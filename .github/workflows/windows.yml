@@ -32,7 +32,59 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Install pinned Rust for early launcher tests
+        shell: pwsh
+        run: |
+          rustup toolchain install 1.95.0 --profile minimal
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          'RUSTUP_TOOLCHAIN=1.95.0' | Out-File -FilePath $env:GITHUB_ENV -Append
+      - name: Tooling and native launcher tests
+        shell: pwsh
+        run: |
+          $PSNativeCommandUseErrorActionPreference = $false
+          python -m unittest discover -s tests -v *> tooling-tests.log
+          $result = $LASTEXITCODE
+          Get-Content tooling-tests.log
+          $tail = (Get-Content tooling-tests.log -Tail 120) -join "`n"
+          $message = $tail.Replace('%', '%25').Replace("`r", '%0D').Replace("`n", '%0A')
+          if ($result -ne 0) {
+            Write-Output "::error title=Windows tooling tests failed::$message"
+          }
+          exit $result
+      - name: Restore pinned engine build cache
+        id: engine-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            .cache/target
+            .cache/upstream
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: windows-x64-rust-1.95-static-v1-${{ hashFiles('upstream.lock.json') }}
+      - name: Native engine and resource-preparer library tests
+        shell: pwsh
+        env:
+          HORIZON_VERSION: '0.7.6'
+          RUSTFLAGS: '-C target-feature=+crt-static'
+          CARGO_TARGET_DIR: ${{ github.workspace }}/.cache/target
+        run: |
+          $PSNativeCommandUseErrorActionPreference = $false
+          $sourceRoot = python tools/fetch_upstream.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo +1.95.0 test --locked --release --target x86_64-pc-windows-msvc --manifest-path "$sourceRoot/Cargo.toml" -p horizon-core -p horizon-prepare --lib *> native-library-tests.log
+          $result = $LASTEXITCODE
+          Get-Content native-library-tests.log
+          $tail = (Get-Content native-library-tests.log -Tail 80) -join "`n"
+          $message = $tail.Replace('%', '%25').Replace("`r", '%0D').Replace("`n", '%0A')
+          if ($result -ne 0) {
+            Write-Output "::error title=Native Windows library tests failed::$message"
+          } else {
+            $summary = ((Get-Content native-library-tests.log | Select-String '^test result:') -join ' | ')
+            Write-Output "::notice title=Native Windows library test results::$summary"
+          }
+          exit $result
       - name: Build and package Windows x64
+        id: native-build
         shell: pwsh
         run: |
           try {
@@ -43,25 +95,39 @@ jobs:
             Write-Output "::error title=Windows build failed::$message"
             throw
           }
-      - name: Tooling and native launcher tests
-        shell: pwsh
-        run: python -m unittest discover -s tests -v
-      - name: Native engine and resource-preparer library tests
-        shell: pwsh
-        env:
-          RUSTFLAGS: '-C target-feature=+crt-static'
-          CARGO_TARGET_DIR: ${{ github.workspace }}/.cache/target
-        run: |
-          $sourceRoot = python tools/fetch_upstream.py
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          cargo +1.95.0 test --locked --release --target x86_64-pc-windows-msvc --manifest-path "$sourceRoot/Cargo.toml" -p horizon-core -p horizon-prepare --lib
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Run packaged Windows executables without game assets
         shell: pwsh
-        run: ./scripts/smoke_windows.ps1 -PackagePath 'dist/windows-x86_64/Herspers-Minecraft'
+        run: |
+          try {
+            ./scripts/smoke_windows.ps1 -PackagePath 'dist/windows-x86_64/Herspers-Minecraft'
+          } catch {
+            $message = $_.Exception.Message.Replace('%', '%25').Replace("`r", '%0D').Replace("`n", '%0A')
+            Write-Output "::error title=Windows startup check failed::$message"
+            throw
+          }
       - name: Upload Windows package
         uses: actions/upload-artifact@v4
         with:
           name: Herspers-Minecraft-Windows-x64
           path: dist/windows-x86_64/*.zip
           if-no-files-found: error
+      - name: Preserve diagnostic build after a later check fails
+        if: failure() && steps.native-build.outcome == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: Windows-diagnostic-build-unverified
+          path: |
+            dist/windows-x86_64/*.zip
+            *-tests.log
+            build-windows.log
+          if-no-files-found: warn
+      - name: Retain compiled engine for future builds
+        if: always() && steps.native-build.outcome == 'success' && steps.engine-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            .cache/target
+            .cache/upstream
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: windows-x64-rust-1.95-static-v1-${{ hashFiles('upstream.lock.json') }}
