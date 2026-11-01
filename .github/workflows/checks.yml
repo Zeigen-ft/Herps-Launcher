@@ -16,3 +16,31 @@ jobs:
           python-version: '3.12'
       - run: python3 -m unittest discover -s tests -v
       - run: for script in scripts/*.sh packaging/*.command; do bash -n "$script"; done
+  windows-tooling:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install pinned Rust for native launcher tests
+        shell: pwsh
+        run: |
+          rustup toolchain install 1.95.0 --profile minimal
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          'RUSTUP_TOOLCHAIN=1.95.0' | Out-File -FilePath $env:GITHUB_ENV -Append
+      - name: Windows tooling tests
+        shell: pwsh
+        run: |
+          $PSNativeCommandUseErrorActionPreference = $false
+          python -m unittest discover -s tests -v *> tooling-tests.log
+          $result = $LASTEXITCODE
+          Get-Content tooling-tests.log
+          if ($result -ne 0) {
+            $tail = (Get-Content tooling-tests.log -Tail 120) -join "`n"
+            $message = $tail.Replace('%', '%25').Replace("`r", '%0D').Replace("`n", '%0A')
+            Write-Output "::error title=Windows tooling tests failed::$message"
+          }
+          exit $result
