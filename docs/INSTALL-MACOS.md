@@ -1,6 +1,6 @@
 # Install Herspers Minecraft on a Mac
 
-This guide is for the downloaded app. You do not need Rust or Xcode to use a prebuilt package.
+This guide is for the **Java Edition Mac app**. The separate Herspers Bedrock 0.3.0 package currently supports Windows x64. You do not need Rust or Xcode to use a prebuilt Mac package.
 
 Both Mac builds passed compilation and ad hoc signing checks. Installation, resource preparation and gameplay still need testing on a Mac. These are development builds, and they are not Apple-notarized.
 
@@ -72,6 +72,18 @@ Open **Applications → Herspers Minecraft** after preparation succeeds.
 If macOS blocks this downloaded development build, open **System Settings → Privacy & Security** and review the message for Herspers Minecraft. Use **Open Anyway** if that option is offered and you trust the downloaded build. On older macOS versions, the equivalent controls are in **System Preferences → Security & Privacy**. This app has ad hoc signatures, not Apple Developer ID signing or notarization.
 
 If it says resources need preparation, repeat step 3 and check that Terminal reaches the success message.
+
+### If Terminal shows only “button returned:OK” and “Process completed”
+
+The older launcher stopped after its resource check failed and its setup dialog was dismissed. The game has not started. That message alone does not identify whether resources are missing or the bundled preparer could not run.
+
+Run the preparation command in step 3 if you have not prepared resources. To see the actual check error, run:
+
+```bash
+cat "$HOME/Library/Application Support/Herspers Minecraft/logs/resources-check.log"
+```
+
+Updated launchers print the failure in Terminal and offer **Prepare resources** and **Show log** buttons. Preparation opens in Terminal; keep it open until it reports success, then open the app again. If preparation itself fails, use its error message to diagnose the missing requirement.
 
 ## Files and troubleshooting
 
