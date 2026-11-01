@@ -6,7 +6,7 @@ The game needs a graphics driver supporting DirectX 12, Vulkan or the engine's O
 
 ## 1. Download and extract
 
-Open the repository's **Actions → Build Windows PC app**, select a successful run, and download the **Herspers-Minecraft-Windows-x64** artifact. Sign in to GitHub if needed.
+[Download the verified Windows 0.2.0 build](https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/41304885077/artifacts/13082981412), named **Herspers-Minecraft-Windows-x64**. Sign in to GitHub if needed. For later builds, open **Actions → Build Windows PC app** and select a successful run.
 
 Extract the downloaded artifact ZIP, then extract the application ZIP inside it. Keep the entire **Herspers-Minecraft** folder together, including `bin`, `preparation`, `Setup.cmd` and `Play.cmd`. For example, keep it in your Documents or Games folder. Do not run individual files from inside the ZIP.
 

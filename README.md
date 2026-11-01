@@ -10,18 +10,18 @@ The supplied APK is a Rust implementation of **Minecraft Java Edition 26.3**, ac
 - Source fetching, static inspection, and portable packaging tests run on Linux.
 - Recovered engine/resource-preparer library tests: 161 passed, 3 ignored.
 - Both native macOS builds passed release compilation, architecture/library checks, ad hoc signing and ZIP packaging in [GitHub Actions run 41295959995](https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/41295959995).
-- App launch, resource preparation and gameplay are **not yet tested**. The apps are not Apple-notarized.
-- Windows version **0.2.0** adds a native launcher, first-time setup, a portable x64 ZIP and Windows build/startup checks. See the Windows workflow for current build results.
+- Interactive game launch, full resource preparation and gameplay are **not yet tested**. The Mac apps are not Apple-notarized; the Windows package is unsigned.
+- Windows version **0.2.0** passed native compilation, packaging, launcher tests, 161 engine/preparer library tests (3 ignored) and packaged-EXE startup checks in [run 41304885077](https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/41304885077).
 
 ## Windows PC version 0.2.0
 
-Open [Build Windows PC app](https://github.com/Zeigen-ft/Herspers-Minecraft/actions/workflows/windows.yml), select a successful run, and download **Herspers-Minecraft-Windows-x64** under Artifacts. Extract both ZIP layers and keep the complete application folder together.
+[Download Windows PC version 0.2.0 — Intel/AMD x64](https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/41304885077/artifacts/13082981412). Sign in to GitHub if asked, extract both ZIP layers, and keep the complete application folder together. It targets Windows 10/11 x64.
 
 1. Install JDK 25 and launch your own Minecraft Java Edition 26.3 once.
 2. Double-click **Setup.cmd** and paste the path to the matching official 26.3 server JAR.
 3. Wait for **Resources are ready**, then double-click **Play.cmd**.
 
-Read the [Windows installation guide](docs/INSTALL-WINDOWS.md) for detailed setup, custom installation folders and troubleshooting. No Rust, Python or developer tools are needed for the downloaded app. Full gameplay testing with prepared resources remains separate from build/startup checks.
+Read the [Windows installation guide](docs/INSTALL-WINDOWS.md) for detailed setup, custom installation folders and troubleshooting, and [Windows build results](docs/WINDOWS-BUILD-RESULTS.md) for validation evidence. No Rust, Python or developer tools are needed for the downloaded app. Full gameplay testing with prepared resources remains separate from build/startup checks.
 
 ## Download the Mac builds
 
