@@ -1,5 +1,6 @@
 import importlib.util
 import json
+import os
 from pathlib import Path
 import plistlib
 import shutil
@@ -70,7 +71,12 @@ class PackagingTests(unittest.TestCase):
         with (app / "Contents/Info.plist").open("rb") as stream:
             info = plistlib.load(stream)
         self.assertEqual("Herspers Minecraft", info["CFBundleName"])
-        self.assertTrue((app / "Contents/MacOS" / info["CFBundleExecutable"]).stat().st_mode & 0o111)
+        entrypoint = app / "Contents/MacOS" / info["CFBundleExecutable"]
+        self.assertTrue(entrypoint.is_file())
+        self.assertEqual(entrypoint.read_bytes()[:4], b"\xcf\xfa\xed\xfe")
+        if os.name != "nt":
+            # Windows file modes do not represent Unix executable permissions.
+            self.assertTrue(entrypoint.stat().st_mode & 0o111)
 
     def test_architecture_mismatch_is_rejected(self):
         with self.assertRaisesRegex(ValueError, "expected a x86_64"):
@@ -139,18 +145,32 @@ class PackagingTests(unittest.TestCase):
                 package.assemble(self.source, self.binaries, "arm64", self.output)
 
     def test_wrappers_are_valid_bash(self):
+        if os.name == "nt":
+            # System32/bash.exe is a WSL launcher, which need not have a distro.
+            # Use Git for Windows' actual Bash interpreter on this platform.
+            git = shutil.which("git")
+            candidates = [] if git is None else [
+                Path(git).parent.parent / "bin/bash.exe",
+                Path(git).parent.parent / "usr/bin/bash.exe",
+            ]
+            bash = next((str(path) for path in candidates if path.is_file()), None)
+        else:
+            bash = shutil.which("bash")
+        if bash is None:
+            self.skipTest("Bash interpreter unavailable on this host")
         for name in ("launch.command", "prepare.command"):
-            subprocess.run(["bash", "-n", str(PROJECT / "packaging" / name)], check=True)
+            subprocess.run([bash, "-n", str(PROJECT / "packaging" / name)], check=True)
 
     def test_native_launcher_is_valid_c_with_platform_api_declared(self):
         compiler = shutil.which("cc")
         if compiler is None:
             self.skipTest("C compiler unavailable")
-        # A declaration-only stub lets Linux parse C without an Apple SDK.
+        # Declaration-only stubs let non-Mac hosts parse C without an Apple SDK.
         # This does not link or run the launcher or claim a macOS build.
         header = self.root / "include/mach-o/dyld.h"
         header.parent.mkdir(parents=True)
-        header.write_text("#include <stdint.h>\nint _NSGetExecutablePath(char *, uint32_t *);\n")
+        header.write_text("#include <stdint.h>\nint _NSGetExecutablePath(char *, uint32_t *);\n"
+                          "#ifdef _WIN32\nchar *realpath(const char *, char *);\n#endif\n")
         subprocess.run([compiler, "-Wall", "-Wextra", "-Werror", "-fsyntax-only",
                         "-I", str(header.parents[1]), str(PROJECT / "packaging/launcher.c")], check=True)
 
