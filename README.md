@@ -9,7 +9,15 @@ The supplied APK is a Rust implementation of **Minecraft Java Edition 26.3**, ac
 - APK inspected without executing it; its embedded build ID matches public source commit `7301f6fdd7f470b11317276e7a11b4dc615c137a`.
 - Source fetching, static inspection, and portable packaging tests run on Linux.
 - Recovered engine/resource-preparer library tests: 161 passed, 3 ignored.
-- macOS compilation, signing checks, app launch and gameplay are **not yet verified**. The current workspace is Linux; no playable Mac binary is claimed.
+- Both native macOS builds passed release compilation, architecture/library checks, ad hoc signing and ZIP packaging in [GitHub Actions run 41295959995](https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/41295959995).
+- App launch, resource preparation and gameplay are **not yet tested**. The apps are not Apple-notarized.
+
+## Download the Mac builds
+
+- [Apple Silicon (arm64)](https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/41295959995/artifacts/13079675808)
+- [Intel (x86_64)](https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/41295959995/artifacts/13079341512)
+
+Sign in to GitHub to download. Each artifact contains an architecture-specific ZIP; extract that ZIP to obtain `Herspers Minecraft.app`. These are development builds, and game assets are not included. Follow the resource-preparation instructions below before playing. See [build evidence](docs/MACOS-BUILD-RESULTS.md).
 
 ## Build on a Mac
 
