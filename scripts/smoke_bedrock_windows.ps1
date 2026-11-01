@@ -44,7 +44,9 @@ try {
     $plan | Set-Content (Join-Path $scratch 'resource-plan.txt')
 
     # Exercise the real first-run window without accepting the EULA or logging in.
-    $setup = Start-Process -FilePath $engine -ArgumentList '--first-run-setup' -PassThru
+    $setup = Start-Process -FilePath $engine -ArgumentList '--first-run-setup' -PassThru `
+        -RedirectStandardOutput (Join-Path $PWD 'bedrock-setup.stdout.log') `
+        -RedirectStandardError (Join-Path $PWD 'bedrock-setup.stderr.log')
     $consent = $null
     $deadline = [DateTime]::UtcNow.AddSeconds(35)
     while ([DateTime]::UtcNow -lt $deadline) {
@@ -55,7 +57,10 @@ try {
             if ($state.phase -eq 'failed') { throw "First-run setup failed: $($state.error)" }
         }
         $setup.Refresh()
-        if ($setup.HasExited) { throw "First-run setup exited before its consent screen: $($setup.ExitCode)" }
+        if ($setup.HasExited) {
+            $details = (Get-Content 'bedrock-setup.stderr.log' -Tail 20 -ErrorAction SilentlyContinue) -join "`n"
+            throw "First-run setup exited before its consent screen ($($setup.ExitCode)): $details"
+        }
         if ($consent -and $setup.MainWindowHandle -ne [IntPtr]::Zero -and
             $setup.MainWindowTitle -eq $env:CINNABAR_WINDOW_TITLE) { break }
         Start-Sleep -Milliseconds 250

@@ -89,8 +89,8 @@ class BedrockPackagingTests(unittest.TestCase):
         self.project.mkdir()
         self.runtime = ("cinnabar", "cinnabar-updater", "bedrock-core", "bedrock-local-server", "cinnabar-cxb")
         self.source_file("Cargo.toml", b'[workspace.package]\nversion = "0.1.31"\n')
-        self.source_file("LICENSE", b"# PolyForm Noncommercial License 1.0.0\n")
-        self.source_file("THIRD_PARTY_NOTICES.md", b"# Third-party notices\n")
+        self.source_file("LICENSE", b"# PolyForm Noncommercial License 1.0.0\nPersonal use only.\nPreserve the wording.\n")
+        self.source_file("THIRD_PARTY_NOTICES.md", b"# Third-party notices\nPreserve each attribution.\n")
         self.source_file("assets/bedrock-target.json", json.dumps({"game_version": "1.26.60", "wire_protocol": 2225}).encode())
         self.source_file("packaging/common/runtime-binaries.txt", "\n".join(f"{name} package ENV" for name in self.runtime).encode())
         self.source_file("assets/vanilla-source.json", json.dumps({
@@ -99,12 +99,12 @@ class BedrockPackagingTests(unittest.TestCase):
             "sha256": "a" * 64, "archive": "resources.zip", "cache_dir": ".local/vanilla",
         }).encode())
         self.source_file("packaging/common/prep-kit-files.txt", b"assets/vanilla-source.json\n")
-        font = b"test font"
+        font = b"test\nfont\n"
         self.source_file("assets/fonts/Example.ttf", font)
         self.source_file("assets/cinnangles-sans-source.json", json.dumps({
             "font_file": "Example.ttf", "font_sha256": hashlib.sha256(font).hexdigest(), "font_size_bytes": len(font),
         }).encode())
-        self.source_file("assets/licenses/Example-LICENSE.txt", b"third-party license")
+        self.source_file("assets/licenses/Example-LICENSE.txt", b"third-party license\nPreserve this line.\n")
         self.source_file("crates/assets/data/block-physics-v2225.bin", b"physics")
         dll = pe_fixture(dll=True)
         self.source_file("packaging/windows/dxc.json", json.dumps({
@@ -225,6 +225,85 @@ class BedrockPackagingTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     package.inspect_engine(self.engine, self.source)
                 path.write_bytes(saved)
+
+    def test_only_observed_notice_paths_accept_deterministic_windows_crlf(self):
+        self.assertEqual(len(package.WINDOWS_CRLF_SOURCE_PATHS), 18)
+        for relative in package.WINDOWS_CRLF_SOURCE_PATHS:
+            with self.subTest(relative=relative):
+                if relative == "resources/licenses/Cinnabar-LICENSE.md":
+                    source = self.source / "LICENSE"
+                elif relative == "resources/assets/THIRD_PARTY_NOTICES.md":
+                    source = self.source / "THIRD_PARTY_NOTICES.md"
+                else:
+                    source = self.source / "assets/licenses" / Path(relative).name
+                    source.parent.mkdir(parents=True, exist_ok=True)
+                    source.write_bytes(b"Required attribution.\nSecond unchanged line.\n")
+                payload = self.engine / relative
+                payload.parent.mkdir(parents=True, exist_ok=True)
+                raw_source = source.read_bytes()
+                raw_payload = raw_source.replace(b"\n", b"\r\n")
+                payload.write_bytes(raw_payload)
+                item = package.inspect_engine(self.engine, self.source)["files"][relative]
+                self.assertEqual(item["source_comparison"], {
+                    "source_sha256": hashlib.sha256(raw_source).hexdigest(), "variant": "windows_crlf"})
+                self.assertEqual(item["sha256"], hashlib.sha256(raw_payload).hexdigest())
+
+    def test_notice_wording_spacing_bare_cr_and_mixed_endings_are_rejected(self):
+        relative = "resources/licenses/Cinnabar-LICENSE.md"
+        source = (self.source / "LICENSE").read_bytes()
+        crlf = source.replace(b"\n", b"\r\n")
+        for changed in [
+            crlf.replace(b"Personal", b"Commercial"),
+            crlf.replace(b"use only", b"use  only"),
+            crlf.replace(b"\r\n", b"\r", 1),
+            source.replace(b"\n", b"\r\n", 1),
+        ]:
+            with self.subTest(changed=changed):
+                (self.engine / relative).write_bytes(changed)
+                with self.assertRaises(ValueError):
+                    package.inspect_engine(self.engine, self.source)
+        bare_cr_source = b"First\rBare carriage return.\nLast line.\n"
+        (self.source / "LICENSE").write_bytes(bare_cr_source)
+        (self.engine / relative).write_bytes(bare_cr_source.replace(b"\n", b"\r\n"))
+        with self.assertRaises(ValueError):
+            package.inspect_engine(self.engine, self.source)
+
+    def test_binary_and_unobserved_license_paths_do_not_accept_crlf_variants(self):
+        self.assertNotIn("resources/licenses/Monocraft-OFL-1.1.txt", package.WINDOWS_CRLF_SOURCE_PATHS)
+        for relative in ["resources/fonts/Example.ttf", "resources/licenses/Example-LICENSE.txt"]:
+            with self.subTest(relative=relative):
+                self.assertNotIn(relative, package.WINDOWS_CRLF_SOURCE_PATHS)
+                path = self.engine / relative
+                original = path.read_bytes()
+                path.write_bytes(original.replace(b"\n", b"\r\n"))
+                with self.assertRaises(ValueError):
+                    package.inspect_engine(self.engine, self.source)
+                path.write_bytes(original)
+
+    def test_crlf_source_exact_match_is_recorded_as_exact_bytes(self):
+        relative = "resources/licenses/Cinnabar-LICENSE.md"
+        source = (self.source / "LICENSE").read_bytes().replace(b"\n", b"\r\n")
+        (self.source / "LICENSE").write_bytes(source)
+        (self.engine / relative).write_bytes(source)
+        item = package.inspect_engine(self.engine, self.source)["files"][relative]
+        self.assertEqual(item["source_comparison"], {
+            "source_sha256": hashlib.sha256(source).hexdigest(), "variant": "exact_bytes"})
+        (self.engine / relative).write_bytes(source.replace(b"\r\n", b"\n"))
+        with self.assertRaises(ValueError):
+            package.inspect_engine(self.engine, self.source)
+
+    def test_staging_preserves_actual_windows_notice_bytes_and_manifest_digest(self):
+        relative = "resources/licenses/Cinnabar-LICENSE.md"
+        source = (self.source / "LICENSE").read_bytes()
+        payload = source.replace(b"\n", b"\r\n")
+        (self.engine / relative).write_bytes(payload)
+        folder, _ = self.stage()
+        self.assertEqual((folder / "engine" / relative).read_bytes(), payload)
+        self.assertEqual((folder / "licenses/cinnabar/LICENSE").read_bytes(), source)
+        manifest = json.loads((folder / "bedrock-client.json").read_text())
+        self.assertEqual(manifest["files"]["engine/" + relative], hashlib.sha256(payload).hexdigest())
+        metadata = json.loads((folder / "build-metadata.json").read_text())
+        self.assertEqual(metadata["engine_files"][relative]["source_comparison"]["variant"], "windows_crlf")
 
     def test_wrong_source_game_version_and_protocol_are_rejected(self):
         target = self.source / "assets/bedrock-target.json"

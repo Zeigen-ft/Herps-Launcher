@@ -49,6 +49,29 @@ FOLDER = "Herspers-Bedrock"
 ARCHIVE = "Herspers-Bedrock-Windows-x64.zip"
 MAX_FILE_BYTES = 512 * 1024 * 1024
 MAX_PAYLOAD_BYTES = 2 * 1024 * 1024 * 1024
+# These notice/license files in the verified 0.1.31 Windows MSI were copied
+# from a Windows Git checkout. Only these observed text paths may match the
+# deterministic CRLF form of the pinned archive's source bytes instead.
+WINDOWS_CRLF_SOURCE_PATHS = frozenset({
+    "resources/assets/THIRD_PARTY_NOTICES.md",
+    "resources/licenses/Android-Bionic-BSD.txt",
+    "resources/licenses/Android-ashmem-NOTICE.txt",
+    "resources/licenses/Apache-2.0.txt",
+    "resources/licenses/Box64-MIT.txt",
+    "resources/licenses/Cinnabar-LICENSE.md",
+    "resources/licenses/DirectXShaderCompiler-LICENSE.txt",
+    "resources/licenses/GCC-GPL-3.0.txt",
+    "resources/licenses/GCC-Runtime-Exception-3.1.txt",
+    "resources/licenses/Inter-OFL-1.1.txt",
+    "resources/licenses/Termux-glibc-MIT.txt",
+    "resources/licenses/glibc-COPYING.LESSERv2.txt",
+    "resources/licenses/glibc-COPYING.LIB.txt",
+    "resources/licenses/glibc-COPYINGv2.txt",
+    "resources/licenses/glibc-COPYINGv3.txt",
+    "resources/licenses/glibc-LICENSES.txt",
+    "resources/licenses/libandroid-shmem-BSD.txt",
+    "resources/licenses/redb-MIT.txt",
+})
 
 
 def sha256(path: Path) -> str:
@@ -271,15 +294,23 @@ def inspect_engine(engine: Path, source: Path) -> dict:
     dlls = {name for name in binaries if name.lower().endswith(".dll")}
     for relative, path in sorted(actual.items()):
         digest = sha256(path)
-        if relative in copied and digest != sha256(copied[relative]):
-            hint = ""
-            if path.suffix.lower() in {".txt", ".md", ".json", ".tsv", ".csv", ".toml", ".rs", ".wgsl", ".js"}:
-                if path.read_bytes().replace(b"\r\n", b"\n") == copied[relative].read_bytes().replace(b"\r\n", b"\n"):
-                    hint = " (CRLF/LF difference only; still refused)"
-            errors.append(f"{relative}: source-backed resource checksum mismatch{hint}")
+        item = {"sha256": digest, "size_bytes": path.stat().st_size}
+        if relative in copied:
+            source_digest = sha256(copied[relative])
+            comparison = {"source_sha256": source_digest, "variant": "exact_bytes"}
+            if digest != source_digest:
+                variant_digest = None
+                if relative in WINDOWS_CRLF_SOURCE_PATHS:
+                    canonical = copied[relative].read_bytes().replace(b"\r\n", b"\n")
+                    if b"\r" not in canonical:
+                        variant_digest = hashlib.sha256(canonical.replace(b"\n", b"\r\n")).hexdigest()
+                if digest == variant_digest:
+                    comparison["variant"] = "windows_crlf"
+                else:
+                    errors.append(f"{relative}: source-backed resource checksum mismatch")
+            item["source_comparison"] = comparison
         if relative == dxc["library"] and digest != dxc["library_sha256"]:
             errors.append(f"{relative}: pinned DXC library checksum mismatch")
-        item = {"sha256": digest, "size_bytes": path.stat().st_size}
         if relative in binaries:
             try:
                 item["pe"] = inspect_pe(path.read_bytes(), allow_dll=relative.lower().endswith(".dll"), bundled_dlls=dlls)
