@@ -17,7 +17,19 @@ The supplied APK is a Rust implementation of **Minecraft Java Edition 26.3**, ac
 - [Apple Silicon (arm64)](https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/41295959995/artifacts/13079675808)
 - [Intel (x86_64)](https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/41295959995/artifacts/13079341512)
 
-Sign in to GitHub to download. Each artifact contains an architecture-specific ZIP; extract that ZIP to obtain `Herspers Minecraft.app`. These are development builds, and game assets are not included. Follow the resource-preparation instructions below before playing. See [build evidence](docs/MACOS-BUILD-RESULTS.md).
+Sign in to GitHub to download. Each artifact contains an architecture-specific ZIP; extract that ZIP to obtain `Herspers Minecraft.app`. These are development builds, and game assets are not included. Follow the [step-by-step Mac installation guide](docs/INSTALL-MACOS.md) before playing. See [build evidence](docs/MACOS-BUILD-RESULTS.md).
+
+## Install the downloaded app
+
+See [Install Herspers Minecraft on a Mac](docs/INSTALL-MACOS.md) for downloading, moving the app into Applications, installing JDK 25, preparing resources and opening the app.
+
+After installing JDK 25 and launching your own Minecraft Java Edition 26.3 once, run this in Terminal:
+
+```bash
+"/Applications/Herspers Minecraft.app/Contents/Resources/prepare.command"
+```
+
+Choose the matching official 26.3 server JAR when prompted. Wait for **Resources are ready**, then open the app. See the guide for a custom Minecraft installation folder or macOS security prompts.
 
 ## Build on a Mac
 
@@ -36,7 +48,7 @@ The **Build macOS apps** GitHub Actions workflow performs the same builds automa
 
 The app does not ship Minecraft assets or reuse the generated game tables from the APK. Install and launch your own **Minecraft Java Edition 26.3** once, have its matching server JAR available, and install **JDK 25** for resource preparation.
 
-After building, run the app's bundled preparation command in Terminal:
+For a downloaded app in Applications, follow the [installation guide](docs/INSTALL-MACOS.md). If you built from source, run the app's bundled preparation command from the repository directory:
 
 ```sh
 "dist/arm64/Herspers Minecraft.app/Contents/Resources/prepare.command" "/absolute/path/server.jar"
