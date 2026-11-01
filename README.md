@@ -8,7 +8,7 @@ The new **Herspers Bedrock 0.3.0** target uses Cinnabar's native Rust game clien
 
 The Bedrock app targets **1.26.60 / protocol 2225** and handles its resource setup inside the app:
 
-1. Extract the complete **Herspers-Bedrock** package and open **Herspers-Bedrock.exe**.
+1. Extract the complete **Herspers-Bedrock** package, install the [Microsoft Visual C++ x64 runtime](https://aka.ms/vc14/vc_redist.x64.exe) if missing, and open **Herspers-Bedrock.exe**.
 2. Review the Minecraft EULA, then let the native setup screen download and prepare its pinned Bedrock resources.
 3. Use the client menu to sign in, join a compatible server, or create/import a Bedrock world.
 
@@ -70,6 +70,8 @@ Expected first-build outputs: `dist/arm64/Herspers Minecraft.app` and `dist/x86_
 The **Build macOS apps** GitHub Actions workflow performs the same builds automatically when build-related files are pushed to `main`, and can also be run manually. It uploads build artifacts; it does not publish a release or establish gameplay readiness. Build both versions and test on the corresponding Macs before distribution. Ad hoc signing is not Developer ID signing or Apple notarization.
 
 ## Prepare game resources and play
+
+This section applies to the earlier **Java Edition** packages. **Bedrock 0.3.0 uses the in-app setup described above.**
 
 The app does not ship Minecraft assets or reuse the generated game tables from the APK. Install and launch your own **Minecraft Java Edition 26.3** once, have its matching server JAR available, and install **JDK 25** for resource preparation.
 

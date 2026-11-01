@@ -32,6 +32,13 @@ SYSTEM_DLLS = _windows.WINDOWS_SYSTEM | {
     "uiautomationcore.dll", "windowscodecs.dll", "winhttp.dll", "wininet.dll",
     "winsta.dll", "wintrust.dll", "wldap32.dll", "wtsapi32.dll",
 }
+# These are prerequisites from Microsoft's Visual C++ 2015-2022 x64
+# Redistributable, NOT libraries guaranteed to ship with Windows itself.
+# No wildcard and no debug-runtime names are accepted.
+VC_RUNTIME_DLLS = {
+    "vcruntime140.dll", "vcruntime140_1.dll", "msvcp140.dll", "msvcp140_1.dll",
+    "msvcp140_2.dll", "msvcp140_atomic_wait.dll", "msvcp140_codecvt_ids.dll",
+}
 PRODUCT_VERSION = "0.3.0"
 ENGINE_VERSION = "0.1.31"
 BEDROCK_VERSION = "1.26.60"
@@ -140,10 +147,12 @@ def inspect_pe(data: bytes, allow_dll: bool = False, bundled_dlls=frozenset()) -
             raise ValueError("unterminated PE import table")
     bundled = {name.lower() for name in bundled_dlls}
     foreign = sorted(name for name in names if name not in SYSTEM_DLLS and name not in bundled
+                     and name not in VC_RUNTIME_DLLS
                      and not name.startswith(("api-ms-win-", "ext-ms-win-")))
     if foreign:
         raise ValueError("unbundled non-system DLL imports: " + ", ".join(foreign))
-    return {"format": "PE32+", "architecture": "x86_64", "kind": "dll" if allow_dll else "exe", "imports": sorted(names)}
+    return {"format": "PE32+", "architecture": "x86_64", "kind": "dll" if allow_dll else "exe",
+            "imports": sorted(names), "vc_runtime_dlls": sorted(names & VC_RUNTIME_DLLS)}
 
 
 def relative_name(text: str) -> str:
@@ -257,18 +266,32 @@ def inspect_engine(engine: Path, source: Path) -> dict:
     if set(actual) != expected:
         raise ValueError(f"engine payload file mismatch: missing={sorted(expected - set(actual))}, unexpected={sorted(set(actual) - expected)}")
     metadata = {}
+    errors = []
+    required_vc = set()
     dlls = {name for name in binaries if name.lower().endswith(".dll")}
     for relative, path in sorted(actual.items()):
         digest = sha256(path)
         if relative in copied and digest != sha256(copied[relative]):
-            raise ValueError(f"source-backed resource checksum mismatch: {relative}")
+            hint = ""
+            if path.suffix.lower() in {".txt", ".md", ".json", ".tsv", ".csv", ".toml", ".rs", ".wgsl", ".js"}:
+                if path.read_bytes().replace(b"\r\n", b"\n") == copied[relative].read_bytes().replace(b"\r\n", b"\n"):
+                    hint = " (CRLF/LF difference only; still refused)"
+            errors.append(f"{relative}: source-backed resource checksum mismatch{hint}")
         if relative == dxc["library"] and digest != dxc["library_sha256"]:
-            raise ValueError("pinned DXC library checksum mismatch")
+            errors.append(f"{relative}: pinned DXC library checksum mismatch")
         item = {"sha256": digest, "size_bytes": path.stat().st_size}
         if relative in binaries:
-            item["pe"] = inspect_pe(path.read_bytes(), allow_dll=relative.lower().endswith(".dll"), bundled_dlls=dlls)
+            try:
+                item["pe"] = inspect_pe(path.read_bytes(), allow_dll=relative.lower().endswith(".dll"), bundled_dlls=dlls)
+                required_vc.update(item["pe"]["vc_runtime_dlls"])
+            except ValueError as error:
+                errors.append(f"{relative}: {error}")
         metadata[relative] = item
-    return {"files": metadata, "runtime_executables": sorted(name for name in binaries if name.endswith(".exe"))}
+    if errors:
+        extra = f"\n... {len(errors) - 20} additional validation failures" if len(errors) > 20 else ""
+        raise ValueError("engine validation failed:\n" + "\n".join(errors[:20]) + extra)
+    return {"files": metadata, "runtime_executables": sorted(name for name in binaries if name.endswith(".exe")),
+            "required_vc_runtime_dlls": sorted(required_vc)}
 
 
 def assemble(engine: Path, launcher: Path, source: Path, output: Path, stage_only: bool = False) -> tuple[Path, Path | None]:
@@ -284,7 +307,9 @@ def assemble(engine: Path, launcher: Path, source: Path, output: Path, stage_onl
     verified = inspect_engine(engine, source)
     launcher = regular_file(launcher)
     launcher_bytes = launcher.read_bytes()
-    inspect_pe(launcher_bytes)
+    launcher_pe = inspect_pe(launcher_bytes)
+    if launcher_pe["vc_runtime_dlls"]:
+        raise ValueError(f"{LAUNCHER}: the independent launcher must link its Visual C runtime statically")
     guide = regular_file(PROJECT / "docs/INSTALL-BEDROCK-WINDOWS.md")
     license_guide = regular_file(PROJECT / "docs/BEDROCK-LICENSES.md")
     project_license = regular_file(PROJECT / "LICENSE")
@@ -311,11 +336,14 @@ def assemble(engine: Path, launcher: Path, source: Path, output: Path, stage_onl
             "product_version": PRODUCT_VERSION, "engine": "cinnabar", "engine_version": ENGINE_VERSION,
             "bedrock_version": BEDROCK_VERSION, "wire_protocol": WIRE_PROTOCOL,
             "in_app_resource_downloads": True, "game_assets_included": False,
+            "required_vc_runtime_dlls": verified["required_vc_runtime_dlls"],
             "files": {"engine/" + name: item["sha256"] for name, item in verified["files"].items()},
         }
         (package / "bedrock-client.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
         metadata = {"source_commit": ENGINE_COMMIT, "stage_only": stage_only,
                     "launcher_sha256": hashlib.sha256(launcher_bytes).hexdigest(), "engine_files": verified["files"],
+                    "launcher_pe": launcher_pe,
+                    "required_vc_runtime_dlls": verified["required_vc_runtime_dlls"],
                     "gameplay_tested": False, "online_authentication_tested": False,
                     "engine_license": "PolyForm Noncommercial 1.0.0", "launcher_license": "GPL-3.0"}
         (package / "build-metadata.json").write_text(json.dumps(metadata, indent=2) + "\n", encoding="utf-8")

@@ -10,6 +10,8 @@ Open [Actions → Build Bedrock Windows app](https://github.com/Zeigen-ft/Herspe
 
 Extract the downloaded artifact ZIP and the application ZIP inside it. Keep the complete **Herspers-Bedrock** folder together, including its `engine` folder, manifests and licenses. Do not run the EXE from inside a ZIP or copy only the launcher.
 
+Install the [Microsoft Visual C++ v14 x64 Redistributable](https://aka.ms/vc14/vc_redist.x64.exe) if it is missing. This is the engine's runtime prerequisite, not a developer tool; many PCs already have it. The launcher checks for the required runtime DLLs before starting the client and shows this link if they are missing.
+
 Double-click **Herspers-Bedrock.exe** in the extracted folder. Cinnabar's original branding remains visible. The package is unsigned, so Windows may show a publisher warning; review the downloaded file's source before deciding whether to open it.
 
 ## 2. Complete the in-app first run

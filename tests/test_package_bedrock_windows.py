@@ -54,9 +54,14 @@ class BedrockPeTests(unittest.TestCase):
         self.assertEqual(package.inspect_pe(pe_fixture(dll=True), allow_dll=True)["architecture"], "x86_64")
 
     def test_unbundled_library_is_refused(self):
-        for data in [pe_fixture("VCRUNTIME140.dll"), pe_fixture(delay_name="missing.dll")]:
+        for data in [pe_fixture("vcruntime140d.dll"), pe_fixture("vcruntime141.dll"), pe_fixture(delay_name="missing.dll")]:
             with self.subTest(), self.assertRaises(ValueError):
                 package.inspect_pe(data)
+
+    def test_visual_cpp_runtime_is_an_explicit_prerequisite_not_a_system_dll(self):
+        result = package.inspect_pe(pe_fixture("VCRUNTIME140.dll", "msvcp140_2.dll"))
+        self.assertEqual(result["vc_runtime_dlls"], ["msvcp140_2.dll", "vcruntime140.dll"])
+        self.assertNotIn("vcruntime140.dll", package.SYSTEM_DLLS)
 
     def test_wrong_architecture_dll_and_malformed_headers_are_refused(self):
         for data in [pe_fixture(machine=0xAA64), pe_fixture(dll=True), b"\x7fELF" + bytes(1020), pe_fixture()[:300]]:
@@ -150,6 +155,31 @@ class BedrockPackagingTests(unittest.TestCase):
         self.assertEqual(set(report["files"]), expected)
         for relative, info in report["files"].items():
             self.assertEqual(info["sha256"], hashlib.sha256((self.engine / relative).read_bytes()).hexdigest())
+
+    def test_actual_vc_prerequisites_are_recorded_per_image_and_in_manifests(self):
+        self.engine_file("cinnabar.exe", pe_fixture("vcruntime140.dll", "msvcp140.dll"))
+        report = package.inspect_engine(self.engine, self.source)
+        expected = ["msvcp140.dll", "vcruntime140.dll"]
+        self.assertEqual(report["required_vc_runtime_dlls"], expected)
+        self.assertEqual(report["files"]["cinnabar.exe"]["pe"]["vc_runtime_dlls"], expected)
+        folder, _ = self.stage()
+        for filename in ("bedrock-client.json", "build-metadata.json"):
+            self.assertEqual(json.loads((folder / filename).read_text())["required_vc_runtime_dlls"], expected)
+
+    def test_independent_launcher_must_not_require_visual_cpp_installation(self):
+        self.launcher.write_bytes(pe_fixture("vcruntime140.dll"))
+        with self.assertRaisesRegex(ValueError, "launcher must link"):
+            self.stage()
+
+    def test_content_failures_include_filenames_and_are_aggregated(self):
+        path = self.engine / "resources/prep-kit/assets/vanilla-source.json"
+        path.write_bytes(path.read_bytes() + b"tampered")
+        self.engine_file("cinnabar.exe", pe_fixture("unknown.dll"))
+        with self.assertRaises(ValueError) as caught:
+            self.stage()
+        self.assertIn("resources/prep-kit/assets/vanilla-source.json", str(caught.exception))
+        self.assertIn("cinnabar.exe", str(caught.exception))
+        self.assertIn("unknown.dll", str(caught.exception))
 
     def test_stage_preserves_separate_licenses_and_emits_no_zip(self):
         folder, archive = self.stage()

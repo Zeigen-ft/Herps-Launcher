@@ -115,6 +115,26 @@ class BedrockLauncherTests(unittest.TestCase):
         self.assertIn("SHA-256", result.stderr)
         self.assertFalse((self.root / "unused player data").exists())
 
+    def test_verify_reports_runtime_prerequisites_without_loading_them(self):
+        bundle, launcher, manifest = self.fixture()
+        manifest["required_vc_runtime_dlls"] = ["vcruntime140.dll"]
+        metadata = bundle / "bedrock-client.json"
+        metadata.write_text(json.dumps(manifest))
+        result = self.run_launcher(launcher, "--verify-install")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads(result.stdout)["required_vc_runtime_dlls"], ["vcruntime140.dll"])
+        self.assertFalse((self.root / "unused player data").exists())
+        for invalid in [None, "vcruntime140.dll", ["../vcruntime140.dll"],
+                        ["arbitrary.dll"], ["vcruntime140d.dll"],
+                        ["vcruntime140.dll", "vcruntime140.dll"]]:
+            with self.subTest(prerequisites=invalid):
+                manifest["required_vc_runtime_dlls"] = invalid
+                metadata.write_text(json.dumps(manifest))
+                result = self.run_launcher(launcher, "--verify-install")
+                self.assertEqual(result.returncode, 1, result.stderr)
+                self.assertIn("runtime prerequisite", result.stderr)
+                self.assertNotIn("panicked", result.stderr)
+
     def test_manifest_cannot_traverse_outside_engine(self):
         bundle, launcher, manifest = self.fixture()
         manifest["files"]["engine/../../outside.exe"] = "0" * 64

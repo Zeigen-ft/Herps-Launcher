@@ -7,7 +7,7 @@ $package = (Resolve-Path $PackagePath).Path
 $scratch = Join-Path ([IO.Path]::GetTempPath()) ('Herspers Bedrock check ' + [guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory $scratch | Out-Null
 $saved = @{}
-foreach ($name in @('CINNABAR_USER_ROOT', 'CINNABAR_UPDATE_CHECK', 'CINNABAR_ACCEPT_MOJANG_EULA')) {
+foreach ($name in @('LOCALAPPDATA', 'CINNABAR_USER_ROOT', 'CINNABAR_UPDATE_CHECK', 'CINNABAR_ACCEPT_MOJANG_EULA', 'CINNABAR_WINDOW_TITLE')) {
     $saved[$name] = [Environment]::GetEnvironmentVariable($name, 'Process')
 }
 $setup = $null
@@ -19,8 +19,10 @@ function Invoke-Probe {
     return $text
 }
 try {
+    $env:LOCALAPPDATA = Join-Path $scratch 'local app data'
     $env:CINNABAR_USER_ROOT = Join-Path $scratch 'profile'
     $env:CINNABAR_UPDATE_CHECK = '0'
+    $env:CINNABAR_WINDOW_TITLE = 'Herspers Bedrock setup check'
     [Environment]::SetEnvironmentVariable('CINNABAR_ACCEPT_MOJANG_EULA', $null, 'Process')
     $launcher = Join-Path $package 'Herspers-Bedrock.exe'
     $version = Invoke-Probe $launcher @('--version')
@@ -32,7 +34,7 @@ try {
     $engine = Join-Path $package 'engine/cinnabar.exe'
     $identity = Invoke-Probe $engine @('--update-build-info') | ConvertFrom-Json
     if ($identity.version -ne '0.1.31') { throw 'The shipped engine does not identify as the pinned build.' }
-    $help = Invoke-Probe $engine @('--help')
+    $help = Invoke-Probe $launcher @('--', '--help')
     if (-not $help.Contains('Bedrock Edition')) { throw 'Native engine help did not identify Bedrock.' }
     $coreHelp = Invoke-Probe (Join-Path $package 'engine/bedrock-core.exe') @('-h')
     if (-not $coreHelp.Contains('socket-dir')) { throw 'Native Go networking helper did not start.' }
@@ -52,20 +54,32 @@ try {
             if ($state.phase -eq 'awaiting_consent') { $consent = $state; break }
             if ($state.phase -eq 'failed') { throw "First-run setup failed: $($state.error)" }
         }
-        if ($consent) { break }
-        if ($setup.HasExited) { throw "First-run setup exited before its consent screen: $($setup.ExitCode)" }
-        Start-Sleep -Milliseconds 250
         $setup.Refresh()
+        if ($setup.HasExited) { throw "First-run setup exited before its consent screen: $($setup.ExitCode)" }
+        if ($consent -and $setup.MainWindowHandle -ne [IntPtr]::Zero -and
+            $setup.MainWindowTitle -eq $env:CINNABAR_WINDOW_TITLE) { break }
+        Start-Sleep -Milliseconds 250
     }
-    if (-not $consent) { throw 'The native in-app resource setup did not reach its consent screen.' }
+    if (-not $consent -or $setup.MainWindowHandle -eq [IntPtr]::Zero -or
+        $setup.MainWindowTitle -ne $env:CINNABAR_WINDOW_TITLE) {
+        throw 'The native in-app resource setup did not open its consent window.'
+    }
+    Start-Sleep -Seconds 1
+    $setup.Refresh()
+    if ($setup.HasExited -or $setup.MainWindowHandle -eq [IntPtr]::Zero) {
+        throw 'The native setup window closed unexpectedly.'
+    }
     $result = @{
         product_version = $verify.product_version
         bedrock_version = $verify.bedrock_version
         wire_protocol = $verify.wire_protocol
         engine_version = $identity.version
         payload_hashes_verified = $true
+        launcher_started_native_client = $true
+        required_vc_runtime_dlls = $verify.required_vc_runtime_dlls
         prep_kit_plan_succeeded = $true
         native_setup_phase = $consent.phase
+        native_setup_window_opened = $true
         eula_accepted_by_test = $false
         gameplay_tested = $false
         account_login_tested = $false

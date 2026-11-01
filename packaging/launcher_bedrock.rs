@@ -19,6 +19,12 @@ const BEDROCK_VERSION: &str = "1.26.60";
 const WIRE_PROTOCOL: u64 = 2225;
 const MAX_MANIFEST: u64 = 4 * 1024 * 1024;
 const MAX_FILES: usize = 12000;
+// Release libraries supplied by Microsoft's separate x64 Visual C++ v14
+// Redistributable. These are prerequisites, not Windows system components.
+const VC_RUNTIME_DLLS: &[&str] = &[
+    "vcruntime140.dll", "vcruntime140_1.dll", "msvcp140.dll", "msvcp140_1.dll",
+    "msvcp140_2.dll", "msvcp140_atomic_wait.dll", "msvcp140_codecvt_ids.dll",
+];
 const REQUIRED: &[&str] = &[
     "engine/cinnabar.exe",
     "engine/cinnabar-updater.exe",
@@ -43,6 +49,8 @@ Edition build and does not run the official Minecraft client executable.
 First launch opens the client's in-app setup. Review the Minecraft EULA there,
 then let it download and prepare its supported vanilla resource files. No Java,
 JDK, manual server.jar, Rust installation or Go installation is needed.
+The engine needs Microsoft's Visual C++ v14 x64 Redistributable. If it is
+missing, install the official package: https://aka.ms/vc14/vc_redist.x64.exe
 
 Cinnabar's original branding and PolyForm Noncommercial 1.0.0 license apply to
 the engine. This independent launcher is GPLv3. Read the bundled licenses and
@@ -189,6 +197,50 @@ fn collect_engine_files(bundle: &Path, directory: &Path, output: &mut BTreeSet<S
     Ok(())
 }
 
+fn required_vc_runtime_dlls(manifest: &Value) -> Result<Vec<String>> {
+    let Some(value) = manifest.get("required_vc_runtime_dlls") else { return Ok(Vec::new()); };
+    let values = value.as_array().filter(|values| values.len() <= VC_RUNTIME_DLLS.len())
+        .ok_or_else(|| Failure::new("Engine manifest has an invalid Visual C++ runtime prerequisite list"))?;
+    let mut names = BTreeSet::new();
+    for value in values {
+        let name = value.as_str().filter(|name| VC_RUNTIME_DLLS.contains(name))
+            .ok_or_else(|| Failure::new("Engine manifest has an unsupported Visual C++ runtime prerequisite"))?;
+        if !names.insert(name.to_owned()) {
+            return Err(Failure::new("Engine manifest repeats a Visual C++ runtime prerequisite"));
+        }
+    }
+    Ok(names.into_iter().collect())
+}
+
+fn check_vc_runtime(names: &[String]) -> Result<()> {
+    #[cfg(windows)]
+    {
+        use std::ffi::c_void;
+        #[link(name = "kernel32")]
+        unsafe extern "system" {
+            fn LoadLibraryExW(name: *const u16, file: *mut c_void, flags: u32) -> *mut c_void;
+            fn FreeLibrary(module: *mut c_void) -> i32;
+        }
+        const LOAD_LIBRARY_SEARCH_SYSTEM32: u32 = 0x00000800;
+        for name in names {
+            let wide: Vec<u16> = name.encode_utf16().chain(Some(0)).collect();
+            // Limit resolution to the installed Windows runtime directory;
+            // never load prerequisite DLLs from the current/app directory.
+            let module = unsafe { LoadLibraryExW(wide.as_ptr(), std::ptr::null_mut(), LOAD_LIBRARY_SEARCH_SYSTEM32) };
+            if module.is_null() {
+                let error = io::Error::last_os_error();
+                return Err(Failure::new(format!(
+                    "Microsoft Visual C++ x64 runtime {name} is missing or cannot load ({error}). Install or repair the official Visual C++ v14 x64 Redistributable, then open Herspers Bedrock again: https://aka.ms/vc14/vc_redist.x64.exe"
+                )));
+            }
+            unsafe { FreeLibrary(module); }
+        }
+    }
+    #[cfg(not(windows))]
+    let _ = names;
+    Ok(())
+}
+
 fn verify_bundle(bundle: &Path) -> Result<Value> {
     let manifest_path = bundle.join("bedrock-client.json");
     if ordinary_file(&manifest_path)?.len() > MAX_MANIFEST {
@@ -196,6 +248,7 @@ fn verify_bundle(bundle: &Path) -> Result<Value> {
     }
     let manifest: Value = serde_json::from_slice(&fs::read(&manifest_path)?)
         .map_err(|error| Failure::new(format!("Invalid engine manifest JSON: {error}")))?;
+    let runtime_dlls = required_vc_runtime_dlls(&manifest)?;
     for (field, expected) in [("product_version", VERSION), ("engine", "cinnabar"),
         ("engine_version", ENGINE_VERSION), ("bedrock_version", BEDROCK_VERSION)] {
         if manifest.get(field).and_then(Value::as_str) != Some(expected) {
@@ -247,6 +300,7 @@ fn verify_bundle(bundle: &Path) -> Result<Value> {
         "engine_license": "PolyForm Noncommercial 1.0.0",
         "in_app_resource_downloads": true, "game_assets_included": false,
         "payload_file_count": files.len(), "payload_hashes_verified": true,
+        "required_vc_runtime_dlls": runtime_dlls,
         "verification": "SHA-256 against packaged manifest", "gameplay_tested": false,
     }))
 }
@@ -267,7 +321,8 @@ fn engine_command(bundle: &Path, arguments: &[OsString], profile: &Path) -> Comm
 }
 
 fn launch(bundle: &Path, arguments: &[OsString], local_app_data: &Path) -> Result<i32> {
-    verify_bundle(bundle)?;
+    let verified = verify_bundle(bundle)?;
+    check_vc_runtime(&required_vc_runtime_dlls(&verified)?)?;
     if !local_app_data.is_absolute() {
         return Err(Failure::new("LOCALAPPDATA must identify an absolute user-data directory"));
     }
@@ -383,6 +438,21 @@ mod tests {
         assert!(verify_bundle(&bundle).unwrap_err().message.contains("SHA-256"));
         fs::remove_file(bundle.join(REQUIRED[0])).unwrap();
         assert!(verify_bundle(&bundle).is_err());
+    }
+
+    #[test]
+    fn runtime_prerequisites_are_explicit_known_release_libraries() {
+        let scratch = Scratch::new(); let bundle = scratch.bundle();
+        assert_eq!(verify_bundle(&bundle).unwrap()["required_vc_runtime_dlls"], json!([]));
+        scratch.edit(&bundle, |value| value["required_vc_runtime_dlls"] = json!(["vcruntime140.dll", "msvcp140.dll"]));
+        assert_eq!(verify_bundle(&bundle).unwrap()["required_vc_runtime_dlls"], json!(["msvcp140.dll", "vcruntime140.dll"]));
+        for invalid in [json!(null), json!("vcruntime140.dll"), json!([1]),
+            json!(["../vcruntime140.dll"]), json!(["VCRUNTIME140.dll"]),
+            json!(["vcruntime140d.dll"]), json!(["other.dll"]),
+            json!(["vcruntime140.dll", "vcruntime140.dll"])] {
+            scratch.edit(&bundle, |value| value["required_vc_runtime_dlls"] = invalid);
+            assert!(verify_bundle(&bundle).unwrap_err().message.contains("runtime prerequisite"));
+        }
     }
 
     #[test]
