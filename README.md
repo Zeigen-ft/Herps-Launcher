@@ -6,6 +6,8 @@ The new **Herspers Bedrock 0.3.0** target uses Cinnabar's native Rust game clien
 
 ## Bedrock PC version 0.3.0
 
+[Download Herspers Bedrock 0.3.0 for Windows x64](https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/41328863931/artifacts/13092278093). The package passed native startup, helper, resource-planner and visible setup-window checks. See [build results](docs/BEDROCK-WINDOWS-BUILD-RESULTS.md).
+
 The Bedrock app targets **1.26.60 / protocol 2225** and handles its resource setup inside the app:
 
 1. Extract the complete **Herspers-Bedrock** package, install the [Microsoft Visual C++ x64 runtime](https://aka.ms/vc14/vc_redist.x64.exe) if missing, and open **Herspers-Bedrock.exe**.
