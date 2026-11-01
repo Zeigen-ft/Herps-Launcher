@@ -1,10 +1,24 @@
 # Herspers-Minecraft
 
-A desktop rebuild project based on the open-source Horizon Android 0.7.6 app supplied by the user. Targets **Windows 10/11 x64 PCs** and **Apple Silicon / Intel Macs** with native packages.
+Desktop Minecraft clients for **Windows 10/11 x64 PCs**, with older Java Edition packages also available for **Apple Silicon / Intel Macs**.
 
-The supplied APK is a Rust implementation of **Minecraft Java Edition 26.3**, according to its source and resource metadata. It is not the official Bedrock engine. This project does not currently provide Bedrock protocol or world-format compatibility.
+The new **Herspers Bedrock 0.3.0** target uses Cinnabar's native Rust game client and Go networking helper. The earlier APK-derived Horizon packages target **Java Edition 26.3** and remain separate.
 
-## Current status
+## Bedrock PC version 0.3.0
+
+The Bedrock app targets **1.26.60 / protocol 2225** and handles its resource setup inside the app:
+
+1. Extract the complete **Herspers-Bedrock** package and open **Herspers-Bedrock.exe**.
+2. Review the Minecraft EULA, then let the native setup screen download and prepare its pinned Bedrock resources.
+3. Use the client menu to sign in, join a compatible server, or create/import a Bedrock world.
+
+**No Java, JDK or manual `server.jar` setup is needed for this target.** The in-app download is the supported version's resource data; the package already contains the native client. Cinnabar's original branding remains visible. Its fixed resource snapshot is `v1.26.60.30-preview`, recorded in [the source/package lock](bedrock-upstream.lock.json).
+
+The [Build Bedrock Windows app workflow](https://github.com/Zeigen-ft/Herspers-Minecraft/actions/workflows/bedrock-windows.yml) checks the package and first-run screen before uploading **Herspers-Bedrock-Windows-x64**. See [Bedrock installation](docs/INSTALL-BEDROCK-WINDOWS.md) and [licenses/provenance](docs/BEDROCK-LICENSES.md). Online login, server behavior and imported worlds need testing with the user's own account and files.
+
+The Rust launcher is GPLv3; the separately distributed Cinnabar engine is **PolyForm Noncommercial 1.0.0**. This combination is not an all-Rust networking stack or a blanket GPL relicense of the engine. The engine's noncommercial terms remain in force.
+
+## Earlier Java Edition build status
 
 - APK inspected without executing it; its embedded build ID matches public source commit `7301f6fdd7f470b11317276e7a11b4dc615c137a`.
 - Source fetching, static inspection, and portable packaging tests run on Linux.
@@ -92,4 +106,6 @@ Dependencies and fetched source stay in ignored `.cache/`; upstream `Cargo.lock`
 
 ## Attribution
 
-Project-specific code is licensed under [GPLv3](LICENSE), as selected in the GitHub repository. Upstream Horizon retains its MIT license, copyright Ludovic Marie and the Horizon contributors. Its license and third-party notices are retained under [licenses](licenses). The packaging step also copies applicable upstream license texts into the app. Minecraft game files have separate terms and are not covered by Horizon's MIT license. This project is unofficial and is not endorsed by Mojang, Microsoft, or Horizon's maintainers.
+The independent project launchers/tools are licensed under [GPLv3](LICENSE), as selected in the GitHub repository. The Bedrock engine is an unchanged, checksum-pinned Cinnabar distribution with its original **PolyForm Noncommercial 1.0.0** license and notices. See [Bedrock licenses](docs/BEDROCK-LICENSES.md); commercial use needs appropriate permission from Cinnabar's licensors.
+
+The older Java Edition packages use Horizon, which retains its MIT license, copyright Ludovic Marie and the Horizon contributors. Its license and third-party notices are retained under [licenses](licenses). Packaging copies applicable upstream license texts into each app. Minecraft game files have separate terms. This project is unofficial and is not endorsed by Mojang, Microsoft, Cinnabar or Horizon's maintainers.

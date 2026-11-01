@@ -32,6 +32,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Install pinned launcher Rust for tooling checks
+        run: rustup toolchain install 1.95.0 --profile minimal
       - name: Tooling tests
         shell: bash
         run: |

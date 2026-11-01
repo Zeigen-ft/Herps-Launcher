@@ -1,4 +1,5 @@
 .cache/
+**/target/
 dist/
 .local/
 __pycache__/

@@ -1,0 +1,19 @@
+{
+  "product_version": "0.3.0",
+  "repository": "https://github.com/cinnabar-mc/cinnabar",
+  "commit": "f64924fbb27004a1f785a2c131de9531fbcd252a",
+  "archive_root": "cinnabar-f64924fbb27004a1f785a2c131de9531fbcd252a",
+  "archive_url": "https://codeload.github.com/cinnabar-mc/cinnabar/tar.gz/f64924fbb27004a1f785a2c131de9531fbcd252a",
+  "archive_sha256": "978b923f42186758e93e7a527cd3751cda0421e3296e3621f00c970db86d3fbf",
+  "engine_version": "0.1.31",
+  "engine_license": "PolyForm Noncommercial 1.0.0",
+  "bedrock_version": "1.26.60",
+  "wire_protocol": 2225,
+  "windows_msi_url": "https://github.com/cinnabar-mc/cinnabar/releases/download/v0.1.31/Cinnabar-x64.msi",
+  "windows_msi_sha256": "584f4fa8851571abffce24bbeacadbd5cdbe35053a93b59e8d8673c7170381cb",
+  "windows_msi_size": 86245376,
+  "launcher_rust_toolchain": "1.95.0",
+  "wix_version": "5.0.2",
+  "resource_pack_tag": "v1.26.60.30-preview",
+  "resource_pack_sha256": "b7e66ccb64370d345d898ac92cf5a524866657d5aad6ff2655ce1dc6a8d102b9"
+}
