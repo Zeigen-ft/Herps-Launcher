@@ -69,3 +69,6 @@ try {
         [Environment]::SetEnvironmentVariable($name, $saved[$name], 'Process')
     }
 }
+# The deliberate missing-resource probe exited 1. All assertions above passed;
+# report the test suite's result rather than that expected child exit status.
+exit 0
