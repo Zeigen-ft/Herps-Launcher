@@ -91,4 +91,4 @@ Developers need Python 3.9+, rustup, PowerShell 7+, Visual Studio C++ Build Tool
 pwsh -File scripts/build_windows.ps1
 ```
 
-The script uses Rust 1.95.0 and the locked upstream source. It produces a portable x64 ZIP under `dist/windows-x86_64`. Repeated builds preserve earlier packages in separate output folders. Full resource preparation and gameplay are separate from compilation.
+The script uses Rust 1.95.0, the locked upstream source and its optimized `fast` profile (optimization level 3, with link-time optimization disabled). It produces a portable x64 ZIP under `dist/windows-x86_64`. For a full release-profile build, add `-Profile release`. Repeated builds preserve earlier packages in separate output folders. Full resource preparation and gameplay are separate from compilation.

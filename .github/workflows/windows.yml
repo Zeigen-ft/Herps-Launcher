@@ -60,7 +60,7 @@ jobs:
             .cache/upstream
             ~/.cargo/registry
             ~/.cargo/git
-          key: windows-x64-rust-1.95-static-v1-${{ hashFiles('upstream.lock.json') }}
+          key: windows-x64-rust-1.95-static-fast-v1-${{ hashFiles('upstream.lock.json') }}
       - name: Native engine and resource-preparer library tests
         shell: pwsh
         env:
@@ -71,7 +71,7 @@ jobs:
           $PSNativeCommandUseErrorActionPreference = $false
           $sourceRoot = python tools/fetch_upstream.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          cargo +1.95.0 test --locked --release --target x86_64-pc-windows-msvc --manifest-path "$sourceRoot/Cargo.toml" -p horizon-core -p horizon-prepare --lib *> native-library-tests.log
+          cargo +1.95.0 test --locked --profile fast --target x86_64-pc-windows-msvc --manifest-path "$sourceRoot/Cargo.toml" -p horizon-core -p horizon-prepare --lib *> native-library-tests.log
           $result = $LASTEXITCODE
           Get-Content native-library-tests.log
           $tail = (Get-Content native-library-tests.log -Tail 80) -join "`n"
@@ -130,4 +130,4 @@ jobs:
             .cache/upstream
             ~/.cargo/registry
             ~/.cargo/git
-          key: windows-x64-rust-1.95-static-v1-${{ hashFiles('upstream.lock.json') }}
+          key: windows-x64-rust-1.95-static-fast-v1-${{ hashFiles('upstream.lock.json') }}

@@ -1,5 +1,6 @@
 #Requires -Version 7.0
 # Build and package the pinned engine for Windows 10/11 x64.
+param([ValidateSet('fast', 'release')][string]$Profile = 'fast')
 $ErrorActionPreference = 'Stop'
 $PSNativeCommandUseErrorActionPreference = $true
 
@@ -29,7 +30,7 @@ $sourceRoot = & python (Join-Path $projectRoot 'tools/fetch_upstream.py')
 if ($LASTEXITCODE -ne 0 -or -not $sourceRoot) { throw 'Pinned source fetch failed.' }
 $sourceRoot = ([string]$sourceRoot).Trim()
 
-Invoke-Checked 'cargo' @("+$toolchain", 'build', '--locked', '--release',
+Invoke-Checked 'cargo' @("+$toolchain", 'build', '--locked', '--profile', $Profile,
     '--manifest-path', (Join-Path $sourceRoot 'Cargo.toml'), '--target', $target,
     '-p', 'horizon-client', '-p', 'horizon-prepare',
     '--bin', 'horizon-client', '--bin', 'horizon-ctl', '--bin', 'horizon-prepare',
@@ -47,6 +48,6 @@ if (Test-Path $packageOutput) {
     $packageOutput = Join-Path $packageOutput ('build-' + [guid]::NewGuid().ToString('N'))
 }
 Invoke-Checked 'python' @((Join-Path $projectRoot 'tools/package_windows.py'),
-    '--source', $sourceRoot, '--binaries', (Join-Path $env:CARGO_TARGET_DIR "$target/release"),
+    '--source', $sourceRoot, '--binaries', (Join-Path $env:CARGO_TARGET_DIR "$target/$Profile"),
     '--launcher', $launcher, '--output', $packageOutput)
 Write-Output "Windows package output: $packageOutput"
