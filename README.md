@@ -1,4 +1,4 @@
-# Herspers Minecraft
+# Herspers-Minecraft
 
 A macOS rebuild project based on the open-source Horizon Android 0.7.6 app supplied by the user. Targets **Apple Silicon and Intel** as separate native `.app` packages.
 
@@ -22,7 +22,7 @@ bash scripts/build_macos.sh both
 
 Expected first-build outputs: `dist/arm64/Herspers Minecraft.app` and `dist/x86_64/Herspers Minecraft.app`, plus architecture-specific ZIPs. Repeated builds preserve existing packages and use fresh `build.*` subdirectories. These are separate builds, not a universal executable. They use the existing Horizon desktop engine and Metal renderer. The in-game interface keeps Horizon's branding.
 
-The manual **Build macOS apps** GitHub Actions workflow performs the same builds once this repository is hosted on GitHub. It uploads build artifacts; it does not publish a release or establish gameplay readiness. Build both versions and test on the corresponding Macs before distribution. Ad hoc signing is not Developer ID signing or Apple notarization.
+The **Build macOS apps** GitHub Actions workflow performs the same builds automatically when build-related files are pushed to `main`, and can also be run manually. It uploads build artifacts; it does not publish a release or establish gameplay readiness. Build both versions and test on the corresponding Macs before distribution. Ad hoc signing is not Developer ID signing or Apple notarization.
 
 ## Prepare game resources and play
 
@@ -61,4 +61,4 @@ Dependencies and fetched source stay in ignored `.cache/`; upstream `Cargo.lock`
 
 ## Attribution
 
-Horizon is MIT licensed, copyright Ludovic Marie and the Horizon contributors. Its license and third-party notices are retained under [licenses](licenses). The packaging step also copies applicable upstream license texts into the app. Minecraft game files have separate terms and are not covered by Horizon's MIT license. This project is unofficial and is not endorsed by Mojang, Microsoft, or Horizon's maintainers.
+Project-specific code is licensed under [GPLv3](LICENSE), as selected in the GitHub repository. Upstream Horizon retains its MIT license, copyright Ludovic Marie and the Horizon contributors. Its license and third-party notices are retained under [licenses](licenses). The packaging step also copies applicable upstream license texts into the app. Minecraft game files have separate terms and are not covered by Horizon's MIT license. This project is unofficial and is not endorsed by Mojang, Microsoft, or Horizon's maintainers.

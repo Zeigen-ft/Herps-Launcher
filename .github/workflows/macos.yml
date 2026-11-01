@@ -1,5 +1,13 @@
 name: Build macOS apps
 on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/macos.yml'
+      - 'scripts/**'
+      - 'packaging/**'
+      - 'tools/**'
+      - 'upstream.lock.json'
   workflow_dispatch:
 permissions:
   contents: read
