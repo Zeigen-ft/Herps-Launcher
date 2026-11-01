@@ -32,7 +32,22 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: python3 -m unittest discover -s tests -v
+      - name: Tooling tests
+        shell: bash
+        run: |
+          set +e
+          python3 -m unittest discover -s tests -v > tooling-tests.log 2>&1
+          result=$?
+          cat tooling-tests.log
+          if [ "$result" -ne 0 ]; then
+            python3 - <<'PY'
+          from pathlib import Path
+          text = '\n'.join(Path('tooling-tests.log').read_text(errors='replace').splitlines()[-100:])
+          text = text.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A')
+          print('::error title=Tooling tests failed::' + text)
+          PY
+          fi
+          exit "$result"
       - name: Build, verify architecture and sign ad hoc
         run: bash scripts/build_macos.sh "${{ matrix.arch }}"
       - name: Upload build artifacts (gameplay remains unverified)

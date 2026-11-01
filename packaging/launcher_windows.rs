@@ -461,7 +461,7 @@ mod tests {
         assert_eq!(failure.code, 9);
         let log = fs::read_to_string(support.join("logs/launcher.log")).unwrap();
         let lines: Vec<_> = log.lines().collect();
-        assert_eq!(lines[0], support.join("game").to_str().unwrap());
+        assert_eq!(PathBuf::from(lines[0]), fs::canonicalize(support.join("game")).unwrap());
         assert!(lines.windows(2).any(|p| p == ["--world", "world $(literal)"]));
         assert!(lines.windows(2).any(|p| p == ["--game-dir", support.join("game").to_str().unwrap()]));
     }
