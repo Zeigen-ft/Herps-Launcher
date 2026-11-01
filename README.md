@@ -1,6 +1,6 @@
 # Herspers-Minecraft
 
-A macOS rebuild project based on the open-source Horizon Android 0.7.6 app supplied by the user. Targets **Apple Silicon and Intel** as separate native `.app` packages.
+A desktop rebuild project based on the open-source Horizon Android 0.7.6 app supplied by the user. Targets **Windows 10/11 x64 PCs** and **Apple Silicon / Intel Macs** with native packages.
 
 The supplied APK is a Rust implementation of **Minecraft Java Edition 26.3**, according to its source and resource metadata. It is not the official Bedrock engine. This project does not currently provide Bedrock protocol or world-format compatibility.
 
@@ -11,6 +11,17 @@ The supplied APK is a Rust implementation of **Minecraft Java Edition 26.3**, ac
 - Recovered engine/resource-preparer library tests: 161 passed, 3 ignored.
 - Both native macOS builds passed release compilation, architecture/library checks, ad hoc signing and ZIP packaging in [GitHub Actions run 41295959995](https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/41295959995).
 - App launch, resource preparation and gameplay are **not yet tested**. The apps are not Apple-notarized.
+- Windows version **0.2.0** adds a native launcher, first-time setup, a portable x64 ZIP and Windows build/startup checks. See the Windows workflow for current build results.
+
+## Windows PC version 0.2.0
+
+Open [Build Windows PC app](https://github.com/Zeigen-ft/Herspers-Minecraft/actions/workflows/windows.yml), select a successful run, and download **Herspers-Minecraft-Windows-x64** under Artifacts. Extract both ZIP layers and keep the complete application folder together.
+
+1. Install JDK 25 and launch your own Minecraft Java Edition 26.3 once.
+2. Double-click **Setup.cmd** and paste the path to the matching official 26.3 server JAR.
+3. Wait for **Resources are ready**, then double-click **Play.cmd**.
+
+Read the [Windows installation guide](docs/INSTALL-WINDOWS.md) for detailed setup, custom installation folders and troubleshooting. No Rust, Python or developer tools are needed for the downloaded app. Full gameplay testing with prepared resources remains separate from build/startup checks.
 
 ## Download the Mac builds
 

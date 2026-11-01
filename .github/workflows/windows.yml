@@ -1,0 +1,67 @@
+name: Build Windows PC app
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/windows.yml'
+      - 'scripts/build_windows.ps1'
+      - 'scripts/smoke_windows.ps1'
+      - 'packaging/launcher_windows.rs'
+      - 'packaging/windows/**'
+      - 'tools/package_windows.py'
+      - 'tools/package_macos.py'
+      - 'tools/fetch_upstream.py'
+      - 'tests/test_windows_launcher.py'
+      - 'tests/test_package_windows.py'
+      - 'docs/INSTALL-WINDOWS.md'
+      - 'upstream.lock.json'
+      - 'LICENSE'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 90
+    env:
+      CARGO_BUILD_JOBS: '3'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build and package Windows x64
+        shell: pwsh
+        run: |
+          try {
+            & ./scripts/build_windows.ps1 *>&1 | Tee-Object -FilePath build-windows.log
+          } catch {
+            $tail = (Get-Content build-windows.log -Tail 40 -ErrorAction SilentlyContinue) -join "`n"
+            $message = ($tail + "`n" + $_.Exception.Message).Replace('%', '%25').Replace("`r", '%0D').Replace("`n", '%0A')
+            Write-Output "::error title=Windows build failed::$message"
+            throw
+          }
+      - name: Tooling and native launcher tests
+        shell: pwsh
+        run: python -m unittest discover -s tests -v
+      - name: Native engine and resource-preparer library tests
+        shell: pwsh
+        env:
+          RUSTFLAGS: '-C target-feature=+crt-static'
+          CARGO_TARGET_DIR: ${{ github.workspace }}/.cache/target
+        run: |
+          $sourceRoot = python tools/fetch_upstream.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo +1.95.0 test --locked --release --target x86_64-pc-windows-msvc --manifest-path "$sourceRoot/Cargo.toml" -p horizon-core -p horizon-prepare --lib
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Run packaged Windows executables without game assets
+        shell: pwsh
+        run: ./scripts/smoke_windows.ps1 -PackagePath 'dist/windows-x86_64/Herspers-Minecraft'
+      - name: Upload Windows package
+        uses: actions/upload-artifact@v4
+        with:
+          name: Herspers-Minecraft-Windows-x64
+          path: dist/windows-x86_64/*.zip
+          if-no-files-found: error

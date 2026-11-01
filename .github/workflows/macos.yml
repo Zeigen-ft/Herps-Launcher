@@ -4,9 +4,13 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/macos.yml'
-      - 'scripts/**'
-      - 'packaging/**'
-      - 'tools/**'
+      - 'scripts/build_macos.sh'
+      - 'scripts/smoke_macos.sh'
+      - 'packaging/launch.command'
+      - 'packaging/prepare.command'
+      - 'packaging/launcher.c'
+      - 'tools/fetch_upstream.py'
+      - 'tools/package_macos.py'
       - 'upstream.lock.json'
   workflow_dispatch:
 permissions:
