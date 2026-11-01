@@ -1,0 +1,86 @@
+{
+  "file": "Horizon-Android-0.7.6-armeabi-v7a.apk",
+  "size_bytes": 30309690,
+  "sha256": "f432e75cffb7f8ca147fe325e51aa410038c8257c38a822277ed9762ba3127db",
+  "analysis": "Static ZIP/ELF inspection only; no APK code executed",
+  "native_libraries": [
+    {
+      "format": "ELF",
+      "bits": 32,
+      "endianness": "little",
+      "machine_id": 40,
+      "machine": "ARM",
+      "needed_libraries": [
+        "libdl.so",
+        "libandroid.so",
+        "liblog.so",
+        "libaaudio.so",
+        "libm.so",
+        "libc.so"
+      ],
+      "path": "lib/armeabi-v7a/libhorizon_android.so",
+      "size_bytes": 36534256,
+      "sha256": "626949e5baf5e2100e09a9d86c76551c2fbc5a5b0a7dbdc3194d88dd50b699c9",
+      "embedded_diagnostic": {
+        "version": "0.7.6",
+        "source_commit_prefix": "7301f6fdd7f4",
+        "offset": 3180255,
+        "evidence_label": "pidversion\u2026phase"
+      }
+    }
+  ],
+  "embedded_source_references": [
+    {
+      "url": "https://github.com/Vasysik/horizon-android",
+      "library": "lib/armeabi-v7a/libhorizon_android.so",
+      "offset": 3297702
+    },
+    {
+      "url": "https://github.com/horizon-rust/horizon/blob/main/docs/play-with-friends.md",
+      "library": "lib/armeabi-v7a/libhorizon_android.so",
+      "offset": 3250200
+    }
+  ],
+  "entry_count": 11,
+  "dex_files": [
+    "classes.dex"
+  ],
+  "license": {
+    "path": "assets/LICENSE.txt",
+    "sha256": "b4b374ae9d0f2d8f7be35c6783e41327431da3b5662605da9ba31493630621df",
+    "headings": [],
+    "first_line": "MIT License",
+    "copyright_lines": [
+      "Copyright (c) 2026 Ludovic Marie and the Horizon contributors"
+    ]
+  },
+  "third_party_notices": {
+    "path": "assets/THIRD_PARTY_NOTICES.md",
+    "sha256": "9136f30ba2e2e161ea4c8e57b78fb0abc206629a64863161707ba81d18da137e",
+    "headings": [
+      "Third-party notices",
+      "wgpu-hal",
+      "Pixelify Sans",
+      "Pixelarticons",
+      "winit",
+      "AMD FidelityFX SDK (FSR 3.1 frame generation)",
+      "Mod loader logos",
+      "Sign in with Microsoft"
+    ],
+    "first_line": "# Third-party notices",
+    "copyright_lines": []
+  },
+  "engine_archive": {
+    "path": "assets/engine-data.zip",
+    "entry_count": 33,
+    "resource_metadata": {
+      "schema": 7,
+      "minecraft": "26.3",
+      "data_version": 5023,
+      "resource_files": 21488,
+      "client_sha256": "4508d006323f24fa02876310c192d739af56516eb259000ac50f0909a68c9a2d",
+      "server_sha256": "a362163eec5d1612d520772bc16e5b39c09e3b234fdc045f56bf544284ee8ae6",
+      "exporter_sha256": "145c943637ed177cc4ef8a85f2484da8afd164868e84a8463882feec1653a860"
+    }
+  }
+}

@@ -1,0 +1,10 @@
+.cache/
+dist/
+.local/
+__pycache__/
+*.pyc
+*.apk
+*.jar
+*.keystore
+*.jks
+.DS_Store
