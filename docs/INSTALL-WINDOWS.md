@@ -97,7 +97,7 @@ Read **HOSTING-TAILSCALE.txt** beside the launchers for server folders, backups 
 - **Host-Tailscale.cmd or Join-Tailscale.cmd is missing:** download the latest successful Windows Java **0.2.2** package and extract both ZIP layers. Older packages do not include these starters.
 - **Server still says online mode:** stop the old server, start **Host-Tailscale.cmd**, and use its newly printed address in **Join-Tailscale.cmd** on both PCs. See **HOSTING-TAILSCALE.txt** for further connection checks.
 - **No graphics device or driver failure:** update your GPU driver and retain the startup log when reporting the problem.
-- **`thread 'main' has overflowed its stack` at the menu:** early 0.2.0 packages used the Windows default main-thread stack. Current source builds reserve 16 MiB and packaging checks that value. To repair an existing unsigned package, close the game and place [repair_windows_stack.ps1](../scripts/repair_windows_stack.ps1) in the extracted application folder. Open PowerShell there and run:
+- **`thread 'main' has overflowed its stack` at the menu:** early 0.2.0 packages used the Windows default main-thread stack. Current source builds reserve 16 MiB and packaging checks that value. To repair an existing unsigned package, close the game and place [repair_windows_stack.ps1](https://github.com/Zeigen-ft/Herspers-Minecraft/blob/main/scripts/repair_windows_stack.ps1) in the extracted application folder. Open PowerShell there and run:
 
   ```powershell
   powershell -NoProfile -ExecutionPolicy Bypass -File .\repair_windows_stack.ps1 -PackagePath .
