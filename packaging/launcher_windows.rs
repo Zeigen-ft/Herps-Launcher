@@ -11,22 +11,30 @@ use std::path::{Path, PathBuf};
 use std::process::{self, Command, ExitStatus, Stdio};
 use std::time::{SystemTime, UNIX_EPOCH};
 
-const VERSION: &str = "0.2.1";
+mod private_server;
+
+const VERSION: &str = "0.2.2";
 const HELP: &str = "Herspers Minecraft for Windows\n\
 Usage: Herspers-Minecraft.exe [-- <game arguments>]\n\
        Herspers-Minecraft.exe --setup [server.jar] [minecraft-folder]\n\
+       Herspers-Minecraft.exe --host-tailscale [--server-dir PATH] [--port PORT] [--accept-eula]\n\
+       Herspers-Minecraft.exe --join-tailscale [100.x.y.z:PORT] [--name PLAYER]\n\
 First launch: install JDK 25, launch your own Minecraft Java Edition 26.3 once,\n\
 then run --setup and select or paste the matching official 26.3 server JAR path.\n\
 The default Minecraft folder is %APPDATA%\\.minecraft.\n\
 Game data and preparation caches are kept in %LOCALAPPDATA%\\Herspers Minecraft.\n\
 No Rust, Python, administrator access, or running Minecraft server is required.\n\
-Options: --help, --version, --setup\n";
+Host-Tailscale.cmd starts your own private server on your Tailscale IPv4 address.\n\
+Join-Tailscale.cmd asks for the host's address and your player name. Both PCs need Tailscale access.\n\
+Options: --help, --version, --setup, --host-tailscale, --join-tailscale\n";
 
 #[derive(Debug, PartialEq, Eq)]
 enum Action {
     Help,
     Version,
     Setup { server: Option<PathBuf>, minecraft: Option<PathBuf> },
+    HostPrivate { directory: Option<PathBuf>, port: u16, accept_eula: bool },
+    JoinPrivate { address: Option<String>, name: Option<String> },
     Play(Vec<OsString>),
 }
 
@@ -61,11 +69,58 @@ fn parse_args(mut args: Vec<OsString>) -> Result<Action> {
                 minecraft: args.get(2).map(PathBuf::from),
             })
         }
+        Some(first) if first == "--host-tailscale" => {
+            let (mut directory, mut port, mut accept_eula) = (None, 25565, false);
+            let mut remaining = args.into_iter().skip(1);
+            while let Some(option) = remaining.next() {
+                if option == "--server-dir" {
+                    directory = Some(PathBuf::from(remaining.next().ok_or_else(|| usage("--server-dir needs a folder"))?));
+                } else if option == "--port" {
+                    port = remaining.next().and_then(|v| v.to_str().and_then(|s| s.parse::<u16>().ok()))
+                        .filter(|p| *p != 0).ok_or_else(|| usage("--port needs a number from 1 to 65535"))?;
+                } else if option == "--accept-eula" {
+                    accept_eula = true;
+                } else {
+                    return Err(usage("Unknown private hosting option; use --help"));
+                }
+            }
+            Ok(Action::HostPrivate { directory, port, accept_eula })
+        }
+        Some(first) if first == "--join-tailscale" => {
+            let (mut address, mut name) = (None, None);
+            let mut remaining = args.into_iter().skip(1);
+            while let Some(option) = remaining.next() {
+                if option == "--name" {
+                    let value = remaining.next().and_then(|v| v.into_string().ok())
+                        .ok_or_else(|| usage("--name needs a player name"))?;
+                    validate_player_name(&value)?;
+                    name = Some(value);
+                } else if address.is_none() && !option.to_string_lossy().starts_with('-') {
+                    let value = option.into_string().map_err(|_| usage("Enter a Tailscale IPv4 address"))?;
+                    private_server::parse_address(&value).map_err(usage)?;
+                    address = Some(value);
+                } else {
+                    return Err(usage("Usage: --join-tailscale [100.x.y.z:PORT] [--name PLAYER]"));
+                }
+            }
+            Ok(Action::JoinPrivate { address, name })
+        }
         _ => {
             if args.first().is_some_and(|a| a == "--") { args.remove(0); }
             Ok(Action::Play(args))
         }
     }
+}
+
+fn usage(message: impl Into<String>) -> Failure {
+    Failure { message: message.into(), code: 2 }
+}
+
+fn validate_player_name(name: &str) -> Result<()> {
+    if !(3..=16).contains(&name.len()) || !name.bytes().all(|c| c.is_ascii_alphanumeric() || c == b'_') {
+        return Err(usage("Use a player name of 3-16 letters, numbers or underscores. Each friend needs a different name."));
+    }
+    Ok(())
 }
 
 fn required_env_path(name: &str) -> Result<PathBuf> {
@@ -224,7 +279,7 @@ fn setup(bundle: &Path, support: &Path, server: PathBuf, minecraft: PathBuf) -> 
     Ok(0)
 }
 
-fn play(bundle: &Path, support: &Path, arguments: &[OsString]) -> Result<i32> {
+fn require_resources(bundle: &Path, support: &Path) -> Result<()> {
     let check = check_resources(bundle, support, &bundle.join("preparation"))?;
     if !check.success() {
         return Err(Failure {
@@ -232,6 +287,11 @@ fn play(bundle: &Path, support: &Path, arguments: &[OsString]) -> Result<i32> {
             code: child_code(check),
         });
     }
+    Ok(())
+}
+
+fn play(bundle: &Path, support: &Path, arguments: &[OsString]) -> Result<i32> {
+    require_resources(bundle, support)?;
     let game = support.join("game");
     fs::create_dir_all(&game)?;
     let log = support.join("logs/launcher.log");
@@ -249,6 +309,83 @@ fn play(bundle: &Path, support: &Path, arguments: &[OsString]) -> Result<i32> {
         return Err(Failure { message: format!("The game exited with an error. See {}", log.display()), code: child_code(status) });
     }
     Ok(child_code(status))
+}
+
+fn prompt_line(label: &str) -> Result<String> {
+    print!("{label}");
+    io::stdout().flush()?;
+    let mut line = String::new();
+    io::stdin().read_line(&mut line)?;
+    let text = line.trim().to_owned();
+    if text.is_empty() { return Err(usage("No response was entered.")); }
+    Ok(text)
+}
+
+fn private_server_command(bundle: &Path, support: &Path, directory: &Path) -> Result<Command> {
+    let mut command = Command::new(helper(bundle, "horizon-client.exe")?);
+    command.arg("--resources").arg(support.join("resources/26.3"))
+        .arg("--game-dir").arg(directory)
+        .arg("--home").arg(directory)
+        // Dedicated-server arguments must come last: the engine forwards all
+        // arguments after --dedicated directly to its server preflight.
+        .args(["--dedicated", "--nogui"]).current_dir(directory)
+        .env("HORIZON_HOME", directory)
+        .env("HORIZON_NO_AUDIO", "1")
+        .env("HORIZON_LAUNCHER_NO_SELF_UPDATE", "1");
+    Ok(command)
+}
+
+fn available_server_port(ip: std::net::Ipv4Addr, port: u16) -> Result<()> {
+    std::net::TcpListener::bind((ip, port)).map(drop).map_err(|error| Failure::new(format!(
+        "Cannot listen on {ip}:{port}: {error}.\nConnect Tailscale and stop any old server on this port first (type stop in its console), then retry."
+    )))
+}
+
+fn host_private(bundle: &Path, support: &Path, directory: Option<PathBuf>, port: u16, accept_eula: bool) -> Result<i32> {
+    require_resources(bundle, support)?;
+    let ip = private_server::tailscale_ipv4().map_err(Failure::new)?;
+    available_server_port(ip, port)?;
+    let directory = directory.unwrap_or_else(|| private_server::server_directory(support));
+    let directory = if directory.is_absolute() { directory } else { env::current_dir()?.join(directory) };
+    let report = private_server::configure(&directory, ip, port).map_err(Failure::new)?;
+    println!("Private server folder: {}", directory.display());
+    println!("Configuration: {}", report.config_path.display());
+    if let Some(path) = report.backup { println!("Original configuration backed up: {}", path.display()); }
+    if !report.eula_agreed {
+        println!("Read the Minecraft EULA: https://aka.ms/MinecraftEULA");
+        if !accept_eula {
+            let agreed = prompt_line("If you agree, type I AGREE and press Enter: ")?;
+            if !agreed.eq_ignore_ascii_case("I AGREE") {
+                return Err(Failure::new("Server not started. The EULA was not accepted."));
+            }
+        }
+        private_server::agree_eula(&directory).map_err(Failure::new)?;
+    }
+    println!("\nHOST AND FRIEND JOIN THIS ADDRESS: {ip}:{port}");
+    println!("This server listens only on Tailscale and uses private player names, without Microsoft account authentication.");
+    println!("Your friend must have access to this PC in Tailscale. Use Join-Tailscale.cmd on both PCs.");
+    println!("Keep this window open. Type stop here to save and shut down the server.\n");
+    let status = private_server_command(bundle, support, &directory)?.status()?;
+    if !status.success() {
+        return Err(Failure { message: format!("Private server exited with an error. Check the output above and {}", directory.join("logs/latest.log").display()), code: child_code(status) });
+    }
+    Ok(child_code(status))
+}
+
+fn join_private(bundle: &Path, support: &Path, address: Option<String>, name: Option<String>) -> Result<i32> {
+    let address = match address {
+        Some(value) => value,
+        None => prompt_line("Host's Tailscale IPv4 address (100.x.y.z:25565): ")?,
+    };
+    let (ip, port) = private_server::parse_address(&address).map_err(usage)?;
+    private_server::tailscale_ipv4().map_err(Failure::new)?;
+    let name = match name {
+        Some(value) => value,
+        None => prompt_line("Your player name (3-16 letters, numbers or underscores): ")?,
+    };
+    validate_player_name(&name)?;
+    let arguments = vec!["--server".into(), format!("{ip}:{port}").into(), "--name".into(), name.into()];
+    play(bundle, support, &arguments)
 }
 
 fn run() -> Result<i32> {
@@ -278,6 +415,8 @@ fn run() -> Result<i32> {
             setup(bundle, &support, server, minecraft)
         }
         Action::Play(arguments) => play(bundle, &support, &arguments),
+        Action::HostPrivate { directory, port, accept_eula } => host_private(bundle, &support, directory, port, accept_eula),
+        Action::JoinPrivate { address, name } => join_private(bundle, &support, address, name),
         _ => unreachable!(),
     }
 }
@@ -349,6 +488,69 @@ mod tests {
         assert_eq!(parse_args(vec!["--".into(), "--world".into(), "My World".into()]).unwrap(), Action::Play(vec!["--world".into(), "My World".into()]));
         assert_eq!(parse_args(vec!["--help".into()]).unwrap(), Action::Help);
         assert_eq!(parse_args(vec!["--version".into()]).unwrap(), Action::Version);
+    }
+
+    #[test]
+    fn private_host_options_keep_paths_literal_and_require_valid_ports() {
+        assert_eq!(parse_args(vec!["--host-tailscale".into()]).unwrap(), Action::HostPrivate {
+            directory: None, port: 25565, accept_eula: false,
+        });
+        let folder = PathBuf::from("C:\\My Server $(literal)\\世界");
+        assert_eq!(parse_args(vec!["--host-tailscale".into(), "--server-dir".into(), folder.clone().into_os_string(),
+            "--port".into(), "25566".into(), "--accept-eula".into()]).unwrap(), Action::HostPrivate {
+                directory: Some(folder), port: 25566, accept_eula: true,
+        });
+        for options in [vec!["--port", "0"], vec!["--port", "65536"], vec!["--port", "not-a-number"],
+            vec!["--server-dir"], vec!["--unknown"]] {
+            let mut args: Vec<OsString> = vec!["--host-tailscale".into()];
+            args.extend(options.into_iter().map(OsString::from));
+            assert_eq!(parse_args(args).unwrap_err().code, 2);
+        }
+    }
+
+    #[test]
+    fn private_join_needs_a_tailnet_address_and_unambiguous_player_name() {
+        assert_eq!(parse_args(vec!["--join-tailscale".into()]).unwrap(), Action::JoinPrivate { address: None, name: None });
+        assert_eq!(parse_args(vec!["--join-tailscale".into(), "100.80.12.34:25566".into(), "--name".into(), "Player_1".into()]).unwrap(),
+            Action::JoinPrivate { address: Some("100.80.12.34:25566".into()), name: Some("Player_1".into()) });
+        for address in ["8.8.8.8", "localhost", "0.0.0.0", "100.80.12.34:0"] {
+            assert_eq!(parse_args(vec!["--join-tailscale".into(), address.into()]).unwrap_err().code, 2);
+        }
+        for name in ["", "aa", "a name", "player;command", "a_name_more_than_16"] { assert!(validate_player_name(name).is_err()); }
+    }
+
+    #[test]
+    fn private_server_keeps_game_flags_before_dedicated_and_worlds_separate() {
+        let scratch = Scratch::new();
+        let bundle = scratch.bundle();
+        fs::create_dir(bundle.join("bin")).unwrap();
+        fs::write(bundle.join("bin/horizon-client.exe"), b"fixture, never executed").unwrap();
+        let support = scratch.0.join("support");
+        let server = scratch.0.join("server $(literal)");
+        fs::create_dir(&server).unwrap();
+        let command = private_server_command(&bundle, &support, &server).unwrap();
+        let args: Vec<_> = command.get_args().collect();
+        let split = args.iter().position(|a| *a == OsStr::new("--dedicated")).unwrap();
+        assert!(args[..split].windows(2).any(|p| p == [OsStr::new("--game-dir"), server.as_os_str()]));
+        assert!(args[..split].windows(2).any(|p| p == [OsStr::new("--home"), server.as_os_str()]));
+        assert!(args[..split].windows(2).any(|p| p == [OsStr::new("--resources"), support.join("resources/26.3").as_os_str()]));
+        assert_eq!(&args[split..], [OsStr::new("--dedicated"), OsStr::new("--nogui")]);
+        assert_eq!(command.get_current_dir(), Some(server.as_path()));
+        assert!(command.get_envs().any(|(key,value)| key == "HORIZON_NO_AUDIO" && value == Some(OsStr::new("1"))));
+        assert!(!support.join("game").exists());
+    }
+
+    #[test]
+    fn occupied_port_is_reported_without_interfering_with_the_other_server() {
+        let listener = std::net::TcpListener::bind((std::net::Ipv4Addr::LOCALHOST, 0)).unwrap();
+        let port = listener.local_addr().unwrap().port();
+        let failure = available_server_port(std::net::Ipv4Addr::LOCALHOST, port).unwrap_err();
+        assert!(failure.message.contains("stop any old server"));
+        assert_eq!(listener.local_addr().unwrap().port(), port);
+        drop(listener);
+        // Parallel fork/exec fixtures may briefly inherit the just-released
+        // socket on Unix; use a fresh free port for the success path.
+        assert!(available_server_port(std::net::Ipv4Addr::LOCALHOST, 0).is_ok());
     }
 
     #[test]

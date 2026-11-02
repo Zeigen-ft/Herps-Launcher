@@ -8,6 +8,7 @@ on:
       - 'scripts/smoke_windows.ps1'
       - 'scripts/repair_windows_stack.ps1'
       - 'packaging/launcher_windows.rs'
+      - 'packaging/private_server.rs'
       - 'packaging/windows/**'
       - 'tools/package_windows.py'
       - 'tools/package_macos.py'
@@ -15,7 +16,9 @@ on:
       - 'tests/test_windows_launcher.py'
       - 'tests/test_package_windows.py'
       - 'tests/test_windows_stack_repair.py'
+      - 'tests/fixtures/private_server_probe.rs'
       - 'docs/INSTALL-WINDOWS.md'
+      - 'docs/HOSTING-TAILSCALE.md'
       - 'upstream.lock.json'
       - 'LICENSE'
   workflow_dispatch:

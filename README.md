@@ -29,9 +29,11 @@ The Rust launcher is GPLv3; the separately distributed Cinnabar engine is **Poly
 - Interactive game launch, full resource preparation and gameplay are **not yet tested**. The Mac apps are not Apple-notarized; the Windows package is unsigned.
 - Windows version **0.2.0** passed native compilation, packaging, launcher tests, 161 engine/preparer library tests (3 ignored) and packaged-EXE startup checks in [run 41304885077](https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/41304885077).
 
-## Windows PC version 0.2.1
+## Windows PC version 0.2.2
 
-Version **0.2.1** addresses the reported `thread 'main' has overflowed its stack` startup crash by reserving a 16 MiB main-thread stack. Packaging rejects a game executable with a smaller reserve. Download **Herspers-Minecraft-Windows-x64** from a successful 0.2.1 run of [Build Windows PC app](https://github.com/Zeigen-ft/Herspers-Minecraft/actions/workflows/windows.yml); sign in to GitHub if asked, extract both ZIP layers, and keep the complete application folder together. It targets Windows 10/11 x64. Full gameplay remains unverified.
+Version **0.2.2** adds **Host-Tailscale.cmd** and **Join-Tailscale.cmd** for private multiplayer between remote PCs. The host starter discovers and binds only to your Tailscale address, backs up existing configuration, and sets private authentication mode so Herspers can join without its unimplemented Microsoft sign-in. See [the hosting guide](docs/HOSTING-TAILSCALE.md). The 16 MiB main-stack fix remains included.
+
+Download **Herspers-Minecraft-Windows-x64** from a successful 0.2.2 run of [Build Windows PC app](https://github.com/Zeigen-ft/Herspers-Minecraft/actions/workflows/windows.yml); sign in to GitHub if asked, extract both ZIP layers, and keep the complete application folder together. It targets Windows 10/11 x64. Full gameplay and an actual two-PC Tailscale session remain unverified.
 
 Owners of the earlier 0.2.0 package can use the [stack repair instructions](docs/INSTALL-WINDOWS.md#troubleshooting) without preparing resources again. The [earlier build evidence](docs/WINDOWS-BUILD-RESULTS.md) describes 0.2.0; it does not validate the revised binary.
 

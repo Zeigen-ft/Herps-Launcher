@@ -22,8 +22,8 @@ BINARIES = ("horizon-client.exe", "horizon-ctl.exe", "horizon-prepare.exe")
 LAUNCHER = "Herspers-Minecraft.exe"
 FOLDER = "Herspers-Minecraft"
 ARCHIVE = "herspers-minecraft-windows-x86_64.zip"
-HELPERS = ("Setup.cmd", "Play.cmd")
-PRODUCT_VERSION = "0.2.1"
+HELPERS = ("Setup.cmd", "Play.cmd", "Host-Tailscale.cmd", "Join-Tailscale.cmd")
+PRODUCT_VERSION = "0.2.2"
 MIN_CLIENT_STACK_RESERVE = 16 * 1024 * 1024
 
 # Policy adapted from Horizon's MIT-licensed tools/check_imports.py, copyright
@@ -162,6 +162,7 @@ def assemble(source: Path, binaries: Path, launcher: Path, output: Path,
     project_license = _common.checked_file(PROJECT / "LICENSE")
     project_lock = _common.checked_file(PROJECT / "upstream.lock.json")
     guide = _common.checked_file(PROJECT / "docs/INSTALL-WINDOWS.md")
+    hosting_guide = _common.checked_file(PROJECT / "docs/HOSTING-TAILSCALE.md")
     helpers = [_common.checked_file(PROJECT / "packaging/windows" / name) for name in HELPERS]
     destination, archive = output / FOLDER, output / ARCHIVE
     if destination.exists() or destination.is_symlink() or archive.exists():
@@ -178,6 +179,7 @@ def assemble(source: Path, binaries: Path, launcher: Path, output: Path,
         shutil.copy2(project_license, package / "LICENSE")
         shutil.copy2(project_lock, package / "upstream.lock.json")
         shutil.copy2(guide, package / "INSTALL-WINDOWS.txt")
+        shutil.copy2(hosting_guide, package / "HOSTING-TAILSCALE.txt")
         for helper in helpers:
             shutil.copy2(helper, package / helper.name)
         preparation_hash = hashlib.sha256()

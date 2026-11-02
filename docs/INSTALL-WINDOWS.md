@@ -1,4 +1,4 @@
-# Install Herspers Minecraft 0.2.1 on a Windows PC
+# Install Herspers Minecraft 0.2.2 on a Windows PC
 
 This version targets **Windows 10 or 11, 64-bit Intel/AMD PCs**. It is not an Android APK. Windows on ARM and 32-bit Windows are not supported by this package.
 
@@ -6,7 +6,7 @@ The game needs a graphics driver supporting DirectX 12, Vulkan or the engine's O
 
 ## 1. Download and extract
 
-Open [Actions → Build Windows PC app](https://github.com/Zeigen-ft/Herspers-Minecraft/actions/workflows/windows.yml) and select a successful run for **0.2.1**, then download **Herspers-Minecraft-Windows-x64**. Sign in to GitHub if needed. Version 0.2.1 reserves a larger main-thread stack to address the startup stack overflow reported with the earlier 0.2.0 package. A successful build does not establish full gameplay readiness.
+Open [Actions → Build Windows PC app](https://github.com/Zeigen-ft/Herspers-Minecraft/actions/workflows/windows.yml) and select a successful run for **0.2.2**, then download **Herspers-Minecraft-Windows-x64**. Sign in to GitHub if needed. Version 0.2.2 adds private Tailscale host/join starters and keeps the 16 MiB stack fix. A successful build does not establish full gameplay readiness.
 
 Extract the downloaded artifact ZIP, then extract the application ZIP inside it. Keep the entire **Herspers-Minecraft** folder together, including `bin`, `preparation`, `Setup.cmd` and `Play.cmd`. For example, keep it in your Documents or Games folder. Do not run individual files from inside the ZIP.
 
@@ -61,6 +61,8 @@ Use the installation folder containing the version files and assets, rather than
 After setup succeeds, double-click **Play.cmd** or **Herspers-Minecraft.exe**. Keep the `bin` and `preparation` folders beside the launcher.
 
 The launcher checks resources before starting the game. If resources are missing, run **Setup.cmd** first. The bundled launcher does not implement a new Microsoft account manager; online server/account compatibility requires separate testing.
+
+For private multiplayer, use **Host-Tailscale.cmd** on the host and **Join-Tailscale.cmd** on both players' PCs. Follow [the Tailscale hosting guide](HOSTING-TAILSCALE.md); the host's printed Tailscale address is used by everyone, including the host.
 
 Game data stays under:
 

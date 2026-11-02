@@ -45,11 +45,21 @@ class WindowsLauncherTests(unittest.TestCase):
         self.assertIn("--setup", result.stdout)
         self.assertIn("JDK 25", result.stdout)
         self.assertIn("%LOCALAPPDATA%", result.stdout)
+        self.assertIn("--host-tailscale", result.stdout)
+        self.assertIn("--join-tailscale", result.stdout)
 
     def test_project_version_is_available_without_game_assets(self):
         result = subprocess.run([str(self.executable), "--version"], capture_output=True, text=True, timeout=15)
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(result.stdout.strip(), "Herspers Minecraft 0.2.1")
+        self.assertEqual(result.stdout.strip(), "Herspers Minecraft 0.2.2")
+
+    def test_private_helpers_reject_public_addresses_and_invalid_names_before_starting(self):
+        for arguments in (["--join-tailscale", "8.8.8.8"],
+                          ["--join-tailscale", "100.64.1.2", "--name", "name with spaces"],
+                          ["--host-tailscale", "--port", "0"]):
+            with self.subTest(arguments=arguments):
+                result = subprocess.run([str(self.executable), *arguments], capture_output=True, text=True, timeout=15)
+                self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
 
 
 if __name__ == "__main__":

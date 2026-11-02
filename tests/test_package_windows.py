@@ -107,6 +107,7 @@ class WindowsPackagingTests(unittest.TestCase):
         self.project = self.root / "project"
         (self.project / "docs").mkdir(parents=True)
         (self.project / "docs/INSTALL-WINDOWS.md").write_text("# Install\nRun --setup first.\n")
+        (self.project / "docs/HOSTING-TAILSCALE.md").write_text("# Private Tailscale hosting\nRun Host-Tailscale.cmd.\n")
         helpers = self.project / "packaging/windows"
         helpers.mkdir(parents=True)
         for name in package.HELPERS:
@@ -141,7 +142,7 @@ class WindowsPackagingTests(unittest.TestCase):
         self.assertTrue(metadata["stage_only"])
         self.assertFalse(metadata["windows_runtime_tested"])
         self.assertFalse(metadata["game_resources_included"])
-        self.assertEqual(metadata["product_version"], "0.2.1")
+        self.assertEqual(metadata["product_version"], "0.2.2")
         self.assertIn("STAGED ONLY", (root / "BUILD-STATUS.txt").read_text())
 
     def test_missing_binary_fails_before_creating_output(self):
@@ -203,6 +204,9 @@ class WindowsPackagingTests(unittest.TestCase):
             self.assertIn("Herspers-Minecraft/INSTALL-WINDOWS.txt", zipped.namelist())
             self.assertIn("Herspers-Minecraft/Setup.cmd", zipped.namelist())
             self.assertIn("Herspers-Minecraft/Play.cmd", zipped.namelist())
+            self.assertIn("Herspers-Minecraft/Host-Tailscale.cmd", zipped.namelist())
+            self.assertIn("Herspers-Minecraft/Join-Tailscale.cmd", zipped.namelist())
+            self.assertIn("Herspers-Minecraft/HOSTING-TAILSCALE.txt", zipped.namelist())
 
 
 if __name__ == "__main__":

@@ -36,7 +36,11 @@ try {
     $help = Invoke-Probe $launcher @('--help')
     if (-not $help.Contains('--setup')) { throw 'Packaged launcher help is incomplete.' }
     $version = Invoke-Probe $launcher @('--version')
-    if ($version.Trim() -ne 'Herspers Minecraft 0.2.1') { throw "Unexpected launcher version: $version" }
+    if ($version.Trim() -ne 'Herspers Minecraft 0.2.2') { throw "Unexpected launcher version: $version" }
+    if (-not $help.Contains('--host-tailscale') -or -not $help.Contains('--join-tailscale')) { throw 'Private multiplayer help is missing.' }
+    foreach ($name in @('Host-Tailscale.cmd', 'Join-Tailscale.cmd', 'HOSTING-TAILSCALE.txt')) {
+        if (-not (Test-Path (Join-Path $package $name))) { throw "Missing private multiplayer helper: $name" }
+    }
     $clientHelp = Invoke-Probe (Join-Path $bin 'horizon-client.exe') @('--help')
     if (-not $clientHelp.Contains('--resources')) { throw 'Client help is incomplete.' }
     $api = Invoke-Probe (Join-Path $bin 'horizon-client.exe') @('--launch-api') | ConvertFrom-Json
@@ -52,12 +56,30 @@ try {
     $support = Join-Path $env:LOCALAPPDATA 'Herspers Minecraft'
     if (-not (Test-Path (Join-Path $support 'logs/resources-check.log'))) { throw 'Resource check log was not written.' }
     if (Test-Path (Join-Path $support 'game')) { throw 'The game was started without resources.' }
+    # Validate the native helper's output with the real engine's properties
+    # parser, without accepting an EULA, opening a port, or needing game assets.
+    $probe = Join-Path $scratch 'private-config-probe.exe'
+    $fixture = Join-Path (Split-Path -Parent $PSScriptRoot) 'tests/fixtures/private_server_probe.rs'
+    Invoke-Probe 'rustc' @('+1.95.0', '--edition=2021', $fixture, '-o', $probe) | Out-Null
+    $server = Join-Path $scratch 'private-server'
+    Invoke-Probe $probe @($server) | Out-Null
+    Invoke-Probe (Join-Path $bin 'horizon-client.exe') @('--game-dir', $server, '--home', $server, '--dedicated', '--initSettings') | Out-Null
+    $properties = Get-Content -Raw (Join-Path $server 'server.properties')
+    if ($properties -notmatch '(?m)^online-mode=false\r?$' -or $properties -notmatch '(?m)^server-ip=100\.64\.1\.2\r?$') {
+        throw 'The real server did not preserve private authentication and Tailscale-only binding.'
+    }
+    if ((Get-Content -Raw (Join-Path $server 'eula.txt')) -match '(?m)^eula=true\r?$') { throw 'The probe unexpectedly accepted an EULA.' }
+    Invoke-Probe $probe @($server) | Out-Null
+    if ((Get-Content -Raw (Join-Path $server 'server.properties')) -ne $properties) {
+        throw 'The private helper rewrote an already-correct native server configuration.'
+    }
     $report = @{
         native_executables_started = $true
         launcher_version = $version.Trim()
         launch_api = $api.launch_api
         minecraft = $api.minecraft
         missing_resources_expected_exit = 1
+        tailscale_config_real_engine_parsed = $true
         game_rendering_tested = $false
         gameplay_tested = $false
     }
