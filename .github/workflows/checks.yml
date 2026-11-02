@@ -16,7 +16,22 @@ jobs:
           python-version: '3.12'
       - name: Install pinned launcher Rust
         run: rustup toolchain install 1.95.0 --profile minimal
-      - run: python3 -m unittest discover -s tests -v
+      - name: Portable tooling tests
+        shell: bash
+        run: |
+          set +e
+          python3 -m unittest discover -s tests -v > tooling-tests.log 2>&1
+          result=$?
+          cat tooling-tests.log
+          if [ "$result" -ne 0 ]; then
+            python3 - <<'PY'
+          from pathlib import Path
+          text = '\n'.join(Path('tooling-tests.log').read_text(errors='replace').splitlines()[-120:])
+          text = text.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A')
+          print('::error title=Portable tooling tests failed::' + text)
+          PY
+          fi
+          exit "$result"
       - run: for script in scripts/*.sh packaging/*.command; do bash -n "$script"; done
   windows-tooling:
     runs-on: windows-latest
