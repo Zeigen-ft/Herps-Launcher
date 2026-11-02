@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 import platform
+import shlex
 import subprocess
 import sys
 
@@ -172,6 +173,9 @@ class Window(QMainWindow):
         self.summary = QLabel()
         self.summary.setWordWrap(True)
         box.addWidget(self.summary)
+        self.home_tail = QLabel("Tailscale · status not checked")
+        self.home_tail.setObjectName("muted")
+        box.addWidget(self.home_tail)
         self.play = self.button(box, "PLAY  →", self.play_game)
         self.play.setObjectName("play")
         self.button(box, "Clean startup · isolated game folder, no mods or shader", lambda: self.play_game(clean=True))
@@ -343,7 +347,9 @@ class Window(QMainWindow):
         box.addWidget(QLabel("Keep the hosting console open; type stop there to save the world.\nThe launcher does not change server authentication or existing server configuration."))
 
     def tail_result(self, result):
-        self.tail_status.setText(("CONNECTED · " if result["connected"] else "OFFLINE · ") + result["message"] + " · " + ", ".join(result.get("ips", [])))
+        status = ("CONNECTED · " if result["connected"] else "OFFLINE · ") + result["message"] + " · " + ", ".join(result.get("ips", []))
+        self.tail_status.setText(status)
+        self.home_tail.setText("Tailscale · " + status)
 
     def pick_server(self, index):
         if 0 <= index < len(self.launcher.config["servers"]):
@@ -371,13 +377,22 @@ class Window(QMainWindow):
         self.play_game(server=self.address.text(), name=self.player_name.text())
 
     def host(self):
+        self.require_idle()
         installation = self.launcher.installation()
         if platform.system() == "Windows":
             # Launch the existing tested host entrypoint with its interactive EULA prompt.
             subprocess.Popen([str(installation.root / "Herspers-Minecraft.exe"), "--host-tailscale"],
                              creationflags=subprocess.CREATE_NEW_CONSOLE)
         else:
-            raise ValueError("This installation's tested hosting console is Windows-only. Join a Windows host here, or use your existing separately configured Mac server. macOS hosting integration remains outstanding.")
+            helper = (Path(sys._MEIPASS) / "herps-host") if getattr(sys, "frozen", False) else Path(__file__).resolve().parents[1] / ".cache/herps-host"
+            if not helper.is_file():
+                raise ValueError("Build the native herps-host helper with tools/package_herps.py before hosting on macOS")
+            script = self.launcher.state / "Host-Tailscale.command"
+            from .core import atomic
+            args = [str(helper), str(installation.binary("horizon-client")), str(self.launcher.support / "resources/26.3"), str(self.launcher.support)]
+            atomic(script, ("#!/bin/bash\n" + shlex.join(args) + "\nresult=$?\nread -r -p 'Press Return to close this console. '\nexit \"$result\"\n").encode())
+            script.chmod(0o700)
+            subprocess.Popen(["/usr/bin/open", "-a", "Terminal", str(script)])
 
     def settings_page(self):
         box = self.page("Settings", "Keep your game installation and data separate. Default profile reuses existing Herspers saves; new profiles start with their own game folders.")
@@ -406,6 +421,7 @@ class Window(QMainWindow):
         self.button(box, "Open mod folder", lambda: self.open_path(self.launcher.game / "horizon-mods"))
         self.button(box, "Restore original graphics settings", self.restore_settings)
         self.button(box, "Switch / update game installation…", self.browse_installation)
+        self.button(box, "Roll back to previous installation", self.rollback_installation)
         self.details = QLabel()
         self.details.setWordWrap(True)
         box.addWidget(self.details)
@@ -430,6 +446,18 @@ class Window(QMainWindow):
         self.launcher.config.update(installation=str(installation.root), native_source=self.source.text())
         self.launcher.save_graphics(self.width.value(), self.height.value(), self.distance.value(), self.backend.currentText())
         self.launcher.save()
+        self.refresh()
+
+    def rollback_installation(self):
+        self.require_idle()
+        previous = self.launcher.config.get("previous_installation")
+        if not previous:
+            raise ValueError("No previous installation recorded")
+        from .core import Installation
+        Installation.inspect(Path(previous))
+        self.launcher.config["previous_installation"], self.launcher.config["installation"] = self.launcher.config["installation"], previous
+        self.launcher.save()
+        self.installation_path.setText(previous)
         self.refresh()
 
     def validate_installation(self):

@@ -98,7 +98,7 @@ def safe_name(value: str) -> str:
 
 def archive(path: Path, limit=64 << 20) -> dict[str, bytes]:
     """Read, never execute/extract, bounded regular files with portable paths."""
-    files, total = {}, 0
+    files, total, seen = {}, 0, set()
     with zipfile.ZipFile(path) as zipped:
         if len(zipped.infolist()) > 20000:
             raise ValueError("Archive has too many entries")
@@ -110,9 +110,13 @@ def archive(path: Path, limit=64 << 20) -> dict[str, bytes]:
                 raise ValueError(f"Unsafe archive member: {name}")
             if info.is_dir():
                 continue
+            reserved = {"con", "prn", "aux", "nul", *[f"{p}{n}" for p in ("com", "lpt") for n in range(1, 10)]}
+            if any(p.endswith((".", " ")) or p.split(".")[0].lower() in reserved or "\0" in p for p in name.split("/")):
+                raise ValueError("Archive contains a nonportable file name")
             total += info.file_size
-            if total > limit or name.casefold() in {n.casefold() for n in files}:
+            if total > limit or name.casefold() in seen:
                 raise ValueError("Archive is too large or has duplicate names")
+            seen.add(name.casefold())
             files[name] = zipped.read(info)
     return files
 
@@ -159,9 +163,6 @@ def inspect_mod(path: Path) -> Mod:
         if (source.get("mod", {}).get("id") != m["id"] or source["mod"].get("version") != m["version"] or
                 source.get("compatibility", {}).get("horizon_revision") != REVISION):
             raise ValueError("Native source and manifest identities differ")
-        # Advanced post-build programs need their own integration; never silently omit one.
-        if "post_build" in source or "post-build" in source:
-            raise ValueError("This mod requires post-build programs, which are not supported yet")
     else:
         if m.get("api") not in ("0.1", "0.2", "0.3") or not m.get("name"):
             raise ValueError("Unsupported Horizon mod API or missing name")
@@ -262,8 +263,9 @@ class Launcher:
         if not self.config["installation"]:
             candidates = [Path("/Applications/Herspers Minecraft.app")]
             if getattr(sys, "frozen", False):
-                candidates += [Path(sys.executable).parent / "game/Herspers-Minecraft",
-                               Path(sys._MEIPASS) / "game/Herspers Minecraft.app"]
+                candidates += [Path(sys.executable).parent / "game/Herspers-Minecraft"]
+                if platform.system() == "Darwin":
+                    candidates += [Path(sys.executable).parents[3] / "Herspers Minecraft.app"]
             for candidate in candidates:
                 if candidate.exists():
                     try:
@@ -272,6 +274,15 @@ class Launcher:
                         break
                     except (OSError, ValueError, KeyError):
                         continue
+        if not self.config.get("native_source") and getattr(sys, "frozen", False):
+            locations = [Path(sys.executable).parent / "engine-source"]
+            if platform.system() == "Darwin":
+                locations += [Path(sys.executable).parents[3] / "engine-source"]
+            for source in locations:
+                if (source / ".herspers-prepared.json").is_file():
+                    self.config["native_source"] = str(source)
+                    self.save()
+                    break
 
     def save(self):
         json_write(self.config_file, self.config)
@@ -359,7 +370,7 @@ class Launcher:
         update_pairs(self.game / "horizon-graphics.txt", {"pickedShaderPack": name})
 
     def build_key(self, mods):
-        return hashlib.sha256(json.dumps({"revision": REVISION, "target": target(),
+        return hashlib.sha256(json.dumps({"revision": REVISION, "target": target(), "engine": self.installation().metadata.get("engine_source"),
             "mods": [(m.id, digest(m.path)) for m in mods]}, sort_keys=True).encode()).hexdigest()
 
     def native_binary(self):
@@ -466,6 +477,9 @@ def build_native(launcher: Launcher, source: Path, trusted=False, progress=lambd
     stamp = read_json(source / ".herspers-prepared.json")
     if stamp.get("upstream", {}).get("commit") != REVISION:
         raise ValueError("Native build source is not the pinned, patched Herspers engine")
+    engine = launcher.installation().metadata.get("engine_source", {})
+    if stamp.get("tree_sha256") != engine.get("prepared_tree_sha256") or stamp.get("patches_sha256") != engine.get("patches_sha256"):
+        raise ValueError("Native source patches do not match the selected installation; use the source shipped with that package")
     # Match prepare_upstream.py's digest, so edited sources cannot masquerade as the clean cache.
     tree_hash = hashlib.sha256()
     for folder, dirs, files in os.walk(source):
@@ -487,17 +501,19 @@ def build_native(launcher: Launcher, source: Path, trusted=False, progress=lambd
     build.parent.mkdir(exist_ok=True)
     launcher.acquire()
     try:
+        build.mkdir(exist_ok=True)
+        (build / "receipt.json").unlink(missing_ok=True)
         # Fresh work output on every attempt; cache target artifacts independently.
         work = Path(tempfile.mkdtemp(prefix="build-", dir=build.parent))
         env = os.environ.copy()
-        env.update(HORIZON_VERSION="0.7.6", CARGO_BUILD_JOBS="3", CARGO_TARGET_DIR=str(build.parent / "target"))
+        env.update(HORIZON_VERSION="0.7.6", RUSTUP_TOOLCHAIN=RUST, CARGO_BUILD_JOBS="3", CARGO_TARGET_DIR=str(build.parent / "target"))
         if platform.system() == "Windows":
             env["RUSTFLAGS"] = "-C target-feature=+crt-static -C link-arg=/STACK:16777216"
         log_path = launcher.state / "native-build.log"
         with log_path.open("w", encoding="utf-8") as log:
-            def run(args):
+            def run(args, cwd=None, extra_env=None):
                 progress("Running " + " ".join(map(str, args)))
-                with subprocess.Popen(list(map(str, args)), cwd=work, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                with subprocess.Popen(list(map(str, args)), cwd=cwd or work, env={**env, **(extra_env or {})}, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                                       text=True, encoding="utf-8", errors="replace", creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0)) as child:
                     for line in child.stdout:
                         log.write(line)
@@ -516,12 +532,36 @@ def build_native(launcher: Launcher, source: Path, trusted=False, progress=lambd
             tool = tool_root / "bin" / ("horizon-mixins.exe" if platform.system() == "Windows" else "horizon-mixins")
             stage = work / "engine"
             run([tool, "apply", "--workspace", source, "--mods", incoming, "--out", stage])
+            def locked_packages(path):
+                return {(p["name"], p["version"], p["source"], p.get("checksum"))
+                        for p in tomllib.loads(path.read_text(encoding="utf-8"))["package"] if "source" in p}
+            if not locked_packages(stage / "Cargo.lock") <= locked_packages(source / "Cargo.lock"):
+                raise ValueError("Native mod dependencies differ from Horizon's pinned Cargo.lock")
             run(["cargo", "+" + RUST, "build", "--locked", "--profile", "fast", "--manifest-path", stage / "Cargo.toml",
                  "--target", host_target, "-p", "horizon-client", "--bin", "horizon-client", "--features", "horizon-client/mods"])
             filename = "horizon-client.exe" if platform.system() == "Windows" else "horizon-client"
             binary = Path(env["CARGO_TARGET_DIR"]) / host_target / "fast" / filename
             build.mkdir(exist_ok=True)
             shutil.copy2(binary, build / filename)
+            if (stage / "native-data").exists():
+                shutil.copytree(stage / "native-data", build / "native-data", dirs_exist_ok=True)
+            post_file = stage / "native-post-build.json"
+            for step in read_json(post_file) if post_file.exists() else []:
+                if not ID.fullmatch(step["mod"]) or step["mod"] not in {m.id for m in mods}:
+                    raise ValueError("Invalid post-build mod identity")
+                for key_name in ("package", "bin"):
+                    if not re.fullmatch(r"[A-Za-z0-9_-]+", step[key_name]):
+                        raise ValueError("Invalid post-build crate/binary name")
+                run(["cargo", "+" + RUST, "build", "--locked", "--profile", "fast", "--manifest-path", stage / "Cargo.toml",
+                     "--target", host_target, "-p", step["package"], "--bin", step["bin"]])
+                program = Path(env["CARGO_TARGET_DIR"]) / host_target / "fast" / (step["bin"] + (".exe" if platform.system() == "Windows" else ""))
+                data = build / "native-data" / step["mod"]
+                cache = launcher.state / "native-cache" / step["mod"]
+                data.mkdir(parents=True, exist_ok=True)
+                cache.mkdir(parents=True, exist_ok=True)
+                run([program, *step.get("args", [])], cwd=build, extra_env={"HORIZON_NATIVE_MOD": step["mod"],
+                    "HORIZON_NATIVE_VERSION_DIR": str(build), "HORIZON_NATIVE_DATA_DIR": str(data), "HORIZON_NATIVE_CACHE_DIR": str(cache),
+                    "HORIZON_NATIVE_BUNDLE_DATA_DIR": str(stage / "native-data" / step["mod"])})
             json_write(build / "receipt.json", {"target": host_target, "revision": REVISION, "sha256": digest(build / filename)})
             progress("Native build ready. Clean installation preserved.")
     finally:

@@ -1,0 +1,80 @@
+name: Build Herps Launcher
+on:
+  workflow_dispatch:
+  pull_request:
+    paths: ['herps_launcher/**', 'tools/package_herps.py', 'packaging/herps*', 'tests/test_herps*', '.github/workflows/herps-launcher.yml']
+  push:
+    branches: [main, feature/herps-launcher-cross-platform]
+    paths: ['herps_launcher/**', 'tools/package_herps.py', 'packaging/herps*', 'tests/test_herps*', '.github/workflows/herps-launcher.yml', 'patches/**', 'upstream.lock.json']
+permissions:
+  contents: read
+jobs:
+  desktop:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            arch: x86_64
+            python_arch: x64
+          - os: macos-15
+            arch: arm64
+            python_arch: arm64
+          - os: macos-15-intel
+            arch: x86_64
+            python_arch: x64
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 100
+    env:
+      CARGO_BUILD_JOBS: '3'
+      QT_QPA_PLATFORM: offscreen
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          architecture: ${{ matrix.python_arch }}
+      - name: Install launcher tools
+        run: python -m pip install -r herps_launcher/requirements.txt
+      - name: Install pinned engine toolchain
+        run: rustup toolchain install 1.95.0 --profile minimal
+      - name: Portable and desktop integration tests
+        run: python -m unittest discover -s tests -v
+      - name: Build Windows game
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./scripts/build_windows.ps1
+      - name: Build macOS game
+        if: runner.os == 'macOS'
+        shell: bash
+        run: bash scripts/build_macos.sh '${{ matrix.arch }}'
+      - name: Package Windows launcher with game and source
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $sourceRoot = python tools/prepare_upstream.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python tools/package_herps.py --game dist/windows-x86_64/Herspers-Minecraft --source "$sourceRoot"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $compiler = 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe'
+          if (-not (Test-Path $compiler)) { throw 'Inno Setup 6 is required for installer generation' }
+          $payload = Get-ChildItem dist/herps -Directory | Where-Object Name -Like 'herps-*' | Select-Object -First 1
+          & $compiler "/DPayload=$($payload.FullName)" "/DOutput=$((Resolve-Path dist/herps).Path)" packaging/herps-windows.iss
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Package macOS launcher and game DMG
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          source_dir=$(python tools/prepare_upstream.py)
+          python tools/package_herps.py --game 'dist/${{ matrix.arch }}/Herspers Minecraft.app' --source "$source_dir"
+      - name: Upload separate versioned platform packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: Herps-Launcher-0.1.0-${{ runner.os }}-${{ matrix.arch }}
+          path: |
+            dist/herps/*.zip
+            dist/herps/*.dmg
+            dist/herps/*.exe
+          if-no-files-found: error

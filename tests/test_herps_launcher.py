@@ -145,7 +145,7 @@ class LauncherTests(unittest.TestCase):
     def test_inspection_rejects_bedrock_staging_and_changed_binaries(self):
         install = self.fixture_install()
         metadata = install.assets / "build-metadata.json"
-        data = read_json_for_test = json.loads(metadata.read_text())
+        data = json.loads(metadata.read_text())
         data["binaries"] = {"horizon-client.exe": {"sha256": "0" * 64}}
         json_write(metadata, data)
         with self.assertRaises(ValueError):
