@@ -2,11 +2,15 @@
 
 [Native Windows build 41390658796](https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/41390658796) succeeded for source commit [`7fe369fc7a0b930f9c3e0663de6904db366964ec`](https://github.com/Zeigen-ft/Herspers-Minecraft/commit/7fe369fc7a0b930f9c3e0663de6904db366964ec).
 
+The instruction refresh in commit [`2ce482044537cd92b752eb80e24603a0cc2e6a7c`](https://github.com/Zeigen-ft/Herspers-Minecraft/commit/2ce482044537cd92b752eb80e24603a0cc2e6a7c) also passed [native Windows build 41392994103](https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/41392994103). This changes the README and bundled instructions while keeping the 0.2.2 launcher and engine source unchanged. The full Windows workflow, including tests, packaging and startup/configuration checks, succeeded again.
+
 ## Download
 
-Open [the successful run's Artifacts section](https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/41390658796#artifacts) and download **Herspers-Minecraft-Windows-x64**. GitHub sign-in may be required. Extract the outer artifact ZIP and the inner application ZIP, keeping the complete application folder together.
+Open [the refreshed run's Artifacts section](https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/41392994103#artifacts) and download **Herspers-Minecraft-Windows-x64**. GitHub sign-in may be required. Extract the outer artifact ZIP and the inner application ZIP, keeping the complete application folder together.
 
 The package contains native **Herspers Minecraft 0.2.2**, the unchanged pinned Horizon 0.7.6 engine/preparer with the 16 MiB main-stack setting, **Host-Tailscale.cmd**, **Join-Tailscale.cmd**, and **HOSTING-TAILSCALE.txt**. Previously prepared resources remain outside the application and can be reused.
+
+The refreshed **INSTALL-WINDOWS.txt** and **HOSTING-TAILSCALE.txt** cover downloading and extracting both ZIPs, reusing ready resources, connecting both PCs to Tailscale, stopping an older server, hosting, joining from both PCs with distinct stable names, and saving/shutting down. Local packaging checks passed all 16 tests, and local document links were checked before publication.
 
 ## Verified
 
