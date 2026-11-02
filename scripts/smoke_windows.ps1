@@ -36,10 +36,17 @@ try {
     $help = Invoke-Probe $launcher @('--help')
     if (-not $help.Contains('--setup')) { throw 'Packaged launcher help is incomplete.' }
     $version = Invoke-Probe $launcher @('--version')
-    if ($version.Trim() -ne 'Herspers Minecraft 0.2.2') { throw "Unexpected launcher version: $version" }
+    if ($version.Trim() -ne 'Herspers Minecraft 0.2.3') { throw "Unexpected launcher version: $version" }
     if (-not $help.Contains('--host-tailscale') -or -not $help.Contains('--join-tailscale')) { throw 'Private multiplayer help is missing.' }
     foreach ($name in @('Host-Tailscale.cmd', 'Join-Tailscale.cmd', 'HOSTING-TAILSCALE.txt')) {
         if (-not (Test-Path (Join-Path $package $name))) { throw "Missing private multiplayer helper: $name" }
+    }
+    foreach ($name in @('SHADERS.txt', 'engine-patches.json')) {
+        if (-not (Test-Path (Join-Path $package $name))) { throw "Missing shader compatibility information: $name" }
+    }
+    $metadata = Get-Content -Raw (Join-Path $package 'build-metadata.json') | ConvertFrom-Json
+    if (-not $metadata.engine_source.modified -or $metadata.engine_source.patches_sha256 -notmatch '^[0-9a-f]{64}$') {
+        throw 'Shader build is missing its applied engine-patch provenance.'
     }
     $clientHelp = Invoke-Probe (Join-Path $bin 'horizon-client.exe') @('--help')
     if (-not $clientHelp.Contains('--resources')) { throw 'Client help is incomplete.' }
@@ -80,6 +87,7 @@ try {
         minecraft = $api.minecraft
         missing_resources_expected_exit = 1
         tailscale_config_real_engine_parsed = $true
+        shader_engine_patch_provenance_checked = $true
         game_rendering_tested = $false
         gameplay_tested = $false
     }

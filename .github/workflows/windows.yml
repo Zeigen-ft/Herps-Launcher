@@ -13,12 +13,16 @@ on:
       - 'tools/package_windows.py'
       - 'tools/package_macos.py'
       - 'tools/fetch_upstream.py'
+      - 'tools/prepare_upstream.py'
+      - 'patches/**'
+      - 'tests/test_prepare_upstream.py'
       - 'tests/test_windows_launcher.py'
       - 'tests/test_package_windows.py'
       - 'tests/test_windows_stack_repair.py'
       - 'tests/fixtures/private_server_probe.rs'
       - 'docs/INSTALL-WINDOWS.md'
       - 'docs/HOSTING-TAILSCALE.md'
+      - 'docs/SHADERS.md'
       - 'upstream.lock.json'
       - 'LICENSE'
   workflow_dispatch:
@@ -65,7 +69,9 @@ jobs:
             .cache/upstream
             ~/.cargo/registry
             ~/.cargo/git
-          key: windows-x64-rust-1.95-static-fast-stack16-v2-${{ hashFiles('upstream.lock.json') }}
+          key: windows-x64-rust-1.95-static-fast-stack16-shaders-v1-${{ hashFiles('upstream.lock.json', 'patches/**') }}
+          restore-keys: |
+            windows-x64-rust-1.95-static-fast-stack16-v2-
       - name: Native engine and resource-preparer library tests
         shell: pwsh
         env:
@@ -74,9 +80,9 @@ jobs:
           CARGO_TARGET_DIR: ${{ github.workspace }}/.cache/target
         run: |
           $PSNativeCommandUseErrorActionPreference = $false
-          $sourceRoot = python tools/fetch_upstream.py
+          $sourceRoot = python tools/prepare_upstream.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          cargo +1.95.0 test --locked --profile fast --target x86_64-pc-windows-msvc --manifest-path "$sourceRoot/Cargo.toml" -p horizon-core -p horizon-prepare --lib *> native-library-tests.log
+          cargo +1.95.0 test --locked --profile fast --target x86_64-pc-windows-msvc --manifest-path "$sourceRoot/Cargo.toml" -p horizon-core -p horizon-prepare -p horizon-shaders -p horizon-shader-api --lib *> native-library-tests.log
           $result = $LASTEXITCODE
           Get-Content native-library-tests.log
           $tail = (Get-Content native-library-tests.log -Tail 80) -join "`n"
@@ -135,4 +141,4 @@ jobs:
             .cache/upstream
             ~/.cargo/registry
             ~/.cargo/git
-          key: windows-x64-rust-1.95-static-fast-stack16-v2-${{ hashFiles('upstream.lock.json') }}
+          key: windows-x64-rust-1.95-static-fast-stack16-shaders-v1-${{ hashFiles('upstream.lock.json', 'patches/**') }}

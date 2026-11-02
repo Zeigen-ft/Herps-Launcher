@@ -1,4 +1,5 @@
 import importlib.util
+import hashlib
 import json
 from pathlib import Path
 import platform
@@ -108,12 +109,28 @@ class WindowsPackagingTests(unittest.TestCase):
         (self.project / "docs").mkdir(parents=True)
         (self.project / "docs/INSTALL-WINDOWS.md").write_text("# Install\nRun --setup first.\n")
         (self.project / "docs/HOSTING-TAILSCALE.md").write_text("# Private Tailscale hosting\nRun Host-Tailscale.cmd.\n")
+        (self.project / "docs/SHADERS.md").write_text("# Shader compatibility\nUse Shader Packs.\n")
         helpers = self.project / "packaging/windows"
         helpers.mkdir(parents=True)
         for name in package.HELPERS:
             (helpers / name).write_text(f"@echo off\nrem {name}\n")
         (self.project / "LICENSE").write_text("project GPLv3")
-        (self.project / "upstream.lock.json").write_text("{}")
+        lock = {"commit": "a" * 40}
+        (self.project / "upstream.lock.json").write_text(json.dumps(lock))
+        patch_dir = self.project / "patches/engine"
+        patch_dir.mkdir(parents=True)
+        patch_bytes = b"--- /dev/null\n+++ b/shader-fixture.txt\n@@ -0,0 +1 @@\n+patched engine\n"
+        (patch_dir / "fixture.patch").write_bytes(patch_bytes)
+        (self.source / "shader-fixture.txt").write_bytes(b"patched engine\n")
+        manifest = {"upstream_commit": lock["commit"], "files": [{
+            "path": "shader-fixture.txt", "before_sha256": None,
+            "after_sha256": hashlib.sha256(b"patched engine\n").hexdigest(),
+            "patch": "engine/fixture.patch"}]}
+        manifest_bytes = json.dumps(manifest).encode()
+        (self.project / "patches/upstream.json").write_bytes(manifest_bytes)
+        self.patch_hash = hashlib.sha256(manifest_bytes + len(patch_bytes).to_bytes(8, "big") + patch_bytes).hexdigest()
+        self.stamp = {"upstream": lock, "patches_sha256": self.patch_hash, "tree_sha256": "b" * 64}
+        (self.source / ".herspers-prepared.json").write_text(json.dumps(self.stamp))
         self.project_patch = patch.object(package, "PROJECT", self.project)
         self.project_patch.start()
         self.addCleanup(self.project_patch.stop)
@@ -134,6 +151,7 @@ class WindowsPackagingTests(unittest.TestCase):
         self.assertEqual((root / "LICENSE").read_text(), "project GPLv3")
         self.assertEqual((root / "licenses/upstream/LICENSE").read_text(), "upstream MIT license")
         self.assertIn("--setup", (root / "INSTALL-WINDOWS.txt").read_text())
+        self.assertIn("Shader Packs", (root / "SHADERS.txt").read_text())
         for helper in package.HELPERS:
             self.assertIn(helper, (root / helper).read_text())
         self.assertFalse(list(root.rglob("*.jar")))
@@ -142,12 +160,29 @@ class WindowsPackagingTests(unittest.TestCase):
         self.assertTrue(metadata["stage_only"])
         self.assertFalse(metadata["windows_runtime_tested"])
         self.assertFalse(metadata["game_resources_included"])
-        self.assertEqual(metadata["product_version"], "0.2.2")
+        self.assertEqual(metadata["product_version"], "0.2.3")
+        self.assertTrue(metadata["engine_source"]["modified"])
+        self.assertEqual(metadata["engine_source"]["patches_sha256"], self.patch_hash)
+        provenance = json.loads((root / "engine-patches.json").read_text())
+        self.assertEqual(provenance["preparation"], self.stamp)
+        self.assertEqual(provenance["patches"]["files"][0]["path"], "shader-fixture.txt")
         self.assertIn("STAGED ONLY", (root / "BUILD-STATUS.txt").read_text())
 
     def test_missing_binary_fails_before_creating_output(self):
         (self.binaries / "horizon-client.exe").unlink()
         with self.assertRaisesRegex(ValueError, "missing regular file"):
+            self.stage()
+        self.assertFalse(self.output.exists())
+
+    def test_unprepared_or_edited_engine_is_rejected_before_output(self):
+        stamp = self.source / ".herspers-prepared.json"
+        original = stamp.read_bytes()
+        stamp.unlink()
+        with self.assertRaisesRegex(ValueError, "missing regular file"):
+            self.stage()
+        stamp.write_bytes(original)
+        (self.source / "shader-fixture.txt").write_text("wrong engine revision\n")
+        with self.assertRaisesRegex(ValueError, "postimage mismatch"):
             self.stage()
         self.assertFalse(self.output.exists())
 
@@ -207,6 +242,8 @@ class WindowsPackagingTests(unittest.TestCase):
             self.assertIn("Herspers-Minecraft/Host-Tailscale.cmd", zipped.namelist())
             self.assertIn("Herspers-Minecraft/Join-Tailscale.cmd", zipped.namelist())
             self.assertIn("Herspers-Minecraft/HOSTING-TAILSCALE.txt", zipped.namelist())
+            self.assertIn("Herspers-Minecraft/SHADERS.txt", zipped.namelist())
+            self.assertIn("Herspers-Minecraft/engine-patches.json", zipped.namelist())
 
 
 if __name__ == "__main__":

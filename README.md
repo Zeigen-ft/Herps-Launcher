@@ -53,6 +53,14 @@ To play with your friend over Tailscale:
 
 Read the [step-by-step Tailscale guide](docs/HOSTING-TAILSCALE.md), also included as **HOSTING-TAILSCALE.txt** in the download. The [Windows installation guide](docs/INSTALL-WINDOWS.md) covers setup and troubleshooting; [Windows 0.2.2 build results](docs/WINDOWS-0.2.2-BUILD-RESULTS.md) record validation. No Rust, Python or developer tools are needed for the downloaded app. Full gameplay testing with prepared resources remains separate from build/startup checks.
 
+## Java shader compatibility update 0.2.3
+
+The 0.2.3 source adds Rust renderer compatibility for original **Complementary Reimagined r5.5.1** and **Complementary Unbound r5.5.1** shader ZIPs, and recognizes the supplied **Fullbright Ubiquitous FUB 7.0** resource pack. Native build status and downloads will be linked after verification; the 0.2.2 download above does not contain this update.
+
+The Complementary packs have drawn original synthetic terrain through real shadow, geometry and post passes on software Vulkan. These tests check pixel readback and HLSL/Metal shader generation; they do not establish complete gameplay or identical visuals on every GPU. **BSL is still awaiting its original ZIP for validation because its official download hosts are blocked in the cloud environment.**
+
+Read [shader and Fullbright installation](docs/SHADERS.md). Original shader ZIPs belong in **Shader Packs**; the uploaded Fullbright ZIP belongs in **Resource Packs**. The author archives are separate from the application download, and the Bedrock build has not received these changes.
+
 ## Download the Mac builds
 
 - [Apple Silicon (arm64)](https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/41295959995/artifacts/13079675808)

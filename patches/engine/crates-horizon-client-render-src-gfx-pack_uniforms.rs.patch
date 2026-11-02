@@ -1,0 +1,201 @@
+--- a/crates/horizon-client-render/src/gfx/pack_uniforms.rs
++++ b/crates/horizon-client-render/src/gfx/pack_uniforms.rs
+@@ -33,6 +33,12 @@
+     /// `heldItemId`, `heldItemId2` (item.properties, 5.3) and `heldBlockLightValue(2)`.
+     pub held_items: [i32; 2],
+     pub held_light: [i32; 2],
++    /// Ambient cave mood, 0..1 (the playerMood shader uniform).
++    pub player_mood: f32,
++    /// World-space camera position minus the interpolated eye position.
++    pub relative_eye_position: [f32; 3],
++    /// Herspers velocity convention: actual player displacement in blocks per second.
++    pub velocity: f32,
+ }
+ 
+ /// One uniform's value: up to 16 floats or 3 integers.
+@@ -160,6 +166,18 @@
+     "shadowModelViewInverse",
+     "shadowProjection",
+     "shadowProjectionInverse",
++    "playerMood",
++    "relativeEyePosition",
++    "currentRenderedItemId",
++    "cameraPositionInt",
++    "cameraPositionFract",
++    "previousCameraPositionInt",
++    "previousCameraPositionFract",
++    "lightningBoltPosition",
++    "velocity",
++    "entityId",
++    "blockEntityId",
++    "entityColor",
+ ];
+ 
+ /// Values carried from frame to frame.
+@@ -170,7 +188,8 @@
+     start: std::time::Instant,
+     last: Option<std::time::Instant>,
+     frame: u32,
+-    previous: Option<(Vec3, Mat4, Mat4)>,
++    // Retain f64 until the split is taken: f32 loses sub-block movement far from spawn.
++    previous: Option<(DVec3, Mat4, Mat4)>,
+     wetness: f32,
+     eye_smooth: [f32; 2],
+     /// The pack's shadow settings (7.1).
+@@ -293,8 +312,14 @@
+         let camera = frame.camera.as_vec3();
+         let (previous_camera, previous_view, previous_projection) =
+             self.previous
+-                .unwrap_or((Vec3::ZERO, Mat4::ZERO, Mat4::ZERO));
+-        self.previous = Some((camera, view, projection));
++                .unwrap_or((DVec3::ZERO, Mat4::ZERO, Mat4::ZERO));
++        self.previous = Some((frame.camera, view, projection));
++        let (camera_int, camera_fract) = split_camera_position(frame.camera);
++        let (previous_camera_int, previous_camera_fract) = split_camera_position(previous_camera);
++        let lightning = lightning_position(
++            frame.camera,
++            frame.lightning.bolts.first().map(|bolt| bolt.at),
++        );
+ 
+         let to_view = |v: Vec3| view.transform_vector3(v);
+         let sun_angle = (frame.sky.sun_angle / 360.0 + 0.25).rem_euclid(1.0);
+@@ -338,7 +363,13 @@
+             let m4 = |m: Mat4| Value::f(&m.to_cols_array());
+             match name {
+                 "cameraPosition" => v3(camera),
+-                "previousCameraPosition" => v3(previous_camera),
++                "previousCameraPosition" => v3(previous_camera.as_vec3()),
++                "cameraPositionInt" => Value::i(&camera_int),
++                "cameraPositionFract" => Value::f(&camera_fract),
++                "previousCameraPositionInt" => Value::i(&previous_camera_int),
++                "previousCameraPositionFract" => Value::f(&previous_camera_fract),
++                "lightningBoltPosition" => Value::f(&lightning),
++                "velocity" => Value::f(&[inputs.velocity]),
+                 "eyeAltitude" => Value::f(&[frame.camera.y as f32]),
+                 "upPosition" => v3(to_view(Vec3::new(0.0, 100.0, 0.0))),
+                 "sunPosition" => v3(sun),
+@@ -387,6 +418,15 @@
+                 "biome_precipitation" => Value::i(&[inputs.biome_precipitation]),
+                 "temperature" => Value::f(&[inputs.temperature]),
+                 "rainfall" => Value::f(&[inputs.rainfall]),
++                "playerMood" => Value::f(&[inputs.player_mood.clamp(0.0, 1.0)]),
++                "relativeEyePosition" => Value::f(&inputs.relative_eye_position),
++                // Outside item geometry there is no rendered item. Gbuffers
++                // programs receive the actual ID from their per-draw block.
++                "currentRenderedItemId" => Value::i(&[0]),
++                // A fullscreen pass has no current entity or flash overlay.
++                // Geometry programs use the real per-draw block instead.
++                "entityId" | "blockEntityId" => Value::i(&[0]),
++                "entityColor" => Value::f(&[0.0; 4]),
+                 "eyeBrightnessSmooth" => Value::i(&self.eye_smooth.map(|v| v.round() as i32)),
+                 "gbufferModelView" => m4(view),
+                 "gbufferModelViewInverse" => m4(view.inverse()),
+@@ -450,6 +490,11 @@
+     match name {
+         "cameraPosition"
+         | "previousCameraPosition"
++        | "relativeEyePosition"
++        | "cameraPositionInt"
++        | "cameraPositionFract"
++        | "previousCameraPositionInt"
++        | "previousCameraPositionFract"
+         | "upPosition"
+         | "sunPosition"
+         | "moonPosition"
+@@ -457,8 +502,41 @@
+         | "fogColor"
+         | "skyColor" => 3,
+         "eyeBrightness" | "eyeBrightnessSmooth" | "atlasSize" => 2,
++        "lightningBoltPosition" | "entityColor" => 4,
+         n if n.starts_with("gbuffer") || n.starts_with("shadow") && n != "shadowAngle" => 16,
+         _ => 1,
++    }
++}
++
++/// Herspers' camera split convention: floor in f64, then subtract before reducing
++/// the fractional part to f32. Fractions stay in [0, 1), including west/below spawn.
++/// This is an explicit Herspers convention, not a claim of Iris implementation parity.
++fn split_camera_position(position: DVec3) -> ([i32; 3], [f32; 3]) {
++    let whole = position.floor();
++    (
++        whole.as_ivec3().to_array(),
++        (position - whole).as_vec3().to_array(),
++    )
++}
++
++/// The first rendered bolt in player space: camera-relative, world-aligned axes.
++/// Subtract before casting to f32 so nearby strikes retain precision far from spawn.
++/// The documented w flag is 1 for a bolt and 0 when there is none.
++fn lightning_position(camera: DVec3, position: Option<[f64; 3]>) -> [f32; 4] {
++    position.map_or([0.0; 4], |at| {
++        let offset = (DVec3::from_array(at) - camera).as_vec3();
++        [offset.x, offset.y, offset.z, 1.0]
++    })
++}
++
++/// Herspers' velocity convention: actual feet displacement over the movement tick,
++/// in blocks per second. Collision-limited motion, passengers and vertical motion
++/// are included; a zero/invalid interval has no measurable speed.
++pub fn player_displacement_speed(previous: DVec3, current: DVec3, tick_seconds: f64) -> f32 {
++    if tick_seconds.is_finite() && tick_seconds > 0.0 {
++        (current.distance(previous) / tick_seconds) as f32
++    } else {
++        0.0
+     }
+ }
+ 
+@@ -470,6 +548,54 @@
+ #[cfg(test)]
+ mod tests {
+     use super::*;
++
++    #[test]
++    fn split_camera_preserves_sub_block_motion_on_both_sides_of_spawn() {
++        for position in [
++            DVec3::new(-0.125, -64.875, 0.0),
++            DVec3::new(0.0, 1.0, -1.0),
++            DVec3::new(29_999_999.875, 70.125, -29_999_999.75),
++            DVec3::new(12.999_999, -13.000_001, 0.000_001),
++        ] {
++            let (whole, fraction) = split_camera_position(position);
++            for axis in 0..3 {
++                assert!((0.0..1.0).contains(&fraction[axis]), "{position:?}");
++                let rebuilt = f64::from(whole[axis]) + f64::from(fraction[axis]);
++                assert!((rebuilt - position[axis]).abs() < 1e-6, "{position:?}");
++            }
++        }
++        let (whole, fraction) = split_camera_position(DVec3::new(-0.125, -64.875, 0.0));
++        assert_eq!(whole, [-1, -65, 0]);
++        assert_eq!(fraction, [0.875, 0.125, 0.0]);
++        let (whole, fraction) = split_camera_position(DVec3::splat(29_999_999.875));
++        let (next_whole, next_fraction) = split_camera_position(DVec3::splat(29_999_999.9375));
++        assert_eq!(whole, next_whole);
++        assert_eq!(next_fraction[0] - fraction[0], 0.0625);
++    }
++
++    #[test]
++    fn movement_speed_uses_real_displacement_and_elapsed_tick_time() {
++        let previous = DVec3::new(29_999_999.5, 64.0, -29_999_999.5);
++        let current = previous + DVec3::new(0.15, 0.2, 0.0);
++        assert!((player_displacement_speed(previous, current, 0.05) - 5.0).abs() < 1e-5);
++        assert!((player_displacement_speed(previous, current, 0.1) - 2.5).abs() < 1e-5);
++        assert_eq!(player_displacement_speed(previous, previous, 0.05), 0.0);
++        for elapsed in [0.0, -0.05, f64::NAN, f64::INFINITY] {
++            assert_eq!(player_displacement_speed(previous, current, elapsed), 0.0);
++        }
++    }
++
++    #[test]
++    fn lightning_has_a_presence_flag_and_keeps_its_fourth_component() {
++        let camera = DVec3::new(29_999_999.5, 64.0, -29_999_999.5);
++        assert_eq!(lightning_position(camera, None), [0.0; 4]);
++        let value = lightning_position(camera, Some([29_999_999.625, 72.0, -29_999_999.75]));
++        assert_eq!(value, [0.125, 8.0, -0.25, 1.0]);
++        assert_eq!(components("lightningBoltPosition"), 4);
++        let mut bytes = [0u8; 16];
++        Value::f(&value).write("vec4", &mut bytes, 0);
++        assert_eq!(f32::from_ne_bytes(bytes[12..16].try_into().unwrap()), 1.0);
++    }
+ 
+     #[test]
+     fn values_follow_the_declared_type() {

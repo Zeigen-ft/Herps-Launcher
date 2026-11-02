@@ -28,8 +28,8 @@ if (-not $env:CARGO_BUILD_JOBS) { $env:CARGO_BUILD_JOBS = '3' }
 
 Invoke-Checked 'rustup' @('toolchain', 'install', $toolchain, '--profile', 'minimal')
 Invoke-Checked 'rustup' @('target', 'add', '--toolchain', $toolchain, $target)
-$sourceRoot = & python (Join-Path $projectRoot 'tools/fetch_upstream.py')
-if ($LASTEXITCODE -ne 0 -or -not $sourceRoot) { throw 'Pinned source fetch failed.' }
+$sourceRoot = & python (Join-Path $projectRoot 'tools/prepare_upstream.py')
+if ($LASTEXITCODE -ne 0 -or -not $sourceRoot) { throw 'Checksum-locked engine preparation failed.' }
 $sourceRoot = ([string]$sourceRoot).Trim()
 
 Invoke-Checked 'cargo' @("+$toolchain", 'build', '--locked', '--profile', $BuildProfile,

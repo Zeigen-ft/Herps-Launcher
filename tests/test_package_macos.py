@@ -1,4 +1,5 @@
 import importlib.util
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -39,6 +40,31 @@ class PackagingTests(unittest.TestCase):
         nested_license.write_text("winit license")
         for name in package.BINARIES:
             self.write_binary(name)
+        self.project = self.root / "project"
+        (self.project / "docs").mkdir(parents=True)
+        (self.project / "docs/SHADERS.md").write_text("# Shader compatibility\nUse Shader Packs.\n")
+        (self.project / "packaging").mkdir()
+        for name in ("launch.command", "prepare.command", "launcher.c"):
+            shutil.copy2(PROJECT / "packaging" / name, self.project / "packaging" / name)
+        lock = {"commit": "a" * 40}
+        (self.project / "upstream.lock.json").write_text(json.dumps(lock))
+        patch_dir = self.project / "patches/engine"
+        patch_dir.mkdir(parents=True)
+        patch_bytes = b"--- /dev/null\n+++ b/shader-fixture.txt\n@@ -0,0 +1 @@\n+patched engine\n"
+        (patch_dir / "fixture.patch").write_bytes(patch_bytes)
+        (self.source / "shader-fixture.txt").write_bytes(b"patched engine\n")
+        manifest = {"upstream_commit": lock["commit"], "files": [{
+            "path": "shader-fixture.txt", "before_sha256": None,
+            "after_sha256": hashlib.sha256(b"patched engine\n").hexdigest(),
+            "patch": "engine/fixture.patch"}]}
+        manifest_bytes = json.dumps(manifest).encode()
+        (self.project / "patches/upstream.json").write_bytes(manifest_bytes)
+        self.patch_hash = hashlib.sha256(manifest_bytes + len(patch_bytes).to_bytes(8, "big") + patch_bytes).hexdigest()
+        self.stamp = {"upstream": lock, "patches_sha256": self.patch_hash, "tree_sha256": "b" * 64}
+        (self.source / ".herspers-prepared.json").write_text(json.dumps(self.stamp))
+        self.project_patch = patch.object(package, "PROJECT", self.project)
+        self.project_patch.start()
+        self.addCleanup(self.project_patch.stop)
 
     def write_binary(self, name, cpu=package.CPUS["arm64"]):
         path = self.binaries / name
@@ -65,12 +91,19 @@ class PackagingTests(unittest.TestCase):
         self.assertFalse(metadata["game_resources_included"])
         self.assertFalse(metadata["native_launcher_compiled"])
         self.assertEqual("arm64", metadata["architecture"])
+        self.assertEqual("0.2.3", metadata["product_version"])
+        self.assertTrue(metadata["engine_source"]["modified"])
+        self.assertEqual(self.patch_hash, metadata["engine_source"]["patches_sha256"])
+        self.assertIn("Shader Packs", (resources / "SHADERS.txt").read_text())
+        provenance = json.loads((resources / "engine-patches.json").read_text())
+        self.assertEqual(self.stamp, provenance["preparation"])
         self.assertTrue((resources / "preparation/mods/horizon/src/test/java/source.txt").is_file())
         self.assertEqual("winit license", (resources / "upstream-notices/third_party/winit/LICENSE").read_text())
         self.assertFalse(list(app.rglob("*.jar")))
         with (app / "Contents/Info.plist").open("rb") as stream:
             info = plistlib.load(stream)
         self.assertEqual("Herspers Minecraft", info["CFBundleName"])
+        self.assertEqual("0.2.3", info["CFBundleShortVersionString"])
         entrypoint = app / "Contents/MacOS" / info["CFBundleExecutable"]
         self.assertTrue(entrypoint.is_file())
         self.assertEqual(entrypoint.read_bytes()[:4], b"\xcf\xfa\xed\xfe")
@@ -81,6 +114,21 @@ class PackagingTests(unittest.TestCase):
     def test_architecture_mismatch_is_rejected(self):
         with self.assertRaisesRegex(ValueError, "expected a x86_64"):
             self.stage("x86_64")
+        self.assertFalse(self.output.exists())
+
+    def test_prepared_source_must_match_current_patch_set(self):
+        (self.project / "patches/engine/fixture.patch").write_text("different patch bytes")
+        with self.assertRaisesRegex(ValueError, "current patch manifest"):
+            self.stage()
+        self.assertFalse(self.output.exists())
+
+    def test_patch_manifest_cannot_name_files_outside_source(self):
+        path = self.project / "patches/upstream.json"
+        manifest = json.loads(path.read_text())
+        manifest["files"][0]["path"] = "../outside.txt"
+        path.write_text(json.dumps(manifest))
+        with self.assertRaisesRegex(ValueError, "unsafe path"):
+            self.stage()
         self.assertFalse(self.output.exists())
 
     def test_intel_stage_records_intel(self):

@@ -1,0 +1,1459 @@
+--- /dev/null
++++ b/crates/horizon-client-render/src/gfx/pack_post_tests.rs
+@@ -0,0 +1,1456 @@
++// SPDX-License-Identifier: MIT
++//! Original generated-image fixtures for custom shader-pack texture bindings.
++use super::*;
++use horizon_shaders::{CustomTexture, GameInputs, Macros, Pack, Properties, load_post};
++
++// The original scene is plains; provide the named biome registry just as the
++// real game does, so custom expressions never rely on missing-biome fallbacks.
++const ORIGINAL_BIOMES: &[&str] = &[
++    "minecraft:plains",
++    "minecraft:nether_wastes",
++    "minecraft:crimson_forest",
++    "minecraft:warped_forest",
++    "minecraft:basalt_deltas",
++    "minecraft:soul_sand_valley",
++    "minecraft:pale_garden",
++];
++
++fn png_bytes(width: u32, height: u32, color: png::ColorType, pixels: &[u8]) -> Vec<u8> {
++    let mut bytes = Vec::new();
++    {
++        let mut encoder = png::Encoder::new(&mut bytes, width, height);
++        encoder.set_color(color);
++        encoder.set_depth(png::BitDepth::Eight);
++        let mut writer = encoder.write_header().unwrap();
++        writer.write_image_data(pixels).unwrap();
++    }
++    bytes
++}
++
++fn declaration(stage: &str, sampler: &str) -> CustomTexture {
++    CustomTexture {
++        stage: stage.into(),
++        sampler: sampler.into(),
++        path: "original.png".into(),
++        data: Vec::new(),
++    }
++}
++
++#[test]
++fn custom_png_preserves_non_square_rgba_rows() {
++    let pixels = [17, 90, 203, 255, 210, 40, 70, 128];
++    let encoded = png_bytes(2, 1, png::ColorType::Rgba, &pixels);
++    let (width, height, decoded) = custom_png(&encoded, 4096).unwrap();
++    assert_eq!((width, height), (2, 1));
++    assert_eq!(decoded, pixels);
++}
++
++#[test]
++fn custom_png_expands_grayscale_alpha_without_losing_alpha() {
++    let encoded = png_bytes(2, 1, png::ColorType::GrayscaleAlpha, &[32, 255, 128, 17]);
++    let (width, height, decoded) = custom_png(&encoded, 4096).unwrap();
++    assert_eq!((width, height), (2, 1));
++    assert_eq!(decoded, [32, 32, 32, 255, 128, 128, 128, 17]);
++}
++
++#[test]
++fn custom_png_refuses_oversized_and_malformed_inputs() {
++    let encoded = png_bytes(2, 1, png::ColorType::Rgba, &[0; 8]);
++    assert!(custom_png(&encoded, 1).is_err());
++    assert!(custom_png(b"not an image", 4096).is_err());
++    assert!(custom_png(&encoded[..24], 4096).is_err());
++}
++
++#[test]
++fn custom_texture_resolver_honors_stage_aliases_and_noise_precedence() {
++    let textures = vec![
++        declaration("*", "noisetex"),
++        declaration("gbuffers", "gaux4"),
++        declaration("deferred", "colortex3"),
++        declaration("gbuffers", "noisetex"),
++    ];
++    assert_eq!(
++        custom_slot(Group::Gbuffers, "colortex7", &textures),
++        Some(1)
++    );
++    assert_eq!(custom_slot(Group::Translucent, "gaux4", &textures), Some(1));
++    assert_eq!(
++        custom_slot(Group::Deferred, "composite", &textures),
++        Some(2)
++    );
++    assert_eq!(custom_slot(Group::Composite, "colortex3", &textures), None);
++    assert_eq!(custom_slot(Group::Gbuffers, "noisetex", &textures), Some(3));
++    for group in [
++        Group::Prepare,
++        Group::Deferred,
++        Group::Final,
++        Group::Shadow,
++        Group::ShadowComp,
++    ] {
++        assert_eq!(custom_slot(group, "noisetex", &textures), Some(0));
++    }
++}
++
++struct Scratch(std::path::PathBuf);
++impl Scratch {
++    fn new() -> Self {
++        let stamp = std::time::SystemTime::now()
++            .duration_since(std::time::UNIX_EPOCH)
++            .unwrap()
++            .as_nanos();
++        let path = std::env::temp_dir().join(format!(
++            "herspers-custom-texture-{}-{stamp}",
++            std::process::id()
++        ));
++        std::fs::create_dir_all(path.join("shaders")).unwrap();
++        Self(path)
++    }
++}
++impl Drop for Scratch {
++    fn drop(&mut self) {
++        let _ = std::fs::remove_dir_all(&self.0);
++    }
++}
++
++/// Exercises actual PNG upload, program translation, custom sampler resolution,
++/// pipeline creation, binding, drawing, and GPU readback. No third-party pack.
++#[test]
++#[ignore = "requires software/hardware Vulkan"]
++fn custom_texture_is_sampled_by_a_real_deferred_gpu_pass() {
++    let mut descriptor = wgpu::InstanceDescriptor::new_without_display_handle();
++    descriptor.backends = wgpu::Backends::VULKAN;
++    let instance = wgpu::Instance::new(descriptor);
++    let adapter = pollster::block_on(instance.request_adapter(&Default::default()))
++        .expect("this explicit GPU test requires a Vulkan adapter");
++    let (device, queue) = pollster::block_on(adapter.request_device(&Default::default()))
++        .expect("Vulkan adapter must provide a device");
++    let scratch = Scratch::new();
++    let shaders = scratch.0.join("shaders");
++    let expected = [17u8, 90, 203, 255];
++    let png = png_bytes(
++        2,
++        1,
++        png::ColorType::Rgba,
++        &[17, 90, 203, 255, 210, 40, 70, 255],
++    );
++    std::fs::write(shaders.join("original.png"), &png).unwrap();
++    std::fs::write(
++        shaders.join("deferred.vsh"),
++        "#version 120\nvoid main() { gl_Position = ftransform(); }\n",
++    )
++    .unwrap();
++    std::fs::write(shaders.join("deferred.fsh"),
++        "#version 120\nuniform sampler2D colortex3;\nvoid main() { gl_FragColor = texture2D(colortex3, vec2(0.25, 0.5)); }\n").unwrap();
++    let metadata = "texture.noise=original.png\ntexture.deferred.colortex3=original.png\n";
++    let pack = Pack::open(&scratch.0).unwrap();
++    let properties = Properties::parse(metadata, &Macros::standard());
++    let mut post = load_post(
++        &pack,
++        "",
++        &properties,
++        &Macros::standard(),
++        &GameInputs::default(),
++    );
++    assert!(
++        post.notes.is_empty(),
++        "unexpected loader notes: {:?}",
++        post.notes
++    );
++    assert_eq!(post.programs.len(), 1);
++    let mut notes = Vec::new();
++    let (textures, views) = custom_images(
++        &device,
++        &queue,
++        std::mem::take(&mut post.textures),
++        &mut notes,
++    );
++    assert_eq!(textures.len(), 2, "{notes:?}");
++    assert_eq!(views.len(), 2);
++    assert!(textures.iter().all(|texture| texture.data.is_empty()));
++    assert_eq!(
++        notes.iter().filter(|note| note.contains("loaded")).count(),
++        1,
++        "the shared image should decode/upload once: {notes:?}"
++    );
++    let draw_uniforms = DrawUniforms::new(&device);
++    let pass = build_pass(
++        &device,
++        post.programs.remove(0),
++        &[wgpu::TextureFormat::Rgba8Unorm; BUFFERS],
++        None,
++        wgpu::TextureFormat::Rgba8Unorm,
++        &mut notes,
++        None,
++        &[],
++        &draw_uniforms.layout,
++        &textures,
++    )
++    .expect("the original deferred fixture must build");
++    assert!(
++        !notes
++            .iter()
++            .any(|note| note.contains("skipped") || note.contains("not provided")),
++        "{notes:?}"
++    );
++    assert_eq!(pass.samplers.len(), 1);
++    let binding = &pass.samplers[0];
++    let Source::Custom(slot) = binding.source else {
++        panic!("deferred colortex3 must use the custom image")
++    };
++    assert_eq!(slot, 1);
++    assert_eq!(
++        pass.reads, 0,
++        "the override must not depend on the colortex3 history buffer"
++    );
++    assert_eq!(pass.writes, [(0, 0)]);
++    let sampler = device.create_sampler(&wgpu::SamplerDescriptor {
++        mag_filter: wgpu::FilterMode::Linear,
++        min_filter: wgpu::FilterMode::Linear,
++        ..Default::default()
++    });
++    let group = device.create_bind_group(&wgpu::BindGroupDescriptor {
++        label: Some("Original custom-image fixture"),
++        layout: &pass.layout,
++        entries: &[
++            wgpu::BindGroupEntry {
++                binding: 0,
++                resource: pass.ubo.as_entire_binding(),
++            },
++            wgpu::BindGroupEntry {
++                binding: binding.binding,
++                resource: wgpu::BindingResource::TextureView(&views[slot]),
++            },
++            wgpu::BindGroupEntry {
++                binding: binding.sampler,
++                resource: wgpu::BindingResource::Sampler(&sampler),
++            },
++        ],
++    });
++    let output = device.create_texture(&wgpu::TextureDescriptor {
++        label: Some("Original custom-image output"),
++        size: wgpu::Extent3d {
++            width: 1,
++            height: 1,
++            depth_or_array_layers: 1,
++        },
++        mip_level_count: 1,
++        sample_count: 1,
++        dimension: wgpu::TextureDimension::D2,
++        format: wgpu::TextureFormat::Rgba8Unorm,
++        usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::COPY_SRC,
++        view_formats: &[],
++    });
++    let view = output.create_view(&Default::default());
++    let readback = device.create_buffer(&wgpu::BufferDescriptor {
++        label: Some("Original custom-image readback"),
++        size: 256,
++        usage: wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::MAP_READ,
++        mapped_at_creation: false,
++    });
++    let mut encoder = device.create_command_encoder(&Default::default());
++    {
++        let mut render = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
++            label: Some("Original deferred fixture"),
++            color_attachments: &[attach(
++                &view,
++                wgpu::Operations {
++                    load: wgpu::LoadOp::Clear(wgpu::Color::BLACK),
++                    store: wgpu::StoreOp::Store,
++                },
++            )],
++            ..Default::default()
++        });
++        render.set_pipeline(&pass.pipeline);
++        render.set_bind_group(0, &group, &[]);
++        render.draw(0..6, 0..1);
++    }
++    encoder.copy_texture_to_buffer(
++        output.as_image_copy(),
++        wgpu::TexelCopyBufferInfo {
++            buffer: &readback,
++            layout: wgpu::TexelCopyBufferLayout {
++                offset: 0,
++                bytes_per_row: Some(256),
++                rows_per_image: None,
++            },
++        },
++        output.size(),
++    );
++    queue.submit([encoder.finish()]);
++    let (tx, rx) = std::sync::mpsc::sync_channel(1);
++    readback
++        .slice(..)
++        .map_async(wgpu::MapMode::Read, move |result| {
++            let _ = tx.send(result);
++        });
++    device.poll(wgpu::PollType::wait_indefinitely()).unwrap();
++    rx.recv().unwrap().unwrap();
++    let mapped = readback.slice(..).get_mapped_range().unwrap();
++    assert_eq!(&mapped[..4], &expected);
++
++    // An original outputless cloud program deliberately suppresses the vanilla
++    // clouds. It is not a failed shader pipeline and must not restore them.
++    std::fs::write(
++        shaders.join("gbuffers_clouds.vsh"),
++        "#version 120\nvoid main() { gl_Position = ftransform(); }\n",
++    )
++    .unwrap();
++    std::fs::write(
++        shaders.join("gbuffers_clouds.fsh"),
++        "#version 120\nvoid main() { discard; }\n",
++    )
++    .unwrap();
++    let pack = Pack::open(&scratch.0).unwrap();
++    let inputs = GameInputs {
++        clouds: Some(super::super::pack_entities::cloud_inputs()),
++        ..Default::default()
++    };
++    let post = load_post(&pack, "", &properties, &Macros::standard(), &inputs);
++    assert!(
++        post.clouds
++            .as_ref()
++            .is_some_and(|p| p.program.interface.outputs.is_empty())
++    );
++    let cloud_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
++        label: Some("Original cloud suppression signature"),
++        entries: &[wgpu::BindGroupLayoutEntry {
++            binding: 0,
++            visibility: wgpu::ShaderStages::VERTEX,
++            ty: wgpu::BindingType::Buffer {
++                ty: wgpu::BufferBindingType::Uniform,
++                has_dynamic_offset: false,
++                min_binding_size: None,
++            },
++            count: None,
++        }],
++    });
++    let white = texture_rgba(
++        &device,
++        &queue,
++        "Original cloud fixture lightmap",
++        1,
++        1,
++        &[255; 4],
++    );
++    let renderer = PackPost::new(
++        &device,
++        &queue,
++        post,
++        wgpu::TextureFormat::Rgba8Unorm,
++        World {
++            atlas: None,
++            lightmap: white,
++            terrain: None,
++            block_ids: &[],
++            celestial: None,
++            clouds: Some(&cloud_layout),
++            weather: false,
++            hand: false,
++        },
++    );
++    assert!(renderer.hides_clouds);
++    assert!(renderer.clouds.is_none());
++    assert!(
++        renderer
++            .notes
++            .iter()
++            .any(|note| note == "gbuffers_clouds: writes no buffer; skipped")
++    );
++    assert!(!renderer.notes.iter().any(
++        |note| note.contains("skipped") && note != "gbuffers_clouds: writes no buffer; skipped"
++    ));
++}
++
++/// Optional real-pack validation: the caller supplies their original archives.
++/// Unlike the legacy metadata harness, every selected program must become a GPU
++/// pipeline using the game's real vertex inputs and binding layouts.
++#[test]
++#[ignore = "requires HORIZON_TEST_SHADER_PACKS and software/hardware Vulkan"]
++fn real_shader_pack_pipelines_use_the_game_geometry() {
++    use super::super::{pack_atlas::PackAtlas, pack_entities, pack_hand, pack_sky, pack_weather};
++    let folder = std::env::var_os("HORIZON_TEST_SHADER_PACKS")
++        .expect("set HORIZON_TEST_SHADER_PACKS to original shader archives");
++    let found = horizon_shaders::discover(std::path::Path::new(&folder));
++    assert!(!found.is_empty(), "no shader packs were discovered");
++    let mut descriptor = wgpu::InstanceDescriptor::new_without_display_handle();
++    descriptor.backends = wgpu::Backends::VULKAN;
++    let instance = wgpu::Instance::new(descriptor);
++    let adapter = pollster::block_on(instance.request_adapter(&Default::default()))
++        .expect("this explicit real-pack test requires a Vulkan adapter");
++    let features = adapter.features()
++        & (wgpu::Features::TEXTURE_FORMAT_16BIT_NORM
++            | wgpu::Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES
++            | wgpu::Features::RG11B10UFLOAT_RENDERABLE
++            | wgpu::Features::FLOAT32_BLENDABLE);
++    let (device, queue) = pollster::block_on(adapter.request_device(&wgpu::DeviceDescriptor {
++        required_features: features,
++        required_limits: adapter.limits(),
++        ..Default::default()
++    }))
++    .expect("Vulkan adapter must provide the real-pack device");
++    let source = device.create_texture(&wgpu::TextureDescriptor {
++        label: Some("Original empty block sprite array"),
++        size: wgpu::Extent3d {
++            width: 16,
++            height: 16,
++            depth_or_array_layers: 1,
++        },
++        mip_level_count: 1,
++        sample_count: 1,
++        dimension: wgpu::TextureDimension::D2,
++        format: wgpu::TextureFormat::Rgba8Unorm,
++        usage: wgpu::TextureUsages::TEXTURE_BINDING
++            | wgpu::TextureUsages::COPY_SRC
++            | wgpu::TextureUsages::COPY_DST,
++        view_formats: &[],
++    });
++    let mut encoder = device.create_command_encoder(&Default::default());
++    let atlas = PackAtlas::new(&device, &mut encoder, &[source], 1, 1, 16)
++        .expect("one sprite fits the block atlas");
++    queue.submit([encoder.finish()]);
++    let single = texture_rgba(&device, &queue, "Original white lightmap", 1, 1, &[255; 4]);
++    let clouds = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
++        label: Some("Actual cloud binding signature"),
++        entries: &[wgpu::BindGroupLayoutEntry {
++            binding: 0,
++            visibility: wgpu::ShaderStages::VERTEX,
++            ty: wgpu::BindingType::Buffer {
++                ty: wgpu::BufferBindingType::Uniform,
++                has_dynamic_offset: false,
++                min_binding_size: None,
++            },
++            count: None,
++        }],
++    });
++    let flat_table = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
++        label: Some("Actual flat-terrain binding signature"),
++        entries: &[0, 1].map(|binding| wgpu::BindGroupLayoutEntry {
++            binding,
++            visibility: wgpu::ShaderStages::VERTEX,
++            ty: wgpu::BindingType::Buffer {
++                ty: wgpu::BufferBindingType::Storage { read_only: true },
++                has_dynamic_offset: false,
++                min_binding_size: None,
++            },
++            count: None,
++        }),
++    });
++    let instance_attributes = wgpu::vertex_attr_array![5=>Float32x4];
++    let buffers = [
++        Some(wgpu::VertexBufferLayout {
++            array_stride: std::mem::size_of::<super::super::TerrainVertex>() as u64,
++            step_mode: wgpu::VertexStepMode::Vertex,
++            attributes: &super::super::TERRAIN_ATTRIBUTES,
++        }),
++        Some(wgpu::VertexBufferLayout {
++            array_stride: 16,
++            step_mode: wgpu::VertexStepMode::Instance,
++            attributes: &instance_attributes,
++        }),
++    ];
++    for entry in found {
++        assert!(
++            entry.problem.is_none(),
++            "{}: {:?}",
++            entry.name,
++            entry.problem
++        );
++        let pack = Pack::open(&entry.path).unwrap();
++        let macros = Macros::standard();
++        let properties = Properties::parse(
++            &pack.read_text("shaders.properties").unwrap_or_default(),
++            &macros,
++        );
++        for dimension in [0, -1, 1] {
++            for flat in [false, true] {
++                let inputs = GameInputs {
++                    terrain: Some(atlas.terrain_inputs(flat)),
++                    sky: Some(pack_sky::inputs()),
++                    celestial: Some(pack_sky::celestial_inputs()),
++                    entities: Some(pack_entities::inputs()),
++                    clouds: Some(pack_entities::cloud_inputs()),
++                    weather: Some(pack_weather::inputs()),
++                    hand: Some(pack_hand::inputs()),
++                };
++                let mut post = load_post(
++                    &pack,
++                    &horizon_shaders::dimension_folder(&pack, dimension),
++                    &properties,
++                    &macros,
++                    &inputs,
++                );
++                post.custom.set_biomes(ORIGINAL_BIOMES);
++                assert!(
++                    post.notes.is_empty(),
++                    "{} dimension{dimension} flat{flat}: {:?}",
++                    entry.name,
++                    post.notes
++                );
++                for program in post.programs.iter().chain(&post.shadow_comp).chain(
++                    [
++                        &post.terrain,
++                        &post.water,
++                        &post.sky,
++                        &post.sky_textured,
++                        &post.entities,
++                        &post.block,
++                        &post.entities_translucent,
++                        &post.particles,
++                        &post.clouds,
++                        &post.weather,
++                        &post.hand,
++                        &post.shadow,
++                        &post.shadow_water,
++                        &post.shadow_entities,
++                        &post.shadow_block,
++                    ]
++                    .into_iter()
++                    .filter_map(Option::as_ref),
++                ) {
++                    author_program_backend_writers(&entry.name, program);
++                }
++                let expected_post = post.programs.len();
++                assert!(expected_post > 0, "{}: no post programs loaded", entry.name);
++                let expected_terrain = post.terrain.is_some();
++                let expected_water = post.water.is_some();
++                let expected_shadow = post.shadow.is_some();
++                let expected_shadow_water = post.shadow_water.is_some();
++                let expected_shadow_comp = post.shadow_comp.len();
++                let suppress_clouds = post.clouds.as_ref().is_some_and(|p| {
++                    p.program.interface.outputs.is_empty() || p.buffers.is_empty()
++                });
++                let expected_clouds = post.clouds.is_some() && !suppress_clouds;
++                let expected_weather = post.weather.is_some();
++                let expected_hand = post.hand.is_some();
++                let expected_sky = post.sky.is_some();
++                let expected_celestial = post.sky_textured.is_some();
++                let expected_entities = [
++                    post.entities.is_some(),
++                    post.block.is_some(),
++                    post.entities_translucent.is_some(),
++                    post.particles.is_some(),
++                ];
++                let expected_shadow_entities =
++                    [post.shadow_entities.is_some(), post.shadow_block.is_some()];
++                let renderer = PackPost::new(
++                    &device,
++                    &queue,
++                    post,
++                    wgpu::TextureFormat::Rgba8Unorm,
++                    World {
++                        atlas: Some((atlas.view.clone(), atlas.size())),
++                        lightmap: single.clone(),
++                        terrain: Some(Geometry {
++                            buffers: if flat { &buffers[..1] } else { &buffers },
++                            table: flat.then_some(&flat_table),
++                            depth_write: true,
++                            atlas: None,
++                            ids: None,
++                            cull: true,
++                        }),
++                        block_ids: &[-1, -1],
++                        celestial: Some(single.clone()),
++                        clouds: Some(&clouds),
++                        weather: true,
++                        hand: true,
++                    },
++                );
++                let context = format!(
++                    "{} dimension{dimension} flat{flat}: {:?}",
++                    entry.name, renderer.notes
++                );
++                if suppress_clouds {
++                    assert!(
++                        renderer.hides_clouds && renderer.clouds.is_none(),
++                        "{context}"
++                    );
++                }
++                assert!(
++                    !renderer.notes.iter().any(|note| (note.contains("skipped")
++                        && !(suppress_clouds
++                            && note == "gbuffers_clouds: writes no buffer; skipped"))
++                        || note.contains("not provided yet")
++                        || note.contains("zero for now:")
++                        || note.contains("names no biome")
++                        || note.contains("failed")),
++                    "{context}"
++                );
++                assert_eq!(renderer.passes.len(), expected_post, "{context}");
++                assert_eq!(renderer.terrain.is_some(), expected_terrain, "{context}");
++                assert_eq!(renderer.water.is_some(), expected_water, "{context}");
++                assert_eq!(
++                    renderer.shadow_terrain.is_some(),
++                    expected_shadow,
++                    "{context}"
++                );
++                assert_eq!(
++                    renderer.shadow_water.is_some(),
++                    expected_shadow_water,
++                    "{context}"
++                );
++                assert_eq!(
++                    renderer.shadow_comp.len(),
++                    expected_shadow_comp,
++                    "{context}"
++                );
++                assert_eq!(renderer.clouds.is_some(), expected_clouds, "{context}");
++                assert_eq!(renderer.weather.is_some(), expected_weather, "{context}");
++                assert_eq!(renderer.hand.is_some(), expected_hand, "{context}");
++                assert_eq!(
++                    renderer.sky.as_ref().is_some_and(|sky| sky.basic.is_some()),
++                    expected_sky,
++                    "{context}"
++                );
++                assert_eq!(
++                    renderer
++                        .sky
++                        .as_ref()
++                        .is_some_and(|sky| sky.textured.is_some()),
++                    expected_celestial,
++                    "{context}"
++                );
++                for i in 0..4 {
++                    assert_eq!(
++                        renderer
++                            .entities
++                            .as_ref()
++                            .is_some_and(|entities| entities.passes[i].is_some()),
++                        expected_entities[i],
++                        "{context}"
++                    );
++                }
++                for i in 0..2 {
++                    assert_eq!(
++                        renderer
++                            .entities
++                            .as_ref()
++                            .is_some_and(|entities| entities.shadow[i].is_some()),
++                        expected_shadow_entities[i],
++                        "{context}"
++                    );
++                }
++                println!(
++                    "{} dimension{dimension} flat{flat}: {expected_post} post pipelines, terrain/shadow/sky/entities/cloud/weather/hand requirements preserved; {} loading notes",
++                    entry.name,
++                    renderer.notes.len()
++                );
++                device.poll(wgpu::PollType::wait_indefinitely()).unwrap();
++            }
++        }
++    }
++}
++
++/// Source-generation checks complement Vulkan execution; they do not run the
++/// generated programs on Windows/Metal drivers or redistribute author shaders.
++fn author_program_backend_writers(pack: &str, program: &horizon_shaders::PostProgram) {
++    for module in [&program.program.vertex, &program.program.fragment] {
++        let info =
++            naga::valid::Validator::new(Default::default(), naga::valid::Capabilities::all())
++                .validate(module)
++                .unwrap_or_else(|error| panic!("{pack} {}: IR validation: {error}", program.name));
++        for entry in &module.entry_points {
++            let context = format!("{pack} {} {:?}", program.name, entry.stage);
++            let mut hlsl = String::new();
++            let hlsl_info = naga::back::hlsl::Writer::new(
++                &mut hlsl,
++                &naga::back::hlsl::Options::default(),
++                &naga::back::hlsl::PipelineOptions {
++                    entry_point: Some((entry.stage, entry.name.clone())),
++                },
++            )
++            .write(module, &info, None)
++            .unwrap_or_else(|error| panic!("{context}: HLSL writer: {error}"));
++            assert!(!hlsl.is_empty(), "{context}: empty HLSL source");
++            assert!(
++                hlsl_info.entry_point_names.iter().all(Result::is_ok),
++                "{context}: HLSL entry points: {:?}",
++                hlsl_info.entry_point_names
++            );
++            let (msl, msl_info) = naga::back::msl::write_string(
++                module,
++                &info,
++                &naga::back::msl::Options {
++                    lang_version: (2, 2),
++                    ..Default::default()
++                },
++                &naga::back::msl::PipelineOptions {
++                    entry_point: Some((entry.stage, entry.name.clone())),
++                    ..Default::default()
++                },
++            )
++            .unwrap_or_else(|error| panic!("{context}: MSL writer: {error}"));
++            assert!(!msl.is_empty(), "{context}: empty MSL source");
++            assert!(
++                msl_info.entry_point_names.iter().all(Result::is_ok),
++                "{context}: MSL entry points: {:?}",
++                msl_info.entry_point_names
++            );
++        }
++    }
++}
++
++/// Synthetic, original world inputs for asset-free execution of author packs.
++/// The real game uses exactly this Frame type and the real terrain vertex format.
++fn original_world_frame(hud: &crate::hud::HudBatch) -> super::super::Frame<'_> {
++    use glam::{DVec3, Mat4};
++    super::super::Frame {
++        camera: DVec3::new(0.0, 64.0, 0.0),
++        yaw: 0.0,
++        pitch: 12.0,
++        fov_degrees: 70.0,
++        bob: Mat4::IDENTITY,
++        spin: Mat4::IDENTITY,
++        sky: crate::environment::Sky {
++            sky_color: [0.30, 0.55, 0.90],
++            fog_color: [0.55, 0.65, 0.80],
++            sky_light_factor: 1.0,
++            sky_light_color: [1.0; 3],
++            block_light_tint: [1.0; 3],
++            ambient_light_color: [0.1; 3],
++            cloud_color: [1.0; 4],
++            fog_start: 96.0,
++            fog_end: 128.0,
++            sun_angle: 0.0,
++            moon_angle: 180.0,
++            ..Default::default()
++        },
++        distance: 128.0,
++        detail_distance: 128.0,
++        depth_far: 512.0,
++        underwater: false,
++        cave_culling: false,
++        title: false,
++        sky_blocked: false,
++        skybox: true,
++        end_sky: false,
++        end_sky_sprite: None,
++        environment_fog: None,
++        water_fog: [0.1, 0.2, 0.4],
++        fog: None,
++        dark_disc: false,
++        outline: Vec::new(),
++        outline_after_terrain: false,
++        outline_high_contrast: false,
++        debug_lines: &[],
++        debug_lines_on_top: &[],
++        debug_crosshair: &[],
++        hud,
++        glint_alpha: 0.75,
++        glint_ticks: 0.0,
++        nether_lighting: false,
++        entities: &[],
++        glowing: &[],
++        entity_spans: &[],
++        weather: &[],
++        weather_time: crate::weather::Time::new(6000, 0.0),
++        dynamic_lights: &[],
++        clouds: None,
++        lightning: Default::default(),
++        additive: &[],
++        see_through: &[],
++        celestial: &[],
++        stars: None,
++        hand: &[],
++        hand_items: &[],
++        hand_fov_degrees: 70.0,
++        screen: &[],
++        pack: PackInputs {
++            day_time: 6000,
++            eye_light: [15; 2],
++            brightness: 0.5,
++            temperature: 0.8,
++            rainfall: 0.4,
++            held_items: [-1; 2],
++            ..Default::default()
++        },
++        border: None,
++        game_time: 6000.0,
++        shader_game_time: 0.25,
++        end_portal_sprites: [[0.0; 4]; 2],
++        crumbling_sprite: [0.0; 4],
++        ticks: 6000,
++        darkness: (0.0, 0.0),
++        night_vision: 0.0,
++        block_flicker: 0.0,
++        boss_darken: 0.0,
++        menu_blur: None,
++        chunk_fade: 0.0,
++        post_effects: crate::post_chain::Request {
++            effects: &[],
++            root: std::path::Path::new("."),
++            menu_blur_radius: 0.0,
++            globals: Default::default(),
++        },
++    }
++}
++
++#[test]
++fn frame_history_retains_sub_block_motion_and_has_no_current_object() {
++    let hud = crate::hud::HudBatch::new([64, 48]);
++    let mut frame = original_world_frame(&hud);
++    frame.camera = glam::DVec3::new(29_999_999.875, 64.0, -0.125);
++    let mut uniforms = FrameUniforms::default();
++    uniforms.update(&frame, &frame.pack, [64, 48]);
++    for (name, ty) in [
++        ("entityId", "int"),
++        ("blockEntityId", "int"),
++        ("currentRenderedItemId", "int"),
++        ("entityColor", "vec4"),
++    ] {
++        let value = uniforms.values[pack_uniforms::index(name).unwrap()];
++        let mut bytes = [0u8; 16];
++        value.write(ty, &mut bytes, 0);
++        assert_eq!(
++            bytes, [0; 16],
++            "no current object in a fullscreen pass: {name}"
++        );
++    }
++    frame.camera.x += 0.0625;
++    uniforms.update(&frame, &frame.pack, [64, 48]);
++    let component = |name: &str| match uniforms.values[pack_uniforms::index(name).unwrap()] {
++        pack_uniforms::Value::F(values) => values[0],
++        _ => panic!("{name} must have a floating-point value"),
++    };
++    assert_eq!(component("previousCameraPositionFract"), 0.875);
++    assert_eq!(component("cameraPositionFract"), 0.9375);
++}
++
++/// Executes the selected packs' actual terrain, shadows and post passes. The
++/// atlas/quad are original generated fixtures, never Mojang assets or copied
++/// pack programs. Read back float pixels as well as depth so validation cannot
++/// pass merely because a pipeline built or the vanilla clear was presented.
++#[test]
++#[ignore = "requires HORIZON_TEST_SHADER_PACKS and software/hardware Vulkan"]
++fn real_shader_packs_render_original_terrain_and_finite_pixels() {
++    use super::super::pack_atlas::PackAtlas;
++    use wgpu::util::DeviceExt;
++    let folder = std::env::var_os("HORIZON_TEST_SHADER_PACKS")
++        .expect("set HORIZON_TEST_SHADER_PACKS to original shader archives");
++    let found = horizon_shaders::discover(std::path::Path::new(&folder));
++    assert!(!found.is_empty(), "no author shader archives found");
++    let mut descriptor = wgpu::InstanceDescriptor::new_without_display_handle();
++    descriptor.backends = wgpu::Backends::VULKAN;
++    let instance = wgpu::Instance::new(descriptor);
++    let adapter = pollster::block_on(instance.request_adapter(&Default::default()))
++        .expect("this explicit GPU test requires a Vulkan adapter");
++    let features = adapter.features()
++        & (wgpu::Features::TEXTURE_FORMAT_16BIT_NORM
++            | wgpu::Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES
++            | wgpu::Features::RG11B10UFLOAT_RENDERABLE
++            | wgpu::Features::FLOAT32_BLENDABLE);
++    let (device, queue) = pollster::block_on(adapter.request_device(&wgpu::DeviceDescriptor {
++        required_features: features,
++        required_limits: adapter.limits(),
++        ..Default::default()
++    }))
++    .unwrap();
++    let original_pixels: Vec<u8> = (0..256)
++        .flat_map(|pixel| {
++            if (pixel / 16 + pixel % 16) % 2 == 0 {
++                [200, 80, 35, 255]
++            } else {
++                [35, 180, 75, 255]
++            }
++        })
++        .collect();
++    let source = device.create_texture_with_data(
++        &queue,
++        &wgpu::TextureDescriptor {
++            label: Some("Original two-color terrain sprite"),
++            size: wgpu::Extent3d {
++                width: 16,
++                height: 16,
++                depth_or_array_layers: 1,
++            },
++            mip_level_count: 1,
++            sample_count: 1,
++            dimension: wgpu::TextureDimension::D2,
++            format: wgpu::TextureFormat::Rgba8Unorm,
++            usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_SRC,
++            view_formats: &[],
++        },
++        wgpu::util::TextureDataOrder::LayerMajor,
++        &original_pixels,
++    );
++    let mut encoder = device.create_command_encoder(&Default::default());
++    let atlas = PackAtlas::new(&device, &mut encoder, &[source], 1, 1, 16).unwrap();
++    queue.submit([encoder.finish()]);
++    let lightmap = texture_rgba(&device, &queue, "Original full lightmap", 1, 1, &[255; 4]);
++    let terrain_vertices = [
++        ([-4.0, -2.0, 3.0], [0.0, 0.0]),
++        ([-4.0, -2.0, 12.0], [0.0, 1.0]),
++        ([4.0, -2.0, 12.0], [1.0, 1.0]),
++        ([4.0, -2.0, 3.0], [1.0, 0.0]),
++    ]
++    .map(|(position, uv)| super::super::TerrainVertex::new(position, uv, 0, u32::MAX, 0xf0f0));
++    let vertices = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
++        label: Some("Original terrain quad"),
++        contents: bytemuck::cast_slice(&terrain_vertices),
++        usage: wgpu::BufferUsages::VERTEX,
++    });
++    let indices = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
++        label: Some("Original terrain quad indices"),
++        contents: bytemuck::cast_slice(&[0u32, 1, 2, 0, 2, 3]),
++        usage: wgpu::BufferUsages::INDEX,
++    });
++    let origin = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
++        label: Some("Original camera-relative terrain origin"),
++        contents: bytemuck::cast_slice(&[0.0f32, 0.0, 0.0, 1.0 / 32768.0]),
++        usage: wgpu::BufferUsages::VERTEX,
++    });
++    let instance_attributes = wgpu::vertex_attr_array![5=>Float32x4];
++    let buffers = [
++        Some(wgpu::VertexBufferLayout {
++            array_stride: std::mem::size_of::<super::super::TerrainVertex>() as u64,
++            step_mode: wgpu::VertexStepMode::Vertex,
++            attributes: &super::super::TERRAIN_ATTRIBUTES,
++        }),
++        Some(wgpu::VertexBufferLayout {
++            array_stride: 16,
++            step_mode: wgpu::VertexStepMode::Instance,
++            attributes: &instance_attributes,
++        }),
++    ];
++    let size = [64, 48];
++    let hud = crate::hud::HudBatch::new(size);
++    let frame = original_world_frame(&hud);
++    let texture = |label, format, usage| {
++        device.create_texture(&wgpu::TextureDescriptor {
++            label: Some(label),
++            size: wgpu::Extent3d {
++                width: size[0],
++                height: size[1],
++                depth_or_array_layers: 1,
++            },
++            mip_level_count: 1,
++            sample_count: 1,
++            dimension: wgpu::TextureDimension::D2,
++            format,
++            usage,
++            view_formats: &[],
++        })
++    };
++    let world = texture(
++        "Original world target",
++        wgpu::TextureFormat::Rgba8Unorm,
++        wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::RENDER_ATTACHMENT,
++    );
++    let depth = texture(
++        "Original world reverse depth",
++        wgpu::TextureFormat::Depth32Float,
++        wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::RENDER_ATTACHMENT,
++    );
++    let output = texture(
++        "Real author pack float output",
++        wgpu::TextureFormat::Rgba32Float,
++        wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::COPY_SRC,
++    );
++    let world_view = world.create_view(&Default::default());
++    let depth_view = depth.create_view(&Default::default());
++    let output_view = output.create_view(&Default::default());
++    let readback = |label, row| {
++        device.create_buffer(&wgpu::BufferDescriptor {
++            label: Some(label),
++            size: u64::from(row * size[1]),
++            usage: wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::MAP_READ,
++            mapped_at_creation: false,
++        })
++    };
++    let color_readback = readback("Real pack float pixel readback", size[0] * 16);
++    let depth_readback = readback("Real pack terrain depth readback", size[0] * 4);
++    let output_folder =
++        std::env::var_os("HORIZON_SHADER_TEST_OUTPUT").map(std::path::PathBuf::from);
++    let mut reports = Vec::new();
++    for entry in found {
++        assert!(
++            entry.problem.is_none(),
++            "{}: {:?}",
++            entry.name,
++            entry.problem
++        );
++        let pack = Pack::open(&entry.path).unwrap();
++        let macros = Macros::standard();
++        let properties = Properties::parse(
++            &pack.read_text("shaders.properties").unwrap_or_default(),
++            &macros,
++        );
++        let mut post = load_post(
++            &pack,
++            &horizon_shaders::dimension_folder(&pack, 0),
++            &properties,
++            &macros,
++            &GameInputs {
++                terrain: Some(atlas.terrain_inputs(false)),
++                ..Default::default()
++            },
++        );
++        post.custom.set_biomes(ORIGINAL_BIOMES);
++        assert!(post.notes.is_empty(), "{}: {:?}", entry.name, post.notes);
++        assert!(
++            post.terrain.is_some(),
++            "{}: actual terrain program required",
++            entry.name
++        );
++        assert!(
++            post.programs
++                .iter()
++                .any(|program| program.group == Group::Final),
++            "{}: author final pass required",
++            entry.name
++        );
++        let expected_post = post.programs.len();
++        let expected_shadow = post.shadow.is_some();
++        let mut renderer = PackPost::new(
++            &device,
++            &queue,
++            post,
++            wgpu::TextureFormat::Rgba32Float,
++            World {
++                atlas: Some((atlas.view.clone(), atlas.size())),
++                lightmap: lightmap.clone(),
++                terrain: Some(Geometry {
++                    buffers: &buffers,
++                    table: None,
++                    depth_write: true,
++                    atlas: None,
++                    ids: None,
++                    cull: false,
++                }),
++                block_ids: &[-1, -1],
++                celestial: None,
++                clouds: None,
++                weather: false,
++                hand: false,
++            },
++        );
++        assert!(
++            renderer.terrain.is_some()
++                && renderer
++                    .passes
++                    .iter()
++                    .any(|pass| pass.group == Group::Final),
++            "{}: real geometry/final pipeline missing: {:?}",
++            entry.name,
++            renderer.notes
++        );
++        assert_eq!(
++            renderer.passes.len(),
++            expected_post,
++            "{}: required post pipeline skipped: {:?}",
++            entry.name,
++            renderer.notes
++        );
++        assert_eq!(
++            renderer.shadow_terrain.is_some(),
++            expected_shadow,
++            "{}: shadow terrain pipeline skipped",
++            entry.name
++        );
++        assert!(
++            !renderer.notes.iter().any(|note| note.contains("skipped")
++                || note.contains("not provided yet")
++                || note.contains("failed")),
++            "{}: {:?}",
++            entry.name,
++            renderer.notes
++        );
++        let mut terrain_draws = 0;
++        for _ in 0..3 {
++            let mut encoder = device.create_command_encoder(&Default::default());
++            encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
++                label: Some("Original world clear"),
++                color_attachments: &[attach(
++                    &world_view,
++                    wgpu::Operations {
++                        load: wgpu::LoadOp::Clear(wgpu::Color {
++                            r: 0.15,
++                            g: 0.3,
++                            b: 0.5,
++                            a: 1.0,
++                        }),
++                        store: wgpu::StoreOp::Store,
++                    },
++                )],
++                depth_stencil_attachment: Some(wgpu::RenderPassDepthStencilAttachment {
++                    view: &depth_view,
++                    depth_ops: Some(wgpu::Operations {
++                        load: wgpu::LoadOp::Clear(0.0),
++                        store: wgpu::StoreOp::Store,
++                    }),
++                    stencil_ops: None,
++                }),
++                ..Default::default()
++            });
++            let mut draw = |pass: &mut wgpu::RenderPass<'_>,
++                            list,
++                            _: &dyn Fn(&mut wgpu::RenderPass<'_>, u32)| {
++                if matches!(list, TerrainList::Solid | TerrainList::ShadowSolid) {
++                    pass.set_vertex_buffer(0, vertices.slice(..));
++                    pass.set_vertex_buffer(1, origin.slice(..));
++                    pass.set_index_buffer(indices.slice(..), wgpu::IndexFormat::Uint32);
++                    pass.draw_indexed(0..6, 0, 0..1);
++                    terrain_draws += 1;
++                }
++            };
++            renderer.run(
++                &device,
++                &queue,
++                &mut encoder,
++                &world_view,
++                &depth_view,
++                &output_view,
++                &frame,
++                &frame.pack,
++                size,
++                size,
++                &[],
++                &mut draw,
++            );
++            queue.submit([encoder.finish()]);
++            device.poll(wgpu::PollType::wait_indefinitely()).unwrap();
++        }
++        assert!(
++            terrain_draws >= 3,
++            "{}: author terrain program never drew",
++            entry.name
++        );
++        let mut encoder = device.create_command_encoder(&Default::default());
++        for (source, target, bytes_per_row, aspect) in [
++            (
++                &output,
++                &color_readback,
++                size[0] * 16,
++                wgpu::TextureAspect::All,
++            ),
++            (
++                &renderer.targets.as_ref().unwrap().depth_texture,
++                &depth_readback,
++                size[0] * 4,
++                wgpu::TextureAspect::DepthOnly,
++            ),
++        ] {
++            encoder.copy_texture_to_buffer(
++                wgpu::TexelCopyTextureInfo {
++                    aspect,
++                    ..source.as_image_copy()
++                },
++                wgpu::TexelCopyBufferInfo {
++                    buffer: target,
++                    layout: wgpu::TexelCopyBufferLayout {
++                        offset: 0,
++                        bytes_per_row: Some(bytes_per_row),
++                        rows_per_image: None,
++                    },
++                },
++                source.size(),
++            );
++        }
++        queue.submit([encoder.finish()]);
++        let map = |buffer: &wgpu::Buffer| {
++            let (tx, rx) = std::sync::mpsc::sync_channel(1);
++            buffer
++                .slice(..)
++                .map_async(wgpu::MapMode::Read, move |result| {
++                    let _ = tx.send(result);
++                });
++            device.poll(wgpu::PollType::wait_indefinitely()).unwrap();
++            rx.recv().unwrap().unwrap();
++        };
++        map(&color_readback);
++        map(&depth_readback);
++        let pixels = color_readback.slice(..).get_mapped_range().unwrap();
++        let values: &[f32] = bytemuck::cast_slice(&pixels);
++        assert!(
++            values.iter().all(|value| value.is_finite()),
++            "{}: nonfinite output pixels",
++            entry.name
++        );
++        let depth_pixels = depth_readback.slice(..).get_mapped_range().unwrap();
++        let depths: &[f32] = bytemuck::cast_slice(&depth_pixels);
++        let covered = depths.iter().filter(|&&value| value < 0.9999).count();
++        assert!(
++            covered > 32 && covered < depths.len() - 32,
++            "{}: fixture terrain depth coverage invalid: {covered}/{}",
++            entry.name,
++            depths.len()
++        );
++        let luminance: Vec<f32> = values
++            .chunks_exact(4)
++            .map(|pixel| pixel[..3].iter().sum::<f32>())
++            .collect();
++        let min = luminance.iter().copied().fold(f32::INFINITY, f32::min);
++        let max = luminance.iter().copied().fold(f32::NEG_INFINITY, f32::max);
++        assert!(
++            max > 0.05 && max - min > 0.02,
++            "{}: output was black/constant: luminance {min}..{max}",
++            entry.name
++        );
++        println!(
++            "{}: author terrain/shadow/post execution; {covered} terrain depth pixels; finite output luminance {min}..{max}",
++            entry.name
++        );
++        if let Some(folder) = &output_folder {
++            std::fs::create_dir_all(folder).unwrap();
++            let basename: String = entry
++                .name
++                .chars()
++                .map(|c| {
++                    if c.is_ascii_alphanumeric() || c == '-' || c == '_' {
++                        c
++                    } else {
++                        '_'
++                    }
++                })
++                .collect();
++            let rgba: Vec<u8> = values
++                .iter()
++                .map(|&value| (value.clamp(0.0, 1.0) * 255.0).round() as u8)
++                .collect();
++            std::fs::write(
++                folder.join(format!("{basename}.png")),
++                png_bytes(size[0], size[1], png::ColorType::Rgba, &rgba),
++            )
++            .unwrap();
++        }
++        reports.push(serde_json::json!({
++            "pack": entry.name, "dimension": 0, "flat_terrain": false,
++            "frames": 3, "size": size, "post_pipelines": expected_post,
++            "terrain_depth_pixels": covered, "total_pixels": depths.len(),
++            "finite_float_output": true, "rgb_sum_min": min, "rgb_sum_max": max,
++        }));
++        drop(pixels);
++        drop(depth_pixels);
++        color_readback.unmap();
++        depth_readback.unmap();
++    }
++    if let Some(folder) = &output_folder {
++        let report = serde_json::json!({ "adapter": adapter.get_info().name,
++            "backend": "Vulkan", "cases": reports,
++            "limits": ["Original synthetic terrain only; no Minecraft assets, full world, gameplay or visual parity validation.",
++                "Native Windows DX12, Metal and player GPU performance remain untested."] });
++        std::fs::write(
++            folder.join("rendered-packs.json"),
++            serde_json::to_vec_pretty(&report).unwrap(),
++        )
++        .unwrap();
++    }
++}
++
++/// An original GLSL fixture makes the arm, main-hand item and off-hand item
++/// visibly depend on their own HzDraw slot. This exercises translation, hand
++/// segmentation, dynamic uniform offsets and actual draw ranges together.
++#[test]
++#[ignore = "requires software/hardware Vulkan"]
++fn rendered_hand_items_keep_distinct_ids_on_the_gpu() {
++    let mut descriptor = wgpu::InstanceDescriptor::new_without_display_handle();
++    descriptor.backends = wgpu::Backends::VULKAN;
++    let instance = wgpu::Instance::new(descriptor);
++    let adapter = pollster::block_on(instance.request_adapter(&Default::default()))
++        .expect("this explicit GPU test requires a Vulkan adapter");
++    let (device, queue) = pollster::block_on(adapter.request_device(&Default::default())).unwrap();
++    let scratch = Scratch::new();
++    std::fs::write(
++        scratch.0.join("shaders/gbuffers_hand.vsh"),
++        "#version 120\nvoid main() { gl_Position = gl_Vertex; }\n",
++    )
++    .unwrap();
++    std::fs::write(
++        scratch.0.join("shaders/gbuffers_hand.fsh"),
++        "#version 120\nuniform int currentRenderedItemId;\nvoid main() {\n\
++         if (currentRenderedItemId == 101) gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);\n\
++         else if (currentRenderedItemId == 202) gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0);\n\
++         else if (currentRenderedItemId == 0) gl_FragColor = vec4(0.0, 0.0, 1.0, 1.0);\n\
++         else gl_FragColor = vec4(1.0, 0.0, 1.0, 1.0);\n}\n",
++    )
++    .unwrap();
++    let post = load_post(
++        &Pack::open(&scratch.0).unwrap(),
++        "",
++        &Properties::default(),
++        &Macros::standard(),
++        &GameInputs {
++            hand: Some(super::super::pack_hand::inputs()),
++            ..Default::default()
++        },
++    );
++    assert!(post.notes.is_empty(), "{:?}", post.notes);
++    assert!(
++        post.hand
++            .as_ref()
++            .is_some_and(|hand| hand.program.interface.draw)
++    );
++    let lightmap = texture_rgba(
++        &device,
++        &queue,
++        "Original hand fixture lightmap",
++        1,
++        1,
++        &[255; 4],
++    );
++    let mut renderer = PackPost::new(
++        &device,
++        &queue,
++        post,
++        wgpu::TextureFormat::Rgba8Unorm,
++        World {
++            atlas: None,
++            lightmap,
++            terrain: None,
++            block_ids: &[],
++            celestial: None,
++            clouds: None,
++            weather: false,
++            hand: true,
++        },
++    );
++    assert!(renderer.hand.is_some(), "{:?}", renderer.notes);
++    let hand: Vec<super::super::Vertex> = [[-0.95, -0.4], [-0.3, 0.3], [0.4, 0.95]]
++        .into_iter()
++        .flat_map(|[left, right]| {
++            [
++                [left, -0.75, 0.0],
++                [right, -0.75, 0.0],
++                [right, 0.75, 0.0],
++                [left, 0.75, 0.0],
++            ]
++        })
++        .map(|pos| super::super::Vertex {
++            pos,
++            uv: [0.0; 2],
++            layer: 0,
++            color: u32::MAX,
++            light: 0xf0f0,
++            normal: [0, 0, 127, 0],
++            glint_uv: [0.0; 2],
++        })
++        .collect();
++    let size = [64, 48];
++    let hud = crate::hud::HudBatch::new(size);
++    let texture = |label, format, usage| {
++        device.create_texture(&wgpu::TextureDescriptor {
++            label: Some(label),
++            size: wgpu::Extent3d {
++                width: size[0],
++                height: size[1],
++                depth_or_array_layers: 1,
++            },
++            mip_level_count: 1,
++            sample_count: 1,
++            dimension: wgpu::TextureDimension::D2,
++            format,
++            usage,
++            view_formats: &[],
++        })
++    };
++    let world = texture(
++        "Original hand fixture world",
++        wgpu::TextureFormat::Rgba8Unorm,
++        wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::RENDER_ATTACHMENT,
++    );
++    let depth = texture(
++        "Original hand fixture depth",
++        wgpu::TextureFormat::Depth32Float,
++        wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::RENDER_ATTACHMENT,
++    );
++    let output = texture(
++        "Original hand ID output",
++        wgpu::TextureFormat::Rgba8Unorm,
++        wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::COPY_SRC,
++    );
++    let world_view = world.create_view(&Default::default());
++    let depth_view = depth.create_view(&Default::default());
++    let output_view = output.create_view(&Default::default());
++    let readback = device.create_buffer(&wgpu::BufferDescriptor {
++        label: Some("Original hand ID readback"),
++        size: u64::from(256 * size[1]),
++        usage: wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::MAP_READ,
++        mapped_at_creation: false,
++    });
++    for [main, off] in [[101, 202], [202, 101]] {
++        let items = [
++            super::super::pack_draw::ItemSpan {
++                start: 4,
++                item_id: main,
++            },
++            super::super::pack_draw::ItemSpan {
++                start: 8,
++                item_id: off,
++            },
++        ];
++        let mut frame = original_world_frame(&hud);
++        frame.hand = &hand;
++        frame.hand_items = &items;
++        let mut encoder = device.create_command_encoder(&Default::default());
++        encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
++            label: Some("Original hand world clear"),
++            color_attachments: &[attach(
++                &world_view,
++                wgpu::Operations {
++                    load: wgpu::LoadOp::Clear(wgpu::Color::BLACK),
++                    store: wgpu::StoreOp::Store,
++                },
++            )],
++            depth_stencil_attachment: Some(wgpu::RenderPassDepthStencilAttachment {
++                view: &depth_view,
++                depth_ops: Some(wgpu::Operations {
++                    load: wgpu::LoadOp::Clear(0.0),
++                    store: wgpu::StoreOp::Store,
++                }),
++                stencil_ops: None,
++            }),
++            ..Default::default()
++        });
++        renderer.run(
++            &device,
++            &queue,
++            &mut encoder,
++            &world_view,
++            &depth_view,
++            &output_view,
++            &frame,
++            &frame.pack,
++            size,
++            size,
++            &[],
++            &mut |_, _, _| {},
++        );
++        encoder.copy_texture_to_buffer(
++            output.as_image_copy(),
++            wgpu::TexelCopyBufferInfo {
++                buffer: &readback,
++                layout: wgpu::TexelCopyBufferLayout {
++                    offset: 0,
++                    bytes_per_row: Some(256),
++                    rows_per_image: None,
++                },
++            },
++            output.size(),
++        );
++        queue.submit([encoder.finish()]);
++        let (tx, rx) = std::sync::mpsc::sync_channel(1);
++        readback
++            .slice(..)
++            .map_async(wgpu::MapMode::Read, move |result| {
++                let _ = tx.send(result);
++            });
++        device.poll(wgpu::PollType::wait_indefinitely()).unwrap();
++        rx.recv().unwrap().unwrap();
++        let pixels = readback.slice(..).get_mapped_range().unwrap();
++        let color = |id| match id {
++            0 => [0, 0, 255, 255],
++            101 => [255, 0, 0, 255],
++            202 => [0, 255, 0, 255],
++            _ => unreachable!(),
++        };
++        for (x, item) in [(10usize, 0), (32, main), (53, off)] {
++            let offset = 24 * 256 + x * 4;
++            assert_eq!(
++                &pixels[offset..offset + 4],
++                &color(item),
++                "hand region x{x} must use item ID{item}; main{main} off{off}"
++            );
++        }
++        drop(pixels);
++        readback.unmap();
++    }
++}

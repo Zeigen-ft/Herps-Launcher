@@ -13,7 +13,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 mod private_server;
 
-const VERSION: &str = "0.2.2";
+const VERSION: &str = "0.2.3";
 const HELP: &str = "Herspers Minecraft for Windows\n\
 Usage: Herspers-Minecraft.exe [-- <game arguments>]\n\
        Herspers-Minecraft.exe --setup [server.jar] [minecraft-folder]\n\

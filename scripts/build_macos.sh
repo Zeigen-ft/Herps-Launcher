@@ -20,7 +20,7 @@ HORIZON_VERSION=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])
 export MACOSX_DEPLOYMENT_TARGET=11.0
 export CARGO_TARGET_DIR="$root/.cache/target"
 export CARGO_BUILD_JOBS=${CARGO_BUILD_JOBS:-4}
-source_dir=$(python3 "$root/tools/fetch_upstream.py")
+source_dir=$(python3 "$root/tools/prepare_upstream.py")
 rustup toolchain install "$toolchain" --profile minimal
 for target in "${targets[@]}"; do
   rustup target add --toolchain "$toolchain" "$target"

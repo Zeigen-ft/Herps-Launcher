@@ -23,7 +23,7 @@ LAUNCHER = "Herspers-Minecraft.exe"
 FOLDER = "Herspers-Minecraft"
 ARCHIVE = "herspers-minecraft-windows-x86_64.zip"
 HELPERS = ("Setup.cmd", "Play.cmd", "Host-Tailscale.cmd", "Join-Tailscale.cmd")
-PRODUCT_VERSION = "0.2.2"
+PRODUCT_VERSION = "0.2.3"
 MIN_CLIENT_STACK_RESERVE = 16 * 1024 * 1024
 
 # Policy adapted from Horizon's MIT-licensed tools/check_imports.py, copyright
@@ -154,6 +154,7 @@ def assemble(source: Path, binaries: Path, launcher: Path, output: Path,
         raise ValueError("real packaging requires Windows; --stage-only is unverified assembly only")
     inputs = _common.source_inputs(source)
     notices = _common.license_files(source)
+    engine_source, patch_provenance = _common.engine_patch_provenance(source, PROJECT)
     verified = {name: verify_binary(binaries / name) for name in BINARIES}
     if verified["horizon-client.exe"]["stack_reserve_bytes"] < MIN_CLIENT_STACK_RESERVE:
         raise ValueError("horizon-client.exe needs at least a 16 MiB main-thread stack reserve; "
@@ -163,6 +164,7 @@ def assemble(source: Path, binaries: Path, launcher: Path, output: Path,
     project_lock = _common.checked_file(PROJECT / "upstream.lock.json")
     guide = _common.checked_file(PROJECT / "docs/INSTALL-WINDOWS.md")
     hosting_guide = _common.checked_file(PROJECT / "docs/HOSTING-TAILSCALE.md")
+    shader_guide = _common.checked_file(PROJECT / "docs/SHADERS.md")
     helpers = [_common.checked_file(PROJECT / "packaging/windows" / name) for name in HELPERS]
     destination, archive = output / FOLDER, output / ARCHIVE
     if destination.exists() or destination.is_symlink() or archive.exists():
@@ -180,6 +182,8 @@ def assemble(source: Path, binaries: Path, launcher: Path, output: Path,
         shutil.copy2(project_lock, package / "upstream.lock.json")
         shutil.copy2(guide, package / "INSTALL-WINDOWS.txt")
         shutil.copy2(hosting_guide, package / "HOSTING-TAILSCALE.txt")
+        shutil.copy2(shader_guide, package / "SHADERS.txt")
+        (package / "engine-patches.json").write_text(json.dumps(patch_provenance, indent=2) + "\n")
         for helper in helpers:
             shutil.copy2(helper, package / helper.name)
         preparation_hash = hashlib.sha256()
@@ -190,7 +194,7 @@ def assemble(source: Path, binaries: Path, launcher: Path, output: Path,
         (package / "preparation-id.txt").write_text(preparation_hash.hexdigest() + "\n")
         metadata = {"product_version": PRODUCT_VERSION, "architecture": "x86_64", "stage_only": stage_only,
                     "windows_runtime_tested": False, "game_resources_included": False,
-                    "code_signed": False, "binaries": verified}
+                    "code_signed": False, "engine_source": engine_source, "binaries": verified}
         (package / "build-metadata.json").write_text(json.dumps(metadata, indent=2) + "\n")
         status = ("STAGED ONLY: UNVERIFIED ASSEMBLY, NOT A WORKING WINDOWS BUILD.\n" if stage_only
                   else "Packaged native Windows binaries. Unsigned; gameplay has not been verified.\n")

@@ -10,7 +10,7 @@ if [[ ! -x "$CARGO_HOME/bin/rustup" ]]; then
   sh /workspace/.setup/rustup-init.sh -y --no-modify-path --default-toolchain 1.95.0 --profile minimal
 fi
 rustup toolchain install 1.95.0 --profile minimal
-source_dir=$(python3 "$root/tools/fetch_upstream.py")
+source_dir=$(python3 "$root/tools/prepare_upstream.py")
 cd "$root"
 python3 -m unittest discover -s tests -v
 for script in scripts/*.sh packaging/*.command; do bash -n "$script"; done

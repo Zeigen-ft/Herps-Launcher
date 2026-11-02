@@ -1,0 +1,42 @@
+--- a/crates/horizon-client/src/game/mob_blocks.rs
++++ b/crates/horizon-client/src/game/mob_blocks.rs
+@@ -478,7 +478,9 @@
+             let seed = mob.id as i32 + ordinal;
+             let state = self.resolve_item(&stack, context, Some(&owner), seed);
+             if lit {
++                self.mark_rendered_item(out.len(), &stack.item);
+                 self.submit_item_world(&state, t, light, out);
++                self.mark_rendered_item(out.len(), "");
+             } else {
+                 self.submit_item_unlit(&state, t, light, out);
+             }
+@@ -591,6 +593,9 @@
+                     }
+                 },
+             };
++            if lit {
++                self.mark_rendered_item(out.len(), &stack.item);
++            }
+             let mut sink = horizon_client::item_render::WorldSink {
+                 out,
+                 light,
+@@ -619,6 +624,9 @@
+                 &self.item_host(),
+                 &mut sink,
+             );
++            if lit {
++                self.mark_rendered_item(out.len(), "");
++            }
+             return;
+         }
+         use horizon_assets::item_model::DisplayContext;
+@@ -634,7 +642,9 @@
+         let seed = mob.id as i32 + 5;
+         let state = self.resolve_item(&stack, DisplayContext::Head, Some(&owner), seed);
+         if lit {
++            self.mark_rendered_item(out.len(), &stack.item);
+             self.submit_item_world(&state, pose, light, out);
++            self.mark_rendered_item(out.len(), "");
+         } else {
+             self.submit_item_unlit(&state, pose, light, out);
+         }

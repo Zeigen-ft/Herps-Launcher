@@ -1,4 +1,4 @@
-# Install Herspers Minecraft 0.2.2 on a Windows PC
+# Install Herspers Minecraft 0.2.3 on a Windows PC
 
 This version targets **Windows 10 or 11, 64-bit Intel/AMD PCs**. It is not an Android APK. Windows on ARM and 32-bit Windows are not supported by this package.
 
@@ -6,7 +6,7 @@ The game needs a graphics driver supporting DirectX 12, Vulkan or the engine's O
 
 ## 1. Download and extract
 
-Open [Actions → Build Windows PC app](https://github.com/Zeigen-ft/Herspers-Minecraft/actions/workflows/windows.yml) and select the latest successful run for **0.2.2**. Scroll to **Artifacts** and download **Herspers-Minecraft-Windows-x64**. Sign in to GitHub if needed. Version 0.2.2 adds private Tailscale host/join starters and keeps the 16 MiB stack fix. A successful build does not establish full gameplay readiness.
+Open [Actions → Build Windows PC app](https://github.com/Zeigen-ft/Herspers-Minecraft/actions/workflows/windows.yml) and select the latest successful run for **0.2.3**. Scroll to **Artifacts** and download **Herspers-Minecraft-Windows-x64**. Sign in to GitHub if needed. Version 0.2.3 adds Rust shader-loader compatibility fixes and keeps the private Tailscale starters and 16 MiB stack fix. A successful build does not establish full gameplay readiness.
 
 Extract the downloaded artifact ZIP, then extract the application ZIP inside it. Keep the entire **Herspers-Minecraft** folder together, including `bin`, `preparation`, `Setup.cmd`, `Play.cmd`, `Host-Tailscale.cmd` and `Join-Tailscale.cmd`. For example, keep it in your Documents or Games folder. Do not run individual files from inside the ZIP.
 
@@ -89,12 +89,18 @@ No router port forwarding is needed. This starter creates a private server witho
 
 Read **HOSTING-TAILSCALE.txt** beside the launchers for server folders, backups and connection troubleshooting. The same [Tailscale hosting guide is available on GitHub](https://github.com/Zeigen-ft/Herspers-Minecraft/blob/main/docs/HOSTING-TAILSCALE.md).
 
+## 6. Install a Java shader pack
+
+Read **SHADERS.txt** beside the launchers for the exact tested pack versions and download links. Open **Options → Horizon Settings → Shader Packs → Open Pack Folder** in the game, copy the original shader ZIP there, then select it in the Shader Packs menu. Shader ZIPs go in `shaderpacks`, rather than the `mods` or `resourcepacks` folders. Shader packs are optional and are not bundled in the application.
+
+The folder is `%LOCALAPPDATA%\Herspers Minecraft\game\shaderpacks`. The separate Bedrock client uses a different renderer; these instructions apply to Herspers Java Edition only. Keep shaders off if diagnosing an unrelated startup failure.
+
 ## Troubleshooting
 
 - **JDK missing:** install the full JDK 25, then close and reopen the setup window. The preparer searches installed JDK folders, `JAVA_HOME` and PATH.
 - **Wrong JAR/version:** use the matching official Java Edition 26.3 files. A different version is rejected.
 - **Missing bundled file:** extract the complete package again; do not move only the launcher EXE.
-- **Host-Tailscale.cmd or Join-Tailscale.cmd is missing:** download the latest successful Windows Java **0.2.2** package and extract both ZIP layers. Older packages do not include these starters.
+- **Host-Tailscale.cmd or Join-Tailscale.cmd is missing:** download the latest successful Windows Java **0.2.2 or newer** package and extract both ZIP layers. Older packages do not include these starters.
 - **Server still says online mode:** stop the old server, start **Host-Tailscale.cmd**, and use its newly printed address in **Join-Tailscale.cmd** on both PCs. See **HOSTING-TAILSCALE.txt** for further connection checks.
 - **No graphics device or driver failure:** update your GPU driver and retain the startup log when reporting the problem.
 - **`thread 'main' has overflowed its stack` at the menu:** early 0.2.0 packages used the Windows default main-thread stack. Current source builds reserve 16 MiB and packaging checks that value. To repair an existing unsigned package, close the game and place [repair_windows_stack.ps1](https://github.com/Zeigen-ft/Herspers-Minecraft/blob/main/scripts/repair_windows_stack.ps1) in the extracted application folder. Open PowerShell there and run:

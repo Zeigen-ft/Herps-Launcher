@@ -10,7 +10,10 @@ on:
       - 'packaging/prepare.command'
       - 'packaging/launcher.c'
       - 'tools/fetch_upstream.py'
+      - 'tools/prepare_upstream.py'
+      - 'patches/**'
       - 'tools/package_macos.py'
+      - 'docs/SHADERS.md'
       - 'upstream.lock.json'
   workflow_dispatch:
 permissions:

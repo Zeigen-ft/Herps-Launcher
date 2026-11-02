@@ -1,10 +1,10 @@
-# Private multiplayer over Tailscale (Windows Java 0.2.2)
+# Private multiplayer over Tailscale (Windows Java 0.2.2 and newer)
 
 You and your friend can play from different locations, including 100 km apart. Your PC runs the server, and Tailscale connects your friend's PC to it. Follow these steps on both PCs; no router port forwarding is needed.
 
 ## On both PCs first
 
-1. Download **Windows Java 0.2.2** from the [Windows builds page](https://github.com/Zeigen-ft/Herspers-Minecraft/actions/workflows/windows.yml). Open the latest successful **0.2.2** run. Sign in to GitHub if needed, scroll to **Artifacts**, and select **Herspers-Minecraft-Windows-x64**.
+1. Download **Windows Java 0.2.2 or newer** from the [Windows builds page](https://github.com/Zeigen-ft/Herspers-Minecraft/actions/workflows/windows.yml). Open the latest successful Java build. Sign in to GitHub if needed, scroll to **Artifacts**, and select **Herspers-Minecraft-Windows-x64**.
 2. Extract the downloaded ZIP. Inside it, extract the application ZIP too. Open the resulting **Herspers-Minecraft** folder, where **Host-Tailscale.cmd** and **Join-Tailscale.cmd** are located. Keep the whole folder together.
 3. Check that Herspers has its Java Edition 26.3 resources ready. If it already says **Resources are ready**, skip Setup. If this is a new installation without prepared resources, read **INSTALL-WINDOWS.txt** in the application folder or the [Windows installation guide on GitHub](https://github.com/Zeigen-ft/Herspers-Minecraft/blob/main/docs/INSTALL-WINDOWS.md), and run **Setup.cmd** once.
 4. Install and connect [Tailscale](https://tailscale.com/download) on both PCs. Give your friend access to your host PC through your Tailscale network or device sharing. Both PCs must stay connected to Tailscale while playing.
@@ -39,7 +39,7 @@ The starter saves configuration backups with unique names and preserves existing
 
 ## Troubleshooting
 
-- **Host-Tailscale.cmd or Join-Tailscale.cmd is missing:** download the latest successful **0.2.2** Windows build again, extract both ZIPs, and open the complete application folder. An older application folder may not contain these starters.
+- **Host-Tailscale.cmd or Join-Tailscale.cmd is missing:** download the latest successful **0.2.2 or newer** Windows Java build again, extract both ZIPs, and open the complete application folder. An older application folder may not contain these starters.
 - **Still says online mode:** that message means the server requires Microsoft authentication, which this launcher does not provide. Stop the old server, launch **Host-Tailscale.cmd**, and have both players join its newly printed address. In the printed server folder, `server.properties` must contain the current Tailscale `server-ip` and `online-mode=false`. Restarting is necessary for changed server settings to take effect.
 - **Cannot listen / port occupied:** connect Tailscale, stop the old server, then retry. If you intentionally run another server, choose a different port with the advanced command below.
 - **Connection times out:** check Tailscale's device-sharing/network access first. If a Windows Firewall rule is needed, allow this application's `bin\horizon-client.exe` for TCP on the selected port, scoped to the host's Tailscale local address and remote range `100.64.0.0/10`. Do not disable the firewall.

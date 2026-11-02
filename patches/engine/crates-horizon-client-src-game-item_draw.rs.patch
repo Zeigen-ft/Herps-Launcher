@@ -1,0 +1,19 @@
+--- a/crates/horizon-client/src/game/item_draw.rs
++++ b/crates/horizon-client/src/game/item_draw.rs
+@@ -434,6 +434,8 @@
+             if state.is_empty() {
+                 continue;
+             }
++            self.mark_entity(out.len(), "minecraft:item");
++            self.mark_rendered_item(out.len(), &item.stack.item);
+             let age = item.age as f32 + partial;
+             let (lo, _) = state.bounding_box();
+             let min_offset_y = -lo.y + 0.0625;
+@@ -457,6 +459,7 @@
+             ) {
+                 self.submit_item_world(&state, copy, vertex_light(packed), out);
+             }
++            self.mark_rendered_item(out.len(), "");
+             if self.entity_glowing(item.id) {
+                 let rgb = super::glowing::team_color(self.mob_team(item.id));
+                 self.mark_outline(&out[entity_start..], rgb);

@@ -1,0 +1,30 @@
+--- a/crates/horizon-shaders/src/post.rs
++++ b/crates/horizon-shaders/src/post.rs
+@@ -214,6 +214,8 @@
+ }
+ 
+ pub struct Post {
++    /// Encoded custom images to bind at their declared render-stage boundary.
++    pub textures: Vec<crate::CustomTexture>,
+     /// The folder the programs came from: `""` for `shaders` itself, else `world0`...
+     pub folder: String,
+     pub programs: Vec<PostProgram>,
+@@ -307,7 +309,9 @@
+     macros: &Macros,
+     inputs: &GameInputs,
+ ) -> Post {
++    let (textures, texture_notes) = crate::custom_textures(pack, properties);
+     let mut post = Post {
++        textures,
+         folder: folder.to_owned(),
+         programs: Vec::new(),
+         deferred_pre: flips(properties, "deferred_pre"),
+@@ -335,7 +339,7 @@
+         particles_late: false,
+         custom: Custom::parse(properties),
+         config: Config::default(),
+-        notes: Vec::new(),
++        notes: texture_notes,
+     };
+     let mut loader = Loader {
+         pack,

@@ -13,6 +13,7 @@ import os
 from pathlib import Path
 import platform
 import plistlib
+import re
 import shutil
 import struct
 import subprocess
@@ -23,6 +24,7 @@ import tempfile
 PROJECT = Path(__file__).resolve().parents[1]
 APP_NAME = "Herspers Minecraft.app"
 BINARIES = ("horizon-client", "horizon-ctl", "horizon-prepare")
+PRODUCT_VERSION = "0.2.3"
 CPUS = {"arm64": 0x0100000C, "x86_64": 0x01000007}
 PREPARATION_DIRS = ("tools", "mods/horizon/src/test/java", "crates/horizon-prepare")
 EXCLUDED_DIRS = {".git", ".local", "target", "build", "__pycache__", ".pytest_cache"}
@@ -124,6 +126,49 @@ def copy_files(files, source, destination):
         shutil.copy2(path, target)
 
 
+def engine_patch_provenance(source, project):
+    """Reject unprepared/mismatched engine inputs and describe the applied changes."""
+    lock = json.loads(checked_file(project / "upstream.lock.json").read_bytes())
+    manifest_bytes = checked_file(project / "patches/upstream.json").read_bytes()
+    manifest = json.loads(manifest_bytes)
+    stamp = json.loads(checked_file(source / ".herspers-prepared.json").read_bytes())
+    if (not isinstance(lock, dict) or not isinstance(manifest, dict) or not isinstance(stamp, dict)
+            or not re.fullmatch(r"[0-9a-f]{40,64}", str(lock.get("commit", "")))
+            or manifest.get("upstream_commit") != lock["commit"]
+            or not isinstance(manifest.get("files"), list) or not manifest["files"]):
+        raise ValueError("engine patch provenance must match the pinned upstream source")
+
+    def relative(value):
+        if (not isinstance(value, str) or not value or "\\" in value or ":" in value
+                or "\0" in value or any(p in ("", ".", "..") for p in value.split("/"))):
+            raise ValueError("unsafe path in engine patch provenance")
+        return Path(*value.split("/"))
+
+    digest = hashlib.sha256(manifest_bytes)
+    seen = set()
+    for entry in manifest["files"]:
+        if not isinstance(entry, dict) or set(entry) != {"path", "before_sha256", "after_sha256", "patch"}:
+            raise ValueError("invalid engine patch provenance entry")
+        target = relative(entry["path"])
+        identity = target.as_posix().casefold()
+        if identity in seen or not re.fullmatch(r"[0-9a-f]{64}", str(entry["after_sha256"])):
+            raise ValueError("invalid or duplicate engine patch target")
+        seen.add(identity)
+        patch = checked_file(project / "patches" / relative(entry["patch"])).read_bytes()
+        digest.update(len(patch).to_bytes(8, "big") + patch)
+        actual = hashlib.sha256(checked_file(source / target).read_bytes()).hexdigest()
+        if actual != entry["after_sha256"]:
+            raise ValueError(f"engine patch postimage mismatch: {target}")
+    patch_hash = digest.hexdigest()
+    if (stamp.get("upstream") != lock or stamp.get("patches_sha256") != patch_hash
+            or not re.fullmatch(r"[0-9a-f]{64}", str(stamp.get("tree_sha256", "")))):
+        raise ValueError("prepared engine source does not match the current patch manifest")
+    summary = {"modified": True, "upstream_commit": lock["commit"],
+               "patches_sha256": patch_hash, "prepared_tree_sha256": stamp["tree_sha256"],
+               "provenance_file": "engine-patches.json"}
+    return summary, {"schema": 1, "preparation": stamp, "patches": manifest}
+
+
 def assemble(source, binaries, arch, output, stage_only=False):
     source = source.resolve()
     binaries = binaries.resolve()
@@ -134,6 +179,8 @@ def assemble(source, binaries, arch, output, stage_only=False):
         raise ValueError("real packaging requires macOS; --stage-only creates an unverified assembly only")
     inputs = source_inputs(source)
     notices = license_files(source)
+    engine_source, patch_provenance = engine_patch_provenance(source, PROJECT)
+    shader_guide = checked_file(PROJECT / "docs/SHADERS.md")
     for name in BINARIES:
         binary_architecture(binaries / name, arch)
         if not stage_only:
@@ -173,6 +220,8 @@ def assemble(source, binaries, arch, output, stage_only=False):
             run("codesign", "--force", "--sign", "-", "--timestamp=none", str(native_launcher))
         copy_files(inputs, source, resources / "preparation")
         copy_files(notices, source, resources / "upstream-notices")
+        shutil.copy2(shader_guide, resources / "SHADERS.txt")
+        (resources / "engine-patches.json").write_text(json.dumps(patch_provenance, indent=2) + "\n")
         preparation_hash = hashlib.sha256()
         for path in sorted(inputs):
             preparation_hash.update(str(path.relative_to(source)).encode())
@@ -182,9 +231,10 @@ def assemble(source, binaries, arch, output, stage_only=False):
         project_lock = PROJECT / "upstream.lock.json"
         if project_lock.is_file():
             shutil.copy2(project_lock, resources / "upstream.lock.json")
-        metadata = {"architecture": arch, "stage_only": stage_only,
+        metadata = {"product_version": PRODUCT_VERSION, "architecture": arch, "stage_only": stage_only,
                     "macos_runtime_tested": False, "game_resources_included": False,
                     "native_launcher_compiled": not stage_only,
+                    "engine_source": engine_source,
                     "binaries_sha256": {name: hashlib.sha256((macos / name).read_bytes()).hexdigest()
                                         for name in BINARIES}}
         (resources / "build-metadata.json").write_text(json.dumps(metadata, indent=2) + "\n")
@@ -195,7 +245,7 @@ def assemble(source, binaries, arch, output, stage_only=False):
         info = {"CFBundleName": "Herspers Minecraft", "CFBundleDisplayName": "Herspers Minecraft",
                 "CFBundleIdentifier": "dev.herspers.minecraft", "CFBundleExecutable": "herspers-minecraft",
                 "CFBundlePackageType": "APPL", "CFBundleInfoDictionaryVersion": "6.0",
-                "CFBundleShortVersionString": "0.1.0", "CFBundleVersion": "1",
+                "CFBundleShortVersionString": PRODUCT_VERSION, "CFBundleVersion": "203",
                 "LSMinimumSystemVersion": "11.0", "NSHighResolutionCapable": True,
                 "LSApplicationCategoryType": "public.app-category.games",
                 "NSHumanReadableCopyright": "Based on MIT-licensed Horizon by Ludovic Marie and contributors."}
