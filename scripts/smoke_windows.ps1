@@ -36,7 +36,7 @@ try {
     $help = Invoke-Probe $launcher @('--help')
     if (-not $help.Contains('--setup')) { throw 'Packaged launcher help is incomplete.' }
     $version = Invoke-Probe $launcher @('--version')
-    if ($version.Trim() -ne 'Herspers Minecraft 0.2.0') { throw "Unexpected launcher version: $version" }
+    if ($version.Trim() -ne 'Herspers Minecraft 0.2.1') { throw "Unexpected launcher version: $version" }
     $clientHelp = Invoke-Probe (Join-Path $bin 'horizon-client.exe') @('--help')
     if (-not $clientHelp.Contains('--resources')) { throw 'Client help is incomplete.' }
     $api = Invoke-Probe (Join-Path $bin 'horizon-client.exe') @('--launch-api') | ConvertFrom-Json

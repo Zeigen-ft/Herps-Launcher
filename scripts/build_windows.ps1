@@ -20,7 +20,9 @@ $lock = Get-Content -Raw (Join-Path $projectRoot 'upstream.lock.json') | Convert
 $toolchain = $lock.rust_toolchain
 $target = 'x86_64-pc-windows-msvc'
 $env:HORIZON_VERSION = $lock.horizon_version
-$env:RUSTFLAGS = '-C target-feature=+crt-static'
+# Game construction during the loading-screen handoff needs more than the
+# Windows main-thread stack default. Reserve 16 MiB; pages commit on demand.
+$env:RUSTFLAGS = '-C target-feature=+crt-static -C link-arg=/STACK:16777216'
 $env:CARGO_TARGET_DIR = Join-Path $projectRoot '.cache/target'
 if (-not $env:CARGO_BUILD_JOBS) { $env:CARGO_BUILD_JOBS = '3' }
 

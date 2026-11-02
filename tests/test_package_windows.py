@@ -14,7 +14,8 @@ package = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(package)
 
 
-def pe_fixture(import_name="KERNEL32.dll", delay_name=None, machine=0x8664, dll=False):
+def pe_fixture(import_name="KERNEL32.dll", delay_name=None, machine=0x8664, dll=False,
+               stack_reserve=16 * 1024 * 1024, stack_commit=4096):
     """Non-executable PE fixture with one file-backed section and import tables."""
     data = bytearray(1024)
     data[:2] = b"MZ"
@@ -25,6 +26,7 @@ def pe_fixture(import_name="KERNEL32.dll", delay_name=None, machine=0x8664, dll=
     struct.pack_into("<H", data, optional, 0x20B)
     struct.pack_into("<Q", data, optional + 24, 0x140000000)
     struct.pack_into("<I", data, optional + 60, 512)
+    struct.pack_into("<QQ", data, optional + 72, stack_reserve, stack_commit)
     struct.pack_into("<I", data, optional + 108, 16)
     section = optional + 240
     data[section:section + 8] = b".rdata\0\0"
@@ -47,6 +49,8 @@ class PeTests(unittest.TestCase):
         result = package.inspect_pe(pe_fixture(delay_name="D3D12.dll"))
         self.assertEqual(result["architecture"], "x86_64")
         self.assertEqual(result["imports"], ["d3d12.dll", "kernel32.dll"])
+        self.assertEqual(result["stack_reserve_bytes"], 16 * 1024 * 1024)
+        self.assertEqual(result["stack_commit_bytes"], 4096)
 
     def test_system_api_sets_are_allowed(self):
         result = package.inspect_pe(pe_fixture("api-ms-win-core-synch-l1-2-0.dll"))
@@ -137,7 +141,7 @@ class WindowsPackagingTests(unittest.TestCase):
         self.assertTrue(metadata["stage_only"])
         self.assertFalse(metadata["windows_runtime_tested"])
         self.assertFalse(metadata["game_resources_included"])
-        self.assertEqual(metadata["product_version"], "0.2.0")
+        self.assertEqual(metadata["product_version"], "0.2.1")
         self.assertIn("STAGED ONLY", (root / "BUILD-STATUS.txt").read_text())
 
     def test_missing_binary_fails_before_creating_output(self):
@@ -145,6 +149,21 @@ class WindowsPackagingTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "missing regular file"):
             self.stage()
         self.assertFalse(self.output.exists())
+
+    def test_small_client_stack_is_rejected_before_creating_output(self):
+        (self.binaries / "horizon-client.exe").write_bytes(pe_fixture(stack_reserve=1024 * 1024))
+        with self.assertRaisesRegex(ValueError, "16 MiB main-thread stack"):
+            self.stage()
+        self.assertFalse(self.output.exists())
+
+    def test_smaller_stacks_on_other_executables_are_allowed_and_recorded(self):
+        for name in ("horizon-ctl.exe", "horizon-prepare.exe"):
+            (self.binaries / name).write_bytes(pe_fixture(stack_reserve=1024 * 1024))
+        self.launcher.write_bytes(pe_fixture(stack_reserve=1024 * 1024))
+        root, _ = self.stage()
+        metadata = json.loads((root / "build-metadata.json").read_text())
+        self.assertEqual(metadata["binaries"]["horizon-client.exe"]["stack_reserve_bytes"], 16 * 1024 * 1024)
+        self.assertEqual(metadata["binaries"][package.LAUNCHER]["stack_reserve_bytes"], 1024 * 1024)
 
     def test_preserves_existing_output(self):
         root, _ = self.stage()

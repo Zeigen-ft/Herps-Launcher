@@ -11,7 +11,7 @@ use std::path::{Path, PathBuf};
 use std::process::{self, Command, ExitStatus, Stdio};
 use std::time::{SystemTime, UNIX_EPOCH};
 
-const VERSION: &str = "0.2.0";
+const VERSION: &str = "0.2.1";
 const HELP: &str = "Herspers Minecraft for Windows\n\
 Usage: Herspers-Minecraft.exe [-- <game arguments>]\n\
        Herspers-Minecraft.exe --setup [server.jar] [minecraft-folder]\n\

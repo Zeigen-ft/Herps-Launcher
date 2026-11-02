@@ -49,7 +49,7 @@ class WindowsLauncherTests(unittest.TestCase):
     def test_project_version_is_available_without_game_assets(self):
         result = subprocess.run([str(self.executable), "--version"], capture_output=True, text=True, timeout=15)
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(result.stdout.strip(), "Herspers Minecraft 0.2.0")
+        self.assertEqual(result.stdout.strip(), "Herspers Minecraft 0.2.1")
 
 
 if __name__ == "__main__":

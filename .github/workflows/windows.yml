@@ -6,6 +6,7 @@ on:
       - '.github/workflows/windows.yml'
       - 'scripts/build_windows.ps1'
       - 'scripts/smoke_windows.ps1'
+      - 'scripts/repair_windows_stack.ps1'
       - 'packaging/launcher_windows.rs'
       - 'packaging/windows/**'
       - 'tools/package_windows.py'
@@ -13,6 +14,7 @@ on:
       - 'tools/fetch_upstream.py'
       - 'tests/test_windows_launcher.py'
       - 'tests/test_package_windows.py'
+      - 'tests/test_windows_stack_repair.py'
       - 'docs/INSTALL-WINDOWS.md'
       - 'upstream.lock.json'
       - 'LICENSE'
@@ -60,12 +62,12 @@ jobs:
             .cache/upstream
             ~/.cargo/registry
             ~/.cargo/git
-          key: windows-x64-rust-1.95-static-fast-v1-${{ hashFiles('upstream.lock.json') }}
+          key: windows-x64-rust-1.95-static-fast-stack16-v2-${{ hashFiles('upstream.lock.json') }}
       - name: Native engine and resource-preparer library tests
         shell: pwsh
         env:
           HORIZON_VERSION: '0.7.6'
-          RUSTFLAGS: '-C target-feature=+crt-static'
+          RUSTFLAGS: '-C target-feature=+crt-static -C link-arg=/STACK:16777216'
           CARGO_TARGET_DIR: ${{ github.workspace }}/.cache/target
         run: |
           $PSNativeCommandUseErrorActionPreference = $false
@@ -130,4 +132,4 @@ jobs:
             .cache/upstream
             ~/.cargo/registry
             ~/.cargo/git
-          key: windows-x64-rust-1.95-static-fast-v1-${{ hashFiles('upstream.lock.json') }}
+          key: windows-x64-rust-1.95-static-fast-stack16-v2-${{ hashFiles('upstream.lock.json') }}

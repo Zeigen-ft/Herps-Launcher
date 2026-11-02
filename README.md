@@ -29,9 +29,11 @@ The Rust launcher is GPLv3; the separately distributed Cinnabar engine is **Poly
 - Interactive game launch, full resource preparation and gameplay are **not yet tested**. The Mac apps are not Apple-notarized; the Windows package is unsigned.
 - Windows version **0.2.0** passed native compilation, packaging, launcher tests, 161 engine/preparer library tests (3 ignored) and packaged-EXE startup checks in [run 41304885077](https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/41304885077).
 
-## Windows PC version 0.2.0
+## Windows PC version 0.2.1
 
-[Download Windows PC version 0.2.0 — Intel/AMD x64](https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/41304885077/artifacts/13082981412). Sign in to GitHub if asked, extract both ZIP layers, and keep the complete application folder together. It targets Windows 10/11 x64.
+Version **0.2.1** addresses the reported `thread 'main' has overflowed its stack` startup crash by reserving a 16 MiB main-thread stack. Packaging rejects a game executable with a smaller reserve. Download **Herspers-Minecraft-Windows-x64** from a successful 0.2.1 run of [Build Windows PC app](https://github.com/Zeigen-ft/Herspers-Minecraft/actions/workflows/windows.yml); sign in to GitHub if asked, extract both ZIP layers, and keep the complete application folder together. It targets Windows 10/11 x64. Full gameplay remains unverified.
+
+Owners of the earlier 0.2.0 package can use the [stack repair instructions](docs/INSTALL-WINDOWS.md#troubleshooting) without preparing resources again. The [earlier build evidence](docs/WINDOWS-BUILD-RESULTS.md) describes 0.2.0; it does not validate the revised binary.
 
 1. Install JDK 25 and launch your own Minecraft Java Edition 26.3 once.
 2. Double-click **Setup.cmd** and paste the path to the matching official 26.3 server JAR.

@@ -23,7 +23,8 @@ LAUNCHER = "Herspers-Minecraft.exe"
 FOLDER = "Herspers-Minecraft"
 ARCHIVE = "herspers-minecraft-windows-x86_64.zip"
 HELPERS = ("Setup.cmd", "Play.cmd")
-PRODUCT_VERSION = "0.2.0"
+PRODUCT_VERSION = "0.2.1"
+MIN_CLIENT_STACK_RESERVE = 16 * 1024 * 1024
 
 # Policy adapted from Horizon's MIT-licensed tools/check_imports.py, copyright
 # Ludovic Marie and contributors. Original license is retained in licenses/.
@@ -126,7 +127,9 @@ def inspect_pe(data: bytes) -> dict:
                      and not name.startswith(("api-ms-win-", "ext-ms-win-")))
     if foreign:
         raise ValueError("unbundled non-system DLL imports: " + ", ".join(foreign))
-    return {"format": "PE32+", "architecture": "x86_64", "imports": sorted(names)}
+    stack_reserve, stack_commit = struct.unpack("<QQ", _range(data, optional + 72, 16))
+    return {"format": "PE32+", "architecture": "x86_64", "imports": sorted(names),
+            "stack_reserve_bytes": stack_reserve, "stack_commit_bytes": stack_commit}
 
 
 def verify_binary(path: Path) -> dict:
@@ -152,6 +155,9 @@ def assemble(source: Path, binaries: Path, launcher: Path, output: Path,
     inputs = _common.source_inputs(source)
     notices = _common.license_files(source)
     verified = {name: verify_binary(binaries / name) for name in BINARIES}
+    if verified["horizon-client.exe"]["stack_reserve_bytes"] < MIN_CLIENT_STACK_RESERVE:
+        raise ValueError("horizon-client.exe needs at least a 16 MiB main-thread stack reserve; "
+                         "rebuild with scripts/build_windows.ps1")
     verified[LAUNCHER] = verify_binary(launcher)
     project_license = _common.checked_file(PROJECT / "LICENSE")
     project_lock = _common.checked_file(PROJECT / "upstream.lock.json")

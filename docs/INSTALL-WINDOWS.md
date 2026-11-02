@@ -1,4 +1,4 @@
-# Install Herspers Minecraft 0.2.0 on a Windows PC
+# Install Herspers Minecraft 0.2.1 on a Windows PC
 
 This version targets **Windows 10 or 11, 64-bit Intel/AMD PCs**. It is not an Android APK. Windows on ARM and 32-bit Windows are not supported by this package.
 
@@ -6,7 +6,7 @@ The game needs a graphics driver supporting DirectX 12, Vulkan or the engine's O
 
 ## 1. Download and extract
 
-[Download the verified Windows 0.2.0 build](https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/41304885077/artifacts/13082981412), named **Herspers-Minecraft-Windows-x64**. Sign in to GitHub if needed. For later builds, open **Actions → Build Windows PC app** and select a successful run.
+Open [Actions → Build Windows PC app](https://github.com/Zeigen-ft/Herspers-Minecraft/actions/workflows/windows.yml) and select a successful run for **0.2.1**, then download **Herspers-Minecraft-Windows-x64**. Sign in to GitHub if needed. Version 0.2.1 reserves a larger main-thread stack to address the startup stack overflow reported with the earlier 0.2.0 package. A successful build does not establish full gameplay readiness.
 
 Extract the downloaded artifact ZIP, then extract the application ZIP inside it. Keep the entire **Herspers-Minecraft** folder together, including `bin`, `preparation`, `Setup.cmd` and `Play.cmd`. For example, keep it in your Documents or Games folder. Do not run individual files from inside the ZIP.
 
@@ -80,6 +80,13 @@ Game data stays under:
 - **Wrong JAR/version:** use the matching official Java Edition 26.3 files. A different version is rejected.
 - **Missing bundled file:** extract the complete package again; do not move only the launcher EXE.
 - **No graphics device or driver failure:** update your GPU driver and retain the startup log when reporting the problem.
+- **`thread 'main' has overflowed its stack` at the menu:** early 0.2.0 packages used the Windows default main-thread stack. Current source builds reserve 16 MiB and packaging checks that value. To repair an existing unsigned package, close the game and place [repair_windows_stack.ps1](../scripts/repair_windows_stack.ps1) in the extracted application folder. Open PowerShell there and run:
+
+  ```powershell
+  powershell -NoProfile -ExecutionPolicy Bypass -File .\repair_windows_stack.ps1 -PackagePath .
+  ```
+
+  The execution-policy override applies only to that invocation. The repair verifies the original game against `build-metadata.json`, then changes only its PE stack-reserve field. It keeps `bin\horizon-client.exe.before-stack-fix.bak`, preserves resources and saves, and refuses signed executables or an existing backup. The repaired executable will differ from the original metadata checksum; the metadata is preserved. Open `Play.cmd` to test. If the game already reserves 16 MiB, the script makes no change; send the new log for further diagnosis. `RUST_MIN_STACK` does not change the main thread's stack.
 
 Include the error text and relevant logs in a bug report, without account tokens or private session files. Resource preparation and an interactive gameplay test on your PC remain necessary even after native build/startup checks pass.
 
