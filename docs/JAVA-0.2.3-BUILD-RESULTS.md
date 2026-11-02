@@ -2,13 +2,14 @@
 
 [Windows build 41467802883](https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/41467802883) passed for source commit [`674665b`](https://github.com/Zeigen-ft/Herspers-Minecraft/commit/674665b5519748cda523b8b01b980ee64b52b3a5). Download **Herspers-Minecraft-Windows-x64** from its Artifacts section, sign in to GitHub if asked, and extract both ZIP layers. Previously prepared Java 26.3 resources and saves remain outside the application folder and can be reused.
 
-The [Mac build](https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/41467803275) is still in progress. Its new shader package is not yet validated by a successful native build.
+[Mac build 41467803275](https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/41467803275) also passed for the same source commit, producing **Herspers-Minecraft-arm64** and **Herspers-Minecraft-x86_64**. Download the matching artifact and extract both ZIP layers to obtain **Herspers Minecraft.app**.
 
 The application contains the pinned Horizon 0.7.6 engine with 20 checksum-locked Rust source patches, not the earlier unchanged engine. The patch fingerprint is `4e1401f7860dfd7f4de8c45147958fe6a39ea53f65e4968c8907b277789243da`; **engine-patches.json** and build metadata record its provenance. The Windows package retains the 16 MiB main stack and Tailscale host/join helpers, and includes **SHADERS.txt**.
 
 ## Verified
 
 - Native Windows tooling, launcher, engine/preparer and shader-library checks; PE architecture/import/stack checks; packaging and executable startup/configuration smoke tests; artifact upload.
+- Native macOS release compilation for Apple Silicon and Intel, architecture and library checks, ad hoc signing, ZIP packaging and artifact upload. These are build checks, not interactive Mac gameplay or notarization.
 - [Shader workflow 41466026846](https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/41466026846) passed against the same engine patch set in source commit `990352b`. The subsequent source changes correct test temporary paths and improve CI diagnostics; they do not change the engine patches.
 - [Portable tooling workflow 41468569223](https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/41468569223) passed.
 - Locally, 132 repository checks passed with two expected skips; all 132 also passed with an aliased temporary directory matching macOS's system-path behavior. The shader/API suites passed 80 tests, with one optional legacy corpus check ignored.

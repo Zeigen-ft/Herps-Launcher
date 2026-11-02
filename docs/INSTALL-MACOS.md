@@ -1,17 +1,19 @@
-# Install Herspers Minecraft on a Mac
+# Install Herspers Minecraft 0.2.3 on a Mac
 
 This guide is for the **Java Edition Mac app**. The separate Herspers Bedrock 0.3.0 package currently supports Windows x64. You do not need Rust or Xcode to use a prebuilt Mac package.
 
-Both Mac builds passed compilation and ad hoc signing checks. Installation, resource preparation and gameplay still need testing on a Mac. These are development builds, and they are not Apple-notarized.
+Both 0.2.3 Mac builds passed native compilation, architecture/library verification, ad hoc signing and ZIP packaging in [the verified build](https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/41467803275). Installation, resource preparation and gameplay still need testing on a Mac. These are development builds, and they are not Apple-notarized.
 
 ## 1. Download the correct build
 
 Open **Apple menu → About This Mac**:
 
-- If it shows an Apple **M-series chip**, download [Apple Silicon / arm64](https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/41295959995/artifacts/13079675808).
-- If it shows an **Intel processor**, download [Intel / x86_64](https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/41295959995/artifacts/13079341512).
+- If it shows an Apple **M-series chip**, download [Apple Silicon / arm64](https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/41467803275#artifacts), named **Herspers-Minecraft-arm64**.
+- If it shows an **Intel processor**, download [Intel / x86_64](https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/41467803275#artifacts), named **Herspers-Minecraft-x86_64**.
 
 Sign in to GitHub if asked. Open the downloaded ZIP, then open the application ZIP inside it. You should now have **Herspers Minecraft.app**.
+
+If you already prepared Java 26.3 resources for an earlier Herspers Mac app, close that app and replace it with the complete new app. Prepared resources and saves remain outside the application; skip steps 2–3 when they are already ready.
 
 Move the app into **Applications**. The commands below assume this location:
 
@@ -85,6 +87,12 @@ cat "$HOME/Library/Application Support/Herspers Minecraft/logs/resources-check.l
 
 Updated launchers print the failure in Terminal and offer **Prepare resources** and **Show log** buttons. Preparation opens in Terminal; keep it open until it reports success, then open the app again. If preparation itself fails, use its error message to diagnose the missing requirement.
 
+## 5. Shader packs and Fullbright
+
+Version 0.2.3 adds Rust compatibility fixes for the exact Complementary shader inputs and the uploaded Fullbright resource pack described in [the shader installation guide](https://github.com/Zeigen-ft/Herspers-Minecraft/blob/main/docs/SHADERS.md). The bundled copy is **SHADERS.txt** under `Herspers Minecraft.app/Contents/Resources`.
+
+Keep original ZIPs unextracted. Complementary ZIPs go in `~/Library/Application Support/Herspers Minecraft/game/shaderpacks` and are selected through **Options → Horizon Settings → Shader Packs**. Your **Fullbright-UB-26.3 fub-7.0.zip** goes in the adjacent `resourcepacks` folder and is selected through **Options → Resource Packs**. Author packs are separate downloads; BSL validation remains pending its original archive.
+
 ## Files and troubleshooting
 
 The app keeps its data outside Applications, under:
@@ -103,4 +111,4 @@ If Terminal reports **JDK 25 is required**, check that you installed the JDK for
 
 For a startup failure, include the exact error and relevant log text when reporting it. Do not include account tokens or private session files. Successful compilation alone does not establish working gameplay, audio, input or online-server compatibility.
 
-To build from source instead of using a downloaded app, see [Build on a Mac](../README.md#build-on-a-mac). Build evidence and remaining validation limits are recorded in [Mac build results](MACOS-BUILD-RESULTS.md).
+To build from source instead of using a downloaded app, see [Build on a Mac](../README.md#build-on-a-mac). Build evidence and remaining validation limits are recorded in [Java 0.2.3 build results](JAVA-0.2.3-BUILD-RESULTS.md).

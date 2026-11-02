@@ -57,18 +57,18 @@ Read the [step-by-step Tailscale guide](docs/HOSTING-TAILSCALE.md), also include
 
 ## Java shader compatibility update 0.2.3
 
-The 0.2.3 source adds Rust renderer compatibility for original **Complementary Reimagined r5.5.1** and **Complementary Unbound r5.5.1** shader ZIPs, and recognizes the supplied **Fullbright Ubiquitous FUB 7.0** resource pack. The verified Windows download is linked above. The native Mac shader build is still in progress; the older Mac downloads below do not contain this update.
+The 0.2.3 source adds Rust renderer compatibility for original **Complementary Reimagined r5.5.1** and **Complementary Unbound r5.5.1** shader ZIPs, and recognizes the supplied **Fullbright Ubiquitous FUB 7.0** resource pack. The verified Windows download is linked above; the verified Apple Silicon and Intel Mac downloads are below. See [Java 0.2.3 build results](docs/JAVA-0.2.3-BUILD-RESULTS.md).
 
 The Complementary packs have drawn original synthetic terrain through real shadow, geometry and post passes on software Vulkan. These tests check pixel readback and HLSL/Metal shader generation; they do not establish complete gameplay or identical visuals on every GPU. **BSL is still awaiting its original ZIP for validation because its official download hosts are blocked in the cloud environment.**
 
 Read [shader and Fullbright installation](docs/SHADERS.md). Original shader ZIPs belong in **Shader Packs**; the uploaded Fullbright ZIP belongs in **Resource Packs**. The author archives are separate from the application download, and the Bedrock build has not received these changes.
 
-## Download the Mac builds
+## Download Java 0.2.3 for Mac
 
-- [Apple Silicon (arm64)](https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/41295959995/artifacts/13079675808)
-- [Intel (x86_64)](https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/41295959995/artifacts/13079341512)
+- [Apple Silicon (arm64)](https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/41467803275#artifacts) — artifact **Herspers-Minecraft-arm64**.
+- [Intel (x86_64)](https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/41467803275#artifacts) — artifact **Herspers-Minecraft-x86_64**.
 
-Sign in to GitHub to download. Each artifact contains an architecture-specific ZIP; extract that ZIP to obtain `Herspers Minecraft.app`. These are development builds, and game assets are not included. Follow the [step-by-step Mac installation guide](docs/INSTALL-MACOS.md) before playing. See [build evidence](docs/MACOS-BUILD-RESULTS.md).
+Sign in to GitHub to download. Each artifact contains an architecture-specific ZIP; extract that ZIP to obtain `Herspers Minecraft.app`. These are development builds, and game assets are not included. Follow the [step-by-step Mac installation guide](docs/INSTALL-MACOS.md) before playing. See [Java 0.2.3 build evidence](docs/JAVA-0.2.3-BUILD-RESULTS.md).
 
 ## Install the downloaded app
 

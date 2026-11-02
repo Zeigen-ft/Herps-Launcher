@@ -69,8 +69,9 @@
         "url": "https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/41467802883"
       },
       "macos": {
-        "result": "pending",
-        "url": "https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/41467803275"
+        "result": "passed",
+        "url": "https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/41467803275",
+        "source_commit": "674665b5519748cda523b8b01b980ee64b52b3a5"
       },
       "shader_ci": {
         "result": "passed",
