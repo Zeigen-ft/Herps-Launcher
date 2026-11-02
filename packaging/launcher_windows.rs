@@ -462,7 +462,7 @@ mod tests {
         fn new() -> Self {
             let path = env::temp_dir().join(format!("herspers-launcher-test-{}-{}-{}", process::id(),
                 SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos(), NEXT.fetch_add(1, Ordering::Relaxed)));
-            fs::create_dir(&path).unwrap(); Self(path)
+            fs::create_dir(&path).unwrap(); Self(fs::canonicalize(path).unwrap())
         }
         fn bundle(&self) -> PathBuf {
             let bundle = self.0.join("bundle with spaces");

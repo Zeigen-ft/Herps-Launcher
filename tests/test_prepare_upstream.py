@@ -31,7 +31,7 @@ class PrepareTests(unittest.TestCase):
     def setUp(self):
         temporary = tempfile.TemporaryDirectory(prefix="herspers prepare ")
         self.addCleanup(temporary.cleanup)
-        self.root = Path(temporary.name)
+        self.root = Path(temporary.name).resolve()
         self.archive = self.root / "source.tar.gz"
         self.before = b"one\ntwo\nthree\n"
         self.after = b"one\nTWO\nthree\nfour\n"

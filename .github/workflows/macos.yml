@@ -9,11 +9,16 @@ on:
       - 'packaging/launch.command'
       - 'packaging/prepare.command'
       - 'packaging/launcher.c'
+      - 'packaging/launcher_windows.rs'
+      - 'packaging/private_server.rs'
       - 'tools/fetch_upstream.py'
       - 'tools/prepare_upstream.py'
       - 'patches/**'
       - 'tools/package_macos.py'
       - 'docs/SHADERS.md'
+      - 'tests/test_prepare_upstream.py'
+      - 'tests/test_windows_stack_repair.py'
+      - 'tests/test_windows_launcher.py'
       - 'upstream.lock.json'
   workflow_dispatch:
 permissions:

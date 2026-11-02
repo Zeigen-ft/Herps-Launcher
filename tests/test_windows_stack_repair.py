@@ -23,7 +23,9 @@ class StackRepairTests(unittest.TestCase):
     def setUp(self):
         temporary = tempfile.TemporaryDirectory(prefix="herspers stack repair ")
         self.addCleanup(temporary.cleanup)
-        self.root = Path(temporary.name)
+        # macOS exposes its temporary root through /var -> /private/var.
+        # Keep normal fixtures physical; link rejection has explicit cases.
+        self.root = Path(temporary.name).resolve()
         self.package = self.root / "Herspers Minecraft 雪"
         (self.package / "bin").mkdir(parents=True)
         self.executable = self.package / "bin/horizon-client.exe"

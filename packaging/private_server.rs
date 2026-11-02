@@ -532,7 +532,7 @@ mod tests {
         fn new() -> Self {
             let path = sidecar(&env::temp_dir().join("herspers-private-server"), "test");
             fs::create_dir(&path).unwrap();
-            Self(path)
+            Self(fs::canonicalize(path).unwrap())
         }
     }
     impl Drop for Scratch {
