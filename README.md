@@ -29,11 +29,13 @@ The Rust launcher is GPLv3; the separately distributed Cinnabar engine is **Poly
 - Interactive game launch, full resource preparation and gameplay are **not yet tested**. The Mac apps are not Apple-notarized; the Windows package is unsigned.
 - Windows version **0.2.0** passed native compilation, packaging, launcher tests, 161 engine/preparer library tests (3 ignored) and packaged-EXE startup checks in [run 41304885077](https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/41304885077).
 
-## Windows PC version 0.2.2
+## Windows PC version 0.2.3
 
-Version **0.2.2** adds **Host-Tailscale.cmd** and **Join-Tailscale.cmd** for private multiplayer between remote PCs. The host starter discovers and binds only to your Tailscale address, backs up existing configuration, and sets private authentication mode so Herspers can join without its unimplemented Microsoft sign-in. See [the hosting guide](docs/HOSTING-TAILSCALE.md). The 16 MiB main-stack fix remains included.
+Version **0.2.3** adds Rust shader-loader compatibility for **Complementary Reimagined r5.5.1**, **Complementary Unbound r5.5.1**, and the supplied **Fullbright Ubiquitous FUB 7.0** resource pack. See [shader installation and exact validation limits](docs/SHADERS.md). BSL still needs its original archive for validation.
 
-[Download Windows Java 0.2.2](https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/41392994103#artifacts), named **Herspers-Minecraft-Windows-x64**. This refreshed package includes the numbered host and friend instructions. The native build and private-server configuration smoke checks passed; see [build results](docs/WINDOWS-0.2.2-BUILD-RESULTS.md). Sign in to GitHub if asked, extract both ZIP layers, and keep the complete application folder together. It targets Windows 10/11 x64. Full gameplay and an actual two-PC Tailscale session remain unverified.
+**Host-Tailscale.cmd** and **Join-Tailscale.cmd** remain included for private multiplayer between remote PCs. The host starter discovers and binds only to your Tailscale address, backs up existing configuration, and sets private authentication mode so Herspers can join without its unimplemented Microsoft sign-in. See [the hosting guide](docs/HOSTING-TAILSCALE.md). The 16 MiB main-stack fix remains included.
+
+[Download Windows Java 0.2.3](https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/41467802883#artifacts), named **Herspers-Minecraft-Windows-x64**. The package includes **SHADERS.txt** and the host/friend instructions. The native build and private-server configuration smoke checks passed; see [build results](docs/JAVA-0.2.3-BUILD-RESULTS.md). Sign in to GitHub if asked, extract both ZIP layers, and keep the complete application folder together. It targets Windows 10/11 x64. Full gameplay and an actual two-PC Tailscale session remain unverified.
 
 Owners of the earlier 0.2.0 package can use the [stack repair instructions](docs/INSTALL-WINDOWS.md#troubleshooting) without preparing resources again. The [earlier build evidence](docs/WINDOWS-BUILD-RESULTS.md) describes 0.2.0; it does not validate the revised binary.
 
@@ -45,17 +47,17 @@ If you already prepared resources on this PC, the new package reuses them; you c
 
 To play with your friend over Tailscale:
 
-1. **Both PCs:** extract the complete Windows Java 0.2.2 package, prepare resources if needed, and connect Tailscale. Give your friend access to the host PC through your Tailscale network or device sharing.
+1. **Both PCs:** extract the complete Windows Java 0.2.2 or newer package, prepare resources if needed, and connect Tailscale. Give your friend access to the host PC through your Tailscale network or device sharing.
 2. **Your PC (host):** type `stop` in any old server window and wait for it to close. Open **Host-Tailscale.cmd**, read and accept the EULA if prompted, and keep this window open.
 3. **Your PC:** send your friend the address printed in the host window, including its port. For example, `100.80.12.34:25565`; use your actual printed address.
 4. **Both PCs:** open **Join-Tailscale.cmd**, enter that same host address, and choose different player names of 3–16 letters, numbers or underscores. The host joins this way too; use the printed address instead of `localhost`. Keep the same names on future visits.
 5. **When finished:** leave the game, then type `stop` in the host's server window to save and shut down.
 
-Read the [step-by-step Tailscale guide](docs/HOSTING-TAILSCALE.md), also included as **HOSTING-TAILSCALE.txt** in the download. The [Windows installation guide](docs/INSTALL-WINDOWS.md) covers setup and troubleshooting; [Windows 0.2.2 build results](docs/WINDOWS-0.2.2-BUILD-RESULTS.md) record validation. No Rust, Python or developer tools are needed for the downloaded app. Full gameplay testing with prepared resources remains separate from build/startup checks.
+Read the [step-by-step Tailscale guide](docs/HOSTING-TAILSCALE.md), also included as **HOSTING-TAILSCALE.txt** in the download. The [Windows installation guide](docs/INSTALL-WINDOWS.md) covers setup and troubleshooting; [Java 0.2.3 build results](docs/JAVA-0.2.3-BUILD-RESULTS.md) record validation. No Rust, Python or developer tools are needed for the downloaded app. Full gameplay testing with prepared resources remains separate from build/startup checks.
 
 ## Java shader compatibility update 0.2.3
 
-The 0.2.3 source adds Rust renderer compatibility for original **Complementary Reimagined r5.5.1** and **Complementary Unbound r5.5.1** shader ZIPs, and recognizes the supplied **Fullbright Ubiquitous FUB 7.0** resource pack. Native build status and downloads will be linked after verification; the 0.2.2 download above does not contain this update.
+The 0.2.3 source adds Rust renderer compatibility for original **Complementary Reimagined r5.5.1** and **Complementary Unbound r5.5.1** shader ZIPs, and recognizes the supplied **Fullbright Ubiquitous FUB 7.0** resource pack. The verified Windows download is linked above. The native Mac shader build is still in progress; the older Mac downloads below do not contain this update.
 
 The Complementary packs have drawn original synthetic terrain through real shadow, geometry and post passes on software Vulkan. These tests check pixel readback and HLSL/Metal shader generation; they do not establish complete gameplay or identical visuals on every GPU. **BSL is still awaiting its original ZIP for validation because its official download hosts are blocked in the cloud environment.**
 

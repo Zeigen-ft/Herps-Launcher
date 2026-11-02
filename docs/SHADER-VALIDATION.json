@@ -63,7 +63,25 @@
       "modified_rust_files": 20
     },
     "native_builds": {
-      "result": "pending"
+      "windows": {
+        "result": "passed",
+        "source_commit": "674665b5519748cda523b8b01b980ee64b52b3a5",
+        "url": "https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/41467802883"
+      },
+      "macos": {
+        "result": "pending",
+        "url": "https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/41467803275"
+      },
+      "shader_ci": {
+        "result": "passed",
+        "source_commit": "990352b5a3f96a43dcb5ebe8a4360ec3ecc59850",
+        "url": "https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/41466026846"
+      },
+      "tooling_ci": {
+        "result": "passed",
+        "source_commit": "8a0c0d6021fe6396f03c9850b34f7060ba9f857d",
+        "url": "https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/41468569223"
+      }
     },
     "renderer_all": {
       "passed": 829,
