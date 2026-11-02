@@ -41,7 +41,17 @@ Owners of the earlier 0.2.0 package can use the [stack repair instructions](docs
 2. Double-click **Setup.cmd** and paste the path to the matching official 26.3 server JAR.
 3. Wait for **Resources are ready**, then double-click **Play.cmd**.
 
-Read the [Windows installation guide](docs/INSTALL-WINDOWS.md) for detailed setup, custom installation folders and troubleshooting, and [Windows build results](docs/WINDOWS-BUILD-RESULTS.md) for validation evidence. No Rust, Python or developer tools are needed for the downloaded app. Full gameplay testing with prepared resources remains separate from build/startup checks.
+If you already prepared resources on this PC, the new package reuses them; you can skip **Setup.cmd**.
+
+To play with your friend over Tailscale:
+
+1. **Both PCs:** extract the complete Windows Java 0.2.2 package, prepare resources if needed, and connect Tailscale. Give your friend access to the host PC through your Tailscale network or device sharing.
+2. **Your PC (host):** type `stop` in any old server window and wait for it to close. Open **Host-Tailscale.cmd**, read and accept the EULA if prompted, and keep this window open.
+3. **Your PC:** send your friend the address printed in the host window, including its port. For example, `100.80.12.34:25565`; use your actual printed address.
+4. **Both PCs:** open **Join-Tailscale.cmd**, enter that same host address, and choose different player names of 3–16 letters, numbers or underscores. The host joins this way too; use the printed address instead of `localhost`. Keep the same names on future visits.
+5. **When finished:** leave the game, then type `stop` in the host's server window to save and shut down.
+
+Read the [step-by-step Tailscale guide](docs/HOSTING-TAILSCALE.md), also included as **HOSTING-TAILSCALE.txt** in the download. The [Windows installation guide](docs/INSTALL-WINDOWS.md) covers setup and troubleshooting; [Windows 0.2.2 build results](docs/WINDOWS-0.2.2-BUILD-RESULTS.md) record validation. No Rust, Python or developer tools are needed for the downloaded app. Full gameplay testing with prepared resources remains separate from build/startup checks.
 
 ## Download the Mac builds
 

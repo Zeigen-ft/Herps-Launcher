@@ -6,9 +6,11 @@ The game needs a graphics driver supporting DirectX 12, Vulkan or the engine's O
 
 ## 1. Download and extract
 
-Open [Actions → Build Windows PC app](https://github.com/Zeigen-ft/Herspers-Minecraft/actions/workflows/windows.yml) and select a successful run for **0.2.2**, then download **Herspers-Minecraft-Windows-x64**. Sign in to GitHub if needed. Version 0.2.2 adds private Tailscale host/join starters and keeps the 16 MiB stack fix. A successful build does not establish full gameplay readiness.
+Open [Actions → Build Windows PC app](https://github.com/Zeigen-ft/Herspers-Minecraft/actions/workflows/windows.yml) and select the latest successful run for **0.2.2**. Scroll to **Artifacts** and download **Herspers-Minecraft-Windows-x64**. Sign in to GitHub if needed. Version 0.2.2 adds private Tailscale host/join starters and keeps the 16 MiB stack fix. A successful build does not establish full gameplay readiness.
 
-Extract the downloaded artifact ZIP, then extract the application ZIP inside it. Keep the entire **Herspers-Minecraft** folder together, including `bin`, `preparation`, `Setup.cmd` and `Play.cmd`. For example, keep it in your Documents or Games folder. Do not run individual files from inside the ZIP.
+Extract the downloaded artifact ZIP, then extract the application ZIP inside it. Keep the entire **Herspers-Minecraft** folder together, including `bin`, `preparation`, `Setup.cmd`, `Play.cmd`, `Host-Tailscale.cmd` and `Join-Tailscale.cmd`. For example, keep it in your Documents or Games folder. Do not run individual files from inside the ZIP.
+
+**Updating an existing installation?** Previously prepared resources and saves stay outside this application folder. If setup already reported **Resources are ready** on this PC, skip steps 2–3 and go to step 4 for single-player or step 5 for Tailscale multiplayer.
 
 No Rust, Python, Visual Studio or administrator access is required to use the downloaded app. The package is unsigned; Windows may show a publisher warning. Only run the package you chose to download from this repository.
 
@@ -26,7 +28,7 @@ The server JAR is an input to preparation. You do not need to run or host a Mine
 
 Double-click **Setup.cmd** in the extracted folder.
 
-When asked for the server JAR, paste its full path and press Enter. Windows **Copy as path** is useful here; surrounding quotes are accepted. For example:
+When asked for the server JAR, paste its full path and press Enter. Select the original **`.jar` file**, keeping it unextracted; a folder such as `META-INF\versions\26.3` will not work. Windows **Copy as path** is useful here; surrounding quotes are accepted. For example:
 
 ```text
 "C:\Users\YourName\Downloads\server.jar"
@@ -62,8 +64,6 @@ After setup succeeds, double-click **Play.cmd** or **Herspers-Minecraft.exe**. K
 
 The launcher checks resources before starting the game. If resources are missing, run **Setup.cmd** first. The bundled launcher does not implement a new Microsoft account manager; online server/account compatibility requires separate testing.
 
-For private multiplayer, use **Host-Tailscale.cmd** on the host and **Join-Tailscale.cmd** on both players' PCs. Follow [the Tailscale hosting guide](HOSTING-TAILSCALE.md); the host's printed Tailscale address is used by everyone, including the host.
-
 Game data stays under:
 
 ```text
@@ -76,11 +76,26 @@ Game data stays under:
 - `logs\resources-check.log`: startup resource-check results.
 - `logs\launcher.log`: game startup output.
 
+## 5. Play with a friend using Tailscale
+
+1. **Both PCs:** complete the download and resource setup above. Install and connect [Tailscale](https://tailscale.com/download). Give your friend access to your host PC through your Tailscale network or device sharing, and keep Tailscale connected on both PCs.
+2. **Your PC (host):** if an older server is running, type `stop` in its server window and wait for it to close. Open **Host-Tailscale.cmd** in the extracted application folder. If prompted, read the Minecraft EULA and type **I AGREE** only if you agree.
+3. **Your PC:** wait for the server to start and copy the address printed in the host window. Send it to your friend, including the port after the colon. It will look like `100.80.12.34:25565`; use your actual printed address. **Keep the host window open.**
+4. **Your PC:** open **Join-Tailscale.cmd** in a second window, paste the printed host address, and enter a player name of **3–16 letters, numbers or underscores**.
+5. **Your friend's PC:** open **Join-Tailscale.cmd**, paste the same address, and enter a different player name. Keep using the same names on future visits. Both players use the host's Tailscale address; `localhost` will not work because this server listens on its Tailscale address.
+6. **When finished:** both players leave the game, then the host types `stop` in the server window and waits for it to save and exit. Next time, connect Tailscale, open **Host-Tailscale.cmd**, then use **Join-Tailscale.cmd** on both PCs again.
+
+No router port forwarding is needed. This starter creates a private server without Microsoft account verification and binds it only to the host's Tailscale address. Tailscale sharing controls which friends can reach it.
+
+Read **HOSTING-TAILSCALE.txt** beside the launchers for server folders, backups and connection troubleshooting. The same [Tailscale hosting guide is available on GitHub](https://github.com/Zeigen-ft/Herspers-Minecraft/blob/main/docs/HOSTING-TAILSCALE.md).
+
 ## Troubleshooting
 
 - **JDK missing:** install the full JDK 25, then close and reopen the setup window. The preparer searches installed JDK folders, `JAVA_HOME` and PATH.
 - **Wrong JAR/version:** use the matching official Java Edition 26.3 files. A different version is rejected.
 - **Missing bundled file:** extract the complete package again; do not move only the launcher EXE.
+- **Host-Tailscale.cmd or Join-Tailscale.cmd is missing:** download the latest successful Windows Java **0.2.2** package and extract both ZIP layers. Older packages do not include these starters.
+- **Server still says online mode:** stop the old server, start **Host-Tailscale.cmd**, and use its newly printed address in **Join-Tailscale.cmd** on both PCs. See **HOSTING-TAILSCALE.txt** for further connection checks.
 - **No graphics device or driver failure:** update your GPU driver and retain the startup log when reporting the problem.
 - **`thread 'main' has overflowed its stack` at the menu:** early 0.2.0 packages used the Windows default main-thread stack. Current source builds reserve 16 MiB and packaging checks that value. To repair an existing unsigned package, close the game and place [repair_windows_stack.ps1](../scripts/repair_windows_stack.ps1) in the extracted application folder. Open PowerShell there and run:
 
