@@ -2,6 +2,8 @@
 
 Herps Launcher is a shared Python/Qt desktop launcher for **Herspers Minecraft Java 26.3** on Windows 10/11 x64, macOS Apple Silicon, and macOS Intel. Bedrock is separate. It does not require the original Horizon Launcher.
 
+Start with the [step-by-step use and integration guide](HERPS-QUICKSTART.md) for installation, first launch, connecting an existing game, mods, shaders, multiplayer, and source/repository integration.
+
 ## Install and play
 
 The `Build Herps Launcher` workflow builds a separate native game and launcher package for each architecture. See [the native validation run](https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/41571739445) for each platform's result and downloadable artifacts. The older Herspers game download links in the repository README are separate from these Herps Launcher packages.
