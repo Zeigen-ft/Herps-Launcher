@@ -16,7 +16,11 @@ from herps_launcher.core import (Launcher, Installation, REVISION, archive, buil
 def pack(path, files):
     with zipfile.ZipFile(path, "w") as z:
         for name, data in files.items():
-            z.writestr(name, data)
+            info = zipfile.ZipInfo(name)
+            # Keep deliberately unsafe names raw: Windows ZipInfo construction
+            # otherwise normalizes backslashes before the fixture is written.
+            info.filename = name
+            z.writestr(info, data)
     return path
 
 
@@ -99,7 +103,7 @@ class LauncherTests(unittest.TestCase):
         self.assertEqual(stamp.read_bytes(), b'{"original":"stamp"}')
 
     def test_archive_rejects_traversal_duplicates_and_expansion(self):
-        for name in ("../evil", "/evil", "C:/evil", "a\\evil", "a/./evil"):
+        for name in ("../evil", "/evil", "C:/evil", "a\\evil", "a/./evil", "a\0evil"):
             with self.subTest(name=name), self.assertRaises(ValueError):
                 archive(pack(self.root / "bad.zip", {name: "x"}))
         with self.assertRaises(ValueError):

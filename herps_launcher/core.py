@@ -103,7 +103,9 @@ def archive(path: Path, limit=64 << 20) -> dict[str, bytes]:
         if len(zipped.infolist()) > 20000:
             raise ValueError("Archive has too many entries")
         for info in zipped.infolist():
-            name = info.filename
+            # ZipInfo normalizes host separators and truncates NULs in filename.
+            # Validate the original archive name before using any normalized path.
+            name = info.orig_filename
             if ("\\" in name or ":" in name or name.startswith("/") or
                     any(p in (".", "..", "") for p in name.rstrip("/").split("/")) or
                     stat.S_IFMT(info.external_attr >> 16) not in (0, stat.S_IFREG, stat.S_IFDIR)):

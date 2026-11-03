@@ -25,6 +25,15 @@ def run(args, **kwargs):
     subprocess.run(list(map(str, args)), check=True, **kwargs)
 
 
+def smoke(executable: Path, output: Path):
+    report_path = output / "launcher-smoke.json"
+    result = subprocess.run([str(executable), "--smoke-test", "--require-installation", "--smoke-report", str(report_path)],
+                            env={**os.environ, "QT_QPA_PLATFORM": "offscreen"}, cwd=output, timeout=120)
+    report = json.loads(report_path.read_text(encoding="utf-8")) if report_path.is_file() else {}
+    if result.returncode or report.get("status") != "passed" or report.get("pages_opened") != 5:
+        raise ValueError(f"Packaged launcher smoke test failed: {report.get('error', 'no successful smoke report')}")
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--game", type=Path, required=True, help="Verified packaged Herspers-Minecraft folder or .app")
@@ -73,15 +82,14 @@ def main():
             run(["codesign", "--verify", "--deep", "--strict", game_destination])
         # Keep the already-signed game bundle a sibling, preserving its binary checksums.
         executable = app / "Contents/MacOS/Herps Launcher"
-        smoke_env = {**os.environ, "QT_QPA_PLATFORM": "offscreen"}
-        run([executable, "--smoke-test"], env=smoke_env, cwd=output)
+        smoke(executable, output)
         # PyInstaller also emits an unpackaged onedir tree; the .app is the delivery.
         shutil.rmtree(output / "Herps Launcher")
     else:
         folder = output / "Herps Launcher"
         shutil.copytree(installation.root, folder / "game/Herspers-Minecraft")
         executable = folder / "Herps Launcher.exe"
-        run([executable, "--smoke-test"], env={**os.environ, "QT_QPA_PLATFORM": "offscreen"}, cwd=output)
+        smoke(executable, output)
     if args.source:
         stamp = json.loads((args.source / ".herspers-prepared.json").read_text())
         from herps_launcher.core import REVISION
