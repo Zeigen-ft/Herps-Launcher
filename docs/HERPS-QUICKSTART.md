@@ -14,10 +14,11 @@ Bedrock is a separate application. These instructions use the Java Edition packa
 `feature/herps-java-compatibility`.** Their automated tests pass on Linux with
 owned fixtures; native Windows/macOS use and gameplay remain unverified.
 The downloads below are historical packages from the earlier launcher workflow,
-not verified distributions of these new pages. Packaging still expects five
-pages and does not bundle `horizon-port-pack`; the source launcher has seven.
-See [release readiness](herps/java-mods-release-readiness.md) before distributing
-a build. No new release or package was published for this feature branch.
+not verified distributions of these new pages. Phase 5A updates packaging to
+require seven pages and bundle `horizon-port-pack`, but Windows/macOS builds
+and installed execution remain unverified. See the
+[Phase 5A report](herps/java-mods-step5a.md) before distributing a build.
+No new release or package was published for this feature branch.
 
 ## 1. Download your platform package
 
@@ -269,12 +270,14 @@ rustc +1.95.0 --edition=2021 packaging/herps_host.rs -o .cache/herps-host
 
 ### Build distributable packages
 
-The existing native build scripts and `tools/package_herps.py` describe the
-earlier packaging workflow. Their five-page smoke expectations currently reject
-the seven-page source launcher, and port-pack is not bundled. The
-[release-readiness report](herps/java-mods-release-readiness.md#packaging-blockers-and-proposed-changes)
-lists exact proposed changes and native validation still required. Packaging
-scripts are unchanged; no new distributable is claimed ready.
+`tools/package_herps.py` now builds the pinned `horizon-port-pack` for the native
+Windows x64, macOS ARM64 or macOS x64 host and includes it with Python/Qt.
+Packaging requires seven pages and actual bundled-helper metadata checks.
+End users do not need Cargo/Rust for Java metadata analysis. Source development
+and existing trusted native-mod builds have their own build requirements.
+The [Phase 5A report](herps/java-mods-step5a.md) records Linux packaging-probe
+evidence and the Windows/macOS verification still required. No native
+distributable containing these additions is claimed ready.
 
 The existing workflow's dispatch syntax for its older remote branch is:
 

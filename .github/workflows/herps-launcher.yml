@@ -8,10 +8,10 @@ on:
         options: [all, windows, macos-arm64, macos-x64]
         default: all
   pull_request:
-    paths: ['herps_launcher/**', 'tools/package_herps.py', 'tools/smoke_herps_native.py', 'tools/ci_run.py', 'packaging/herps*', 'tests/test_herps*', 'tests/test_ci_run.py', '.github/workflows/herps-launcher.yml']
+    paths: ['herps_launcher/**', 'tools/package_herps.py', 'tools/smoke_herps_native.py', 'tools/ci_run.py', 'packaging/herps*', 'tests/test_herps*', 'tests/test_javamods*', 'tests/test_modpacks*', 'tests/test_ci_run.py', '.github/workflows/herps-launcher.yml']
   push:
     branches: [main, feature/herps-launcher-cross-platform]
-    paths: ['herps_launcher/**', 'tools/package_herps.py', 'tools/smoke_herps_native.py', 'tools/ci_run.py', 'packaging/herps*', 'tests/test_herps*', 'tests/test_ci_run.py', '.github/workflows/herps-launcher.yml', 'patches/**', 'upstream.lock.json']
+    paths: ['herps_launcher/**', 'tools/package_herps.py', 'tools/smoke_herps_native.py', 'tools/ci_run.py', 'packaging/herps*', 'tests/test_herps*', 'tests/test_javamods*', 'tests/test_modpacks*', 'tests/test_ci_run.py', '.github/workflows/herps-launcher.yml', 'patches/**', 'upstream.lock.json']
 permissions:
   contents: read
 jobs:
@@ -39,28 +39,46 @@ jobs:
         run: python -m pip install -r herps_launcher/requirements.txt
       - name: Install pinned engine toolchain
         run: rustup toolchain install 1.95.0 --profile minimal
-      - name: Portable and desktop integration tests
-        run: python tools/ci_run.py herps-tests.log python -m unittest discover -s tests -v
       - name: Reuse verified Windows engine build cache
         if: runner.os == 'Windows'
         uses: actions/cache@v4
         with:
           path: |
             .cache/target
+            .cache/port-pack-target
             .cache/upstream
             ~/.cargo/registry
             ~/.cargo/git
-          key: windows-x64-rust-1.95-static-fast-stack16-shaders-v1-${{ hashFiles('upstream.lock.json', 'patches/**') }}
+          key: windows-x64-rust-1.95-static-fast-stack16-shaders-v1-portpack-v1-${{ hashFiles('upstream.lock.json', 'patches/**') }}
+          restore-keys: windows-x64-rust-1.95-static-fast-stack16-shaders-v1-${{ hashFiles('upstream.lock.json', 'patches/**') }}
       - name: Reuse macOS engine build cache
         if: runner.os == 'macOS'
         uses: actions/cache@v4
         with:
           path: |
             .cache/target
+            .cache/port-pack-target
             .cache/upstream
             ~/.cargo/registry
             ~/.cargo/git
-          key: herps-engine-macOS-${{ matrix.arch }}-rust-1.95-${{ hashFiles('upstream.lock.json', 'patches/**') }}
+          key: herps-engine-macOS-${{ matrix.arch }}-rust-1.95-portpack-v1-${{ hashFiles('upstream.lock.json', 'patches/**') }}
+          restore-keys: herps-engine-macOS-${{ matrix.arch }}-rust-1.95-${{ hashFiles('upstream.lock.json', 'patches/**') }}
+      - name: Build pinned port-pack for the native runner
+        shell: python
+        run: |
+          import json
+          import os
+          import sys
+          from pathlib import Path
+          sys.path.insert(0, str(Path.cwd()))
+          from herps_launcher.core import target
+          from tools.package_herps import build_port_pack
+          binary, evidence = build_port_pack(target())
+          Path("herps-port-pack-build.json").write_text(json.dumps(evidence, indent=2) + "\n", encoding="utf-8")
+          with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as environment:
+              environment.write(f"HERPS_TEST_PORT_PACK={binary}\n")
+      - name: Portable and desktop integration tests with the real backend
+        run: python tools/ci_run.py herps-tests.log python -m unittest discover -s tests -v
       - name: Build Windows game
         if: runner.os == 'Windows'
         shell: pwsh
@@ -102,12 +120,14 @@ jobs:
             $launcher = Join-Path $installed 'Herps Launcher/Herps Launcher.exe'
             if (-not (Test-Path $launcher)) { throw 'Installed launcher is missing' }
             $smokeReport = Join-Path $env:RUNNER_TEMP 'herps-installed-smoke.json'
-            $smoke = Start-Process -FilePath $launcher -ArgumentList @('--smoke-test', '--require-installation', '--smoke-report', "`"$smokeReport`"") -PassThru -Wait
+            $smoke = Start-Process -FilePath $launcher -ArgumentList @('--smoke-test', '--require-installation', '--require-port-pack', '--smoke-report', "`"$smokeReport`"") -PassThru -Wait
             if (-not (Test-Path $smokeReport)) { throw "Installed launcher did not produce its smoke report (exit $($smoke.ExitCode))" }
             $reportText = Get-Content -Raw $smokeReport
             Write-Output $reportText
             $report = $reportText | ConvertFrom-Json
-            if ($smoke.ExitCode -ne 0 -or $report.status -ne 'passed' -or $report.pages_opened -ne 5) { throw "Installed launcher smoke test failed: $reportText" }
+            if ($smoke.ExitCode -ne 0 -or $report.status -ne 'passed' -or $report.pages_opened -ne 7) { throw "Installed launcher smoke test failed: $reportText" }
+            if ($report.port_pack.status -ne 'passed' -or $report.port_pack.bundled -ne $true -or $report.port_pack.sha256 -cnotmatch '^[0-9a-f]{64}$' -or $report.port_pack.adapter_status -ne 'Requires porting' -or $report.port_pack.original_verdict -ne 'works' -or $null -ne $report.port_pack.test_execution) { throw "Installed bundled port-pack fixture failed: $reportText" }
+            Copy-Item $smokeReport 'dist/herps/installed-launcher-smoke.json'
             $startShortcut = Join-Path ([Environment]::GetFolderPath('Programs')) 'Herps Launcher/Herps Launcher.lnk'
             $desktopShortcut = Join-Path ([Environment]::GetFolderPath('DesktopDirectory')) 'Herps Launcher.lnk'
             if (-not (Test-Path $startShortcut) -or -not (Test-Path $desktopShortcut)) { throw 'Installer shortcuts were not created' }
@@ -150,3 +170,15 @@ jobs:
             dist/herps/*.exe
             dist/herps/native-build-proof.json
           if-no-files-found: error
+      - name: Upload packaging and backend evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Herps-Launcher-evidence-${{ runner.os }}-${{ matrix.arch }}
+          path: |
+            herps-*.log
+            herps-port-pack-build.json
+            dist/herps/**/launcher-smoke.json
+            dist/herps/**/package.json
+            dist/herps/installed-launcher-smoke.json
+          if-no-files-found: warn

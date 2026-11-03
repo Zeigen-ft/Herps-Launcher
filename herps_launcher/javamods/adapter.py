@@ -9,6 +9,7 @@ import json
 import math
 import os
 from pathlib import Path
+import platform
 import re
 import shutil
 import subprocess
@@ -25,6 +26,26 @@ REQUIRES_PORTING = "Requires porting"
 MAX_BYTES = 512 << 20
 MAX_FILES = 4096
 KEY = re.compile(r"[a-z0-9][a-z0-9_.-]{0,127}\Z")
+
+
+def bundled_port_pack_candidates() -> tuple[Path, ...]:
+    """Locate trusted package resources without searching the user's PATH.
+
+    PyInstaller's resource directory is authoritative. Executable-relative
+    fallbacks cover onedir Windows packages and the macOS application layout;
+    none of these directories is used for mutable profile work.
+    """
+    if not getattr(sys, "frozen", False):
+        return ()
+    name = "horizon-port-pack.exe" if platform.system() == "Windows" else "horizon-port-pack"
+    executable_dir = Path(sys.executable).absolute().parent
+    directories = []
+    if getattr(sys, "_MEIPASS", None):
+        directories.append(Path(sys._MEIPASS))
+    directories += [executable_dir, executable_dir / "_internal"]
+    if platform.system() == "Darwin" and executable_dir.name == "MacOS" and executable_dir.parent.name == "Contents":
+        directories += [executable_dir.parent / "Frameworks", executable_dir.parent / "Resources"]
+    return tuple(dict.fromkeys(directory / name for directory in directories))
 
 
 def _plain(path: Path) -> None:
@@ -151,18 +172,18 @@ class PortPackAdapter:
         return AnalysisReport(operation, self.launcher.config["profile"], work)
 
     def _binary(self, report: AnalysisReport) -> Path:
-        name = "horizon-port-pack.exe" if os.name == "nt" else "horizon-port-pack"
+        name = "horizon-port-pack.exe" if platform.system() == "Windows" else "horizon-port-pack"
         explicit = self.executable or self.launcher.config.get("port_pack_binary") or os.environ.get("HERPS_PORT_PACK")
         candidates = [Path(explicit)] if explicit else []
         if not explicit:
             if getattr(sys, "frozen", False):
-                candidates += [Path(getattr(sys, "_MEIPASS", Path(sys.executable).parent)) / name,
-                               Path(sys.executable).parent / name]
-            if os.environ.get("CARGO_TARGET_DIR"):
-                candidates += [Path(os.environ["CARGO_TARGET_DIR"]) / mode / name for mode in ("release", "debug")]
-            found = shutil.which(name)
-            if found:
-                candidates.append(Path(found))
+                candidates += bundled_port_pack_candidates()
+            else:
+                if os.environ.get("CARGO_TARGET_DIR"):
+                    candidates += [Path(os.environ["CARGO_TARGET_DIR"]) / mode / name for mode in ("release", "debug")]
+                found = shutil.which(name)
+                if found:
+                    candidates.append(Path(found))
         for path in candidates:
             path = path.expanduser().absolute()
             if path.is_file() and os.access(path, os.X_OK):
@@ -170,7 +191,14 @@ class PortPackAdapter:
                     "audited_engine_revision": REVISION,
                     "note": "Binary hash recorded; port-pack has no version protocol. Use a trusted build of the pinned engine."}
                 return path
-        raise ValueError("horizon-port-pack executable is missing; select a trusted pinned build with --port-pack or port_pack_binary")
+        if explicit:
+            raise ValueError(f"Selected horizon-port-pack executable is missing or not executable: {explicit}; "
+                             "select a trusted pinned build or clear port_pack_binary/HERPS_PORT_PACK to use automatic discovery")
+        if getattr(sys, "frozen", False):
+            raise ValueError("Bundled horizon-port-pack executable is missing or not executable; reinstall the launcher "
+                             "or select a trusted pinned build. Cargo/Rust is not required for packaged metadata analysis")
+        raise ValueError("horizon-port-pack executable is missing or not executable; select a trusted pinned build "
+                         "with --port-pack, port_pack_binary, HERPS_PORT_PACK, CARGO_TARGET_DIR, or PATH")
 
     def _run(self, report: AnalysisReport, *args: str | Path) -> None:
         binary = self._binary(report)

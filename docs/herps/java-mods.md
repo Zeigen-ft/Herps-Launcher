@@ -7,11 +7,12 @@ convert arbitrary Java gameplay, or establish tested gameplay compatibility.
 
 The source launcher has seven pages: Home, Mods, Java Mods, Modpacks, Shaders,
 Multiplayer and Settings. Native Windows/macOS execution of the new workflows
-remains unverified. Distribution packaging still needs the changes described in
-the [release readiness report](java-mods-release-readiness.md); older downloadable
-packages are not evidence that these new pages or the port-pack helper are
-included. See the [quickstart](../HERPS-QUICKSTART.md) for source setup and existing
-game installation instructions.
+remains unverified. Phase 5A implements seven-page packaging and native helper
+bundling; the [Phase 5A report](java-mods-step5a.md) distinguishes Linux source
+and frozen-probe evidence from the native builds still pending. Older downloadable
+packages do not contain these additions. See the
+[quickstart](../HERPS-QUICKSTART.md) for source setup and existing game
+installation instructions.
 
 ## Prepare the source launcher
 
@@ -19,7 +20,12 @@ Run the source launcher with Python 3.12 and the pinned
 `herps_launcher/requirements.txt` dependencies. Analysis and porting require a
 trusted `horizon-port-pack` executable built from the repository's pinned engine
 source with Rust 1.95.0. A JDK is not needed for passive mod analysis; the existing
-game resource-preparation workflow is separate.
+game resource-preparation workflow is separate. New packaging builds include the
+matching helper automatically; packaged metadata analysis requires no Cargo,
+Rust or JDK on the end user's machine. Native package verification is pending.
+Frozen launchers search their bundled resource/application directories instead
+of developer Cargo caches or PATH. An explicit backend selection overrides
+discovery; clear an obsolete selection or reinstall if the helper is missing.
 
 For a developer build, run these existing commands from the repository root:
 
@@ -350,14 +356,15 @@ Evidence includes
 `test_partial_port_has_data_outputs_but_play_remains_disabled`.
 The [Step 1](java-mods-step1.md), [Step 2](java-mods-step2.md) and
 [Step 3](java-mods-step3.md) reports contain more test names and observed output.
-Use the [release readiness report](java-mods-release-readiness.md) for current
-verification totals and release blockers.
+The [Step 4 readiness report](java-mods-release-readiness.md) records the earlier
+assessment. Use the [Phase 5A report](java-mods-step5a.md) for packaging changes,
+current verification totals and remaining native verification requirements.
 
 ## Troubleshooting
 
 | Symptom | Action |
 | --- | --- |
-| Missing backend | Select a trusted matching executable; do not select the source folder or a JAR. The helper is not bundled yet. |
+| Missing backend | Source mode needs a trusted matching executable. New packaging includes the helper: clear obsolete overrides or reinstall a verified package. Do not select a source folder or JAR. |
 | `works` alongside Unsupported | Read the conservative findings; static backend verdicts can omit missing dependencies or unreadable classes. |
 | Missing dependencies/files | Select your own folder or instance, rerun analysis, and review version/hash failures. CurseForge ID-only inputs may need instance metadata. |
 | Hash mismatch | Preserve the source, obtain the correct file through your authorised source, and import/reanalyse it. Do not edit the expected hash to force a pass. |
