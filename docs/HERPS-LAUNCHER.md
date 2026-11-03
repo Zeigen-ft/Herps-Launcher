@@ -4,7 +4,17 @@ Herps Launcher is a shared Python/Qt desktop launcher for **Herspers Minecraft J
 
 ## Install and play
 
-The new `Build Herps Launcher` workflow builds a separate native game and launcher package for each architecture. These packages have not yet been built or exercised on native runners for this change; do not mistake the existing Herspers download links for Herps Launcher releases.
+The `Build Herps Launcher` workflow builds a separate native game and launcher package for each architecture. See [the native validation run](https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/41571739445) for each platform's result and downloadable artifacts. The older Herspers game download links in the repository README are separate from these Herps Launcher packages.
+
+Run **41571739445**, built from source commit **2aee3c77a3c03e91a680f3342267c435a392d737**, passed on all three platforms:
+
+| Platform | Download | Verified |
+| --- | --- | --- |
+| Windows 10/11 x64 | [Installer and portable ZIP](https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/41571739445/artifacts/13202422947) | Native build, packaged game discovery/UI, install/start/shortcuts/uninstall, actual native-mod compile and rollback |
+| Mac Apple Silicon | [ARM64 DMG](https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/41571739445/artifacts/13202148293) | Native build, packaged game discovery/UI, DMG integrity |
+| Mac Intel | [x86_64 DMG](https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/41571739445/artifacts/13202408890) | Native build, packaged game discovery/UI, DMG integrity |
+
+Download and extract GitHub's outer artifact ZIP first. Windows users can then run the `-Setup.exe`; Mac users can open the enclosed `.dmg`. GitHub may require sign-in to download Actions artifacts.
 
 On Windows, install the Microsoft Visual C++ x64 runtime from https://aka.ms/vc14/vc_redist.x64.exe if missing, then run the generated per-user installer (optional desktop shortcut and Start Menu shortcut), or extract the entire ZIP and run `Herps Launcher/Herps Launcher.exe`. Keep its game and `_internal` directories intact. On macOS, mount the DMG and copy **both** `Herps Launcher.app` and `Herspers Minecraft.app` into Applications. If you want to compile native mods, also retain the included `engine-source` folder and choose it in Settings. Qt 6.8 requires macOS 12 or later.
 
@@ -22,7 +32,7 @@ Native `.hnmod` bundles must target **7301f6fdd7f470b11317276e7a11b4dc615c137a**
 
 Native compilation requires Rust **1.95.0**, network access to GitHub/crates.io, and the platform's build tools: Visual Studio C++ Build Tools + Windows SDK on Windows, Xcode Command Line Tools on Mac. Set Prepared native source to the included verified `engine-source`, or run `python tools/prepare_upstream.py` from a development checkout and select the printed folder. The preparer's content digest is checked again before using that source. Rebuild installs the pinned mixins tool, applies it into a separate work directory, checks the staged dependency lock against Horizon's lock, builds with audio/controllers/runtime mods, runs declared post-build tools, and caches the binary by source revision, architecture and enabled mod hashes. Windows retains the 16 MiB stack setting.
 
-The original installation's binaries are never overwritten. Changes to enabled native mods require a matching build before PLAY. Roll back by disabling all native mods; ordinary PLAY then selects the original client. Removed mods are moved into `herps-launcher/removed`, and mod data is retained.
+The original installation's binaries are never overwritten. Changes to enabled native mods require a matching build before PLAY. Roll back by disabling all native mods; ordinary PLAY then selects the original client. Removed mods are moved into `herps-launcher/removed`, and mod data is retained. Native bundle staging follows the mixins CLI's direct per-mod directory layout, and the source copy receives its exact revision marker without changing the verified source cache. Rust installed under `CARGO_HOME/bin` or `~/.cargo/bin` is discovered even when a Mac app opened from Finder has no Rust directory on PATH.
 
 ## Shaders and settings
 
@@ -58,4 +68,10 @@ The packaging command builds the native hosting helper, bundles Python/Qt, start
 
 ## Verification boundaries
 
-Linux checks cover real owned child processes, failure/exit handling and relaunch, mod import/enable/removal, unsafe archives, native manifest pins, source/target fingerprints, shader configuration/reset, save preservation, and actual Qt page navigation. The original 161 engine/preparer library tests and Linux client compile check passed during development. Actual Windows/macOS launcher startup, installers/DMGs, complete native mod compilation, real shader rendering, prepared-game startup, and a two-machine Tailscale session still require native runs and the user's game files. CI configuration is provided but no remote workflow has been dispatched or reported as passed for this branch.
+Linux checks cover real owned child processes, failure/exit handling and relaunch, mod import/enable/removal, raw unsafe ZIP names, native manifest pins and staging, source/target fingerprints, shader configuration/reset, save preservation, and actual Qt page navigation. The original 161 engine/preparer library tests and Linux client compile check passed during development.
+
+The linked native workflow runs the full test suite on Windows x64, Mac ARM64 and Mac Intel, then builds their actual game and launcher packages. Packaged UI smoke checks require successful discovery and checksum validation of the bundled game plus all five launcher pages. Windows additionally checks silent installation, both shortcuts, installed-app startup and uninstallation. Mac packages undergo DMG integrity verification.
+
+The Windows native-mod check imports and enables an owned `.hnmod`, uses the pinned mixins tool and real prepared source to compile the game, verifies its injected marker and 16 MiB stack, checks native/original binary selection and rollback, and verifies that the save sentinel, clean installation and source cache remain unchanged. Its proof explicitly leaves hook execution and gameplay unverified. It uses a private copy of the clean target cache. Mac native-mod compilation has not been exercised by this check.
+
+Read the actual job conclusions in the linked workflow before treating a platform as verified. Real shader activation/rendering, prepared-game startup, hook execution, account login and a two-machine Tailscale session still need the user's legitimate game files and suitable hardware/services. These checks do not establish gameplay readiness or notarization.
