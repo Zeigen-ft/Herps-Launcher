@@ -42,6 +42,26 @@ jobs:
         run: rustup toolchain install 1.95.0 --profile minimal
       - name: Portable and desktop integration tests
         run: python -m unittest discover -s tests -v
+      - name: Reuse verified Windows engine build cache
+        if: runner.os == 'Windows'
+        uses: actions/cache@v4
+        with:
+          path: |
+            .cache/target
+            .cache/upstream
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: windows-x64-rust-1.95-static-fast-stack16-shaders-v1-${{ hashFiles('upstream.lock.json', 'patches/**') }}
+      - name: Reuse macOS engine build cache
+        if: runner.os == 'macOS'
+        uses: actions/cache@v4
+        with:
+          path: |
+            .cache/target
+            .cache/upstream
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: herps-engine-macOS-${{ matrix.arch }}-rust-1.95-${{ hashFiles('upstream.lock.json', 'patches/**') }}
       - name: Build Windows game
         if: runner.os == 'Windows'
         shell: pwsh

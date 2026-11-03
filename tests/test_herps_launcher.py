@@ -10,7 +10,7 @@ from unittest.mock import patch
 import zipfile
 
 from herps_launcher.core import (Launcher, Installation, REVISION, archive, build_native,
-    digest, inspect_mod, json_write, pairs, server_address, support_dir, target, update_pairs)
+    digest, find_cargo, inspect_mod, json_write, pairs, server_address, stage_native_source, support_dir, target, update_pairs)
 
 
 def pack(path, files):
@@ -71,6 +71,32 @@ class LauncherTests(unittest.TestCase):
             inspect_mod(native(self.root / "wrong.hnmod", "c" * 40))
         with self.assertRaises(ValueError):
             build_native(self.launcher, self.root, trusted=False)
+
+    def test_native_build_discovers_user_rustup_without_shell_path(self):
+        binary = "cargo.exe" if os.name == "nt" else "cargo"
+        cargo = self.root / ".cargo/bin" / binary
+        cargo.parent.mkdir(parents=True)
+        cargo.write_bytes(b"owned tool fixture")
+        cargo.chmod(0o755)
+        self.assertEqual(find_cargo({"PATH": ""}, self.root), cargo.absolute())
+        custom = self.root / "custom-cargo/bin" / binary
+        custom.parent.mkdir(parents=True)
+        custom.write_bytes(b"custom tool fixture")
+        custom.chmod(0o755)
+        self.assertEqual(find_cargo({"PATH": "", "CARGO_HOME": str(custom.parent.parent)}, self.root), custom.absolute())
+
+    def test_mixin_source_copy_has_exact_revision_and_preserves_cache(self):
+        source, work = self.root / "prepared", self.root / "work"
+        source.mkdir()
+        work.mkdir()
+        stamp = source / ".herspers-prepared.json"
+        stamp.write_bytes(b'{"original":"stamp"}')
+        (source / "Cargo.lock").write_bytes(b"owned locked source")
+        result = stage_native_source(source, work)
+        self.assertEqual((result / ".horizon-revision").read_text(), REVISION)
+        self.assertFalse((source / ".horizon-revision").exists())
+        self.assertEqual((result / "Cargo.lock").read_bytes(), b"owned locked source")
+        self.assertEqual(stamp.read_bytes(), b'{"original":"stamp"}')
 
     def test_archive_rejects_traversal_duplicates_and_expansion(self):
         for name in ("../evil", "/evil", "C:/evil", "a\\evil", "a/./evil"):

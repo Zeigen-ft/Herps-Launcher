@@ -461,6 +461,33 @@ class Launcher:
         update_pairs(self.game / "horizon-graphics.txt", {"graphicsApi": backend})
 
 
+def find_cargo(environ=None, home=None) -> Path:
+    """Finder's PATH commonly omits rustup's per-user bin directory."""
+    environ = os.environ if environ is None else environ
+    home = Path.home() if home is None else home
+    filename = "cargo.exe" if platform.system() == "Windows" else "cargo"
+    candidates = []
+    if environ.get("CARGO_HOME"):
+        candidates.append(Path(environ["CARGO_HOME"]) / "bin" / filename)
+    candidates.append(home / ".cargo/bin" / filename)
+    inherited = shutil.which("cargo", path=environ.get("PATH", ""))
+    if inherited:
+        candidates.append(Path(inherited))
+    for candidate in candidates:
+        if candidate.is_file() and os.access(candidate, os.X_OK):
+            # Keep rustup's cargo symlink name: resolving it changes proxy dispatch.
+            return candidate.absolute()
+    raise ValueError("Install Rust 1.95.0 using rustup; Windows also needs Visual Studio C++ Build Tools, macOS needs Xcode Command Line Tools")
+
+
+def stage_native_source(source: Path, work: Path) -> Path:
+    """Supply mixins' exact archive revision without changing the verified cache."""
+    staged = work / "source"
+    shutil.copytree(source, staged)
+    atomic(staged / ".horizon-revision", REVISION.encode())
+    return staged
+
+
 def build_native(launcher: Launcher, source: Path, trusted=False, progress=lambda line: None):
     """Apply exact-revision mixins to a verified source copy, keep clean install untouched."""
     if not trusted:
@@ -471,8 +498,7 @@ def build_native(launcher: Launcher, source: Path, trusted=False, progress=lambd
     revisions = {m.metadata["mixins"] for m in mods}
     if len(revisions) != 1:
         raise ValueError("These mods pin different mixin tools; use a compatible set")
-    if not shutil.which("cargo"):
-        raise ValueError("Install Rust 1.95.0 using rustup; Windows also needs Visual Studio C++ Build Tools, macOS needs Xcode Command Line Tools")
+    cargo = find_cargo()
     source = source.resolve(strict=True)
     stamp = read_json(source / ".herspers-prepared.json")
     if stamp.get("upstream", {}).get("commit") != REVISION:
@@ -507,6 +533,7 @@ def build_native(launcher: Launcher, source: Path, trusted=False, progress=lambd
         work = Path(tempfile.mkdtemp(prefix="build-", dir=build.parent))
         env = os.environ.copy()
         env.update(HORIZON_VERSION="0.7.6", RUSTUP_TOOLCHAIN=RUST, CARGO_BUILD_JOBS="3", CARGO_TARGET_DIR=str(build.parent / "target"))
+        env["PATH"] = str(cargo.parent) + os.pathsep + env.get("PATH", "")
         if platform.system() == "Windows":
             env["RUSTFLAGS"] = "-C target-feature=+crt-static -C link-arg=/STACK:16777216"
         log_path = launcher.state / "native-build.log"
@@ -522,7 +549,7 @@ def build_native(launcher: Launcher, source: Path, trusted=False, progress=lambd
                     if child.wait():
                         raise ValueError(f"Native build failed; see {log_path}")
             tool_root = launcher.state / "mixins" / next(iter(revisions))
-            run(["cargo", "+" + RUST, "install", "--locked", "--git", "https://github.com/horizon-rust/horizon-mixins", "--rev", next(iter(revisions)),
+            run([cargo, "+" + RUST, "install", "--locked", "--git", "https://github.com/horizon-rust/horizon-mixins", "--rev", next(iter(revisions)),
                  "--root", tool_root, "horizon-mixins-cli"])
             incoming = work / "mods"
             for mod in mods:
@@ -531,13 +558,14 @@ def build_native(launcher: Launcher, source: Path, trusted=False, progress=lambd
                         atomic(incoming / mod.id / name, data)
             tool = tool_root / "bin" / ("horizon-mixins.exe" if platform.system() == "Windows" else "horizon-mixins")
             stage = work / "engine"
-            run([tool, "apply", "--workspace", source, "--mods", incoming, "--out", stage])
+            working_source = stage_native_source(source, work)
+            run([tool, "apply", "--workspace", working_source, "--mods", incoming, "--out", stage])
             def locked_packages(path):
                 return {(p["name"], p["version"], p["source"], p.get("checksum"))
                         for p in tomllib.loads(path.read_text(encoding="utf-8"))["package"] if "source" in p}
             if not locked_packages(stage / "Cargo.lock") <= locked_packages(source / "Cargo.lock"):
                 raise ValueError("Native mod dependencies differ from Horizon's pinned Cargo.lock")
-            run(["cargo", "+" + RUST, "build", "--locked", "--profile", "fast", "--manifest-path", stage / "Cargo.toml",
+            run([cargo, "+" + RUST, "build", "--locked", "--profile", "fast", "--manifest-path", stage / "Cargo.toml",
                  "--target", host_target, "-p", "horizon-client", "--bin", "horizon-client", "--features", "horizon-client/mods"])
             filename = "horizon-client.exe" if platform.system() == "Windows" else "horizon-client"
             binary = Path(env["CARGO_TARGET_DIR"]) / host_target / "fast" / filename
@@ -552,7 +580,7 @@ def build_native(launcher: Launcher, source: Path, trusted=False, progress=lambd
                 for key_name in ("package", "bin"):
                     if not re.fullmatch(r"[A-Za-z0-9_-]+", step[key_name]):
                         raise ValueError("Invalid post-build crate/binary name")
-                run(["cargo", "+" + RUST, "build", "--locked", "--profile", "fast", "--manifest-path", stage / "Cargo.toml",
+                run([cargo, "+" + RUST, "build", "--locked", "--profile", "fast", "--manifest-path", stage / "Cargo.toml",
                      "--target", host_target, "-p", step["package"], "--bin", step["bin"]])
                 program = Path(env["CARGO_TARGET_DIR"]) / host_target / "fast" / (step["bin"] + (".exe" if platform.system() == "Windows" else ""))
                 data = build / "native-data" / step["mod"]
