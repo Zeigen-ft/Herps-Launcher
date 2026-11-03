@@ -491,6 +491,22 @@ def stage_native_source(source: Path, work: Path) -> Path:
     return staged
 
 
+def stage_native_mod(mod: Mod, incoming: Path) -> Path:
+    """Unpack the bundle's mixin folder directly under the CLI's mods directory."""
+    if not mod.native or not ID.fullmatch(mod.id):
+        raise ValueError("Native staging requires a valid native mod identity")
+    files = archive(mod.path)
+    prefix = f"mixins/{mod.id}/"
+    source_files = {name: data for name, data in files.items() if name != "horizon-native.json"}
+    if (prefix + "horizon-mixin.toml" not in source_files or
+            any(not name.startswith(prefix) for name in source_files)):
+        raise ValueError("Native source is outside its mod namespace or has no mixin manifest")
+    destination = incoming / mod.id
+    for name, data in source_files.items():
+        atomic(destination / name[len(prefix):], data)
+    return destination
+
+
 def build_native(launcher: Launcher, source: Path, trusted=False, progress=lambda line: None):
     """Apply exact-revision mixins to a verified source copy, keep clean install untouched."""
     if not trusted:
@@ -556,9 +572,7 @@ def build_native(launcher: Launcher, source: Path, trusted=False, progress=lambd
                  "--root", tool_root, "horizon-mixins-cli"])
             incoming = work / "mods"
             for mod in mods:
-                for name, data in archive(mod.path).items():
-                    if name != "horizon-native.json":
-                        atomic(incoming / mod.id / name, data)
+                stage_native_mod(mod, incoming)
             tool = tool_root / "bin" / ("horizon-mixins.exe" if platform.system() == "Windows" else "horizon-mixins")
             stage = work / "engine"
             working_source = stage_native_source(source, work)

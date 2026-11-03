@@ -8,10 +8,10 @@ on:
         options: [all, windows, macos-arm64, macos-x64]
         default: all
   pull_request:
-    paths: ['herps_launcher/**', 'tools/package_herps.py', 'tools/ci_run.py', 'packaging/herps*', 'tests/test_herps*', 'tests/test_ci_run.py', '.github/workflows/herps-launcher.yml']
+    paths: ['herps_launcher/**', 'tools/package_herps.py', 'tools/smoke_herps_native.py', 'tools/ci_run.py', 'packaging/herps*', 'tests/test_herps*', 'tests/test_ci_run.py', '.github/workflows/herps-launcher.yml']
   push:
     branches: [main, feature/herps-launcher-cross-platform]
-    paths: ['herps_launcher/**', 'tools/package_herps.py', 'tools/ci_run.py', 'packaging/herps*', 'tests/test_herps*', 'tests/test_ci_run.py', '.github/workflows/herps-launcher.yml', 'patches/**', 'upstream.lock.json']
+    paths: ['herps_launcher/**', 'tools/package_herps.py', 'tools/smoke_herps_native.py', 'tools/ci_run.py', 'packaging/herps*', 'tests/test_herps*', 'tests/test_ci_run.py', '.github/workflows/herps-launcher.yml', 'patches/**', 'upstream.lock.json']
 permissions:
   contents: read
 jobs:
@@ -83,7 +83,11 @@ jobs:
             throw 'Inno Setup 6 is required for installer generation'
           }
           $payload = Get-ChildItem dist/herps -Directory | Where-Object Name -Like 'herps-*' | Select-Object -First 1
-          python tools/ci_run.py herps-installer-build.log "$compiler" "/DPayload=$($payload.FullName)" "/DOutput=$((Resolve-Path dist/herps).Path)" packaging/herps-windows.iss
+          # Inno's compressor cannot read some files under the long build prefix.
+          $shortPayload = Join-Path $env:RUNNER_TEMP 'herps-payload'
+          python -c 'import shutil,sys; shutil.copytree(sys.argv[1],sys.argv[2])' $payload.FullName $shortPayload
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python tools/ci_run.py herps-installer-build.log "$compiler" "/DPayload=$shortPayload" "/DOutput=$((Resolve-Path dist/herps).Path)" packaging/herps-windows.iss
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Install, start and uninstall Windows launcher
         if: runner.os == 'Windows'
@@ -115,6 +119,14 @@ jobs:
             Write-Output "::error title=Installer smoke test failed::$message"
             throw
           }
+      - name: Compile, select and roll back an owned Windows native mod
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $sourceRoot = python tools/prepare_upstream.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python tools/ci_run.py herps-native-smoke.log python tools/smoke_herps_native.py --game dist/windows-x86_64/Herspers-Minecraft --source "$sourceRoot" --target-cache .cache/target --report dist/herps/native-build-proof.json
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Package macOS launcher and game DMG
         if: runner.os == 'macOS'
         shell: bash
@@ -136,4 +148,5 @@ jobs:
             dist/herps/*.zip
             dist/herps/*.dmg
             dist/herps/*.exe
+            dist/herps/native-build-proof.json
           if-no-files-found: error

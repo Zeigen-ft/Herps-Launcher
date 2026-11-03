@@ -10,7 +10,7 @@ from unittest.mock import patch
 import zipfile
 
 from herps_launcher.core import (Launcher, Installation, REVISION, archive, build_native,
-    digest, find_cargo, inspect_mod, json_write, pairs, server_address, stage_native_source, support_dir, target, update_pairs)
+    digest, find_cargo, inspect_mod, json_write, pairs, server_address, stage_native_mod, stage_native_source, support_dir, target, update_pairs)
 
 
 def pack(path, files):
@@ -101,6 +101,32 @@ class LauncherTests(unittest.TestCase):
         self.assertFalse((source / ".horizon-revision").exists())
         self.assertEqual((result / "Cargo.lock").read_bytes(), b"owned locked source")
         self.assertEqual(stamp.read_bytes(), b'{"original":"stamp"}')
+
+    def test_native_bundle_stages_manifest_at_cli_mod_root(self):
+        path = native(self.root / "staged.hnmod")
+        files = archive(path)
+        files["mixins/native_demo/engine/data/salt.txt"] = b"owned nested data"
+        pack(path, files)
+        before = path.read_bytes()
+        destination = stage_native_mod(inspect_mod(path), self.root / "incoming")
+        self.assertEqual(destination, self.root / "incoming/native_demo")
+        self.assertTrue((destination / "horizon-mixin.toml").is_file())
+        self.assertTrue((destination / "hook.rs").is_file())
+        self.assertEqual((destination / "engine/data/salt.txt").read_bytes(), b"owned nested data")
+        self.assertFalse((destination / "mixins").exists())
+        self.assertFalse((destination / "horizon-native.json").exists())
+        self.assertEqual(path.read_bytes(), before)
+
+    def test_native_staging_refuses_wrong_namespace_before_writing(self):
+        path = native(self.root / "valid-namespace.hnmod")
+        mod = inspect_mod(path)
+        files = archive(path)
+        files["mixins/other/evil.rs"] = b"// outside the reviewed namespace"
+        mod.path = pack(self.root / "changed.hnmod", files)
+        incoming = self.root / "incoming"
+        with self.assertRaisesRegex(ValueError, "namespace"):
+            stage_native_mod(mod, incoming)
+        self.assertFalse(incoming.exists())
 
     def test_archive_rejects_traversal_duplicates_and_expansion(self):
         for name in ("../evil", "/evil", "C:/evil", "a\\evil", "a/./evil", "a\0evil"):
