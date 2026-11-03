@@ -1,5 +1,13 @@
 # Herps Launcher 0.1.0
 
+This guide retains the earlier cross-platform package and native-build history.
+The Java Mods and Modpacks additions on `feature/herps-java-compatibility` are
+available in source, with seven pages. They are not verified by the historical
+download/CI results below. For current workflows and limits, read
+[Java Mods and Modpacks](herps/java-mods.md) and
+[release readiness](herps/java-mods-release-readiness.md). The native results
+and external artifact links below were not revalidated during Step 4.
+
 Herps Launcher is a shared Python/Qt desktop launcher for **Herspers Minecraft Java 26.3** on Windows 10/11 x64, macOS Apple Silicon, and macOS Intel. Bedrock is separate. It does not require the original Horizon Launcher.
 
 Start with the [step-by-step use and integration guide](HERPS-QUICKSTART.md) for installation, first launch, connecting an existing game, mods, shaders, multiplayer, and source/repository integration.
@@ -28,7 +36,7 @@ PLAY keeps the launcher open, captures output and exit codes, and becomes availa
 
 ## Mods and native builds
 
-Import `.hmod` or `.hnmod` on Mods. Imports start **disabled**. Review the manifest details and enable explicitly. Runtime API lines 0.1/0.2/0.3 are read from `horizon-mod.toml`; code is loaded by Horizon's actual runtime. This format has capabilities and side declarations, but no dependency graph. The game remains responsible for WebAssembly component linking, namespace clashes, and loading errors; inspect game logs. Forge/Fabric JAR mods are unsupported.
+Import `.hmod` or `.hnmod` on Mods. Imports start **disabled**. Review the manifest details and enable explicitly. Runtime API lines 0.1/0.2/0.3 are read from `horizon-mod.toml`; code is loaded by Horizon's actual runtime. This format has capabilities and side declarations, but no dependency graph. The game remains responsible for WebAssembly component linking, namespace clashes, and loading errors; inspect game logs. Direct execution of Forge/Fabric/NeoForge JAR mods is unsupported; the separate source Java Mods page provides passive inspection and limited data carry-over, not Java execution.
 
 Native `.hnmod` bundles must target **7301f6fdd7f470b11317276e7a11b4dc615c137a**, Java **26.3**, and an exact `horizon-mixins` revision. Different mixin-tool revisions in one build are rejected. This intentionally rejects some hooks-only mods tested against other revisions instead of silently changing the engine version. Native sources are **not sandboxed**: build scripts, post-build programs and game code run with your permissions. Review and trust the source before each build.
 
@@ -72,7 +80,7 @@ The packaging command builds the native hosting helper, bundles Python/Qt, start
 
 Linux checks cover real owned child processes, failure/exit handling and relaunch, mod import/enable/removal, raw unsafe ZIP names, native manifest pins and staging, source/target fingerprints, shader configuration/reset, save preservation, and actual Qt page navigation. The original 161 engine/preparer library tests and Linux client compile check passed during development.
 
-The linked native workflow runs the full test suite on Windows x64, Mac ARM64 and Mac Intel, then builds their actual game and launcher packages. Packaged UI smoke checks require successful discovery and checksum validation of the bundled game plus all five launcher pages. Windows additionally checks silent installation, both shortcuts, installed-app startup and uninstallation. Mac packages undergo DMG integrity verification.
+The linked historical native workflow covered Windows x64, Mac ARM64 and Mac Intel game/launcher packages before Java Mods and Modpacks. The current packaging validators still require five pages and successful bundled-game discovery/checksums; their page-count checks reject the seven-page source launcher. Windows install/start/shortcuts/uninstall and Mac DMG verification remain necessary checks for a future approved build. No new native build, installation or gameplay verification is claimed here; the exact proposed packaging changes are in the release-readiness report.
 
 The Windows native-mod check imports and enables an owned `.hnmod`, uses the pinned mixins tool and real prepared source to compile the game, verifies its injected marker and 16 MiB stack, checks native/original binary selection and rollback, and verifies that the save sentinel, clean installation and source cache remain unchanged. Its proof explicitly leaves hook execution and gameplay unverified. It uses a private copy of the clean target cache. Mac native-mod compilation has not been exercised by this check.
 

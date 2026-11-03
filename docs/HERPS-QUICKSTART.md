@@ -2,15 +2,28 @@
 
 Herps Launcher manages **Herspers Minecraft Java Edition 26.3**. Choose a route:
 
+- **Use Java Mods or Modpacks:** use the source feature branch described below,
+  then follow [Java Mods](#java-mods-source-only) or [Modpacks](#modpacks-source-only).
 - **Install the complete app:** follow steps 1–3 below.
 - **Connect an existing Herspers game:** follow [Connect an existing installation](#connect-an-existing-installation).
 - **Work on the source or integrate the feature branch:** follow [Source and repository integration](#source-and-repository-integration).
 
 Bedrock is a separate application. These instructions use the Java Edition packages.
 
+**Java Mods and Modpacks are available in source on
+`feature/herps-java-compatibility`.** Their automated tests pass on Linux with
+owned fixtures; native Windows/macOS use and gameplay remain unverified.
+The downloads below are historical packages from the earlier launcher workflow,
+not verified distributions of these new pages. Packaging still expects five
+pages and does not bundle `horizon-port-pack`; the source launcher has seven.
+See [release readiness](herps/java-mods-release-readiness.md) before distributing
+a build. No new release or package was published for this feature branch.
+
 ## 1. Download your platform package
 
-Sign in to GitHub if prompted, download the artifact, and **extract its outer ZIP**:
+For the earlier packaged launcher, sign in to GitHub if prompted, download the
+artifact, and **extract its outer ZIP**. These historical artifact links were
+not revalidated during the Java Mods documentation work and may have expired:
 
 | Your computer | Download | File to open after extraction |
 | --- | --- | --- |
@@ -98,7 +111,10 @@ Use **Settings → Open game data and saves** to open the selected profile's fol
 4. Click **Enable / disable** to turn it on.
 5. Return to **Home → PLAY →**.
 
-Forge/Fabric `.jar` mods are incompatible with this Horizon mod format. **Remove to backup** removes a package from the profile while retaining a backup and its mod data.
+Forge/Fabric/NeoForge `.jar` files cannot be loaded directly as `.hmod` files.
+The source-only Java Mods page can inspect them and carry supported data; it
+does not execute Java code. **Remove to backup** removes a Horizon package from
+the profile while retaining a backup and its mod data.
 
 ### Native-source mods: `.hnmod`
 
@@ -110,6 +126,79 @@ Forge/Fabric `.jar` mods are incompatible with this Horizon mod format. **Remove
 6. Return to **Home → PLAY →**. The selected profile uses the matching rebuilt binary.
 
 Native mods execute build scripts and game code with your permissions. Each supported platform/architecture needs its own build. Use **Roll back · disable all native mods** to select the original game binary again. If the enabled native-mod set changes, rebuild when requested. See [the compatibility contract](HERPS-LAUNCHER.md#mods-and-native-builds) for exact revision requirements. Windows native compilation and rollback were exercised in CI; Mac native-mod compilation remains unverified.
+
+### Java Mods (source only)
+
+Analysis needs the source launcher and a trusted `horizon-port-pack` binary built
+from the pinned engine. It does not need Java execution, Minecraft assets or a
+running game. Build/discovery instructions are in the
+[Java Mods guide](herps/java-mods.md#prepare-the-source-launcher).
+
+1. On **Home**, choose a profile; stop any game or background operation first.
+2. Open **Java Mods → Select backend…** if the trusted tool is not discovered.
+3. Choose **Import Java mod…** and select your own Fabric, Forge or NeoForge
+   `.jar`. The launcher makes a profile-local copy and reads metadata only.
+4. Select the row and click **Analyze**. Review the original backend verdict,
+   conservative status, reasons, dependencies, mixins and unsupported features.
+5. If files are missing, click **Resolve dependencies…**, choose your own mod
+   folder or instance, and inspect the new result. No mod downloads or API keys
+   are required. A present file still needs the correct version and evidence.
+6. Review each licence. Restricted, non-commercial or no-derivatives content
+   requires acknowledgement before the backend's local data carry-over; that
+   acknowledgement grants no modification or redistribution rights.
+7. For supported data-only content, use **Port to Herspers · data only**. A
+   validated folder port appears under **Local data ports**, initially disabled.
+   Use **Enable / disable**, **View compatibility details**, **Open mod directory**
+   or **Remove to backup** there. Removal preserves saves, mod data and the
+   imported JAR. Edited ports are preserved and rejected for review.
+8. Use **View errors**, **Export JSON…** or **Export text…** for real diagnostics
+   and evidence. Keep the retained input/run files for later revalidation.
+
+**Requires porting** means a data-tier candidate, not native compatibility or
+tested gameplay. **Unsupported** may mean missing evidence or known unsupported
+features; inspect the reason and `insufficient_evidence` diagnostics. A Rust
+`works` verdict can overlook dependencies or unreadable classes and is never
+promoted directly to successful compatibility. Java code/loaders, a Java bridge,
+universal conversion and Java **Build Mod / Test Mod** actions are unavailable.
+A standalone JAR requiring a dependency ensemble may remain blocked even after
+local files are supplied; a complete pack can carry only a validated subset.
+
+### Modpacks (source only)
+
+1. Open **Modpacks** in the same selected profile and choose the trusted backend
+   if necessary.
+2. Use **Import modpack…** for a Modrinth `.mrpack` or CurseForge ZIP, or
+   **Import instance…** for your own Prism/MultiMC instance directory.
+   **packwiz is not supported by the current backend.**
+3. Click **Analyze pack**. The coverage table retains every indexed mod and
+   unresolved manifest entry: name, version, compatibility, reason, licence,
+   porting tier and missing dependencies. An unknown dependency list for a
+   missing JAR does not prove that it has no dependencies.
+4. Use **Resolve missing files…** with your own mod folder or installed instance.
+   Known declared hashes are checked, including Modrinth SHA-512. A match is
+   not authenticated publisher identity. CurseForge ID-only manifests need
+   matching `minecraftinstance.json` metadata or hash/name evidence; renaming
+   an arbitrary JAR to a placeholder cannot resolve an ID. No API key is needed.
+5. Review licences before checking **I reviewed restricted licences**. Use
+   **Port supported data…** to carry only the validated dependency/content
+   subset into its private run folder. Unsupported and missing rows stay visible.
+6. Review the summary, **View errors**, and export JSON/text evidence. Pack
+   output is not automatically installed or enabled in existing game folders.
+
+The **Port and Play** group always keeps **Play · unavailable** disabled.
+Partial carry-over, a valid folder or an original `works` verdict does not
+establish a fully playable modpack. There is no verified whole-pack content/
+gameplay validation backend. Existing Home launching is a separate workflow.
+
+| Feature | Source status | Verification |
+| --- | --- | --- |
+| Java JAR inspection, local resolution and reports | Available in source | Automated tests with owned fixtures; Windows/macOS unverified |
+| Supported data-tier carry and Java Mods backup management | Available in source | Folder/hash/preservation tests; gameplay unverified |
+| `.mrpack`, CurseForge ZIP and Prism/MultiMC coverage | Available in source | Real pinned backend + Qt tests; native platforms unverified |
+| Java execution/bridge, universal conversion, packwiz, Java Build/Test, Modpack Play | Not available yet | No working backend; no success claim |
+
+See the [full workflows and CLI examples](herps/java-mods.md) and
+[release-readiness evidence](herps/java-mods-release-readiness.md).
 
 ### Shader packs
 
@@ -135,14 +224,20 @@ The host's Tailscale address is required; the private server binds to that addre
 
 ### Run the launcher from source
 
-Use Python **3.12** and a compatible prebuilt Herspers game package. The source checkout does not include compiled game binaries. In an existing checkout, preserve your local changes and use the feature branch. A new checkout can be created with:
+Use Python **3.12**. A compatible prebuilt Herspers game package is required for
+Home gameplay, but not passive Java metadata analysis. The checkout includes no
+compiled game binaries. In the existing checkout containing the local feature
+history, preserve your changes and select:
 
 ```sh
-git clone --branch feature/herps-launcher-cross-platform https://github.com/Zeigen-ft/Herspers-Minecraft.git
-cd Herspers-Minecraft
+git switch feature/herps-java-compatibility
+git log -1 --oneline
 ```
 
 In an isolated cloud task, use its existing checkout; no additional worktree is needed.
+The new feature commits are local. A clone of `main` or the older cross-platform
+branch does not establish that this implementation is present; transferring or
+publishing its history requires a separate approved repository workflow.
 
 **Windows, PowerShell:**
 
@@ -160,7 +255,10 @@ python3.12 -m venv .local/herps-venv
 .local/herps-venv/bin/python -m herps_launcher
 ```
 
-Connect your prebuilt game through **Settings → Find installation…**. Normal use of the downloaded app does not require Python, Rust or a source checkout.
+Connect your prebuilt game through **Settings → Find installation…** when using
+Home. Earlier downloaded packages bundle their Python runtime. The new Java
+Mods/Modpacks source workflow additionally needs the separately built trusted
+port-pack executable; it is not supplied by those historical packages.
 
 Source-mode Mac hosting additionally needs its helper compiled at the path the development launcher uses:
 
@@ -171,19 +269,32 @@ rustc +1.95.0 --edition=2021 packaging/herps_host.rs -o .cache/herps-host
 
 ### Build distributable packages
 
-The existing native build scripts and `tools/package_herps.py` prepare the game, launcher and packaging. The [developer guide](HERPS-LAUNCHER.md#develop-and-package) explains prerequisites and package inputs. Run local builds on the matching Windows/Mac platform; use the printed output directory when a repeated build creates a `build-*` folder.
+The existing native build scripts and `tools/package_herps.py` describe the
+earlier packaging workflow. Their five-page smoke expectations currently reject
+the seven-page source launcher, and port-pack is not bundled. The
+[release-readiness report](herps/java-mods-release-readiness.md#packaging-blockers-and-proposed-changes)
+lists exact proposed changes and native validation still required. Packaging
+scripts are unchanged; no new distributable is claimed ready.
 
-To run the repository's verified CI workflow with an authenticated GitHub CLI and repository access:
+The existing workflow's dispatch syntax for its older remote branch is:
 
 ```sh
 gh workflow run herps-launcher.yml --repo Zeigen-ft/Herspers-Minecraft --ref feature/herps-launcher-cross-platform -f platform=all
 ```
 
-Use `platform=windows`, `platform=macos-arm64`, or `platform=macos-x64` to build one target. Inspect the workflow's conclusion, then download the corresponding artifact.
+It requires authenticated GitHub CLI access. This example does not publish the
+local Java compatibility branch or prove that a new package works. Future
+approved native verification should cover `windows`, `macos-arm64` and
+`macos-x64`, inspect conclusions and retain installed-application evidence.
 
-### Bring the feature into `main`
+### Feature branch and release status
 
-The implementation and this guide are on **`feature/herps-launcher-cross-platform`**. To integrate them into the repository's default branch, open a pull request with **base `main`** and **compare `feature/herps-launcher-cross-platform`**, review the changes and native CI evidence, and merge when you choose. No automatic merge has been performed.
+The Java Mods and Modpacks implementation is on
+**`feature/herps-java-compatibility`**, preserving the older cross-platform
+launcher. Steps 0–3 were committed locally; Step 4 updates documentation and
+verification. No push, merge into `main`, publication or release was performed.
+Source availability and passing fixture tests do not establish distributable or
+gameplay readiness.
 
 Keep `herps_launcher/`, its pinned requirements, `tools/package_herps.py`, `tools/ci_run.py`, `tools/smoke_herps_native.py`, the `packaging/herps*` files and shared `packaging/private_server.rs`, launcher tests, the Herps workflow, and the existing source locks, patches and engine fetch/build/package tools together. The launcher relies on the repository's source lock and engine package metadata; copying only the GUI file is insufficient.
 
@@ -196,5 +307,9 @@ Keep `herps_launcher/`, its pinned requirements, `tools/package_herps.py`, `tool
 | Native mods need rebuilding | Set the matching prepared source folder, check Rust/build-tool availability, and run **Rebuild native mods…**. |
 | Shader failure | Use **Restore default shaders** before retrying. |
 | Game exits with an error | Use **Home → Open launcher and game logs** and inspect the newest run log. |
+| Java/pack backend missing | Select a trusted pinned executable with **Select backend…**; historical packages do not bundle it. |
+| Original verdict says `works` but status is Unsupported | Read the conservative reasons: missing files/dependencies, unreadable classes, mixins or incomplete evidence remain blockers. |
+| CurseForge ZIP still has unresolved IDs | Supply a matching installed instance or declared hash/name evidence; no API-key lookup or filename guessing is performed. |
+| Modpack Play or Java Build/Test is disabled | These actions have no working validation/execution backend and are intentionally unavailable. |
 
 For validation results and remaining limits—including gameplay, shader rendering, live multiplayer and signing—see [the full launcher guide](HERPS-LAUNCHER.md#verification-boundaries).
