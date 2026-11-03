@@ -67,8 +67,10 @@ class JavaModsHarness(unittest.TestCase):
     def wait_idle(self):
         deadline = time.monotonic() + 10
         while self.window.worker is not None and time.monotonic() < deadline:
-            QTest.qWait(10)
             self.app.processEvents()
+            # Yield the GIL for Python worker hashing/IO between Qt event passes,
+            # as QApplication.exec does in the actual launcher.
+            time.sleep(0.005)
         self.assertIsNone(self.window.worker, "Background operation did not finish")
         self.app.processEvents()
 

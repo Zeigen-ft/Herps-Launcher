@@ -163,10 +163,10 @@ class PortPackBuildTests(unittest.TestCase):
         self.assertEqual(evidence["build_sha256"], package.digest(binary))
         self.assertEqual(self.command[:4], ["cargo", "+1.95.0", "build", "--locked"])
         self.assertIn("--release", self.command)
-        self.assertEqual(self.command[self.command.index("--manifest-path") + 1], self.source / "Cargo.toml")
+        self.assertEqual(self.command[self.command.index("--manifest-path") + 1], self.source.resolve() / "Cargo.toml")
         cache = self.command[self.command.index("--target-dir") + 1]
-        self.assertFalse(cache.is_relative_to(self.source))
-        self.assertEqual(cache, self.project / ".cache/port-pack-target")
+        self.assertFalse(cache.is_relative_to(self.source.resolve()))
+        self.assertEqual(cache, (self.project / ".cache/port-pack-target").resolve())
         self.assertIn("-C debuginfo=0", self.build_kwargs["env"]["RUSTFLAGS"])
         self.assertIn("target-feature=+crt-static", self.build_kwargs["env"]["RUSTFLAGS"])
         self.assertTrue(self.prepare_args.kwargs["check"])
