@@ -106,8 +106,8 @@ class JavaModsHarness(unittest.TestCase):
 class JavaModsPageTests(JavaModsHarness):
     def test_java_mods_registration_preserves_all_existing_pages(self):
         self.assertEqual([button.text() for button in self.window.nav],
-                         ["Home", "Mods", "Java Mods", "Shaders", "Multiplayer", "Settings"])
-        self.assertEqual(self.window.pages.count(), 6)
+                         ["Home", "Mods", "Java Mods", "Modpacks", "Shaders", "Multiplayer", "Settings"])
+        self.assertEqual(self.window.pages.count(), 7)
         self.assertIs(self.window.pages.widget(2), self.page)
         for i, button in enumerate(self.window.nav):
             self.click(button)

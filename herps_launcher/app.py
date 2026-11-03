@@ -16,6 +16,7 @@ from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QFileDialog, 
 
 from .core import Launcher, GAME, REVISION, build_native, pairs, read_json, tailscale, server_address
 from .javamods.page import JavaModsPage
+from .modpacks.page import ModpacksPage
 from . import __version__
 
 STYLE = """
@@ -75,7 +76,7 @@ class Window(QMainWindow):
         sidebar.addWidget(brand)
         self.pages = QStackedWidget()
         self.nav = []
-        for index, name in enumerate(("Home", "Mods", "Java Mods", "Shaders", "Multiplayer", "Settings")):
+        for index, name in enumerate(("Home", "Mods", "Java Mods", "Modpacks", "Shaders", "Multiplayer", "Settings")):
             button = QPushButton(name)
             button.setObjectName("nav")
             button.setCheckable(True)
@@ -96,6 +97,8 @@ class Window(QMainWindow):
         self.mods_page()
         self.java_mods = JavaModsPage(self)
         self.pages.addWidget(self.java_mods)
+        self.modpacks = ModpacksPage(self)
+        self.pages.addWidget(self.modpacks)
         self.shaders_page()
         self.multiplayer_page()
         self.settings_page()
@@ -138,6 +141,8 @@ class Window(QMainWindow):
             button.setChecked(i == index)
         if hasattr(self, "java_mods") and self.pages.currentWidget() is self.java_mods:
             self.java_mods.refresh_profile()
+        if hasattr(self, "modpacks") and self.pages.currentWidget() is self.modpacks:
+            self.modpacks.refresh_profile()
 
     def busy(self):
         return self.worker is not None or self.launcher.child is not None
@@ -156,6 +161,7 @@ class Window(QMainWindow):
         self.worker.start()
         self.play.setEnabled(False)
         self.java_mods.busy_changed()
+        self.modpacks.busy_changed()
 
     def work_finished(self):
         worker, self.worker = self.worker, None
@@ -488,6 +494,7 @@ class Window(QMainWindow):
     def refresh(self):
         self.play.setEnabled(not self.busy())
         self.java_mods.refresh_profile()
+        self.modpacks.refresh_profile()
         try:
             self.mod_entries = self.launcher.mods()
             self.mod_list.clear()
