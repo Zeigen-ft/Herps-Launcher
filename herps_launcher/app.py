@@ -15,6 +15,7 @@ from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QFileDialog, 
     QPushButton, QSpinBox, QStackedWidget, QTextEdit, QVBoxLayout, QWidget)
 
 from .core import Launcher, GAME, REVISION, build_native, pairs, read_json, tailscale, server_address
+from .javamods.page import JavaModsPage
 from . import __version__
 
 STYLE = """
@@ -74,7 +75,7 @@ class Window(QMainWindow):
         sidebar.addWidget(brand)
         self.pages = QStackedWidget()
         self.nav = []
-        for index, name in enumerate(("Home", "Mods", "Shaders", "Multiplayer", "Settings")):
+        for index, name in enumerate(("Home", "Mods", "Java Mods", "Shaders", "Multiplayer", "Settings")):
             button = QPushButton(name)
             button.setObjectName("nav")
             button.setCheckable(True)
@@ -93,6 +94,8 @@ class Window(QMainWindow):
         self.setCentralWidget(shell)
         self.home_page()
         self.mods_page()
+        self.java_mods = JavaModsPage(self)
+        self.pages.addWidget(self.java_mods)
         self.shaders_page()
         self.multiplayer_page()
         self.settings_page()
@@ -133,6 +136,8 @@ class Window(QMainWindow):
         self.pages.setCurrentIndex(index)
         for i, button in enumerate(self.nav):
             button.setChecked(i == index)
+        if hasattr(self, "java_mods") and self.pages.currentWidget() is self.java_mods:
+            self.java_mods.refresh_profile()
 
     def busy(self):
         return self.worker is not None or self.launcher.child is not None
@@ -141,15 +146,16 @@ class Window(QMainWindow):
         if self.busy():
             raise ValueError("Wait for the current operation or game to finish before changing the profile")
 
-    def start_work(self, function, done=None):
+    def start_work(self, function, done=None, failed=None, progress=None):
         self.require_idle()
         self.worker = Worker(function, self)
-        self.worker.line.connect(self.build_log.append)
-        self.worker.failed.connect(lambda message: QMessageBox.warning(self, "Operation failed", message))
-        self.worker.done.connect(lambda result: done(result) if done else None)
+        self.worker.line.connect(progress or self.build_log.append)
+        self.worker.failed.connect(failed or (lambda message: QMessageBox.warning(self, "Operation failed", message)))
+        self.worker.done.connect(lambda result: self.guard(lambda: done(result)) if done else None)
         self.worker.finished.connect(self.work_finished)
         self.worker.start()
         self.play.setEnabled(False)
+        self.java_mods.busy_changed()
 
     def work_finished(self):
         worker, self.worker = self.worker, None
@@ -481,13 +487,15 @@ class Window(QMainWindow):
 
     def refresh(self):
         self.play.setEnabled(not self.busy())
+        self.java_mods.refresh_profile()
         try:
             self.mod_entries = self.launcher.mods()
             self.mod_list.clear()
             for m in self.mod_entries:
                 self.mod_list.addItem(f"{'ON' if self.launcher.enabled(m) else 'OFF'}   {m.name}  {m.version}   ·   {'native build' if m.native else 'runtime / content'}")
             selected = pairs(self.launcher.game / "horizon-graphics.txt").get("pickedShaderPack", "")
-            self.summary.setText(f"Java {GAME}  ·  Profile: {self.launcher.config['profile']}\n{sum(self.launcher.enabled(m) for m in self.mod_entries)} active mods  ·  Shader: {selected or 'Default'}")
+            active_mods = sum(self.launcher.enabled(m) for m in self.mod_entries)
+            self.summary.setText(f"Java {GAME}  ·  Profile: {self.launcher.config['profile']}\n{active_mods} active runtime/native packages  ·  Java data ports: Java Mods page  ·  Shader: {selected or 'Default'}")
             self.shader_list.clear()
             for path in sorted((self.launcher.game / "shaderpacks").glob("*")):
                 if path.is_file() and path.suffix in (".zip", ".hshader"):
@@ -522,7 +530,7 @@ class Window(QMainWindow):
 
     def closeEvent(self, event):
         if self.busy():
-            QMessageBox.information(self, "Operation in progress", "Close the game or wait for the build before closing Herps Launcher. Server consoles must be stopped separately with stop.")
+            QMessageBox.information(self, "Operation in progress", "Close the game or wait for the current operation before closing Herps Launcher. Server consoles must be stopped separately with stop.")
             event.ignore()
         else:
             event.accept()

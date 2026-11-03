@@ -44,7 +44,10 @@ class DesktopTests(unittest.TestCase):
         self.app.processEvents()
         self.temporary.cleanup()
 
-    def test_all_five_sidebar_buttons_navigate_actual_pages(self):
+    def test_all_six_sidebar_buttons_navigate_actual_pages(self):
+        self.assertEqual([button.text() for button in self.window.nav],
+                         ["Home", "Mods", "Java Mods", "Shaders", "Multiplayer", "Settings"])
+        self.assertEqual(self.window.pages.count(), 6)
         for i, button in enumerate(self.window.nav):
             QTest.mouseClick(button, Qt.MouseButton.LeftButton)
             self.app.processEvents()
