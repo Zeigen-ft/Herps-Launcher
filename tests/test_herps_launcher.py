@@ -169,8 +169,20 @@ class LauncherTests(unittest.TestCase):
             p = bins / name
             p.write_text("#!/bin/sh\nprintf '%s\\n' \"$@\"\nexit 0\n")
             p.chmod(0o755)
+        launcher = root / "Herspers-Minecraft.exe"
+        launcher.write_bytes(b"owned native entrypoint fixture")
+        metadata = json.loads((root / "build-metadata.json").read_text())
+        metadata["binaries"] = {p.name: {"sha256": digest(p)} for p in [*bins.iterdir(), launcher]}
+        json_write(root / "build-metadata.json", metadata)
         self.launcher.config["installation"] = str(root)
         return Installation.inspect(root, enforce_platform=False)
+
+    def test_windows_root_entrypoint_is_validated_at_its_real_package_path(self):
+        install = self.fixture_install()
+        self.assertEqual(Installation.inspect(install.root, enforce_platform=False).root, install.root)
+        (install.root / "Herspers-Minecraft.exe").write_bytes(b"changed entrypoint")
+        with self.assertRaisesRegex(ValueError, "Installation binary changed: Herspers-Minecraft.exe"):
+            Installation.inspect(install.root, enforce_platform=False)
 
     def test_inspection_rejects_bedrock_staging_and_changed_binaries(self):
         install = self.fixture_install()

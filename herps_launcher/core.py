@@ -208,7 +208,8 @@ class Installation:
             name: entry.get("sha256") for name, entry in metadata.get("binaries", {}).items()}
         for name, expected in checksums.items():
             safe_name(name)
-            if not expected or digest(bins / name) != expected:
+            binary_path = root / name if not mac and name == "Herspers-Minecraft.exe" else bins / name
+            if not expected or digest(binary_path) != expected:
                 raise ValueError(f"Installation binary changed: {name}. Re-extract a clean package; your saves are kept separately")
         return cls(root, bins, assets, metadata)
 
