@@ -4,12 +4,22 @@ from pathlib import Path
 import tempfile
 import unittest
 from unittest.mock import patch
-from tools.package_herps import notarize_dmg
+from tools.package_herps import notarize_dmg, copy_documentation
 from tools.release_evidence import candidate
 from tools.verify_herps_windows import verify
 
 
 class ReleaseEvidenceTests(unittest.TestCase):
+    def test_offline_guides_and_referenced_support_documents_are_shipped(self):
+        with tempfile.TemporaryDirectory() as root:
+            output = Path(root)
+            copy_documentation(output)
+            self.assertIn("docs/HERPS-LAUNCHER.md", (output / 'START-HERE.txt').read_text())
+            for name in ('docs/HERPS-LAUNCHER.md', 'docs/HERPS-SUPPORT.md',
+                         'docs/herps/native-acceptance.md', 'docs/herps/release-security.md',
+                         'licenses/Qt-PySide-NOTICE.md', 'LICENSE-HERPS.txt'):
+                self.assertTrue((output / name).is_file(), name)
+
     def test_notarization_failure_does_not_leave_success_metadata(self):
         with tempfile.TemporaryDirectory() as root:
             image = Path(root) / 'owned.dmg'

@@ -131,6 +131,21 @@ def notarize_dmg(image: Path):
         image.with_suffix(".notarization.json").write_text(json.dumps(receipt, indent=2) + "\n")
 
 
+def copy_documentation(output: Path):
+    """Keep relative links valid in the delivered offline documentation."""
+    shutil.copytree(ROOT / "docs", output / "docs")
+    shutil.copytree(ROOT / "licenses", output / "licenses")
+    shutil.copy2(ROOT / "LICENSE", output / "LICENSE-HERPS.txt")
+    for source, destination in (("HERPS-LAUNCHER.md", "START-HERE.txt"),
+                                ("herps/java-mods.md", "JAVA-MODS.txt"),
+                                ("HERPS-SUPPORT.md", "SUPPORT.md")):
+        (output / destination).write_text(
+            f"Herps Launcher candidate documentation: docs/{source}\n"
+            "Internal verification build; not a stable public release.\n", encoding="utf-8")
+    for name in ("Horizon-LICENSE.txt", "Horizon-THIRD_PARTY_NOTICES.md"):
+        shutil.copy2(ROOT / "licenses" / name, output / name)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--game", type=Path, required=True, help="Verified packaged Herspers-Minecraft folder or .app")
@@ -188,14 +203,7 @@ def main():
         # copy2 preserves source executable bits used by the preparation digest.
         destination = output / "engine-source" if platform.system() == "Darwin" else output / "Herps Launcher/engine-source"
         shutil.copytree(args.source, destination)
-    shutil.copy2(ROOT / "docs/HERPS-SUPPORT.md", output / "SUPPORT.md")
-    shutil.copy2(ROOT / "LICENSE", output / "LICENSE-HERPS.txt")
-    shutil.copy2(ROOT / "docs/HERPS-LAUNCHER.md", output / "START-HERE.txt")
-    shutil.copy2(ROOT / "docs/herps/java-mods.md", output / "JAVA-MODS.txt")
-    for name in ("Horizon-LICENSE.txt", "Horizon-THIRD_PARTY_NOTICES.md"):
-        source = ROOT / "licenses" / name
-        if source.is_file():
-            shutil.copy2(source, output / name)
+    copy_documentation(output)
     (output / "package.json").write_text(json.dumps({"launcher_version": __version__, "target": host_target,
         "port_pack": {**backend_build, "bundled_sha256": smoke_report["port_pack"]["sha256"],
                       "path": str(Path(smoke_report["port_pack"]["path"]).relative_to(output.resolve())),

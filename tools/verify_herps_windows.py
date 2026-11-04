@@ -46,10 +46,16 @@ def verify(setup, output):
             support = local / 'Herspers Minecraft'
             # Preexisting user data predates installation and must survive every stage.
             for name in ('game/saves/Existing/level.dat', 'game/options.txt',
-                         'game/shaderpacks/owned.txt', 'game/horizon-mod-data/existing/data.txt'):
+                         'game/shaderpacks/owned.txt', 'game/horizon-mod-data/existing/data.txt',
+                         'herps-launcher/profiles/existing/saves/Existing/level.dat'):
                 p = support / name
                 p.parent.mkdir(parents=True, exist_ok=True)
                 p.write_bytes(b'owned preexisting data sentinel')
+            settings = support / 'herps-launcher/settings.json'
+            settings.parent.mkdir(parents=True, exist_ok=True)
+            settings.write_text(json.dumps({'installation': '', 'profile': 'existing',
+                'profiles': ['default', 'existing'], 'servers': [], 'close_on_play': False,
+                'phase5d_preserved_setting': 'owned existing preference'}))
             original = snapshot(support)
             env = dict(os.environ)
             for key in ('HERPS_TEST_PORT_PACK', 'CARGO_HOME', 'RUSTUP_HOME', 'PYTHONPATH', 'PYTHONHOME'):
@@ -60,9 +66,16 @@ def verify(setup, output):
                        QT_QPA_PLATFORM='offscreen', HERPS_ACCEPTANCE_SUPPORT=str(support))
             for key in ('APPDATA', 'HOME'): Path(env[key]).mkdir(parents=True)
             launcher = installed / 'Herps Launcher/Herps Launcher.exe'
-            install_args = [setup, '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART',
-                            '/TASKS=desktopicon', f'/DIR={installed}']
-            command(install_args)
+            helper = root / 'install.ps1'
+            helper.write_text('param($exe, $destination, $log)\n'
+                '$p = Start-Process -FilePath $exe -ArgumentList @(\'/VERYSILENT\', '
+                '\'/SUPPRESSMSGBOXES\', \'/NORESTART\', \'/TASKS=desktopicon\', '
+                '"/DIR=`\"$destination`\"", "/LOG=`\"$log`\"") -PassThru -Wait\n'
+                'exit $p.ExitCode\n', encoding='utf-8')
+            def install(stage):
+                command([powershell, '-NoProfile', '-File', helper, setup, installed,
+                         output / f'installer-{stage}.log'])
+            install('first')
             if not all(p.is_file() for p in shortcuts) or not launcher.is_file():
                 raise ValueError('Installed launcher or shortcuts missing')
             for mode, name in [('--smoke-test', 'installed-smoke.json'),
@@ -76,21 +89,26 @@ def verify(setup, output):
                 if mode == '--smoke-test' and data.get('pages_opened') != 7:
                     raise ValueError('Seven-page navigation missing')
                 report[name] = data
-            if any(snapshot(support).get(name) != value for name, value in original.items()):
+            if any(snapshot(support).get(name) != value for name, value in original.items()
+                   if name != str(settings.relative_to(support))):
                 raise ValueError('Existing user data changed during installed workflows')
+            config = json.loads(settings.read_text())
+            if config.get('phase5d_preserved_setting') != 'owned existing preference' or 'existing' not in config['profiles']:
+                raise ValueError('Existing profile registration or unknown preference lost')
+            report['existing_profile_and_preference_preserved'] = True
             before = snapshot(support)
             # Same-version replacement, then uninstall and reinstall, all against existing data.
-            command(install_args)
+            install('replacement')
             if snapshot(support) != before: raise ValueError('Replacement changed user data')
-            command([installed / 'unins000.exe', '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART'])
+            command([installed / 'unins000.exe', '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', f'/LOG={output / "uninstall.log"}'])
             if launcher.exists() or any(p.exists() for p in shortcuts):
                 raise ValueError('Uninstaller left launcher or shortcuts behind')
             if snapshot(support) != before: raise ValueError('Uninstall changed user data')
-            command(install_args)
+            install('reinstall')
             command([launcher, '--smoke-test', '--require-installation', '--require-port-pack',
                      '--smoke-report', output / 'reinstalled-smoke.json'], env)
             if snapshot(support) != before: raise ValueError('Reinstall changed user data')
-            command([installed / 'unins000.exe', '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART'])
+            command([installed / 'unins000.exe', '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', f'/LOG={output / "uninstall.log"}'])
             if snapshot(support) != before: raise ValueError('Final uninstall changed user data')
             report['preserved_files'] = before
             report['existing_data_before_install'] = original

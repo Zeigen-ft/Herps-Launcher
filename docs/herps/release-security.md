@@ -33,6 +33,10 @@ included. See ../../licenses/Qt-PySide-NOTICE.md for source locations and rights
 The generated inventory includes Python build tools, not just runtime modules.
 It is not an exact linked-native SBOM or a completed Qt third-party legal review.
 
+A Phase 5D pip-audit scan of the seven pinned Python distributions reported no
+known vulnerabilities. This narrow database result does not certify embedded
+Qt/native libraries or Rust dependencies; full native/transitive review remains open.
+
 Before public distribution verify actual bundled Qt modules/native dependencies,
 complete original copyright notices, GPL corresponding-source delivery and LGPL
 library replacement/relinking requirements. A mod license acknowledgement grants
