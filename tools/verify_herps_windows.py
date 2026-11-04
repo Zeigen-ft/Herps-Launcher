@@ -1,0 +1,112 @@
+#!/usr/bin/env python3
+"""Disposable native installer lifecycle and frozen workflows; never gameplay."""
+import argparse
+import json
+import os
+from pathlib import Path
+import platform
+import subprocess
+import tempfile
+
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from tools.verify_herps_dmg import sha256
+
+
+def snapshot(root):
+    return {str(p.relative_to(root)): sha256(p) for p in root.rglob('*') if p.is_file()}
+
+
+def verify(setup, output):
+    output.mkdir(parents=True, exist_ok=True)
+    output = output.resolve()
+    report = {'status': 'failed', 'interactive_verified': False, 'gameplay_verified': False,
+              'commands': [], 'platform': platform.platform()}
+    def command(args, env=None):
+        result = subprocess.run(list(map(str, args)), env=env, capture_output=True, text=True, timeout=600)
+        report['commands'].append({'argv': list(map(str, args)), 'exit_code': result.returncode,
+                                   'stdout': result.stdout, 'stderr': result.stderr})
+        if result.returncode:
+            raise ValueError(f'Command failed: {args[0]} ({result.returncode}): {result.stderr}')
+        return result.stdout.strip()
+    try:
+        if platform.system() != 'Windows' or platform.machine().lower() not in ('amd64', 'x86_64'):
+            raise ValueError('Native Windows x64 required')
+        report['setup_sha256'] = sha256(setup)
+        powershell = Path(os.environ['SYSTEMROOT']) / 'System32/WindowsPowerShell/v1.0/powershell.exe'
+        shortcuts = [Path(command([powershell, '-NoProfile', '-Command', f"[Environment]::GetFolderPath('{folder}')"])) / suffix
+                     for folder, suffix in [('Programs', 'Herps Launcher/Herps Launcher.lnk'),
+                                            ('DesktopDirectory', 'Herps Launcher.lnk')]]
+        if any(p.exists() for p in shortcuts):
+            raise ValueError('Refusing to overwrite preexisting launcher shortcuts')
+        with tempfile.TemporaryDirectory(prefix='Herps Windows acceptance ') as temporary:
+            root = Path(temporary)
+            installed = root / 'Installed Apps With Spaces'
+            local = root / 'Local AppData'
+            support = local / 'Herspers Minecraft'
+            # Preexisting user data predates installation and must survive every stage.
+            for name in ('game/saves/Existing/level.dat', 'game/options.txt',
+                         'game/shaderpacks/owned.txt', 'game/horizon-mod-data/existing/data.txt'):
+                p = support / name
+                p.parent.mkdir(parents=True, exist_ok=True)
+                p.write_bytes(b'owned preexisting data sentinel')
+            original = snapshot(support)
+            env = dict(os.environ)
+            for key in ('HERPS_TEST_PORT_PACK', 'CARGO_HOME', 'RUSTUP_HOME', 'PYTHONPATH', 'PYTHONHOME'):
+                env.pop(key, None)
+            env.update(LOCALAPPDATA=str(local), APPDATA=str(root / 'Roaming'),
+                       HOME=str(root / 'Home'), USERPROFILE=str(root / 'Home'),
+                       PATH=str(Path(os.environ['SYSTEMROOT']) / 'System32'),
+                       QT_QPA_PLATFORM='offscreen', HERPS_ACCEPTANCE_SUPPORT=str(support))
+            for key in ('APPDATA', 'HOME'): Path(env[key]).mkdir(parents=True)
+            launcher = installed / 'Herps Launcher/Herps Launcher.exe'
+            install_args = [setup, '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART',
+                            '/TASKS=desktopicon', f'/DIR={installed}']
+            command(install_args)
+            if not all(p.is_file() for p in shortcuts) or not launcher.is_file():
+                raise ValueError('Installed launcher or shortcuts missing')
+            for mode, name in [('--smoke-test', 'installed-smoke.json'),
+                               ('--native-acceptance', 'installed-workflows.json')]:
+                receipt = output / name
+                receipt.unlink(missing_ok=True)
+                command([launcher, mode, '--require-installation', '--require-port-pack',
+                         '--smoke-report', receipt], env)
+                data = json.loads(receipt.read_text())
+                if data.get('status') != 'passed': raise ValueError(f'Failed receipt: {name}')
+                if mode == '--smoke-test' and data.get('pages_opened') != 7:
+                    raise ValueError('Seven-page navigation missing')
+                report[name] = data
+            if any(snapshot(support).get(name) != value for name, value in original.items()):
+                raise ValueError('Existing user data changed during installed workflows')
+            before = snapshot(support)
+            # Same-version replacement, then uninstall and reinstall, all against existing data.
+            command(install_args)
+            if snapshot(support) != before: raise ValueError('Replacement changed user data')
+            command([installed / 'unins000.exe', '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART'])
+            if launcher.exists() or any(p.exists() for p in shortcuts):
+                raise ValueError('Uninstaller left launcher or shortcuts behind')
+            if snapshot(support) != before: raise ValueError('Uninstall changed user data')
+            command(install_args)
+            command([launcher, '--smoke-test', '--require-installation', '--require-port-pack',
+                     '--smoke-report', output / 'reinstalled-smoke.json'], env)
+            if snapshot(support) != before: raise ValueError('Reinstall changed user data')
+            command([installed / 'unins000.exe', '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART'])
+            if snapshot(support) != before: raise ValueError('Final uninstall changed user data')
+            report['preserved_files'] = before
+            report['existing_data_before_install'] = original
+        report['status'] = 'passed'
+    except Exception as error:
+        report['error'] = str(error)
+    finally:
+        (output / 'windows-lifecycle.json').write_text(json.dumps(report, indent=2) + '\n')
+    if report['status'] != 'passed': raise ValueError(report['error'])
+
+
+if __name__ == '__main__':
+    import sys
+    # Script invocation imports tools through the repository root.
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--setup', type=Path, required=True)
+    parser.add_argument('--output', type=Path, required=True)
+    args = parser.parse_args()
+    verify(args.setup.resolve(), args.output)

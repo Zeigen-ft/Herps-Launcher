@@ -97,19 +97,38 @@ def pyinstaller_command(output: Path, build: Path, helper: Path, port_pack: Path
         "--add-binary", f"{helper}{os.pathsep}.", "--add-binary", f"{port_pack}{os.pathsep}.",
         "--collect-submodules", "herps_launcher.javamods", "--collect-submodules", "herps_launcher.modpacks",
         "--hidden-import", "PySide6.QtTest", "--copy-metadata", "PySide6-Essentials", "--copy-metadata", "shiboken6"]
+    # Opt-in delivered workflow verification on every supported target.
+    command += ["--paths", ROOT / "packaging", "--hidden-import", "phase5c_acceptance",
+                "--hidden-import", "herps_entry", "--hidden-import", "unittest.mock",
+                "--hidden-import", "tools.make_javamods_fixtures",
+                "--hidden-import", "tools.make_modpack_fixtures"]
+    for name in ("test_javamods_ui.py", "test_modpacks_ui.py",
+                 "test_javamods_library.py", "test_modpacks_service.py"):
+        command += ["--add-data", f"{ROOT / 'tests' / name}{os.pathsep}phase5c-tests"]
     if host_target.endswith("apple-darwin"):
-        # Frozen owned-fixture acceptance is opt-in and macOS-only.
-        command += ["--paths", ROOT / "packaging", "--hidden-import", "phase5c_acceptance",
-                    "--hidden-import", "herps_entry", "--hidden-import", "unittest.mock",
-                    "--hidden-import", "tools.make_javamods_fixtures",
-                    "--hidden-import", "tools.make_modpack_fixtures"]
-        for name in ("test_javamods_ui.py", "test_modpacks_ui.py",
-                     "test_javamods_library.py", "test_modpacks_service.py"):
-            command += ["--add-data", f"{ROOT / 'tests' / name}{os.pathsep}phase5c-tests"]
         command += ["--osx-bundle-identifier", "io.herspers.herps-launcher", "--target-architecture", "arm64" if host_target.startswith("aarch64") else "x86_64"]
         if os.environ.get("HERPS_CODESIGN_IDENTITY"):
             command += ["--codesign-identity", os.environ["HERPS_CODESIGN_IDENTITY"], "--osx-entitlements-file", ROOT / "packaging/herps-entitlements.plist"]
     return command + [ROOT / "packaging/herps_entry.py"]
+
+
+def notarize_dmg(image: Path):
+    """Record results beside the final DMG; never mutate submitted contents."""
+    receipt = {"status": "not_requested", "notarized": False}
+    profile = os.environ.get("HERPS_NOTARY_PROFILE")
+    try:
+        if profile:
+            receipt["status"] = "failed"
+            if not os.environ.get("HERPS_CODESIGN_IDENTITY"):
+                raise ValueError("Notarization requires a signing identity and configured keychain profile")
+            receipt["status"] = "failed"
+            run(["xcrun", "notarytool", "submit", image, "--keychain-profile", profile, "--wait"])
+            run(["xcrun", "stapler", "staple", image])
+            run(["xcrun", "stapler", "validate", image])
+            receipt.update(status="verified", notarized=True)
+    finally:
+        receipt["dmg_sha256"] = digest(image)
+        image.with_suffix(".notarization.json").write_text(json.dumps(receipt, indent=2) + "\n")
 
 
 def main():
@@ -169,6 +188,7 @@ def main():
         # copy2 preserves source executable bits used by the preparation digest.
         destination = output / "engine-source" if platform.system() == "Darwin" else output / "Herps Launcher/engine-source"
         shutil.copytree(args.source, destination)
+    shutil.copy2(ROOT / "docs/HERPS-SUPPORT.md", output / "SUPPORT.md")
     shutil.copy2(ROOT / "LICENSE", output / "LICENSE-HERPS.txt")
     shutil.copy2(ROOT / "docs/HERPS-LAUNCHER.md", output / "START-HERE.txt")
     shutil.copy2(ROOT / "docs/herps/java-mods.md", output / "JAVA-MODS.txt")
@@ -180,17 +200,16 @@ def main():
         "port_pack": {**backend_build, "bundled_sha256": smoke_report["port_pack"]["sha256"],
                       "path": str(Path(smoke_report["port_pack"]["path"]).relative_to(output.resolve())),
                       "passive_fixture_smoke_passed": True},
-        "native_ui_smoke_passed": True, "gameplay_verified": False, "notarized": False}, indent=2) + "\n")
+        "native_ui_smoke_passed": True, "gameplay_verified": False,
+        "notarized": None if os.environ.get("HERPS_NOTARY_PROFILE") else False,
+        "notarization": {"status": "external_receipt" if os.environ.get("HERPS_NOTARY_PROFILE") else "not_requested", "result_receipt": "external sidecar after final DMG verification"}}, indent=2) + "\n")
+    from tools.release_evidence import collect_dependencies
+    collect_dependencies(output)
     archive_name = args.output.resolve() / f"Herps-Launcher-{__version__}-{host_target}-{output.name[-8:]}"
     if platform.system() == "Darwin":
         # Users with configured Developer ID credentials can sign and notarize before distribution.
         run(["hdiutil", "create", "-volname", "Herps Launcher", "-srcfolder", output, "-format", "UDZO", str(archive_name) + ".dmg"])
-        profile = os.environ.get("HERPS_NOTARY_PROFILE")
-        if profile:
-            if not os.environ.get("HERPS_CODESIGN_IDENTITY"):
-                raise ValueError("Notarization requires HERPS_CODESIGN_IDENTITY and a configured notarytool keychain profile")
-            run(["xcrun", "notarytool", "submit", str(archive_name) + ".dmg", "--keychain-profile", profile, "--wait"])
-            run(["xcrun", "stapler", "staple", str(archive_name) + ".dmg"])
+        notarize_dmg(Path(str(archive_name) + ".dmg"))
     else:
         shutil.make_archive(str(archive_name), "zip", root_dir=output)
     print(f"Herps Launcher package: {archive_name}")

@@ -8,10 +8,10 @@ on:
         options: [all, windows, macos-arm64, macos-x64]
         default: all
   pull_request:
-    paths: ['herps_launcher/**', 'tools/package_herps.py', 'tools/smoke_herps_native.py', 'tools/ci_run.py', 'packaging/herps*', 'tests/test_herps*', 'tests/test_javamods*', 'tests/test_modpacks*', 'tests/test_ci_run.py', '.github/workflows/herps-launcher.yml']
+    paths: ['herps_launcher/**', 'tools/package_herps.py', 'tools/verify_herps*.py', 'tools/release_evidence.py', 'packaging/phase5c_acceptance.py', 'tools/smoke_herps_native.py', 'tools/ci_run.py', 'packaging/herps*', 'tests/test_herps*', 'tests/test_javamods*', 'tests/test_modpacks*', 'tests/test_ci_run.py', '.github/workflows/herps-launcher.yml']
   push:
     branches: [main, feature/herps-launcher-cross-platform]
-    paths: ['herps_launcher/**', 'tools/package_herps.py', 'tools/smoke_herps_native.py', 'tools/ci_run.py', 'packaging/herps*', 'tests/test_herps*', 'tests/test_javamods*', 'tests/test_modpacks*', 'tests/test_ci_run.py', '.github/workflows/herps-launcher.yml', 'patches/**', 'upstream.lock.json']
+    paths: ['herps_launcher/**', 'tools/package_herps.py', 'tools/verify_herps*.py', 'tools/release_evidence.py', 'packaging/phase5c_acceptance.py', 'tools/smoke_herps_native.py', 'tools/ci_run.py', 'packaging/herps*', 'tests/test_herps*', 'tests/test_javamods*', 'tests/test_modpacks*', 'tests/test_ci_run.py', '.github/workflows/herps-launcher.yml', 'patches/**', 'upstream.lock.json']
 permissions:
   contents: read
 jobs:
@@ -111,34 +111,10 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          try {
-            $setup = Get-ChildItem dist/herps -Filter '*-Setup.exe' | Select-Object -First 1
-            if (-not $setup) { throw 'The installer was not generated' }
-            $installed = Join-Path $env:RUNNER_TEMP 'Herps-Launcher-Installed'
-            $install = Start-Process -FilePath $setup.FullName -ArgumentList @('/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/TASKS=desktopicon', "/DIR=`"$installed`"") -PassThru -Wait
-            if ($install.ExitCode -ne 0) { throw "Installer exited with code $($install.ExitCode)" }
-            $launcher = Join-Path $installed 'Herps Launcher/Herps Launcher.exe'
-            if (-not (Test-Path $launcher)) { throw 'Installed launcher is missing' }
-            $smokeReport = Join-Path $env:RUNNER_TEMP 'herps-installed-smoke.json'
-            $smoke = Start-Process -FilePath $launcher -ArgumentList @('--smoke-test', '--require-installation', '--require-port-pack', '--smoke-report', "`"$smokeReport`"") -PassThru -Wait
-            if (-not (Test-Path $smokeReport)) { throw "Installed launcher did not produce its smoke report (exit $($smoke.ExitCode))" }
-            $reportText = Get-Content -Raw $smokeReport
-            Write-Output $reportText
-            $report = $reportText | ConvertFrom-Json
-            if ($smoke.ExitCode -ne 0 -or $report.status -ne 'passed' -or $report.pages_opened -ne 7) { throw "Installed launcher smoke test failed: $reportText" }
-            if ($report.port_pack.status -ne 'passed' -or $report.port_pack.bundled -ne $true -or $report.port_pack.sha256 -cnotmatch '^[0-9a-f]{64}$' -or $report.port_pack.adapter_status -ne 'Requires porting' -or $report.port_pack.original_verdict -ne 'works' -or $null -ne $report.port_pack.test_execution) { throw "Installed bundled port-pack fixture failed: $reportText" }
-            Copy-Item $smokeReport 'dist/herps/installed-launcher-smoke.json'
-            $startShortcut = Join-Path ([Environment]::GetFolderPath('Programs')) 'Herps Launcher/Herps Launcher.lnk'
-            $desktopShortcut = Join-Path ([Environment]::GetFolderPath('DesktopDirectory')) 'Herps Launcher.lnk'
-            if (-not (Test-Path $startShortcut) -or -not (Test-Path $desktopShortcut)) { throw 'Installer shortcuts were not created' }
-            $uninstall = Start-Process -FilePath (Join-Path $installed 'unins000.exe') -ArgumentList @('/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART') -PassThru -Wait
-            if ($uninstall.ExitCode -ne 0) { throw "Uninstaller exited with code $($uninstall.ExitCode)" }
-            if ((Test-Path $launcher) -or (Test-Path $startShortcut) -or (Test-Path $desktopShortcut)) { throw 'Uninstaller left installed launcher or shortcuts behind' }
-          } catch {
-            $message = $_.Exception.Message.Replace('%', '%25').Replace("`r", '%0D').Replace("`n", '%0A')
-            Write-Output "::error title=Installer smoke test failed::$message"
-            throw
-          }
+          $setup = Get-ChildItem dist/herps -Filter '*-Setup.exe' | Select-Object -First 1
+          if (-not $setup) { throw 'The installer was not generated' }
+          python tools/ci_run.py herps-installed-acceptance.log python tools/verify_herps_windows.py --setup $setup.FullName --output dist/herps/phase5d-evidence
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Compile, select and roll back an owned Windows native mod
         if: runner.os == 'Windows'
         shell: pwsh
@@ -167,11 +143,16 @@ jobs:
           for image in dist/herps/*.dmg; do
             python tools/ci_run.py herps-delivered-dmg.log python tools/verify_herps_dmg.py --dmg "$image" --arch '${{ matrix.arch }}' --output dist/herps/phase5c-evidence
           done
+      - name: Record internal candidate provenance and checksums
+        run: python tools/release_evidence.py dist/herps
       - name: Upload separate versioned platform packages
         uses: actions/upload-artifact@v4
         with:
           name: Herps-Launcher-0.1.0-${{ runner.os }}-${{ matrix.arch }}
           path: |
+            dist/herps/candidate.json
+            dist/herps/SHA256SUMS
+            dist/herps/*.notarization.json
             dist/herps/*.zip
             dist/herps/*.dmg
             dist/herps/*.exe
@@ -186,6 +167,12 @@ jobs:
             herps-*.log
             herps-port-pack-build.json
             dist/herps/phase5c-evidence/**
+            dist/herps/phase5d-evidence/**
+            dist/herps/**/python-dependencies.json
+            dist/herps/**/python-notices/**
+            dist/herps/candidate.json
+            dist/herps/SHA256SUMS
+            dist/herps/*.notarization.json
             dist/herps/**/launcher-smoke.json
             dist/herps/**/package.json
             dist/herps/installed-launcher-smoke.json

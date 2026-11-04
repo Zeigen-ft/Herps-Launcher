@@ -219,11 +219,8 @@ class PyInstallerInputsTests(unittest.TestCase):
                 self.assertEqual(packages, ["herps_launcher.javamods", "herps_launcher.modpacks"])
                 data = [str(command[i + 1]) for i, arg in enumerate(command) if arg == "--add-data"]
                 self.assertFalse(any(name in item for item in data for name in ("horizon-port-pack", "herps-host")))
-                if target.endswith("windows-msvc"):
-                    self.assertEqual(data, [])
-                else:
-                    self.assertEqual(len(data), 4)
-                    self.assertTrue(all(item.endswith("phase5c-tests") for item in data))
+                self.assertEqual(len(data), 4)
+                self.assertTrue(all(item.endswith("phase5c-tests") for item in data))
                 if target.endswith("apple-darwin"):
                     expected = "arm64" if target.startswith("aarch64") else "x86_64"
                     self.assertEqual(command[command.index("--target-architecture") + 1], expected)
