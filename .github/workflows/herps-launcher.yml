@@ -160,6 +160,13 @@ jobs:
           for image in dist/herps/*.dmg; do
             python tools/ci_run.py herps-dmg-verify.log hdiutil verify "$image"
           done
+      - name: Verify delivered macOS DMG without developer tools
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          for image in dist/herps/*.dmg; do
+            python tools/ci_run.py herps-delivered-dmg.log python tools/verify_herps_dmg.py --dmg "$image" --arch '${{ matrix.arch }}' --output dist/herps/phase5c-evidence
+          done
       - name: Upload separate versioned platform packages
         uses: actions/upload-artifact@v4
         with:
@@ -178,6 +185,7 @@ jobs:
           path: |
             herps-*.log
             herps-port-pack-build.json
+            dist/herps/phase5c-evidence/**
             dist/herps/**/launcher-smoke.json
             dist/herps/**/package.json
             dist/herps/installed-launcher-smoke.json

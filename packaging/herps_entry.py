@@ -58,6 +58,9 @@ def port_pack_smoke(launcher, directory, evidence):
 
 
 if __name__ == "__main__":
+    if "--phase5c-acceptance" in sys.argv:
+        from phase5c_acceptance import run
+        raise SystemExit(run(sys.argv[sys.argv.index("--smoke-report") + 1]))
     if "--smoke-test" in sys.argv:
         import tempfile
         from pathlib import Path

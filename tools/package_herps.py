@@ -98,6 +98,14 @@ def pyinstaller_command(output: Path, build: Path, helper: Path, port_pack: Path
         "--collect-submodules", "herps_launcher.javamods", "--collect-submodules", "herps_launcher.modpacks",
         "--hidden-import", "PySide6.QtTest", "--copy-metadata", "PySide6-Essentials", "--copy-metadata", "shiboken6"]
     if host_target.endswith("apple-darwin"):
+        # Frozen owned-fixture acceptance is opt-in and macOS-only.
+        command += ["--paths", ROOT / "packaging", "--hidden-import", "phase5c_acceptance",
+                    "--hidden-import", "herps_entry", "--hidden-import", "unittest.mock",
+                    "--hidden-import", "tools.make_javamods_fixtures",
+                    "--hidden-import", "tools.make_modpack_fixtures"]
+        for name in ("test_javamods_ui.py", "test_modpacks_ui.py",
+                     "test_javamods_library.py", "test_modpacks_service.py"):
+            command += ["--add-data", f"{ROOT / 'tests' / name}{os.pathsep}phase5c-tests"]
         command += ["--osx-bundle-identifier", "io.herspers.herps-launcher", "--target-architecture", "arm64" if host_target.startswith("aarch64") else "x86_64"]
         if os.environ.get("HERPS_CODESIGN_IDENTITY"):
             command += ["--codesign-identity", os.environ["HERPS_CODESIGN_IDENTITY"], "--osx-entitlements-file", ROOT / "packaging/herps-entitlements.plist"]
