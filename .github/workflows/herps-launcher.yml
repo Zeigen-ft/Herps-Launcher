@@ -5,7 +5,7 @@ on:
       platform:
         description: Platform packages to build
         type: choice
-        options: [all, windows, macos-arm64, macos-x64]
+        options: [all, windows, macos-arm64, macos-x64, macos-arm64-26]
         default: all
   pull_request:
     paths: ['herps_launcher/**', 'tools/package_herps.py', 'tools/package_macos.py', 'tools/package_windows.py', 'tools/prepare_upstream.py', 'tools/verify_herps*.py', 'tools/release_evidence.py', 'tools/windows_installer.py', 'tools/smoke_herps_native.py', 'tools/ci_run.py', 'packaging/**', 'tests/**', 'scripts/build_*.sh', 'scripts/build_*.ps1', 'patches/**', 'upstream.lock.json', 'docs/**', 'licenses/**', 'LICENSE', '.github/workflows/herps-launcher.yml']
@@ -19,7 +19,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include: ${{ fromJSON(inputs.platform == 'windows' && '[{"os":"windows-latest","arch":"x86_64","python_arch":"x64"}]' || inputs.platform == 'macos-arm64' && '[{"os":"macos-15","arch":"arm64","python_arch":"arm64"}]' || inputs.platform == 'macos-x64' && '[{"os":"macos-15-intel","arch":"x86_64","python_arch":"x64"}]' || '[{"os":"windows-latest","arch":"x86_64","python_arch":"x64"},{"os":"macos-15","arch":"arm64","python_arch":"arm64"},{"os":"macos-15-intel","arch":"x86_64","python_arch":"x64"}]') }}
+        include: ${{ fromJSON(inputs.platform == 'macos-arm64-26' && '[{"os":"macos-26","arch":"arm64","python_arch":"arm64"}]' || inputs.platform == 'windows' && '[{"os":"windows-latest","arch":"x86_64","python_arch":"x64"}]' || inputs.platform == 'macos-arm64' && '[{"os":"macos-15","arch":"arm64","python_arch":"arm64"}]' || inputs.platform == 'macos-x64' && '[{"os":"macos-15-intel","arch":"x86_64","python_arch":"x64"}]' || '[{"os":"windows-latest","arch":"x86_64","python_arch":"x64"},{"os":"macos-15","arch":"arm64","python_arch":"arm64"},{"os":"macos-15-intel","arch":"x86_64","python_arch":"x64"}]') }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 100
     env:
@@ -61,8 +61,8 @@ jobs:
             .cache/upstream
             ~/.cargo/registry
             ~/.cargo/git
-          key: herps-engine-macOS-${{ matrix.arch }}-rust-1.95-portpack-v1-${{ hashFiles('upstream.lock.json', 'patches/**') }}
-          restore-keys: herps-engine-macOS-${{ matrix.arch }}-rust-1.95-${{ hashFiles('upstream.lock.json', 'patches/**') }}
+          key: herps-engine-${{ matrix.os }}-${{ matrix.arch }}-rust-1.95-portpack-v1-${{ hashFiles('upstream.lock.json', 'patches/**') }}
+          restore-keys: herps-engine-${{ matrix.os }}-${{ matrix.arch }}-rust-1.95-${{ hashFiles('upstream.lock.json', 'patches/**') }}
       - name: Build pinned port-pack for the native runner
         shell: python
         run: |

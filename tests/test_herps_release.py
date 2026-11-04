@@ -6,7 +6,7 @@ import unittest
 from unittest.mock import patch
 from tools.package_herps import notarize_dmg, copy_documentation
 from tools.release_evidence import candidate, collect_dependencies
-from tools.verify_herps_windows import verify
+from tools.verify_herps_windows import verify, verify_early_rejection
 from tools.windows_installer import payload_limits
 
 
@@ -42,6 +42,25 @@ class ReleaseEvidenceTests(unittest.TestCase):
             (folder / 'nested' / '\U0001f600.txt').write_text('owned')
             limits = payload_limits(folder)
             self.assertEqual(limits, {'file_chars': 13, 'directory_chars': 6})
+
+    def test_rejection_receipt_cannot_pass_if_copying_then_rollback_occurred(self):
+        with tempfile.TemporaryDirectory() as root:
+            log = Path(root) / 'installer.log'
+            message = 'This installation folder is too long for the bundled files.'
+            log.write_text(message)
+            verify_early_rejection(log)
+            log.write_text(message + '\nInstalling the file.\nRolling back changes.')
+            with self.assertRaisesRegex(ValueError, 'before file copying'): verify_early_rejection(log)
+
+    def test_installer_harness_refuses_personal_machine_execution(self):
+        with tempfile.TemporaryDirectory() as root:
+            with patch('tools.verify_herps_windows.platform.system', return_value='Windows'), \
+                 patch('tools.verify_herps_windows.platform.machine', return_value='AMD64'), \
+                 patch('tools.verify_herps_windows.platform.platform', return_value='owned Windows'), \
+                 patch.dict('os.environ', {}, clear=True), \
+                 patch('tools.verify_herps_windows.subprocess.run') as run:
+                with self.assertRaisesRegex(ValueError, 'CI-only'): verify(Path(root) / 'unused.exe', Path(root))
+                run.assert_not_called()
 
     def test_notarization_failure_does_not_leave_success_metadata(self):
         with tempfile.TemporaryDirectory() as root:

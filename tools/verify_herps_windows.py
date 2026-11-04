@@ -17,6 +17,13 @@ def snapshot(root):
     return {str(p.relative_to(root)): sha256(p) for p in root.rglob('*') if p.is_file()}
 
 
+def verify_early_rejection(log):
+    text = Path(log).read_text(encoding='utf-8-sig')
+    if ('This installation folder is too long for the bundled files.' not in text
+            or 'Installing the file.' in text):
+        raise ValueError('Installer did not prove early path rejection before file copying')
+
+
 def verify(setup, output):
     output.mkdir(parents=True, exist_ok=True)
     output = output.resolve()
@@ -32,6 +39,8 @@ def verify(setup, output):
     try:
         if platform.system() != 'Windows' or platform.machine().lower() not in ('amd64', 'x86_64'):
             raise ValueError('Native Windows x64 required')
+        if os.environ.get('GITHUB_ACTIONS') != 'true':
+            raise ValueError('Installer verifier is CI-only; use the manual protocol on personal machines')
         report['setup_sha256'] = sha256(setup)
         powershell = Path(os.environ['SYSTEMROOT']) / 'System32/WindowsPowerShell/v1.0/powershell.exe'
         shortcuts = [Path(command([powershell, '-NoProfile', '-Command', f"[Environment]::GetFolderPath('{folder}')"])) / suffix
@@ -78,6 +87,7 @@ def verify(setup, output):
                 if reject and (code == 0 or destination.exists()):
                     raise ValueError('Overlong destination was not rejected before copying')
             install('long-path', root / ('Long destination ' + 'x' * 140), reject=True)
+            verify_early_rejection(output / 'installer-long-path.log')
             if snapshot(support) != original: raise ValueError('Rejected installation changed existing data')
             report['overlong_destination_rejected_before_copy'] = True
             install('first')
