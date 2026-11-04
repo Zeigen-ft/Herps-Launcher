@@ -25,7 +25,7 @@ def verify(image, output, arch):
         report['commands'].append({'argv': list(map(str, args)), 'exit_code': result.returncode,
                                    'stdout': result.stdout, 'stderr': result.stderr})
         if result.returncode:
-            raise ValueError(f'Command failed: {args[0]} ({result.returncode})')
+            raise ValueError(f'Command failed: {args[0]} ({result.returncode}): {result.stderr}')
         return result.stdout
     try:
         if platform.system() != 'Darwin' or platform.machine() != arch:
@@ -46,7 +46,7 @@ def verify(image, output, arch):
             for name in ('Herps Launcher.app', 'Herspers Minecraft.app'):
                 command(['codesign', '--verify', '--deep', '--strict', installed / name])
             executable = installed / 'Herps Launcher.app/Contents/MacOS/Herps Launcher'
-            command(['lipo', '-verify_arch', arch, executable])
+            command(['lipo', executable, '-verify_arch', arch])
             # Empty PATH removes developer tool discovery; absolute app/helper paths still work.
             empty_path = root / 'no developer tools'
             empty_path.mkdir()
