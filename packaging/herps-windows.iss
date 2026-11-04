@@ -1,9 +1,15 @@
-; Compile with ISCC /DPayload=absolute-package-directory /DOutput=output-directory
+; Compile through herps-launcher.yml with payload-derived UTF-16 path budgets.
 #ifndef Payload
   #error Payload must name a verified package folder
 #endif
 #ifndef Output
   #error Output must name the installer output folder
+#endif
+#ifndef MaxPayloadFileChars
+  #error MaxPayloadFileChars must come from tools/windows_installer.py
+#endif
+#ifndef MaxPayloadDirChars
+  #error MaxPayloadDirChars must come from tools/windows_installer.py
 #endif
 [Setup]
 AppId=io.herspers.herps-launcher
@@ -32,6 +38,12 @@ Filename: "{app}\Herps Launcher\Herps Launcher.exe"; Description: Open Herps Lau
 function PrepareToInstall(var NeedsRestart: Boolean): String;
 begin
   Result := '';
+  if (Length(ExpandConstant('{app}')) + 1 + {#MaxPayloadFileChars} > 259) or
+     (Length(ExpandConstant('{app}')) + 1 + {#MaxPayloadDirChars} > 247) then
+  begin
+    Result := 'This installation folder is too long for the bundled files. Choose a shorter folder. Existing game data has not been changed.';
+    Exit;
+  end;
   if not FileExists(ExpandConstant('{sys}\vcruntime140_1.dll')) then
     Result := 'Install the Microsoft Visual C++ x64 runtime from https://aka.ms/vc14/vc_redist.x64.exe, then run this installer again.';
 end;

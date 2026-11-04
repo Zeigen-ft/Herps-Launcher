@@ -8,10 +8,10 @@ on:
         options: [all, windows, macos-arm64, macos-x64]
         default: all
   pull_request:
-    paths: ['herps_launcher/**', 'tools/package_herps.py', 'tools/package_macos.py', 'tools/package_windows.py', 'tools/prepare_upstream.py', 'tools/verify_herps*.py', 'tools/release_evidence.py', 'tools/smoke_herps_native.py', 'tools/ci_run.py', 'packaging/**', 'tests/**', 'scripts/build_*.sh', 'scripts/build_*.ps1', 'patches/**', 'upstream.lock.json', 'docs/**', 'licenses/**', 'LICENSE', '.github/workflows/herps-launcher.yml']
+    paths: ['herps_launcher/**', 'tools/package_herps.py', 'tools/package_macos.py', 'tools/package_windows.py', 'tools/prepare_upstream.py', 'tools/verify_herps*.py', 'tools/release_evidence.py', 'tools/windows_installer.py', 'tools/smoke_herps_native.py', 'tools/ci_run.py', 'packaging/**', 'tests/**', 'scripts/build_*.sh', 'scripts/build_*.ps1', 'patches/**', 'upstream.lock.json', 'docs/**', 'licenses/**', 'LICENSE', '.github/workflows/herps-launcher.yml']
   push:
     branches: [main, feature/herps-launcher-cross-platform]
-    paths: ['herps_launcher/**', 'tools/package_herps.py', 'tools/package_macos.py', 'tools/package_windows.py', 'tools/prepare_upstream.py', 'tools/verify_herps*.py', 'tools/release_evidence.py', 'tools/smoke_herps_native.py', 'tools/ci_run.py', 'packaging/**', 'tests/**', 'scripts/build_*.sh', 'scripts/build_*.ps1', 'patches/**', 'upstream.lock.json', 'docs/**', 'licenses/**', 'LICENSE', '.github/workflows/herps-launcher.yml']
+    paths: ['herps_launcher/**', 'tools/package_herps.py', 'tools/package_macos.py', 'tools/package_windows.py', 'tools/prepare_upstream.py', 'tools/verify_herps*.py', 'tools/release_evidence.py', 'tools/windows_installer.py', 'tools/smoke_herps_native.py', 'tools/ci_run.py', 'packaging/**', 'tests/**', 'scripts/build_*.sh', 'scripts/build_*.ps1', 'patches/**', 'upstream.lock.json', 'docs/**', 'licenses/**', 'LICENSE', '.github/workflows/herps-launcher.yml']
 permissions:
   contents: read
 jobs:
@@ -105,7 +105,10 @@ jobs:
           $shortPayload = Join-Path $env:RUNNER_TEMP 'herps-payload'
           python -c 'import shutil,sys; shutil.copytree(sys.argv[1],sys.argv[2])' $payload.FullName $shortPayload
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          python tools/ci_run.py herps-installer-build.log "$compiler" "/DPayload=$shortPayload" "/DOutput=$((Resolve-Path dist/herps).Path)" packaging/herps-windows.iss
+          $limits = python tools/windows_installer.py $shortPayload | ConvertFrom-Json
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $limits | ConvertTo-Json | Set-Content dist/herps/windows-path-limits.json
+          python tools/ci_run.py herps-installer-build.log "$compiler" "/DMaxPayloadFileChars=$($limits.file_chars)" "/DMaxPayloadDirChars=$($limits.directory_chars)" "/DPayload=$shortPayload" "/DOutput=$((Resolve-Path dist/herps).Path)" packaging/herps-windows.iss
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Install, start and uninstall Windows launcher
         if: runner.os == 'Windows'
@@ -150,6 +153,7 @@ jobs:
         with:
           name: Herps-Launcher-0.1.0-${{ runner.os }}-${{ matrix.arch }}
           path: |
+            dist/herps/windows-path-limits.json
             dist/herps/candidate.json
             dist/herps/SHA256SUMS
             dist/herps/*.notarization.json
@@ -169,7 +173,9 @@ jobs:
             dist/herps/phase5c-evidence/**
             dist/herps/phase5d-evidence/**
             dist/herps/**/python-dependencies.json
+            dist/herps/**/resolved-build-requirements.txt
             dist/herps/**/python-notices/**
+            dist/herps/windows-path-limits.json
             dist/herps/candidate.json
             dist/herps/SHA256SUMS
             dist/herps/*.notarization.json

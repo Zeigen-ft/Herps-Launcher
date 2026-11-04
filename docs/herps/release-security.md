@@ -26,16 +26,27 @@ record source commit, requirements/upstream-lock hashes and final archive hashes
 This makes the recipe traceable; timestamps/signing and tool/runner differences
 mean byte-for-byte reproducibility has not been established.
 
-Packaging generates python-dependencies.json and copies discovered license/notice
+Packaging generates python-dependencies.json and a platform-specific
+resolved-build-requirements.txt snapshot, and copies discovered license/notice
 files into python-notices. PySide6/shiboken6 wheel manifests exposed no license
 text in the local review, so LGPLv3, GPLv3 and a Qt/PySide notice are explicitly
 included. See ../../licenses/Qt-PySide-NOTICE.md for source locations and rights.
-The generated inventory includes Python build tools, not just runtime modules.
+The generated inventory follows active dependency markers and includes Python
+build tools, not just runtime modules. Replay uses the recorded platform-specific
+resolved snapshot; transitive versions are recorded rather than assumed pinned
+by the seven top-level requirements.
 It is not an exact linked-native SBOM or a completed Qt third-party legal review.
 
 A Phase 5D pip-audit scan of the seven pinned Python distributions reported no
 known vulnerabilities. This narrow database result does not certify embedded
-Qt/native libraries or Rust dependencies; full native/transitive review remains open.
+Qt/native libraries. cargo-audit 0.22.2 also scanned the identical pristine and
+prepared Rust lockfiles. Four zip 2.4.2 advisories belong to horizon-android,
+outside the conservative client/preparer/port-pack dependency closure; desktop
+roots use zip 9.1.3, outside the reported affected range. This is an exclusion
+based on the lock graph, not a universal security certification. Remaining
+warnings: unmaintained ttf-parser 0.25.1, Tokio 1.53.2 I/O-safety advisory
+(absent from target-resolved desktop graphs with the actual mods feature), and yanked clipboard-win 5.4.1. Complete
+native/transitive review and risk disposition remain release gates.
 
 Before public distribution verify actual bundled Qt modules/native dependencies,
 complete original copyright notices, GPL corresponding-source delivery and LGPL

@@ -5,8 +5,9 @@ import tempfile
 import unittest
 from unittest.mock import patch
 from tools.package_herps import notarize_dmg, copy_documentation
-from tools.release_evidence import candidate
+from tools.release_evidence import candidate, collect_dependencies
 from tools.verify_herps_windows import verify
+from tools.windows_installer import payload_limits
 
 
 class ReleaseEvidenceTests(unittest.TestCase):
@@ -19,6 +20,28 @@ class ReleaseEvidenceTests(unittest.TestCase):
                          'docs/herps/native-acceptance.md', 'docs/herps/release-security.md',
                          'licenses/Qt-PySide-NOTICE.md', 'LICENSE-HERPS.txt'):
                 self.assertTrue((output / name).is_file(), name)
+
+    def test_resolved_inventory_preserves_qt_notices_despite_distribution_name_normalization(self):
+        with tempfile.TemporaryDirectory() as root:
+            output = Path(root)
+            collect_dependencies(output)
+            r = json.loads((output / 'python-dependencies.json').read_text())
+            rows = {x['name'].lower().replace('_', '-'): x for x in r['dependencies']}
+            for name in ('pyside6-essentials', 'shiboken6'):
+                members = [Path(n['file']).name for n in rows[name]['notices']]
+                self.assertIn('LGPL-3.0.txt', members)
+                self.assertIn('Qt-PySide-NOTICE.md', members)
+                self.assertTrue(all((output / n['file']).is_file() for n in rows[name]['notices']))
+            self.assertTrue((output / 'resolved-build-requirements.txt').is_file())
+
+    def test_installer_path_budget_counts_utf16_and_refuses_empty_payload(self):
+        with tempfile.TemporaryDirectory() as root:
+            folder = Path(root)
+            with self.assertRaisesRegex(ValueError, 'empty'): payload_limits(folder)
+            (folder / 'nested').mkdir()
+            (folder / 'nested' / '\U0001f600.txt').write_text('owned')
+            limits = payload_limits(folder)
+            self.assertEqual(limits, {'file_chars': 13, 'directory_chars': 6})
 
     def test_notarization_failure_does_not_leave_success_metadata(self):
         with tempfile.TemporaryDirectory() as root:

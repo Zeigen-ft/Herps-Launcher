@@ -135,6 +135,8 @@ def copy_documentation(output: Path):
     """Keep relative links valid in the delivered offline documentation."""
     shutil.copytree(ROOT / "docs", output / "docs")
     shutil.copytree(ROOT / "licenses", output / "licenses")
+    shutil.copy2(ROOT / "README.md", output / "README.md")
+    shutil.copy2(ROOT / "LICENSE", output / "LICENSE")
     shutil.copy2(ROOT / "LICENSE", output / "LICENSE-HERPS.txt")
     for source, destination in (("HERPS-LAUNCHER.md", "START-HERE.txt"),
                                 ("herps/java-mods.md", "JAVA-MODS.txt"),

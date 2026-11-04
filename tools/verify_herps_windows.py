@@ -22,13 +22,13 @@ def verify(setup, output):
     output = output.resolve()
     report = {'status': 'failed', 'interactive_verified': False, 'gameplay_verified': False,
               'commands': [], 'platform': platform.platform()}
-    def command(args, env=None):
+    def command(args, env=None, allow_failure=False):
         result = subprocess.run(list(map(str, args)), env=env, capture_output=True, text=True, timeout=600)
         report['commands'].append({'argv': list(map(str, args)), 'exit_code': result.returncode,
                                    'stdout': result.stdout, 'stderr': result.stderr})
-        if result.returncode:
+        if result.returncode and not allow_failure:
             raise ValueError(f'Command failed: {args[0]} ({result.returncode}): {result.stderr}')
-        return result.stdout.strip()
+        return result.returncode if allow_failure else result.stdout.strip()
     try:
         if platform.system() != 'Windows' or platform.machine().lower() not in ('amd64', 'x86_64'):
             raise ValueError('Native Windows x64 required')
@@ -39,7 +39,7 @@ def verify(setup, output):
                                             ('DesktopDirectory', 'Herps Launcher.lnk')]]
         if any(p.exists() for p in shortcuts):
             raise ValueError('Refusing to overwrite preexisting launcher shortcuts')
-        with tempfile.TemporaryDirectory(prefix='Herps Windows acceptance ') as temporary:
+        with tempfile.TemporaryDirectory(prefix='hwd-', dir=os.environ.get('RUNNER_TEMP')) as temporary:
             root = Path(temporary)
             installed = root / 'Installed Apps With Spaces'
             local = root / 'Local AppData'
@@ -72,9 +72,14 @@ def verify(setup, output):
                 '\'/SUPPRESSMSGBOXES\', \'/NORESTART\', \'/TASKS=desktopicon\', '
                 '"/DIR=`\"$destination`\"", "/LOG=`\"$log`\"") -PassThru -Wait\n'
                 'exit $p.ExitCode\n', encoding='utf-8')
-            def install(stage):
-                command([powershell, '-NoProfile', '-File', helper, setup, installed,
-                         output / f'installer-{stage}.log'])
+            def install(stage, destination=installed, reject=False):
+                code = command([powershell, '-NoProfile', '-File', helper, setup, destination,
+                         output / f'installer-{stage}.log'], allow_failure=reject)
+                if reject and (code == 0 or destination.exists()):
+                    raise ValueError('Overlong destination was not rejected before copying')
+            install('long-path', root / ('Long destination ' + 'x' * 140), reject=True)
+            if snapshot(support) != original: raise ValueError('Rejected installation changed existing data')
+            report['overlong_destination_rejected_before_copy'] = True
             install('first')
             if not all(p.is_file() for p in shortcuts) or not launcher.is_file():
                 raise ValueError('Installed launcher or shortcuts missing')

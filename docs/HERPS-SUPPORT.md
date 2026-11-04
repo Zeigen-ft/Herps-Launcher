@@ -11,6 +11,7 @@ launcher's support floor. Bedrock is a separate product.
 | Mac ARM64 | macOS 15 is the current candidate target | Native delivered-DMG automation; physical interactive acceptance pending |
 | Mac Intel x86_64 | macOS 15 is the current candidate target | Native delivered-DMG automation; physical interactive acceptance pending |
 | macOS 12–14 | Compatibility targets, experimental until individually tested | Qt 6.8 requires macOS 12+; CI on 15 does not certify older OS versions |
+| macOS newer than 15 | Experimental until tested and explicitly added to the matrix | Newer hardware/OS is useful additional evidence, not proof of macOS 15 acceptance |
 | macOS 11 and older | Launcher unsupported | Game-only package minimum does not establish launcher compatibility |
 | Other architectures / Linux desktop | No supported end-user package | Linux tests are developer evidence, not a supported distribution |
 
