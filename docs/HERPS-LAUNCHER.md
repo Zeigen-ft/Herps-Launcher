@@ -12,6 +12,11 @@ Herps Launcher is a shared Python/Qt desktop launcher for **Herspers Minecraft J
 
 Start with the [step-by-step use and integration guide](HERPS-QUICKSTART.md) for installation, first launch, connecting an existing game, mods, shaders, multiplayer, and source/repository integration.
 
+Current internal candidates, hashes, support limits and remaining release gates
+are recorded in [Phase 5D](herps/phase5d-release-readiness.md) and the
+[support matrix](HERPS-SUPPORT.md). Download links below are historical builds;
+they are not the current hardening candidate. No stable release is approved.
+
 ## Install and play
 
 The `Build Herps Launcher` workflow builds a separate native game and launcher package for each architecture. See [the native validation run](https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/41571739445) for each platform's result and downloadable artifacts. The older Herspers game download links in the repository README are separate from these Herps Launcher packages.

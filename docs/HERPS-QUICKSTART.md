@@ -21,6 +21,11 @@ implementation and the Phase 5B/5C reports for native verification boundaries.
 No GitHub Release was published for this feature branch. CI artifacts are
 verification builds, not production releases.
 
+For the current internal candidate hashes and native/manual acceptance status,
+read [Phase 5D](herps/phase5d-release-readiness.md) and the
+[support matrix](HERPS-SUPPORT.md). Use the [manual protocol](herps/native-acceptance.md)
+for testing; the disposable CI installer verifier is not for personal machines.
+
 ## 1. Download your platform package
 
 For the earlier packaged launcher, sign in to GitHub if prompted, download the

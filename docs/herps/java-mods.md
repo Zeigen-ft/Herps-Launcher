@@ -15,6 +15,10 @@ packages do not contain these additions. See the
 [quickstart](../HERPS-QUICKSTART.md) for source setup and existing game
 installation instructions.
 
+[Phase 5D](phase5d-release-readiness.md) records current native candidate evidence,
+checksums and remaining acceptance gates. Automated metadata/data-workflow passes
+do not establish real Minecraft gameplay or Java runtime compatibility.
+
 ## Prepare the source launcher
 
 Run the source launcher with Python 3.12 and the pinned

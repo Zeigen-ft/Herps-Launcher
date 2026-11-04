@@ -8,7 +8,7 @@ launcher's support floor. Bedrock is a separate product.
 | --- | --- | --- |
 | Windows x64 | Windows 11 is the primary candidate target | Native CI builds/installer smoke; real clean-machine desktop/gameplay acceptance pending |
 | Windows 10 x64 | Legacy experimental compatibility only | No Windows 10-specific interactive evidence; not stable-supported |
-| Mac ARM64 | macOS 15 baseline; macOS 26 experimental fallback target | 15 has Phase 5C evidence; Phase 5D hosted capacity blocked. A standard 26 runner is tried separately; interactive acceptance remains open |
+| Mac ARM64 | macOS 15 baseline; macOS 26 experimental fallback target | 15 has Phase 5C evidence; Phase 5D hosted capacity blocked. 26.6.2 automated verification passed separately; interactive acceptance remains open |
 | Mac Intel x86_64 | macOS 15 is the current candidate target | Native delivered-DMG automation; physical interactive acceptance pending |
 | macOS 12–14 | Compatibility targets, experimental until individually tested | Qt 6.8 requires macOS 12+; CI on 15 does not certify older OS versions |
 | macOS newer than 15 | Experimental until tested and explicitly added to the matrix | Newer hardware/OS is useful additional evidence, not proof of macOS 15 acceptance |
@@ -38,6 +38,7 @@ approval is implied. Ad hoc Mac signature validity differs from Gatekeeper trust
 Windows SmartScreen behavior is unverified. Any signing service/credentials or
 release publication requires separate approval.
 
-See [manual acceptance](herps/native-acceptance.md),
+See [Phase 5D evidence and blockers](herps/phase5d-release-readiness.md),
+[manual acceptance](herps/native-acceptance.md),
 [Phase 5C evidence](herps/java-mods-phase5c-macos.md) and
 [security/distribution review](herps/release-security.md).
