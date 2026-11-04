@@ -11,14 +11,15 @@ Herps Launcher manages **Herspers Minecraft Java Edition 26.3**. Choose a route:
 Bedrock is a separate application. These instructions use the Java Edition packages.
 
 **Java Mods and Modpacks are available in source on
-`feature/herps-java-compatibility`.** Their automated tests pass on Linux with
-owned fixtures; native Windows/macOS use and gameplay remain unverified.
-The downloads below are historical packages from the earlier launcher workflow,
-not verified distributions of these new pages. Phase 5A updates packaging to
-require seven pages and bundle `horizon-port-pack`, but Windows/macOS builds
-and installed execution remain unverified. See the
-[Phase 5A report](herps/java-mods-step5a.md) before distributing a build.
-No new release or package was published for this feature branch.
+`feature/herps-java-compatibility`.** Phase 5B verified Windows builds and limited
+installed offscreen smoke. The [Phase 5C report](herps/java-mods-phase5c-macos.md)
+records macOS CI evidence; full native interactive acceptance and gameplay
+remain unverified. The downloads below are historical packages from the earlier
+launcher workflow. Phase 5A requires seven pages and a bundled
+`horizon-port-pack`; see the [Phase 5A report](herps/java-mods-step5a.md) for
+implementation and the Phase 5B/5C reports for native verification boundaries.
+No GitHub Release was published for this feature branch. CI artifacts are
+verification builds, not production releases.
 
 ## 1. Download your platform package
 
@@ -276,8 +277,9 @@ Packaging requires seven pages and actual bundled-helper metadata checks.
 End users do not need Cargo/Rust for Java metadata analysis. Source development
 and existing trusted native-mod builds have their own build requirements.
 The [Phase 5A report](herps/java-mods-step5a.md) records Linux packaging-probe
-evidence and the Windows/macOS verification still required. No native
-distributable containing these additions is claimed ready.
+evidence. See [Phase 5B](herps/java-mods-phase5b-windows.md) and
+[Phase 5C](herps/java-mods-phase5c-macos.md) for native results. Full native
+interactive acceptance remains open; these are not a production release.
 
 The existing workflow's dispatch syntax for its older remote branch is:
 

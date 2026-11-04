@@ -6,10 +6,11 @@ supported data into Horizon folder mods. They do not execute Java bytecode,
 convert arbitrary Java gameplay, or establish tested gameplay compatibility.
 
 The source launcher has seven pages: Home, Mods, Java Mods, Modpacks, Shaders,
-Multiplayer and Settings. Native Windows/macOS execution of the new workflows
-remains unverified. Phase 5A implements seven-page packaging and native helper
-bundling; the [Phase 5A report](java-mods-step5a.md) distinguishes Linux source
-and frozen-probe evidence from the native builds still pending. Older downloadable
+Multiplayer and Settings. Phase 5B verified Windows native builds and limited installed offscreen smoke.
+The [Phase 5C report](java-mods-phase5c-macos.md) records architecture-specific
+macOS CI verification and the native interactive acceptance still required.
+The [Phase 5A report](java-mods-step5a.md) records packaging implementation.
+Older downloadable
 packages do not contain these additions. See the
 [quickstart](../HERPS-QUICKSTART.md) for source setup and existing game
 installation instructions.
@@ -22,7 +23,7 @@ trusted `horizon-port-pack` executable built from the repository's pinned engine
 source with Rust 1.95.0. A JDK is not needed for passive mod analysis; the existing
 game resource-preparation workflow is separate. New packaging builds include the
 matching helper automatically; packaged metadata analysis requires no Cargo,
-Rust or JDK on the end user's machine. Native package verification is pending.
+Rust or JDK on the end user's machine. See the Phase 5B/5C reports for native evidence and acceptance limits.
 Frozen launchers search their bundled resource/application directories instead
 of developer Cargo caches or PATH. An explicit backend selection overrides
 discovery; clear an obsolete selection or reinstall if the helper is missing.
