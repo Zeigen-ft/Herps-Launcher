@@ -19,6 +19,10 @@ installation instructions.
 checksums and remaining acceptance gates. Automated metadata/data-workflow passes
 do not establish real Minecraft gameplay or Java runtime compatibility.
 
+The [targeted FunCraft/RLCraft reports](../targeted-porting/TARGETED_PORTING_PLAN.md)
+record exact-input inventory, missing rights/runtime evidence and one limited
+manual-backup replacement. They do not establish whole-pack compatibility.
+
 ## Prepare the source launcher
 
 Run the source launcher with Python 3.12 and the pinned

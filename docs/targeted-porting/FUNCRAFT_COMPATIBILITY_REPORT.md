@@ -4,8 +4,8 @@ Date: 2026-11-05 (Asia/Singapore). Baseline: `3112e32`.
 Input: `FunCraft - FC-Release 1.1.1 - hotfix.zip`.
 
 **Not playable as the original modpack in Herspers.** No Java code was run and no
-whole mod is certified native. The first implementation candidate is the limited
-manual-backup behavior described in the [plan](TARGETED_PORTING_PLAN.md).
+whole mod is certified native. The first implemented slice is the limited
+manual-backup behavior described in the [initial implementation report](INITIAL_IMPLEMENTATION_REPORT.md).
 
 ## Verified input facts
 
@@ -266,7 +266,7 @@ become native-compatible merely because they are not gameplay mods.
 
 | Candidate behavior | Potential technical route | Current gate |
 | --- | --- | --- |
-| FTB Backups manual world snapshot | Independent launcher operation; no engine change | First bounded implementation selected; original JAR remains unsupported |
+| FTB Backups manual world snapshot | Independent launcher operation; no engine change | Manual stopped-world backup implemented and fixture-verified; original JAR remains unsupported |
 | Hwyla/Wawla information overlay | Existing game-read/HUD APIs for a precisely limited subset | Exact source/rights and intended fields need review; no whole-mod equivalence |
 | JEI-like recipe browsing | Existing engine recipe/UI facilities | Native vanilla recipes do not imply modded machines or 1.12 recipes |
 | Old resource-pack subset | Explicit path/schema conversion | Artwork rights and target assets unresolved; no copying |
@@ -286,7 +286,7 @@ inventory only. The original pack's installation, full dependency resolution,
 assets/logic adaptation, actual gameplay, world conversion/save/load, native
 renderer/audio behavior, crash recovery and performance are **NOT RUN**.
 
-Current whole-pack compatibility remains unsupported. The targeted plan selects
+Current whole-pack compatibility remains unsupported. The targeted iteration implements
 one manual backup behavior and stops after that implementation; it must not mark
 FTB Backups itself or FunCraft as native-compatible. RLCraft's separate evidence
 gap does not disappear because FunCraft can be inspected.

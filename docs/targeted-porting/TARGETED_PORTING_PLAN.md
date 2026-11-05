@@ -59,6 +59,12 @@ separately in the inventory.
 
 ## Priority 1 — first bounded implementation
 
+Status: implemented as a launcher-side manual stopped-world backup and checksum
+verification, with fixture/source/frozen-Linux evidence. See the
+[implementation report](INITIAL_IMPLEMENTATION_REPORT.md) and
+[installation/test guide](TESTING_MANUAL_BACKUP.md). Native interactive/world-load
+acceptance is still open. The design/acceptance contract below remains its scope.
+
 Selected candidate: **manual world backup**, a feature of FTB Backups in FunCraft
 (CurseForge project 314904, file 2749104). The archive's `ftbbackups.cfg` enables
 backups; the public 1.12 source exposes a manual start operation. This is a small
