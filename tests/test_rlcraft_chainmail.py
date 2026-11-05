@@ -75,7 +75,7 @@ class ChainmailTests(unittest.TestCase):
         manifest = tomllib.loads(probe_manifest(source, True))
         self.assertEqual(manifest["workspace"]["resolver"], "2")
         for name in ("winit", "wgpu-hal"):
-            self.assertEqual(Path(manifest["patch"]["crates-io"][name]["path"]), source / "third_party" / name)
+            self.assertEqual(Path(manifest["patch"]["crates-io"][name]["path"]), (source / "third_party" / name).resolve())
         (source / "Cargo.toml").write_text('[patch.crates-io]\nwinit={path="../outside"}\n')
         with self.assertRaisesRegex(ValueError, "escaped"):
             probe_manifest(source, True)
