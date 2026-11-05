@@ -5,10 +5,13 @@ Date: 2026-11-05 (Asia/Singapore). Baseline: `3112e32` on
 
 ## Evidence and completion boundary
 
-The [FunCraft report](FUNCRAFT_COMPATIBILITY_REPORT.md) inventories the supplied
-ZIP. The [RLCraft report](RLCRAFT_COMPATIBILITY_REPORT.md) documents a blocked
-transfer and a 2.8.2 reference mismatch. RLCraft 2.9.3 Phase 1/2 are **incomplete**;
-there is no invented mod list or claim that the two versions are identical.
+The [FunCraft report](FUNCRAFT_COMPATIBILITY_REPORT.md) inventories its supplied
+ZIP. The later [RLCraft 2.9.3 report](RLCRAFT_COMPATIBILITY_REPORT.md) verifies the
+actual reconstructed export: 3,723 entries, 177 manifest mod projects, 10 resource
+packs, one additional embedded mod and two auxiliary JARs. Its
+[complete static matrix](RLCRAFT_293_MOD_MATRIX.md) covers every declared pair.
+The 2.8.2 reference remains excluded. Exact missing-JAR dependency/source/licence
+binding and all gameplay acceptance remain incomplete.
 
 The subsequent preparation authorized from `36fab19` is recorded in the
 [Windows candidate/local-inspector report](NEXT_PHASE_PREPARATION_REPORT.md).
@@ -32,9 +35,10 @@ Current engine/launcher boundary:
 - Modpacks retains local manifests, resolves files with identity evidence and
   permits a conservative data subset. It does not launch whole packs. Nested
   legacy libraries and `memory_repo` are not a validated Forge installation.
-- Existing WASM client APIs offer game-read/HUD/input/recipes/UI; server APIs and
-  registry data are bounded. They do not implement Forge events, JVM class loading,
-  LaunchWrapper/ASM, mixins, capabilities or arbitrary 1.12.2 world semantics.
+- The pinned engine documents content `.hmod` and Rust source-patching `.hnmod`
+  as active mod paths. Legacy WIT SDK files do not prove a usable WASM runtime.
+  Native hooks still require a versioned source/API audit and real execution
+  evidence; they are not Forge/JVM/LaunchWrapper/ASM compatibility.
 - A data format that can be parsed is not gameplay compatibility. Runtime
   callbacks, real rendering and real save/load still require native evidence.
 
@@ -55,7 +59,9 @@ separately in the inventory.
 
 ## Priority 0 — finish input and licence evidence
 
-1. Obtain the actual RLCraft 2.9.3 manifest and inspectable archive contents.
+1. RLCraft export reconstruction/identity and full static matrix are now done.
+   Resolve exact missing binaries/release source/licence and dependency closure
+   only with lawfully user-supplied files; do not auto-download proprietary mods.
 2. Resolve FunCraft's 154 project/file pairs against the user's exact local
    installation metadata and hashes. Do not infer versions from project names
    or pair the HTML list with manifest entries by order.
@@ -107,6 +113,13 @@ command, live-server coordination, timer, retention policy, external files or
 server-wide backup. No claim to implement the complete original mod.
 
 ## Priority 2 — next feature candidates, not implementation approval
+
+The verified RLCraft investigation now recommends a
+[chainmail plate-to-boots gameplay slice](RLCRAFT_293_FIRST_GAMEPLAY_FEATURE.md):
+one template-based native item and two recipes, using existing content API 0.2.
+Its pinned 1.12.2 source/MIT evidence is recorded. No implementation starts in
+this investigation; exact scope differences, custom-item preservation and real
+craft/save/load acceptance are explicit. Whole Java mods/packs remain blocked.
 
 After exact source/API/licence confirmation, evaluate one of:
 

@@ -37,6 +37,10 @@ Historical Phase 5D installers do not contain this later feature; use the exact
 new candidate/run/hash in that report. It does not convert Forge worlds or make
 FTB Backups/either pack playable. Native interactive acceptance remains open.
 
+The later [RLCraft 2.9.3 analysis](targeted-porting/RLCRAFT_COMPATIBILITY_REPORT.md)
+verifies the supplied export and completes the static artifact matrix. It adds
+no mod runtime or gameplay acceptance; the first crafting feature is a proposal.
+
 Unavailable: Java bytecode execution, Java bridge, universal conversion, packwiz,
 Java Build/Test and Modpack Play. Raw `works` is not gameplay compatibility.
 CLI pack commands have a narrower surface than the GUI; no parity claim.

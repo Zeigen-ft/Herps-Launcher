@@ -4,6 +4,11 @@ Date: 2026-11-05 (Asia/Singapore). Branch:
 `feature/herps-java-compatibility`. Starting commit:
 `36fab19720ccd3dc0b0d5961b7a10670f82722c6`.
 
+This records the Windows preparation handoff. The subsequent
+[verified RLCraft 2.9.3 investigation](RLCRAFT_COMPATIBILITY_REPORT.md) supersedes
+its pending-input statements below; candidate hashes and CI results remain the
+historical evidence recorded here. No RLCraft gameplay is thereby accepted.
+
 **Preparation is complete; physical Windows backup/load acceptance and the
 actual RLCraft 2.9.3 inspection remain open.** This iteration supplies an internal
 Windows x64 candidate with the existing FunCraft-scoped manual backup utility,

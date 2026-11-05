@@ -54,11 +54,34 @@ fixtures or CI/source uploads.
 
 ## RLCraft
 
-The exact 2.9.3 upload remains inaccessible, so its dependency and licensing
-inventory is **blocked**. The user-supplied 2XD repository is a 2.8.2 reference
-with additional tweaks. Neither that repository's public availability nor its
-older manifest clears 2.9.3 content. No files are downloaded from its `mods/`,
-resource/structure directories or redistributed.
+The actual 2.9.3 archive is now reconstructed and hash-verified. See the
+[updated report](RLCRAFT_COMPATIBILITY_REPORT.md),
+[complete artifact matrix](RLCRAFT_293_MOD_MATRIX.md) and
+[per-row evidence JSON](rlcraft-2.9.3-inventory.json). The manifest declares 177
+mod projects and 10 resource packs; three embedded JARs are inventoried separately.
+
+Public metadata for all 187 selected project/file pairs includes current licence
+labels and source links. All 187 dependency tabs were checked; version drift is
+visible, including Bountiful's modern Kotlin dependency versus legacy Forgelin
+source-family evidence. These are not verified historical binary dependency
+closures or licence bindings. No missing mod binaries were downloaded.
+
+There are 36 current ARR, 15 custom and two NonCommercial project labels. Other
+MIT/Apache/BSD/GPL/LGPL labels still require their applicable notices, source and
+asset scope. XP From Harvest's current ARR label differs from its linked source
+repository's LGPL-3.0 default licence; no favourable label is chosen silently.
+The three embedded JARs contain no established licence text and are not cleared
+by a parent project's terms. No original artifact is distribution-cleared.
+
+The recommended chainmail crafting slice has MIT source at a pinned 1.12.2
+revision with version 1.0, matching the selected file's declared version. Its
+absent JAR is not authenticated to that source. The
+[proposal](RLCRAFT_293_FIRST_GAMEPLAY_FEATURE.md) uses new native definitions,
+requires applicable notices for any reused material, and copies no original
+JAR/texture. It does not implement RLCraft's skill/integration rules.
+
+The 2XD repository remains a 2.8.2 reference, excluded from all 2.9.3 evidence.
+No proprietary binaries, scripts, original assets or user logs are committed.
 
 ## Reproduction and gates
 
