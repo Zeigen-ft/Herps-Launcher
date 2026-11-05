@@ -1,6 +1,7 @@
 # First gameplay recommendation — chainmail plate to boots
 
-**Approved slice implemented; physical gameplay acceptance remains NOT RUN.**
+**Approved slice implemented; five user-reported Windows checks passed in
+Survival/Creative. Remaining physical cases and all Mac gameplay are NOT RUN.**
 See the [implementation verification](RLCRAFT_CHAINMAIL_VERIFICATION.md) and
 [Windows survival test guide](WINDOWS_CHAINMAIL_ACCEPTANCE.md).
 See the [verified archive report](RLCRAFT_COMPATIBILITY_REPORT.md) and
@@ -83,7 +84,11 @@ a separate trusted operation. No new Java Mods execution button is involved.
 6. Report and stop. Any major engine change, signing service/credentials or
    release publication requires approval.
 
-## Acceptance — all currently NOT RUN
+## Acceptance checklist — current results in the verification report
+
+The user reports enabled Windows launch, both recipes, boots equip (+1 Armor)
+and inventory persistence after full restart PASS in Survival/Creative on run
+42118750443. Other rows/details remain NOT RUN; do not infer every subcase passed.
 
 Use an externally backed-up **new disposable native profile/world**. Never use
 a valuable save or old RLCraft/Forge world. Record initial hashes and logs.

@@ -1,8 +1,11 @@
 # Windows 11: test Chainmail Plate and Boots
 
 This is an **internal experimental candidate**, not complete RLCraft support.
-No physical survival, graphics, audio, equipment or save/load test has passed
-until someone actually performs and records it on a PC. Use the candidate and
+The user reports enabled launch, both recipes, +1 Armor equipment and inventory
+persistence after a full game/launcher restart PASS in Survival and Creative
+on run 42118750443. Other cases below remain NOT RUN; this checklist must not
+be treated as wholly passed. Earlier logo-stall/empty-output observations are
+unresolved. Use the exact candidate and
 checksums linked in [the verification report](RLCRAFT_CHAINMAIL_VERIFICATION.md).
 
 ## 1. Install and prepare

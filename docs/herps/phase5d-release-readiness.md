@@ -1,6 +1,30 @@
 # Phase 5D — Native acceptance and candidate hardening
 
-Updated: 2026-11-05, Asia/Singapore.
+Updated: 2026-11-06, Asia/Singapore.
+
+## Current addendum — physical Windows chainmail evidence
+
+The user personally tested Chainmail Plate and Boots 0.1.0 from
+[Windows run 42118750443](https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/42118750443),
+source `8fb33fb04b6a3a7dd94d83ca81b08267efe7d4c9`, and confirmed Survival **and**
+Creative: native-enabled launch, four nuggets → plate, four plates → boots,
+equipping boots with **+1 Armor**, and both items retained after completely
+closing/restarting Minecraft and Herspers Launcher and reopening the same world.
+These are user-reported physical PASS, distinct from CI. Exact OS build/hardware,
+execution date and supporting logs/screenshots were not supplied.
+
+Earlier loading-logo stall and initially empty recipe output remain unresolved;
+later successful launches/crafting do not establish causes or fixes. Untested
+edge/preservation/installation/recovery cases and **all Mac gameplay remain
+NOT RUN**. See [current readiness, release notes, candidates and install instructions](release-candidates-0.1.0.md)
+and [the detailed evidence](../targeted-porting/RLCRAFT_CHAINMAIL_VERIFICATION.md).
+Neither full RLCraft nor FunCraft compatibility or stable/public release is approved.
+
+The Phase 5D tables and dependency reviews below are **historical evidence at
+their stated commits**. The addendum supersedes blanket statements that no
+physical Windows gameplay has ever been reported; it does not accept all Phase
+5D cases or transfer the report to later candidates/Macs. Original CI receipts
+keep gameplay false, and historical security/distribution gates remain open.
 
 Baseline: `4bcb4564abae7cbeb12f8f1645dd58ae858c5339` on
 `feature/herps-java-compatibility`. This is an internal verification milestone,
@@ -322,12 +346,13 @@ prepared Minecraft 26.3 resources or supplied assets were available. Existing
 owned process fixtures exercise resource-check failure, lock release, launch
 arguments, child logging/exit and relaunch; they do not run Minecraft.
 
-**Real resource preparation, rendered game startup, world save/load, gameplay,
+At the historical Phase 5D commits, **real resource preparation, rendered game startup, world save/load, gameplay,
 shader rendering, native hook execution and live two-machine multiplayer remain
 unverified.** A Windows 11 x64 manual-test machine is available. A Mac has also been offered,
 but its chip and installed OS are not yet confirmed; it is not recorded as
 ARM64/Intel acceptance evidence. No manual case has been run
-in this session. Intel hardware coverage remains unconfirmed.
+in that earlier session. The current addendum records the later bounded Windows
+report. Intel hardware coverage remains unconfirmed.
 
 Physical Windows/Mac testing is required for the manual protocol's
 real hardware graphics/input/audio cases. Native CI/offscreen UI and synthetic
@@ -345,7 +370,9 @@ separate from native manual/gameplay acceptance. Do not merge into main, tag,
 publish a release or promote these internal artifacts without separate approval.
 The next work, in priority order:
 
-1. Complete Windows 11 manual acceptance using the verified installer and
+1. Complete the remaining Windows 11 manual acceptance and investigate the
+   unresolved logo-stall/initially-empty-output observations. Retain the five
+   reported chainmail passes separately. Use the verified installer and
    disposable profiles: actual resource preparation, PLAY, world save/load,
    exit/relaunch, desktop dialogs, failure recovery and real preservation cases.
 2. Confirm the offered Mac's chip/OS, test the matching candidate interactively,

@@ -1,5 +1,9 @@
 # Native acceptance protocol — Windows x64, Mac ARM64 and Mac Intel
 
+Current recorded outcomes are in the [release-readiness notes](release-candidates-0.1.0.md).
+Five chainmail Windows checks are user-reported PASS in Survival/Creative;
+unreported cases and all Mac gameplay remain NOT RUN.
+
 All cases are **NOT RUN** until performed on a native interactive OS session.
 Use a physical machine for real graphics/input/audio testing. A native VM may
 provide installation/UI evidence but must be identified; CI/offscreen tests

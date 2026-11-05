@@ -1,5 +1,10 @@
 # Use or integrate Herps Launcher
 
+**Current internal candidates:** see [release notes, verified downloads/hashes
+and installation](herps/release-candidates-0.1.0.md). That report records the
+bounded user-reported Windows chainmail gameplay passes; unreported cases and
+all Mac gameplay remain NOT RUN. The older download links below are historical.
+
 Herps Launcher manages **Herspers Minecraft Java Edition 26.3**. Choose a route:
 
 - **Use Java Mods or Modpacks:** use the source feature branch described below,

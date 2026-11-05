@@ -1,12 +1,14 @@
 # Herps Launcher candidate support contract
 
 Status: internal release-candidate verification, not a stable public release.
+Updated physical evidence: 2026-11-06, Asia/Singapore. See the
+[current readiness, release notes and candidate installation](herps/release-candidates-0.1.0.md).
 Applies to the launcher; a game-only app's macOS 11 declaration is not the Qt
 launcher's support floor. Bedrock is a separate product.
 
 | Target | Candidate OS policy | Evidence and remaining gate |
 | --- | --- | --- |
-| Windows x64 | Windows 11 is the primary candidate target | Native CI builds/installer smoke; real clean-machine desktop/gameplay acceptance pending |
+| Windows x64 | Windows 11 is the primary candidate target | Native CI/installer checks passed; user reports enabled launch, plate/boots crafting, +1 Armor equip and inventory persistence in Survival/Creative on run 42118750443. Full clean-machine/edge acceptance pending |
 | Windows 10 x64 | Legacy experimental compatibility only | No Windows 10-specific interactive evidence; not stable-supported |
 | Mac ARM64 | macOS 15 baseline; macOS 26 experimental fallback target | 15 has Phase 5C evidence; Phase 5D hosted capacity blocked. 26.6.2 automated verification passed separately; interactive acceptance remains open |
 | Mac Intel x86_64 | macOS 15 is the current candidate target | Native delivered-DMG automation; physical interactive acceptance pending |
@@ -23,10 +25,12 @@ Rust 1.95.0 and platform build tools. Actual native hook execution is experiment
 Supported workflow scope: seven-page launcher; local game discovery/settings;
 profile separation; passive Java metadata inspection and conservative diagnostics;
 owned/local dependency resolution; supported data-only carry; report exports.
-Only fixture-level automated results are currently claimed for new workflows.
-Real PLAY/resource preparation, world save/load, graphics/audio/input, shader
-rendering and two-machine Tailscale use require the manual evidence checklist.
-They must not be marketed as newly certified from offscreen navigation.
+New workflow automation remains fixture evidence. The user separately reports
+physical Windows enabled PLAY, both chainmail recipes, boots equip and same-world
+inventory persistence after fully restarting Minecraft/launcher, in Survival and
+Creative. See the exact candidate/evidence below. Resource preparation, explicit
+graphics/audio/shader/multiplayer and other unreported cases still require the
+manual checklist. Offscreen navigation is not physical acceptance.
 
 The [initial targeted iteration](targeted-porting/INITIAL_IMPLEMENTATION_REPORT.md)
 adds one FunCraft-hotfix-only manual backup operation. The later
@@ -37,9 +41,12 @@ Historical Phase 5D installers do not contain this later feature; use the exact
 new candidate/run/hash in that report. It does not convert Forge worlds or make
 FTB Backups/either pack playable. Native interactive acceptance remains open.
 
-The later [RLCraft 2.9.3 analysis](targeted-porting/RLCRAFT_COMPATIBILITY_REPORT.md)
-verifies the supplied export and completes the static artifact matrix. It adds
-no mod runtime or gameplay acceptance; the first crafting feature is a proposal.
+The [RLCraft 2.9.3 analysis](targeted-porting/RLCRAFT_COMPATIBILITY_REPORT.md)
+is static evidence. The later [Chainmail Plate and Boots verification](targeted-porting/RLCRAFT_CHAINMAIL_VERIFICATION.md)
+records its independent native content implementation and the five user-reported
+Windows passes. Earlier loading-logo stall/empty-output observations remain
+unresolved. All Mac gameplay and unreported physical edge cases remain NOT RUN;
+neither whole modpack is compatible by this evidence.
 
 Unavailable: Java bytecode execution, Java bridge, universal conversion, packwiz,
 Java Build/Test and Modpack Play. Raw `works` is not gameplay compatibility.
