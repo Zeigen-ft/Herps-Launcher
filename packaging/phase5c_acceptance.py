@@ -6,6 +6,20 @@ import shutil
 import sys
 import unittest
 
+TARGETED_BACKUP_CASES = {
+    "test_modpacks_ui.ModpacksPageTests.test_targeted_world_backup_and_verification_do_not_unlock_java_or_pack_play",
+    "test_modpacks_ui.ModpacksPageTests.test_targeted_backup_cancellation_unknown_pack_and_profile_switch_fail_closed",
+    "test_modpacks_ui.ModpacksPageTests.test_backup_and_existing_controls_remain_reachable_at_small_window_sizes",
+}
+
+
+def verify_targeted_cases(tests, skipped):
+    missing = TARGETED_BACKUP_CASES - set(tests)
+    omitted = TARGETED_BACKUP_CASES & {name for name, _ in skipped}
+    if missing or omitted:
+        raise ValueError(f"Required delivered FunCraft backup cases missing/skipped: {sorted(missing | omitted)}")
+    return sorted(TARGETED_BACKUP_CASES)
+
 
 def run(report_path):
     from herps_launcher.core import Launcher
@@ -48,8 +62,9 @@ def run(report_path):
         unexpected_skips = [(t.id(), reason) for t, reason in result.skipped
                             if sys.platform != "win32" or t.id().split(".")[-1] not in allowed_windows]
         report["unexpected_skips"] = unexpected_skips
-        if not result.wasSuccessful() or unexpected_skips or result.testsRun < 62:
+        if not result.wasSuccessful() or unexpected_skips or result.testsRun < 65:
             raise ValueError("Frozen acceptance failed, skipped coverage, or collected too few cases")
+        report["targeted_backup_cases_verified"] = verify_targeted_cases(report["tests"], report["skipped"])
         support = Path(os.environ.get("HERPS_ACCEPTANCE_SUPPORT") or os.environ["PHASE5C_SUPPORT"])
         persistent = Launcher(support)
         persistent.add_profile("owned_acceptance")

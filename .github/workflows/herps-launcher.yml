@@ -8,10 +8,10 @@ on:
         options: [all, windows, macos-arm64, macos-x64, macos-arm64-26]
         default: all
   pull_request:
-    paths: ['herps_launcher/**', 'tools/package_herps.py', 'tools/package_macos.py', 'tools/package_windows.py', 'tools/prepare_upstream.py', 'tools/verify_herps*.py', 'tools/release_evidence.py', 'tools/windows_installer.py', 'tools/smoke_herps_native.py', 'tools/ci_run.py', 'tools/inspect_targeted_packs.py', 'tools/smoke_targeted_backup.py', 'packaging/**', 'tests/**', 'scripts/build_*.sh', 'scripts/build_*.ps1', 'patches/**', 'upstream.lock.json', 'docs/**', 'licenses/**', 'LICENSE', '.github/workflows/herps-launcher.yml']
+    paths: ['herps_launcher/**', 'tools/package_herps.py', 'tools/package_macos.py', 'tools/package_windows.py', 'tools/prepare_upstream.py', 'tools/verify_herps*.py', 'tools/release_evidence.py', 'tools/windows_installer.py', 'tools/smoke_herps_native.py', 'tools/ci_run.py', 'tools/inspect_targeted_packs.py', 'tools/smoke_targeted_backup.py', 'tools/inspect_rlcraft_293.py', 'tools/package_rlcraft_inspector.py', 'packaging/**', 'tests/**', 'scripts/build_*.sh', 'scripts/build_*.ps1', 'patches/**', 'upstream.lock.json', 'docs/**', 'licenses/**', 'LICENSE', '.github/workflows/herps-launcher.yml']
   push:
     branches: [main, feature/herps-launcher-cross-platform]
-    paths: ['herps_launcher/**', 'tools/package_herps.py', 'tools/package_macos.py', 'tools/package_windows.py', 'tools/prepare_upstream.py', 'tools/verify_herps*.py', 'tools/release_evidence.py', 'tools/windows_installer.py', 'tools/smoke_herps_native.py', 'tools/ci_run.py', 'tools/inspect_targeted_packs.py', 'tools/smoke_targeted_backup.py', 'packaging/**', 'tests/**', 'scripts/build_*.sh', 'scripts/build_*.ps1', 'patches/**', 'upstream.lock.json', 'docs/**', 'licenses/**', 'LICENSE', '.github/workflows/herps-launcher.yml']
+    paths: ['herps_launcher/**', 'tools/package_herps.py', 'tools/package_macos.py', 'tools/package_windows.py', 'tools/prepare_upstream.py', 'tools/verify_herps*.py', 'tools/release_evidence.py', 'tools/windows_installer.py', 'tools/smoke_herps_native.py', 'tools/ci_run.py', 'tools/inspect_targeted_packs.py', 'tools/smoke_targeted_backup.py', 'tools/inspect_rlcraft_293.py', 'tools/package_rlcraft_inspector.py', 'packaging/**', 'tests/**', 'scripts/build_*.sh', 'scripts/build_*.ps1', 'patches/**', 'upstream.lock.json', 'docs/**', 'licenses/**', 'LICENSE', '.github/workflows/herps-launcher.yml']
 permissions:
   contents: read
 jobs:
@@ -79,6 +79,9 @@ jobs:
               environment.write(f"HERPS_TEST_PORT_PACK={binary}\n")
       - name: Portable and desktop integration tests with the real backend
         run: python tools/ci_run.py herps-tests.log python -m unittest discover -s tests -v
+      - name: Stage the standalone local RLCraft inspector
+        if: runner.os == 'Windows'
+        run: python tools/ci_run.py herps-rlcraft-inspector-package.log python tools/package_rlcraft_inspector.py --output dist/rlcraft-inspector
       - name: Build Windows game
         if: runner.os == 'Windows'
         shell: pwsh
@@ -162,6 +165,13 @@ jobs:
             dist/herps/*.exe
             dist/herps/native-build-proof.json
           if-no-files-found: error
+      - name: Upload the local RLCraft inspector
+        if: runner.os == 'Windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: RLCraft-2.9.3-Local-Inspector
+          path: dist/rlcraft-inspector/
+          if-no-files-found: error
       - name: Upload packaging and backend evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -170,6 +180,8 @@ jobs:
           path: |
             herps-*.log
             herps-port-pack-build.json
+            dist/rlcraft-inspector/inspector.json
+            dist/rlcraft-inspector/SHA256SUMS
             dist/herps/phase5c-evidence/**
             dist/herps/phase5d-evidence/**
             dist/herps/**/python-dependencies.json

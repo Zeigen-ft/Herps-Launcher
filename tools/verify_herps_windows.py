@@ -56,6 +56,7 @@ def verify(setup, output):
             # Preexisting user data predates installation and must survive every stage.
             for name in ('game/saves/Existing/level.dat', 'game/options.txt',
                          'game/shaderpacks/owned.txt', 'game/horizon-mod-data/existing/data.txt',
+                         'herps-launcher/targeted-backups/funcraft/existing/owned-backup-marker.txt',
                          'herps-launcher/profiles/existing/saves/Existing/level.dat'):
                 p = support / name
                 p.parent.mkdir(parents=True, exist_ok=True)
@@ -103,6 +104,8 @@ def verify(setup, output):
                 if data.get('status') != 'passed': raise ValueError(f'Failed receipt: {name}')
                 if mode == '--smoke-test' and data.get('pages_opened') != 7:
                     raise ValueError('Seven-page navigation missing')
+                if mode == '--native-acceptance' and len(data.get('targeted_backup_cases_verified', [])) != 3:
+                    raise ValueError('Delivered candidate did not verify the three FunCraft backup cases')
                 report[name] = data
             if any(snapshot(support).get(name) != value for name, value in original.items()
                    if name != str(settings.relative_to(support))):
