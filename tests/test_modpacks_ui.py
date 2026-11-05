@@ -8,10 +8,11 @@ import threading
 import time
 import unittest
 from unittest.mock import patch
+from zipfile import ZipFile
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 try:
-    from PySide6.QtCore import Qt, QTimer
+    from PySide6.QtCore import QPoint, Qt, QTimer
     from PySide6.QtTest import QTest
     from PySide6.QtWidgets import QApplication, QMessageBox
     from herps_launcher.app import Window, STYLE
@@ -20,6 +21,7 @@ except ImportError:
 
 from herps_launcher.core import Launcher, digest
 from herps_launcher.modpacks.service import ModpackLibrary
+from herps_launcher.modpacks import targeted_backup
 from tools.make_javamods_fixtures import make_jar
 from tools.make_modpack_fixtures import mrpack, curseforge, local_cf_instance, instance, packwiz
 
@@ -116,6 +118,83 @@ class ModpacksPageTests(unittest.TestCase):
             self.assertEqual(self.window.pages.currentIndex(), index)
             self.assertTrue(button.isChecked())
         self.assertFalse(self.page.play_button.isEnabled())
+
+    def targeted_fixture(self):
+        source = self.root / "owned targeted metadata.zip"
+        manifest = {"manifestType": "minecraftModpack", "manifestVersion": 1,
+            "minecraft": {"version": "1.12.2", "modLoaders": [{"id": "forge-14.23.5.2847", "primary": True}]},
+            "name": targeted_backup.FUNCRAFT_NAME, "version": targeted_backup.FUNCRAFT_VERSION,
+            "author": "Owned test fixture", "files": [{"projectID": 314904, "fileID": 2749104, "required": True}], "overrides": "overrides"}
+        with ZipFile(source, "w") as zipped:
+            zipped.writestr("manifest.json", json.dumps(manifest))
+        self.enterContext(patch.object(targeted_backup, "FUNCRAFT_SHA256", digest(source)))
+        self.imported(source)
+        for index, entry in enumerate(self.page.pack_entries):
+            if entry.name == targeted_backup.FUNCRAFT_NAME:
+                self.page.pack_list.setCurrentRow(index)
+                break
+        self.app.processEvents()
+        self.wait_idle()
+        return source
+
+    def test_targeted_world_backup_and_verification_do_not_unlock_java_or_pack_play(self):
+        self.targeted_fixture()
+        saved = self.launcher.game / "saves/Owned/level.dat"
+        saved.parent.mkdir(parents=True)
+        saved.write_bytes(b"owned UI backup fixture; not real gameplay")
+        original = digest(saved)
+        self.assertTrue(self.page.backup_button.isEnabled())
+        self.assertIn(targeted_backup.FUNCRAFT_VERSION, self.page.feature_status.text())
+        with patch("PySide6.QtWidgets.QMessageBox.warning", return_value=QMessageBox.StandardButton.Yes):
+            self.click(self.page.backup_button)
+        self.wait_idle()
+        archives = list((self.launcher.state / "targeted-backups").rglob("worlds.zip"))
+        self.assertEqual(len(archives), 1)
+        self.assertIn("checksum verification passed", self.page.status.text())
+        with patch("PySide6.QtWidgets.QFileDialog.getOpenFileName", return_value=(str(archives[0]), "")):
+            self.click(self.page.verify_backup_button)
+        self.wait_idle()
+        self.assertIn("integrity verified", self.page.status.text())
+        self.assertEqual(digest(saved), original)
+        self.assertFalse(self.page.play_button.isEnabled())
+        self.assertFalse(self.window.java_mods.build_button.isEnabled())
+        self.assertFalse(self.window.java_mods.test_button.isEnabled())
+        self.assertFalse(json.loads(self.page.details.toPlainText())["gameplay_verified"])
+
+    def test_targeted_backup_cancellation_unknown_pack_and_profile_switch_fail_closed(self):
+        self.imported(mrpack(self.root / "unrelated.mrpack", [self.good]))
+        self.assertFalse(self.page.backup_button.isEnabled())
+        self.targeted_fixture()
+        self.assertTrue(self.page.backup_button.isEnabled())
+        with patch("PySide6.QtWidgets.QMessageBox.warning", return_value=QMessageBox.StandardButton.Cancel):
+            self.click(self.page.backup_button)
+        self.assertFalse((self.launcher.state / "targeted-backups").exists())
+        self.window.navigate(0)
+        self.launcher.add_profile("no_target")
+        self.window.profile.addItem("no_target")
+        self.window.profile.setCurrentText("no_target")
+        self.window.refresh()
+        self.window.navigate(3)
+        self.app.processEvents()
+        self.wait_idle()
+        self.assertFalse(self.page.backup_button.isEnabled())
+        self.assertFalse(self.page.verify_backup_button.isEnabled())
+        self.assertFalse(self.page.play_button.isEnabled())
+
+    def test_backup_and_existing_controls_remain_reachable_at_small_window_sizes(self):
+        self.targeted_fixture()
+        for width, height in [(1130, 790), (900, 640)]:
+            with self.subTest(size=(width, height)):
+                self.window.resize(width, height)
+                self.app.processEvents()
+                for button in (self.page.backup_button, self.page.verify_backup_button,
+                        self.page.analyze_button, self.page.export_json_button, self.page.errors_button):
+                    self.page.scroll.ensureWidgetVisible(button, 0, 0)
+                    self.app.processEvents()
+                    point = button.mapTo(self.page.scroll.viewport(), QPoint(0, 0))
+                    self.assertGreaterEqual(button.height(), button.minimumSizeHint().height())
+                    self.assertTrue(self.page.scroll.viewport().rect().contains(point), button.text())
+                    self.assertTrue(self.page.scroll.viewport().rect().contains(point + QPoint(button.width() - 1, button.height() - 1)), button.text())
 
     def test_import_analyze_and_resolve_keep_all_mod_rows_and_required_columns(self):
         bad = make_jar(self.user / "bad.jar", mod_id="bad", depends={"missinglib": "*"}, mixins=True)

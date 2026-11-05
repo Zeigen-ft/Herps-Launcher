@@ -5,12 +5,13 @@ import json
 from pathlib import Path
 
 from PySide6.QtCore import QTimer
-from PySide6.QtWidgets import (QAbstractItemView, QCheckBox, QFileDialog, QGroupBox,
-    QHeaderView, QHBoxLayout, QLabel, QLineEdit, QListWidget, QMessageBox,
-    QProgressBar, QPushButton, QSplitter, QTableWidget, QTableWidgetItem,
+from PySide6.QtWidgets import (QAbstractItemView, QCheckBox, QFileDialog, QFrame, QGroupBox,
+    QHeaderView, QHBoxLayout, QLabel, QLayout, QLineEdit, QListWidget, QMessageBox,
+    QProgressBar, QPushButton, QScrollArea, QSplitter, QTableWidget, QTableWidgetItem,
     QTextEdit, QVBoxLayout, QWidget)
 
 from .service import ModpackLibrary
+from .targeted_backup import create_backup, eligibility, verify_backup
 
 
 UNSUPPORTED = "Unsupported"
@@ -37,13 +38,23 @@ class ModpacksPage(QWidget):
         self.library = None
         self.pack_entries = []
         self.reports = {}
+        self.target_features = {}
         self.current_report = None
         self._profile = None
         self._dirty = True
         self._scheduled = False
         self._last_error = ""
 
-        box = QVBoxLayout(self)
+        shell = QVBoxLayout(self)
+        shell.setContentsMargins(0, 0, 0, 0)
+        self.scroll = QScrollArea(self)
+        self.scroll.setWidgetResizable(True)
+        self.scroll.setFrameShape(QFrame.Shape.NoFrame)
+        body = QWidget()
+        self.scroll.setWidget(body)
+        shell.addWidget(self.scroll)
+        box = QVBoxLayout(body)
+        box.setSizeConstraint(QLayout.SizeConstraint.SetMinimumSize)
         box.setSpacing(10)
         heading = QLabel("Modpacks")
         heading.setObjectName("heading")
@@ -74,6 +85,18 @@ class ModpacksPage(QWidget):
         self.refresh_button = self._button(row, "Refresh", self.reload)
         box.addLayout(row)
 
+        feature_box = QGroupBox("Targeted native replacement · FunCraft hotfix only")
+        feature_layout = QVBoxLayout(feature_box)
+        feature_layout.setSizeConstraint(QLayout.SizeConstraint.SetMinimumSize)
+        self.feature_status = QLabel("Import the inspected FunCraft hotfix to check manual world-backup availability. Whole-pack gameplay remains unsupported.")
+        self.feature_status.setWordWrap(True)
+        feature_layout.addWidget(self.feature_status)
+        feature_buttons = QHBoxLayout()
+        self.backup_button = self._button(feature_buttons, "Back up stopped worlds…", self.backup_worlds)
+        self.verify_backup_button = self._button(feature_buttons, "Verify world backup…", self.check_world_backup)
+        feature_layout.addLayout(feature_buttons)
+        box.addWidget(feature_box)
+
         self.summary = QLabel("Playable status: unverified. Import a pack to inspect every indexed mod.")
         self.summary.setWordWrap(True)
         box.addWidget(self.summary)
@@ -90,6 +113,7 @@ class ModpacksPage(QWidget):
         box.addLayout(row)
 
         splitter = QSplitter()
+        splitter.setMinimumHeight(250)
         from PySide6.QtCore import Qt
         splitter.setOrientation(Qt.Orientation.Vertical)
         self.coverage_table = QTableWidget(0, 7)
@@ -163,6 +187,7 @@ class ModpacksPage(QWidget):
             self._profile = profile
             self.library = ModpackLibrary(self.launcher)
             self.pack_entries, self.reports = [], {}
+            self.target_features = {}
             self.current_report = None
             self.pack_list.clear()
             self.coverage_table.setRowCount(0)
@@ -191,6 +216,9 @@ class ModpacksPage(QWidget):
         self.pack_list.setEnabled(not busy)
         self.coverage_table.setEnabled(not busy)
         self.restricted_ack.setEnabled(not busy)
+        target = self.target_features.get(entry.token, {}) if entry else {}
+        self.backup_button.setEnabled(not busy and target.get("available") is True)
+        self.verify_backup_button.setEnabled(not busy and target.get("available") is True)
         # No verified runtime/content validation backend exists. A static Works
         # verdict or a carried folder can never unlock Play here.
         self.play_button.setEnabled(False)
@@ -227,10 +255,16 @@ class ModpacksPage(QWidget):
         reports = {}
         if selected and selected.report_file:
             reports[selected.token] = _data(library.load_report(selected.token))
-        return entries, reports
+        features = {}
+        for entry in entries:
+            try:
+                features[entry.token] = eligibility(library, entry.token)
+            except (OSError, ValueError) as error:
+                features[entry.token] = {"available": False, "reason": f"Target verification failed: {error}"}
+        return entries, reports, features
 
     def _apply_snapshot(self, snapshot, token=None):
-        self.pack_entries, reports = snapshot
+        self.pack_entries, reports, self.target_features = snapshot
         self.reports.update(reports)
         self.pack_list.blockSignals(True)
         self.pack_list.clear()
@@ -328,6 +362,32 @@ class ModpacksPage(QWidget):
     def port_pack(self):
         self._execute("port")
 
+    def backup_worlds(self):
+        entry = self._require_selected()
+        answer = QMessageBox.warning(self, "Back up stopped profile worlds",
+            "Close every game and server using this profile, including programs started outside Herps Launcher. "
+            "This creates a new backup of this Herspers profile's saves only; it does not convert old Forge worlds. "
+            "There is no live-server coordination or automatic retention. Are all games and servers closed?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel, QMessageBox.StandardButton.Cancel)
+        if answer != QMessageBox.StandardButton.Yes:
+            return
+        library = self.library
+        def done(result):
+            self.details.setPlainText(json.dumps(result, indent=2, ensure_ascii=False))
+            self.status.setText(f"World backup checksum verification passed: {result['path']}. Game loading and pack compatibility remain unverified.")
+        self._run("Creating a stopped-world backup…",
+            lambda progress: create_backup(library, entry.token, external_processes_closed=True, progress=progress), done)
+
+    def check_world_backup(self):
+        self._require_selected()
+        path, _ = QFileDialog.getOpenFileName(self, "Verify a targeted world backup without extracting it",
+            str(self.launcher.state / "targeted-backups"), "World backup ZIP (*.zip)")
+        if path:
+            def done(result):
+                self.details.setPlainText(json.dumps(result, indent=2, ensure_ascii=False))
+                self.status.setText(f"Backup integrity verified for profile {result['profile']}. World loading is not established.")
+            self._run("Verifying the backup inventory and checksums…", lambda progress: verify_backup(Path(path)), done)
+
     def _execute(self, operation, dependencies=None):
         entry = self._require_selected()
         library = self.library
@@ -350,6 +410,9 @@ class ModpacksPage(QWidget):
 
     def show_selected_pack(self):
         entry = self._selected()
+        target = self.target_features.get(entry.token, {}) if entry else {}
+        self.feature_status.setText((f"{target['name']} · {target['version']}\n" if target.get("available") else "")
+            + target.get("reason", "No verified targeted replacement selected. Import the inspected FunCraft hotfix; RLCraft 2.9.3 evidence remains blocked."))
         self.current_report = self.reports.get(entry.token) if entry else None
         self.coverage_table.setRowCount(0)
         if entry is None:
