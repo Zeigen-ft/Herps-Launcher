@@ -23,6 +23,30 @@ def registry_pins(lock):
             for p in tomllib.loads(lock.read_text(encoding="utf-8"))["package"] if p.get("source")}
 
 
+def probe_manifest(source, native_crafting):
+    """Root-workspace patches do not propagate through Cargo path dependencies."""
+    features = '["dep:horizon-client","dep:horizon-world"]' if native_crafting else '[]'
+    manifest = ('[package]\nname="herspers-chainmail-probe"\nversion="0.1.0"\nedition="2024"\n'
+                f'[workspace]\nresolver="2"\n[features]\ncrafting={features}\n[dependencies]\n'
+                'serde_json="=1.0.151"\n')
+    dependencies = ("horizon-mods", "horizon-client", "horizon-world") if native_crafting else ("horizon-mods",)
+    for name in dependencies:
+        path = (source / "crates" / name).as_posix()
+        optional = ', optional=true' if name != "horizon-mods" else ', default-features=false'
+        features = ', features=["mods"]' if name == "horizon-client" else ''
+        manifest += f'{name}={{path={json.dumps(path)}{optional}{features}}}\n'
+    upstream = tomllib.loads((source / "Cargo.toml").read_text(encoding="utf-8"))
+    manifest += '\n[patch.crates-io]\n'
+    for name, patch in upstream.get("patch", {}).get("crates-io", {}).items():
+        if set(patch) != {"path"}:
+            raise ValueError("Review new non-path upstream dependency overrides before compiling the probe")
+        path = (source / patch["path"]).resolve()
+        if not path.is_relative_to(source.resolve()) or not path.is_dir():
+            raise ValueError("Dependency override escaped the checksum-prepared source")
+        manifest += f'{json.dumps(name)}={{path={json.dumps(path.as_posix())}}}\n'
+    return manifest + '\n[profile.fast]\ninherits="release"\nlto=false\ncodegen-units=16\nincremental=true\n'
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--native-crafting", action="store_true", help="Also link actual native recipe loader/matcher")
@@ -40,18 +64,7 @@ def main():
     cache.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix="probe-", dir=cache) as directory:
         crate = Path(directory)
-        features = '["dep:horizon-client","dep:horizon-world"]' if args.native_crafting else '[]'
-        manifest = ('[package]\nname="herspers-chainmail-probe"\nversion="0.1.0"\nedition="2024"\n'
-                    f'[workspace]\n[features]\ncrafting={features}\n[dependencies]\n'
-                    'serde_json="=1.0.151"\n')
-        dependencies = ("horizon-mods", "horizon-client", "horizon-world") if args.native_crafting else ("horizon-mods",)
-        for name in dependencies:
-            path = (source / "crates" / name).as_posix()
-            optional = ', optional=true' if name != "horizon-mods" else ', default-features=false'
-            features = ', features=["mods"]' if name == "horizon-client" else ''
-            manifest += f'{name}={{path={json.dumps(path)}{optional}{features}}}\n'
-        manifest += '\n[profile.fast]\ninherits="release"\nlto=false\ncodegen-units=16\nincremental=true\n'
-        (crate / "Cargo.toml").write_text(manifest, encoding="utf-8")
+        (crate / "Cargo.toml").write_text(probe_manifest(source, args.native_crafting), encoding="utf-8")
         (crate / "src").mkdir()
         shutil.copyfile(ROOT / "packaging/chainmail_probe.rs", crate / "src/main.rs")
         shutil.copyfile(source / "Cargo.lock", crate / "Cargo.lock")

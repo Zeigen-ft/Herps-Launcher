@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 import tempfile
 import subprocess
+import tomllib
 import unittest
 from unittest.mock import patch
 from zipfile import ZipFile
@@ -12,6 +13,7 @@ from zipfile import ZipFile
 from herps_launcher.core import Launcher, atomic, digest, inspect_mod, pairs
 from herps_launcher.modpacks import chainmail as feature
 from tools.build_rlcraft_chainmail import package_bytes, ROOT
+from tools.verify_rlcraft_chainmail import probe_manifest
 
 
 class ChainmailTests(unittest.TestCase):
@@ -64,6 +66,19 @@ class ChainmailTests(unittest.TestCase):
                 target.parent.mkdir(parents=True, exist_ok=True)
                 target.write_bytes(path.read_bytes().replace(b"\r\n", b"\n").replace(b"\n", b"\r\n"))
         self.assertEqual(package_bytes(copy), self.package.read_bytes())
+
+    def test_native_probe_keeps_workspace_vendor_overrides_and_resolver(self):
+        source = self.root / "pinned source"
+        (source / "third_party/winit").mkdir(parents=True)
+        (source / "third_party/wgpu-hal").mkdir()
+        (source / "Cargo.toml").write_text('[patch.crates-io]\nwinit={path="third_party/winit"}\nwgpu-hal={path="third_party/wgpu-hal"}\n')
+        manifest = tomllib.loads(probe_manifest(source, True))
+        self.assertEqual(manifest["workspace"]["resolver"], "2")
+        for name in ("winit", "wgpu-hal"):
+            self.assertEqual(Path(manifest["patch"]["crates-io"][name]["path"]), source / "third_party" / name)
+        (source / "Cargo.toml").write_text('[patch.crates-io]\nwinit={path="../outside"}\n')
+        with self.assertRaisesRegex(ValueError, "escaped"):
+            probe_manifest(source, True)
 
     def test_default_profile_and_missing_consent_are_rejected_without_install(self):
         with self.assertRaisesRegex(ValueError, "Explicitly confirm"):

@@ -20,7 +20,7 @@ operations and changed package bytes fail closed. Removing/disabling with
 saves is blocked; missing/changed/disabled managed content blocks launching
 that saved profile. Empty-profile removal retains a backup.
 
-Local automated validation: **420 tests, 405 passed, 15 platform skips**.
+Local automated validation: **421 tests, 406 passed, 15 platform skips**.
 Pinned native `Package::read` / `Content::read` also passed on Linux.
 Windows candidate, native recipe matcher and installed frozen acceptance:
 **pending CI in this build-time copy**. The feature branch's current copy of
@@ -41,3 +41,10 @@ gate, other armor recipes, Wolf Armor/Varied Commodities/Lycanites integration,
 old save migration and complete modpack Play. Java Mods Build/Test and imported
 whole-Modpack Play remain disabled. No engine source change, main merge, tag or
 public release is part of this work.
+
+CI attempt [42117119229](https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/42117119229)
+passed Windows regressions (420 tests, 14 platform skips) and the game build,
+then failed because the external probe workspace omitted the pinned vendored
+`winit`/`wgpu-hal` overrides. The probe now carries those exact prepared-source
+overrides and Cargo resolver; a Windows retry is required. No gameplay test
+was executed or accepted by that failed attempt.
