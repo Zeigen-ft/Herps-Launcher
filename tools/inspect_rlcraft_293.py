@@ -537,6 +537,12 @@ def main():
 
 
 if __name__ == "__main__":
+    # Windows pipes otherwise use the active code page, even with an isolated
+    # Python child. Keep captured progress/error output deterministic and able
+    # to describe Unicode archive paths without an encoding failure.
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8", errors="backslashreplace")
     try:
         raise SystemExit(main())
     except (OSError, ValueError, BadZipFile, KeyError, EOFError, struct.error, UnicodeError, RuntimeError) as error:

@@ -241,7 +241,14 @@ class RLCraftInspectorTests(unittest.TestCase):
 
     def test_script_runs_standalone_in_isolated_python_without_repo_imports(self):
         self.make_zip()
+        unicode_source=self.root/'RLCraft 2.9.3 \u2013 \u4e16\u754c.zip'
+        self.source.rename(unicode_source)
+        self.source=unicode_source
+        self.output=self.root/'inspection \u4e16\u754c'
         script=Path(inspector.__file__).resolve()
-        result=subprocess.run([sys.executable,'-I',str(script),str(self.source),'--output',str(self.output)],cwd=self.root,capture_output=True,text=True,timeout=60)
+        result=subprocess.run([sys.executable,'-I',str(script),str(self.source),'--output',str(self.output)],cwd=self.root,capture_output=True,text=True,encoding='utf-8',timeout=60)
         self.assertEqual(result.returncode,0,result.stderr)
+        self.assertEqual(result.stderr,'')
+        self.assertIn('Inspection complete.',result.stdout)
+        self.assertIn(str(self.output),result.stdout)
         self.assertTrue((self.output/'00-summary.zip').is_file())
