@@ -30,7 +30,15 @@ class RLCraftInspectorTests(unittest.TestCase):
                 zipped.writestr("manifest.json", json.dumps(value) if manifest is None else manifest)
             zipped.writestr("modlist.html", '<a href="https://example.invalid/mc-mods/123">Owned fixture</a>')
             zipped.writestr("overrides/config/owned.cfg", "enabled=true\n")
-            for name, content in extra: zipped.writestr(name, content)
+            for name, content in extra:
+                if isinstance(name, str):
+                    raw = ZipInfo(name)
+                    # ZipInfo's constructor normalizes host separators on
+                    # Windows. Preserve the malicious raw central-directory
+                    # spelling so this is a real malformed-archive regression.
+                    raw.filename = raw.orig_filename = name
+                    name = raw
+                zipped.writestr(name, content)
         return value
 
     def inspect(self, **kwargs):

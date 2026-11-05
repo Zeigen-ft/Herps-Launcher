@@ -4,6 +4,7 @@ from pathlib import Path
 import subprocess
 import sys
 import tempfile
+from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 from zipfile import ZipFile, ZipInfo
@@ -85,6 +86,20 @@ class TargetedBackupTests(unittest.TestCase):
         second = self.create()
         self.assertNotEqual(first["path"], second["path"])
         self.assertEqual(digest(Path(first["path"])), first["archive_sha256"])
+        self.assert_unchanged()
+
+    def test_fingerprints_consistently_use_descriptors_not_path_stat_metadata(self):
+        original_stat = Path.stat
+        def differing_path_metadata(path, **kwargs):
+            value = original_stat(path, **kwargs)
+            if path == self.save:
+                return SimpleNamespace(st_mode=value.st_mode, st_dev=value.st_dev,
+                    st_ino=value.st_ino + 1, st_size=value.st_size,
+                    st_mtime_ns=value.st_mtime_ns + 100, st_ctime_ns=value.st_ctime_ns + 100)
+            return value
+        with patch.object(Path, "stat", differing_path_metadata):
+            result = self.create()
+        self.assertTrue(backup.verify_backup(Path(result["path"]))["verified"])
         self.assert_unchanged()
 
     def test_original_default_profile_is_supported_without_switching_or_touching_named_data(self):

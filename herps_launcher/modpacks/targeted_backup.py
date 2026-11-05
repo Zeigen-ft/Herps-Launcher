@@ -82,6 +82,37 @@ def _signature(value):
     return (value.st_dev, value.st_ino, value.st_size, value.st_mtime_ns, value.st_ctime_ns)
 
 
+def _open_source(library, path):
+    library.guard._safe(path)
+    descriptor = os.open(path, os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_BINARY", 0))
+    try:
+        return os.fdopen(descriptor, "rb")
+    except Exception:
+        os.close(descriptor)
+        raise
+
+
+def _fingerprint_source(library, path, remaining):
+    # Windows path stat and descriptor fstat need not expose identical metadata.
+    # Take identity, size, timestamps and bytes from one descriptor, consistently
+    # with the copy operation. Hash/size and the final rescan remain mandatory.
+    with _open_source(library, path) as stream:
+        before = os.fstat(stream.fileno())
+        if not stat.S_ISREG(before.st_mode):
+            raise ValueError("Nonregular save entry")
+        if before.st_size > min(MAX_FILE_BYTES, remaining):
+            raise ValueError("Backup limit: at most 512 MiB total and 128 MiB per file; existing data is unchanged")
+        sha, count = hashlib.sha256(), 0
+        while chunk := stream.read(CHUNK):
+            count += len(chunk)
+            if count > before.st_size:
+                raise ValueError("Save file grew while fingerprinting")
+            sha.update(chunk)
+        if count != before.st_size or _signature(os.fstat(stream.fileno())) != _signature(before):
+            raise ValueError("Save files changed during backup; close all games/servers and retry")
+        return {"bytes": count, "sha256": sha.hexdigest(), "signature": _signature(before)}
+
+
 def _scan(library, source):
     library.guard._safe(source)
     if not source.is_dir():
@@ -101,13 +132,9 @@ def _scan(library, source):
             if stat.S_ISDIR(value.st_mode):
                 directories.append(relative)
             elif stat.S_ISREG(value.st_mode):
-                total += value.st_size
-                if value.st_size > MAX_FILE_BYTES or total > MAX_BYTES:
-                    raise ValueError("Backup limit: at most 512 MiB total and 128 MiB per file; existing data is unchanged")
-                sha = digest(path)
-                if _signature(path.stat(follow_symlinks=False)) != _signature(value):
-                    raise ValueError("Save files changed during backup; close all games/servers and retry")
-                files[relative] = {"bytes": value.st_size, "sha256": sha, "signature": _signature(value)}
+                row = _fingerprint_source(library, path, MAX_BYTES - total)
+                total += row["bytes"]
+                files[relative] = row
             else:
                 raise ValueError("Nonregular save entry")
     if not files:
@@ -117,11 +144,12 @@ def _scan(library, source):
 
 def _copy_file(library, source, relative, expected, zipped):
     path = source / relative
-    library.guard._safe(path)
-    fd = os.open(path, os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_BINARY", 0))
-    with os.fdopen(fd, "rb") as stream:
-        if _signature(os.fstat(stream.fileno())) != expected["signature"]:
-            raise ValueError("Save file changed before copying")
+    with _open_source(library, path) as stream:
+        observed = os.fstat(stream.fileno())
+        if not stat.S_ISREG(observed.st_mode) or _signature(observed) != expected["signature"]:
+            error = ValueError("Save file changed before copying")
+            error.add_note(f"Relative save: {relative!r}; fingerprint={expected['signature']}; open={_signature(observed)}")
+            raise error
         sha, count = hashlib.sha256(), 0
         with zipped.open("saves/" + relative, "w", force_zip64=True) as output:
             while chunk := stream.read(CHUNK):
