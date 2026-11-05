@@ -20,7 +20,7 @@ operations and changed package bytes fail closed. Removing/disabling with
 saves is blocked; missing/changed/disabled managed content blocks launching
 that saved profile. Empty-profile removal retains a backup.
 
-Local automated validation: **419 tests, 404 passed, 15 platform skips**.
+Local automated validation: **420 tests, 405 passed, 15 platform skips**.
 Pinned native `Package::read` / `Content::read` also passed on Linux.
 Windows candidate, native recipe matcher and installed frozen acceptance:
 **pending CI in this build-time copy**. The feature branch's current copy of

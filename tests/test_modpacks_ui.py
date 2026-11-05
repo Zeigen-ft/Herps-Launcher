@@ -169,6 +169,13 @@ class ModpacksPageTests(unittest.TestCase):
         self.assertIn("existing saves", self.page._last_error)
         self.assertFalse(chainmail.status(self.launcher)["installed"])
         self.assertEqual(digest(saved), before)
+        receipt = chainmail._receipt(self.launcher)
+        receipt.parent.mkdir(parents=True)
+        receipt.write_text("[]")
+        self.page.busy_changed()
+        self.assertIn("Preserve this profile", self.page.chainmail_status.text())
+        self.assertFalse(self.page.chainmail_button.isEnabled())
+        self.assertEqual(digest(saved), before)
 
     def test_chainmail_controls_reachable_and_busy_install_is_blocked(self):
         self.select_disposable()

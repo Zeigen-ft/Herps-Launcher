@@ -214,6 +214,16 @@ class ChainmailTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "receipt changed"):
             self.launcher.set_enabled(self.mod(), True)
 
+    def test_malformed_receipt_is_a_preservation_error_not_a_status_crash(self):
+        self.install()
+        before = digest(feature._path(self.launcher))
+        for value in ("[]", "null", "0", '"text"', "{"):
+            with self.subTest(receipt=value):
+                feature._receipt(self.launcher).write_text(value)
+                with self.assertRaises(ValueError):
+                    feature.status(self.launcher)
+                self.assertEqual(digest(feature._path(self.launcher)), before)
+
     @unittest.skipUnless(os.name == "nt", "Windows junction behavior requires Windows")
     def test_windows_junction_cannot_redirect_installation(self):
         external = self.root / "outside"

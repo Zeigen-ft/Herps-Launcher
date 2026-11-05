@@ -95,6 +95,8 @@ def _managed(launcher, guard):
     if raw is None:
         raise ValueError("Install the bundled chainmail feature using Modpacks and disposable-profile consent")
     value = json.loads(raw)
+    if not isinstance(value, dict):
+        raise ValueError("Chainmail ownership receipt changed; preserve this profile for review")
     expected = {"schema": 1, "profile": launcher.config["profile"], "id": MOD_ID,
                 "version": VERSION, "sha256": PACKAGE_SHA256, "disposable_confirmed": True}
     if any(value.get(key) != item for key, item in expected.items()):
