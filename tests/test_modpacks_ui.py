@@ -22,6 +22,7 @@ except ImportError:
 from herps_launcher.core import Launcher, digest
 from herps_launcher.modpacks.service import ModpackLibrary
 from herps_launcher.modpacks import targeted_backup
+from herps_launcher.modpacks import chainmail
 from tools.make_javamods_fixtures import make_jar
 from tools.make_modpack_fixtures import mrpack, curseforge, local_cf_instance, instance, packwiz
 
@@ -118,6 +119,75 @@ class ModpacksPageTests(unittest.TestCase):
             self.assertEqual(self.window.pages.currentIndex(), index)
             self.assertTrue(button.isChecked())
         self.assertFalse(self.page.play_button.isEnabled())
+
+    def select_disposable(self, name="crafting_test"):
+        self.launcher.add_profile(name)
+        self.window.profile.addItem(name)
+        self.window.profile.setCurrentText(name)
+        self.window.refresh()
+        self.wait_idle()
+
+    def test_chainmail_explicit_profile_install_starts_off_and_preserves_play_guards(self):
+        self.assertFalse(self.page.chainmail_button.isEnabled())
+        self.select_disposable()
+        self.assertFalse(self.page.chainmail_button.isEnabled())
+        self.page.chainmail_consent.setChecked(True)
+        with patch("PySide6.QtWidgets.QMessageBox.warning", return_value=QMessageBox.StandardButton.Yes):
+            self.click(self.page.chainmail_button)
+        self.wait_idle()
+        result = chainmail.status(self.launcher)
+        self.assertTrue(result["installed"])
+        self.assertFalse(result["enabled"])
+        self.assertFalse(result["gameplay_verified"])
+        self.assertEqual(result["sha256"], chainmail.PACKAGE_SHA256)
+        self.assertIn("disabled", self.page.chainmail_status.text())
+        self.assertEqual(len(self.window.mod_entries), 1)
+        self.window.mod_list.setCurrentRow(0)
+        self.window.toggle_mod()
+        self.assertTrue(self.launcher.enabled(self.window.mod_entries[0]))
+        self.assertFalse(self.page.play_button.isEnabled())
+        self.assertFalse(self.window.java_mods.build_button.isEnabled())
+        self.assertFalse(self.window.java_mods.test_button.isEnabled())
+        self.assertEqual(self.window.pages.count(), 7)
+
+    def test_chainmail_cancel_profile_switch_and_existing_save_fail_closed(self):
+        self.select_disposable()
+        self.page.chainmail_consent.setChecked(True)
+        with patch("PySide6.QtWidgets.QMessageBox.warning", return_value=QMessageBox.StandardButton.Cancel):
+            self.click(self.page.chainmail_button)
+        self.assertFalse(chainmail.status(self.launcher)["installed"])
+        self.select_disposable("another_disposable")
+        self.assertFalse(self.page.chainmail_consent.isChecked())
+        saved = self.launcher.game / "saves/Owned/level.dat"
+        saved.parent.mkdir(parents=True)
+        saved.write_bytes(b"owned non-gameplay fixture")
+        before = digest(saved)
+        self.page.chainmail_consent.setChecked(True)
+        with patch("PySide6.QtWidgets.QMessageBox.warning", return_value=QMessageBox.StandardButton.Yes):
+            self.click(self.page.chainmail_button)
+        self.wait_idle()
+        self.assertIn("existing saves", self.page._last_error)
+        self.assertFalse(chainmail.status(self.launcher)["installed"])
+        self.assertEqual(digest(saved), before)
+
+    def test_chainmail_controls_reachable_and_busy_install_is_blocked(self):
+        self.select_disposable()
+        self.page.chainmail_consent.setChecked(True)
+        for width, height in [(1130, 790), (900, 640)]:
+            self.window.resize(width, height)
+            self.app.processEvents()
+            for control in (self.page.chainmail_consent, self.page.chainmail_button):
+                self.page.scroll.ensureWidgetVisible(control, 0, 0)
+                self.app.processEvents()
+                point = control.mapTo(self.page.scroll.viewport(), QPoint(0, 0))
+                self.assertTrue(self.page.scroll.viewport().rect().contains(point))
+                self.assertTrue(self.page.scroll.viewport().rect().contains(point + QPoint(control.width() - 1, control.height() - 1)))
+        with patch.object(self.window, "busy", return_value=True):
+            self.page.busy_changed()
+            self.assertFalse(self.page.chainmail_button.isEnabled())
+            with self.assertRaises(ValueError):
+                self.page.install_chainmail()
+        self.assertFalse(chainmail.status(self.launcher)["installed"])
 
     def targeted_fixture(self):
         source = self.root / "owned targeted metadata.zip"

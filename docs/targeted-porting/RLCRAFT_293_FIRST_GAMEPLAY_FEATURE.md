@@ -1,6 +1,8 @@
 # First gameplay recommendation — chainmail plate to boots
 
-**Proposal only. No gameplay implementation or acceptance is claimed.**
+**Approved slice implemented; physical gameplay acceptance remains NOT RUN.**
+See the [implementation verification](RLCRAFT_CHAINMAIL_VERIFICATION.md) and
+[Windows survival test guide](WINDOWS_CHAINMAIL_ACCEPTANCE.md).
 See the [verified archive report](RLCRAFT_COMPATIBILITY_REPORT.md) and
 [complete artifact matrix](RLCRAFT_293_MOD_MATRIX.md).
 
@@ -106,5 +108,5 @@ major engine change, stop for approval; do not hide the limitation or discard
 data to pass. Parsing/registry fixtures, successful packaging and synthetic files
 cannot substitute for real crafting and world-load observations.
 
-Until that evidence exists, keep this feature proposed/unverified and the
+Until that evidence exists, keep this feature experimental/unverified and the
 original whole-mod row BLOCKED. No complete RLCraft acceptance is implied.

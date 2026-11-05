@@ -335,10 +335,15 @@ class Launcher:
         return pairs(self.game / "horizon-mods.txt").get("mod." + mod.id) == "true"
 
     def set_enabled(self, mod, enabled):
+        if mod.id == "herspers_rl_chainmail":
+            from .modpacks.chainmail import set_enabled
+            return set_enabled(self, mod, enabled)
         update_pairs(self.game / "horizon-mods.txt", {"mod." + mod.id: str(bool(enabled)).lower()})
 
     def install_mod(self, path):
         mod = inspect_mod(path)
+        if mod.id == "herspers_rl_chainmail":
+            raise ValueError("Use Modpacks → Chainmail Plate and Boots in a fresh disposable profile")
         if any(m.id == mod.id for m in self.mods()):
             raise ValueError("This id is already installed. Remove or disable the existing version first")
         destination = self.game / ("horizon-native-mods" if mod.native else "horizon-mods") / (mod.id + path.suffix)
@@ -348,6 +353,9 @@ class Launcher:
         return mod
 
     def remove_mod(self, mod):
+        if mod.id == "herspers_rl_chainmail":
+            from .modpacks.chainmail import remove
+            return remove(self, mod)
         expected = self.game / ("horizon-native-mods" if mod.native else "horizon-mods")
         if mod.path.parent != expected:
             raise ValueError("Mod is outside this profile")
@@ -388,6 +396,8 @@ class Launcher:
         return binary
 
     def command(self, server="", name="", clean=False):
+        from .modpacks.chainmail import protect_launch
+        protect_launch(self)
         installation = self.installation()
         executable = installation.binary("horizon-client") if clean else self.native_binary() or installation.binary("horizon-client")
         args = [str(executable), "--resources", str(self.support / "resources" / GAME), "--game-dir", str(self.game), "--home", str(self.support)]

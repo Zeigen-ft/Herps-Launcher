@@ -11,6 +11,19 @@ TARGETED_BACKUP_CASES = {
     "test_modpacks_ui.ModpacksPageTests.test_targeted_backup_cancellation_unknown_pack_and_profile_switch_fail_closed",
     "test_modpacks_ui.ModpacksPageTests.test_backup_and_existing_controls_remain_reachable_at_small_window_sizes",
 }
+CHAINMAIL_CASES = {
+    "test_modpacks_ui.ModpacksPageTests.test_chainmail_explicit_profile_install_starts_off_and_preserves_play_guards",
+    "test_modpacks_ui.ModpacksPageTests.test_chainmail_cancel_profile_switch_and_existing_save_fail_closed",
+    "test_modpacks_ui.ModpacksPageTests.test_chainmail_controls_reachable_and_busy_install_is_blocked",
+}
+
+
+def verify_chainmail_cases(tests, skipped):
+    missing = CHAINMAIL_CASES - set(tests)
+    omitted = CHAINMAIL_CASES & {name for name, _ in skipped}
+    if missing or omitted:
+        raise ValueError(f"Required delivered chainmail cases missing/skipped: {sorted(missing | omitted)}")
+    return sorted(CHAINMAIL_CASES)
 
 
 def verify_targeted_cases(tests, skipped):
@@ -62,9 +75,10 @@ def run(report_path):
         unexpected_skips = [(t.id(), reason) for t, reason in result.skipped
                             if sys.platform != "win32" or t.id().split(".")[-1] not in allowed_windows]
         report["unexpected_skips"] = unexpected_skips
-        if not result.wasSuccessful() or unexpected_skips or result.testsRun < 65:
+        if not result.wasSuccessful() or unexpected_skips or result.testsRun < 68:
             raise ValueError("Frozen acceptance failed, skipped coverage, or collected too few cases")
         report["targeted_backup_cases_verified"] = verify_targeted_cases(report["tests"], report["skipped"])
+        report["chainmail_cases_verified"] = verify_chainmail_cases(report["tests"], report["skipped"])
         support = Path(os.environ.get("HERPS_ACCEPTANCE_SUPPORT") or os.environ["PHASE5C_SUPPORT"])
         persistent = Launcher(support)
         persistent.add_profile("owned_acceptance")

@@ -48,7 +48,7 @@ def eligibility(library, token):
     """Revalidate the managed import; a renamed/edited pack never opts in."""
     entry = library._entry(token)
     if not entry.source.is_file() or digest(entry.source) != FUNCRAFT_SHA256:
-        return {"available": False, "reason": "Only the exact inspected FunCraft 1.1.1 hotfix ZIP has a replacement feature. RLCraft 2.9.3 remains uninspected."}
+        return {"available": False, "reason": "Only the exact inspected FunCraft 1.1.1 hotfix ZIP enables manual backups here. RLCraft's independent chainmail crafting slice is a separate opt-in feature."}
     with ZipFile(entry.source) as zipped:
         item = zipped.getinfo("manifest.json")
         if item.file_size > 1 << 20:

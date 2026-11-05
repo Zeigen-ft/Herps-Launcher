@@ -1,0 +1,19 @@
+Chainmail Plate and Boots 0.1.0
+
+New native definitions and packaging: Herspers contributors, GPL-3.0-only;
+see LICENSE-HERPS.txt. No original mod JAR, texture or Java code is included.
+The plate deliberately uses a vanilla iron-nugget texture reference; game
+resources must be prepared separately from the player's legitimate game files.
+
+Recipe behavior adapted from Craftable Chainmail 1.0, Minecraft 1.12.2:
+https://github.com/ModsByLeo/CraftableChainmail
+Source revision: 0561a6cb57ad40edc1bf1ec7a1642e23096254fa
+src/main/resources/assets/craftablechainmail/recipes/chainmail_plate.json
+src/main/resources/assets/craftablechainmail/recipes/chainmail_boots.json
+Copyright (c) 2019 Kfir Awad. MIT permission notice: LICENSE-CraftableChainmail.txt.
+
+This independent native content pack implements only a plate and boots recipe.
+It does not execute Forge/Java, implement RLCraft, enforce Reskillable's Defense
+requirement, migrate saves, or provide the other original armor recipes.
+Experimental: install only into an explicitly selected fresh disposable profile.
+Physical survival crafting and save/load acceptance remain required.

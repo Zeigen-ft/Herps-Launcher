@@ -106,6 +106,8 @@ def verify(setup, output):
                     raise ValueError('Seven-page navigation missing')
                 if mode == '--native-acceptance' and len(data.get('targeted_backup_cases_verified', [])) != 3:
                     raise ValueError('Delivered candidate did not verify the three FunCraft backup cases')
+                if mode == '--native-acceptance' and len(data.get('chainmail_cases_verified', [])) != 3:
+                    raise ValueError('Delivered candidate did not verify the three chainmail installation cases')
                 report[name] = data
             if any(snapshot(support).get(name) != value for name, value in original.items()
                    if name != str(settings.relative_to(support))):

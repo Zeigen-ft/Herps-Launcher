@@ -12,6 +12,7 @@ from PySide6.QtWidgets import (QAbstractItemView, QCheckBox, QFileDialog, QFrame
 
 from .service import ModpackLibrary
 from .targeted_backup import create_backup, eligibility, verify_backup
+from . import chainmail
 
 
 UNSUPPORTED = "Unsupported"
@@ -30,7 +31,7 @@ def _data(value):
 
 
 class ModpacksPage(QWidget):
-    """Never installs or launches a pack; expensive operations use Window's worker."""
+    """Whole-pack Play stays off; individual native replacements require opt-in."""
 
     def __init__(self, window):
         super().__init__()
@@ -96,6 +97,20 @@ class ModpacksPage(QWidget):
         self.verify_backup_button = self._button(feature_buttons, "Verify world backup…", self.check_world_backup)
         feature_layout.addLayout(feature_buttons)
         box.addWidget(feature_box)
+
+        chain_box = QGroupBox("Targeted native replacement · Chainmail Plate and Boots")
+        chain_layout = QVBoxLayout(chain_box)
+        self.chainmail_status = QLabel()
+        self.chainmail_status.setWordWrap(True)
+        chain_layout.addWidget(self.chainmail_status)
+        self.chainmail_consent = QCheckBox("Confirm disposable profile and closed games/servers")
+        self.chainmail_consent.setMaximumWidth(520)
+        self.chainmail_consent.setToolTip("Create a new named profile on Home first. Install before creating any world. The package starts disabled.")
+        self.chainmail_consent.toggled.connect(lambda _: self.busy_changed())
+        chain_layout.addWidget(self.chainmail_consent)
+        self.chainmail_button = self._button(chain_layout, "Install chainmail crafting · disabled initially…", self.install_chainmail)
+        self.chainmail_button.setMaximumWidth(520)
+        box.addWidget(chain_box)
 
         self.summary = QLabel("Playable status: unverified. Import a pack to inspect every indexed mod.")
         self.summary.setWordWrap(True)
@@ -197,6 +212,9 @@ class ModpacksPage(QWidget):
             self.restricted_ack.blockSignals(True)
             self.restricted_ack.setChecked(False)
             self.restricted_ack.blockSignals(False)
+            self.chainmail_consent.blockSignals(True)
+            self.chainmail_consent.setChecked(False)
+            self.chainmail_consent.blockSignals(False)
             self.summary.setText("Playable status: unverified. No pack analysis is selected for this profile.")
             self.status.setText(f"Profile: {profile}. Import a pack or load its retained local evidence.")
         self.binary_path.setText(self.launcher.config.get("port_pack_binary", ""))
@@ -219,12 +237,50 @@ class ModpacksPage(QWidget):
         target = self.target_features.get(entry.token, {}) if entry else {}
         self.backup_button.setEnabled(not busy and target.get("available") is True)
         self.verify_backup_button.setEnabled(not busy and target.get("available") is True)
+        installed, valid = False, True
+        try:
+            state = chainmail.status(self.launcher)
+            installed = state["installed"]
+            description = ("Installed · " + ("enabled" if state["enabled"] else "disabled; enable explicitly on Mods")) if installed else "Not installed"
+            self.chainmail_status.setText(f"Profile: {self.launcher.config['profile']} · {description}. "
+                "Experimental plate + boots recipes only; physical survival/save-load testing is pending. "
+                "Vanilla nugget artwork. Keep enabled once saves exist. Whole RLCraft is unsupported.")
+        except (OSError, ValueError) as error:
+            valid = False
+            self.chainmail_status.setText(f"Preserve this profile and review chainmail content: {error}")
+        available = not busy and valid and not installed and self.launcher.config["profile"] != "default"
+        self.chainmail_consent.setEnabled(available)
+        self.chainmail_button.setEnabled(available and self.chainmail_consent.isChecked())
         # No verified runtime/content validation backend exists. A static Works
         # verdict or a carried folder can never unlock Play here.
         self.play_button.setEnabled(False)
         if self._dirty and self._active() and not busy and not self._scheduled:
             self._scheduled = True
             QTimer.singleShot(0, self._load_if_idle)
+
+    def install_chainmail(self):
+        self.window.require_idle()
+        profile = self.launcher.config["profile"]
+        if not self.chainmail_consent.isChecked() or profile == "default":
+            raise ValueError("Select and explicitly confirm a fresh named disposable profile first")
+        answer = QMessageBox.warning(self, "Install experimental crafting?",
+            f"Install only into '{profile}'? All games and servers must be closed. "
+            "This profile must be disposable and contain no saved worlds. The package starts disabled; "
+            "enable it on Mods before creating a test world. Do not disable/remove it after saves exist. "
+            "No real survival or custom-item persistence acceptance is claimed.",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel,
+            QMessageBox.StandardButton.Cancel)
+        if answer != QMessageBox.StandardButton.Yes:
+            return
+
+        def completed(result):
+            self.details.setPlainText(json.dumps(result, indent=2))
+            self.status.setText(f"Installed disabled in {profile}. Open Mods, select Chainmail Plate and Boots, and enable explicitly.")
+            self.chainmail_consent.setChecked(False)
+            self.window.refresh()
+
+        self._run("Installing bundled chainmail content into the selected disposable profile…",
+            lambda emit: chainmail.install(self.launcher, profile, disposable_confirmed=True, games_closed=True), completed)
 
     def _run(self, label, function, done):
         self.window.require_idle()

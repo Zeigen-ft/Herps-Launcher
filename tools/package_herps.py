@@ -92,10 +92,15 @@ def build_port_pack(host_target: str) -> tuple[Path, dict]:
 
 
 def pyinstaller_command(output: Path, build: Path, helper: Path, port_pack: Path, host_target: str) -> list:
+    from tools.build_rlcraft_chainmail import build as build_chainmail
+    from herps_launcher.modpacks.chainmail import PACKAGE_NAME
+    content = ROOT / ".cache/targeted-content"
+    build_chainmail(content)
     command = [sys.executable, "-m", "PyInstaller", "--noconfirm", "--clean", "--windowed", "--onedir",
         "--name", "Herps Launcher", "--paths", ROOT, "--distpath", output, "--workpath", build / "work", "--specpath", build,
         "--add-binary", f"{helper}{os.pathsep}.", "--add-binary", f"{port_pack}{os.pathsep}.",
         "--collect-submodules", "herps_launcher.javamods", "--collect-submodules", "herps_launcher.modpacks",
+        "--add-data", f"{content / PACKAGE_NAME}{os.pathsep}targeted-content",
         "--hidden-import", "PySide6.QtTest", "--copy-metadata", "PySide6-Essentials", "--copy-metadata", "shiboken6"]
     # Opt-in delivered workflow verification on every supported target.
     command += ["--paths", ROOT / "packaging", "--hidden-import", "phase5c_acceptance",

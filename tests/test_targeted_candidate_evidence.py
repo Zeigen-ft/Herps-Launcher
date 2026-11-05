@@ -15,6 +15,14 @@ spec.loader.exec_module(acceptance)
 
 
 class TargetedCandidateEvidenceTests(unittest.TestCase):
+    def test_old_frozen_cohort_cannot_claim_chainmail_installation(self):
+        required = sorted(acceptance.CHAINMAIL_CASES)
+        with self.assertRaisesRegex(ValueError, 'missing/skipped'):
+            acceptance.verify_chainmail_cases(sorted(acceptance.TARGETED_BACKUP_CASES), [])
+        with self.assertRaisesRegex(ValueError, 'missing/skipped'):
+            acceptance.verify_chainmail_cases(required, [(required[0], 'unavailable')])
+        self.assertEqual(acceptance.verify_chainmail_cases(required, []), required)
+
     def test_old_frozen_cohort_cannot_claim_the_new_backup_feature(self):
         with self.assertRaisesRegex(ValueError,'missing/skipped'):
             acceptance.verify_targeted_cases(['old.test']*65,[])
