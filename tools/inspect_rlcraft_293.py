@@ -488,6 +488,8 @@ def assemble_parts(folder, output, dataset="archive"):
                     payload = bounded_read(zipped, zipped.getinfo("payload.bin"), PART_BYTES)
                 if len(payload) != claim["bytes"] or hashlib.sha256(payload).hexdigest() != claim["payload_sha256"]:
                     raise ValueError("Corrupt or truncated export payload")
+                if offset + len(payload) > first["source_bytes"]:
+                    raise ValueError("Reassembled bytes exceed declared source size")
                 stream.write(payload)
                 full.update(payload)
                 offset += len(payload)

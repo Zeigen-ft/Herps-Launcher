@@ -211,6 +211,28 @@ class RLCraftInspectorTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,'Missing'):inspector.assemble_parts(self.output,output)
         self.assertFalse(output.exists())
 
+    def test_reassembly_rejects_bytes_beyond_declared_total_before_writing(self):
+        self.make_zip();self.inspect()
+        part=next(self.output.glob('archive-0001-*.zip'))
+        with ZipFile(part) as z:
+            claim=json.loads(z.read('part.json'));data=z.read('payload.bin')
+        claim['source_bytes']=1
+        with ZipFile(part,'w') as z:
+            z.writestr('part.json',json.dumps(claim));z.writestr('payload.bin',data)
+        output=self.root/'oversized-reassembly.zip'
+        cleaned_sizes=[]
+        real_unlink=Path.unlink
+        def record_cleanup(path,*args,**kwargs):
+            if path.name.startswith('.rlcraft-reassembly-'):
+                cleaned_sizes.append(path.stat().st_size)
+            return real_unlink(path,*args,**kwargs)
+        with patch.object(Path,'unlink',new=record_cleanup):
+            with self.assertRaisesRegex(ValueError,'exceed declared source size'):
+                inspector.assemble_parts(self.output,output)
+        self.assertEqual(cleaned_sizes,[0])
+        self.assertFalse(output.exists())
+        self.assertTrue(self.source.exists())
+
     def test_reassembly_rechecks_actual_target_instead_of_trusting_packet_label(self):
         self.make_zip(version='2.8.2')
         self.output.mkdir()
