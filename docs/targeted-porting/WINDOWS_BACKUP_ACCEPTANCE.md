@@ -1,5 +1,7 @@
 # Windows 11 acceptance — a real world backed up and loaded separately
 
+Use the exact downloads/checksums in the
+[current Windows candidate report](NEXT_PHASE_PREPARATION_REPORT.md).
 All cases below start **NOT RUN**. Native CI uses owned fixture bytes and
 offscreen UI; it cannot pass real gameplay/world-load cases. This procedure
 tests one FunCraft-scoped backup utility for native Herspers worlds, not the
@@ -25,8 +27,13 @@ original FunCraft gameplay, FTB Backups JAR, RLCraft or Forge-world conversion.
    **Extract All**. Check the downloaded ZIP and extracted Setup EXE hashes with
    `Get-FileHash -Algorithm SHA256 -LiteralPath "<full file path>"`.
 2. Run the verified Setup EXE using the default short per-user folder. Keep an
-   installer log if desired by launching it from PowerShell with
-   `"/LOG=$env:TEMP\Herps-backup-candidate-install.log"` as an argument.
+   installer log if desired: open PowerShell in the extracted folder and run:
+
+   ```powershell
+   & '.\Herps-Launcher-0.1.0-Windows-x64-Setup.exe' "/LOG=$env:TEMP\Herps-backup-candidate-install.log"
+   ```
+
+   The log will be `%TEMP%\Herps-backup-candidate-install.log`.
 3. Record any VC++ prerequisite error, unexpected elevation, SmartScreen or
    antivirus warning. Review the source/hash before deciding whether to trust
    this unsigned candidate. Do not disable security controls to pass acceptance.
@@ -35,6 +42,18 @@ original FunCraft gameplay, FTB Backups JAR, RLCraft or Forge-world conversion.
 5. The installed app bundles its passive helper. No Python, Rust or Cargo is
    needed for launcher backup/import. Python 3.12 is separately required only
    for the [local RLCraft inspector](WINDOWS_RLCRAFT_INSPECTION.md).
+   To record the Rust tools currently on PATH, run this read-only check:
+
+   ```powershell
+   foreach ($tool in 'cargo','rustc','rustup') {
+       $found = Get-Command $tool -ErrorAction SilentlyContinue
+       if ($found) { "$tool : $($found.Source)" } else { "$tool : absent from PATH" }
+   }
+   ```
+
+   If tools are already installed, record that limitation; do not uninstall them
+   or claim a physical test without developer tools. CI separately tests their
+   absence from PATH. Native source-mod compilation is outside this checklist.
 
 ## 3. Create a real disposable native world
 
@@ -119,14 +138,22 @@ passed. This helper changes no files. Do not run scripts found inside a modpack.
    profile. Settings → Open game data and saves identifies its separate folder.
 2. While all games remain stopped, confirm that destination contains no saves.
    Copy the scratch folder's **`saves` folder** into this new profile's game
-   folder. Do not copy the backup manifest into an existing world or overwrite
-   anything. Stop on any merge/replace prompt.
+   folder. If the new profile already has an empty `saves` folder, open it and
+   copy only the extracted test-world folder into that empty folder; avoid
+   creating `saves\saves`. Enable File Explorer → View → Show → Hidden items
+   when checking emptiness. Do not copy the backup manifest into a world or
+   overwrite anything. Stop if any save is already present or any merge/replace
+   prompt appears; choose another new disposable profile.
 3. Return to Home with `funcraft_accept_restored` selected. Use the same compatible
    native installation/resources and press PLAY. Open the restored test world.
 4. Verify the distinctive marker, location and relevant inventory. Save/exit
    normally, wait for the exit code, relaunch and verify it again.
 5. Confirm the original source profile/world remains present. It must not have
    been moved or overwritten. The two profiles should now have independent worlds.
+   With both games stopped, repeat section 5's comparison between the original
+   source `saves/` and the unchanged scratch extraction: they must still match.
+   Compare the original source here, not the restored copy that gameplay has
+   legitimately updated.
 
 Only an actual successful load and marker observation can pass restore gameplay
 acceptance. A matching hash, valid ZIP, test log, menu or synthetic file cannot.

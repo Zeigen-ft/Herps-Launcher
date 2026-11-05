@@ -67,3 +67,14 @@ enabled by this investigation. Actual game launch, world creation/load, save
 preservation, crash recovery and performance tests are **NOT RUN** for RLCraft.
 The [prioritized plan](TARGETED_PORTING_PLAN.md) keeps this target blocked until
 its exact input becomes available.
+
+## Later preparation from `36fab19`
+
+The [local Windows inspection/export tool](WINDOWS_RLCRAFT_INSPECTION.md) now
+provides a safe route around the upload-size limit: original SHA-256, complete
+outer listing, bounded dependency metadata and private numbered export ZIPs
+strictly below 32 MiB. The [preparation report](NEXT_PHASE_PREPARATION_REPORT.md)
+records its exact CI build, download, hashes, tests and remaining bounds.
+This tool has been tested on owned fixtures; the actual user's 2.9.3 ZIP has
+**still not been inspected**. Receipt of all exact parts is required before
+changing the blocked matrix above. The 2.8.2 reference remains excluded.

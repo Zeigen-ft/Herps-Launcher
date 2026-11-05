@@ -5,6 +5,13 @@ written to preserve one FTB Backups behavior. It is not an executable port of
 FTB Backups, a Forge/JVM bridge, a 1.12.2 world converter or a playable FunCraft
 package. No compatible whole-pack installer has been produced.
 
+For the packaged Windows candidate, use the exact run/download/checksum in the
+[current preparation report](NEXT_PHASE_PREPARATION_REPORT.md) and the
+[Windows 11 real-world backup/load procedure](WINDOWS_BACKUP_ACCEPTANCE.md).
+That newer candidate bundles the helper and backup operation; Python/Rust/Cargo
+are not needed for installed backup/import. The source instructions below remain
+an alternative and describe the older Phase 5D helper explicitly.
+
 ## Use the implementation from source
 
 The historical Phase 5D Windows installer recorded at `3112e32` does **not**

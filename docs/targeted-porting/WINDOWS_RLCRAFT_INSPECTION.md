@@ -7,9 +7,12 @@ It needs **Python 3.12 for Windows**, not Rust, Cargo, Java or developer build t
 
 ## Download and run
 
-1. Open the Windows candidate Actions run linked in the current targeted-porting
-   verification report. Download **RLCraft-2.9.3-Local-Inspector** from Artifacts
-   and use File Explorer → **Extract All**. Keep its files together.
+1. Open successful [Actions run 42034782638](https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/42034782638) or its direct
+   [**RLCraft-2.9.3-Local-Inspector** download](https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/42034782638/artifacts/13420625410)
+   (artifact `13420625410`, source `91a14cd0ebcc28c7e894173e7dc19c4a3f9498a1`).
+   Use File Explorer → **Extract All** and keep its files together.
+   These are internal test artifacts; GitHub sign-in may be required.
+   Download ZIP SHA-256: `c8ca99670471033c36234bea8bd9f19a44689b5a37633591b85fd8fe8cb0ac3e`.
 2. Install Python 3.12 from <https://www.python.org/downloads/windows/> if needed.
    Choose the standard Python installer/launcher. Open PowerShell and run
    `py -3.12 --version` to confirm it is available. No administrator shell is
@@ -22,8 +25,16 @@ It needs **Python 3.12 for Windows**, not Rust, Cargo, Java or developer build t
    Get-FileHash -Algorithm SHA256 -LiteralPath .\inspect_rlcraft_293.py
    ```
 
-   Compare the full hash with `script_sha256` and the phase report. Stop if it
-   differs. Do not use an inspector script supplied inside a modpack.
+   The expected delivered Windows script hash is:
+
+   ```text
+   cccc155cf8b3acc812b1f3db26d1c7a4775dd9c1783c2a706a7d3bd7f6aca957
+   ```
+
+   Compare all 64 characters with that value and `script_sha256`. Stop if
+   they differ. Do not use an inspector script supplied inside a modpack.
+   The Windows artifact uses CRLF line endings, so its hash differs from
+   a Linux LF source checkout. See the [full evidence report](NEXT_PHASE_PREPARATION_REPORT.md).
 4. Double-click **Inspect-RLCraft.cmd**. It starts the trusted Python inspector
    and asks for a path. It never runs the ZIP's own scripts.
 5. Find your original **RLCraft 1.12.2 - Release v2.9.3.zip** in File Explorer.

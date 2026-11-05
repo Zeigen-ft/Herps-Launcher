@@ -28,11 +28,14 @@ Real PLAY/resource preparation, world save/load, graphics/audio/input, shader
 rendering and two-machine Tailscale use require the manual evidence checklist.
 They must not be marketed as newly certified from offscreen navigation.
 
-The [targeted porting iteration](targeted-porting/INITIAL_IMPLEMENTATION_REPORT.md)
-adds one FunCraft-hotfix-only manual backup operation in source. It is verified
-with owned file fixtures and a Linux packaging probe; it does not convert Forge
-worlds or make FTB Backups/the pack playable. Existing Phase 5D installers do not
-contain this later feature. New native interactive acceptance remains open.
+The [initial targeted iteration](targeted-porting/INITIAL_IMPLEMENTATION_REPORT.md)
+adds one FunCraft-hotfix-only manual backup operation. The later
+[Windows candidate and local RLCraft inspector](targeted-porting/NEXT_PHASE_PREPARATION_REPORT.md)
+provide native Windows CI evidence and
+[physical Windows backup/load instructions](targeted-porting/WINDOWS_BACKUP_ACCEPTANCE.md).
+Historical Phase 5D installers do not contain this later feature; use the exact
+new candidate/run/hash in that report. It does not convert Forge worlds or make
+FTB Backups/either pack playable. Native interactive acceptance remains open.
 
 Unavailable: Java bytecode execution, Java bridge, universal conversion, packwiz,
 Java Build/Test and Modpack Play. Raw `works` is not gameplay compatibility.

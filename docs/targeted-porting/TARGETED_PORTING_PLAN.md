@@ -10,6 +10,14 @@ ZIP. The [RLCraft report](RLCRAFT_COMPATIBILITY_REPORT.md) documents a blocked
 transfer and a 2.8.2 reference mismatch. RLCraft 2.9.3 Phase 1/2 are **incomplete**;
 there is no invented mod list or claim that the two versions are identical.
 
+The subsequent preparation authorized from `36fab19` is recorded in the
+[Windows candidate/local-inspector report](NEXT_PHASE_PREPARATION_REPORT.md).
+Use the [Windows RLCraft inspector guide](WINDOWS_RLCRAFT_INSPECTION.md) to return
+the actual 2.9.3 archive in bounded private parts, and the
+[real-world backup/load checklist](WINDOWS_BACKUP_ACCEPTANCE.md) for native
+Windows acceptance. Automated Windows candidate evidence does not complete
+RLCraft inventory or real gameplay. Stop before the next gameplay-mod port.
+
 Current engine/launcher boundary:
 
 - `upstream.lock.json` pins Horizon 0.7.6 at
@@ -60,7 +68,8 @@ separately in the inventory.
 ## Priority 1 — first bounded implementation
 
 Status: implemented as a launcher-side manual stopped-world backup and checksum
-verification, with fixture/source/frozen-Linux evidence. See the
+verification, with fixture/source/frozen-Linux and later native Windows CI
+evidence. See the [current preparation report](NEXT_PHASE_PREPARATION_REPORT.md),
 [implementation report](INITIAL_IMPLEMENTATION_REPORT.md) and
 [installation/test guide](TESTING_MANUAL_BACKUP.md). Native interactive/world-load
 acceptance is still open. The design/acceptance contract below remains its scope.
