@@ -33,12 +33,15 @@ migration does not change visibility, create a release or create a tag.
 
 | Target | Current evidence | Remaining acceptance |
 | --- | --- | --- |
-| Windows x64 | Source repository native CI; user-reported enabled launch, both recipes, +1 Armor equip and inventory persistence after full restart. Crafting/persistence reported in Survival and Creative | Remaining physical installation, preservation, failure and gameplay edge cases |
-| macOS Intel | Native source-repository DMG/architecture/helper checks and 68 frozen cases | **All physical gameplay NOT RUN** |
-| macOS Apple Silicon | Native source-repository DMG/architecture/helper checks and 68 frozen cases | **All physical gameplay NOT RUN** |
+| Windows x64 | Destination native CI: 415 source tests passed, 14 platform/input skips; 68/68 installed cases. Earlier user-reported launch, both recipes, +1 Armor and inventory persistence; crafting/persistence in Survival and Creative | Rebuilt candidate and remaining physical installation, preservation, failure and gameplay edge cases |
+| macOS Intel | Destination native DMG/architecture/helper checks; 426 source tests passed, 3 platform/input skips; 68/68 delivered cases | **All physical gameplay NOT RUN** |
+| macOS Apple Silicon | Destination native DMG/architecture/helper checks; 426 source tests passed, 3 platform/input skips; 68/68 delivered cases | **All physical gameplay NOT RUN** |
 
-Destination build results and exact asset hashes are recorded separately after
-migration CI finishes. The older Windows report belongs to source run
+Destination run [42144749724](https://github.com/Zeigen-ft/Herps-Launcher/actions/runs/42144749724)
+passed all three targets and release-file assembly. Download the
+[separate verified packages, guides and checksums](release/0.1.0/README.md);
+read the [final migration report](docs/migration/RELEASE_PREPARATION_REPORT.md).
+The older Windows report belongs to source run
 [42118750443](https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/42118750443).
 Source run [42129264888](https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/42129264888)
 passed all three platforms and 68/68 frozen cases per platform. These results do

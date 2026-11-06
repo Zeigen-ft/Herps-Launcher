@@ -38,10 +38,24 @@ Cold native builds have a longer timeout without selecting paid larger runners.
 
 ## Validation status
 
-Migration branch/PR and destination CI verification are being prepared. Until
-that validation passes, do not treat destination main or release files as complete.
-The post-build final report will be linked here with exact destination run,
-source/tree identity, asset links and independently verified hashes.
+[Migration PR #1](https://github.com/Zeigen-ft/Herps-Launcher/pull/1) was merged
+after destination native validation. Merge `568bcd9c5fd4e4a42a2269a49b65c6680503d224`
+has exactly the tested `ada1c0fcec013ec15d2e8bff865a8bbb1eb875eb` file tree and
+preserves both histories. Later changes add the read-only download exporter and
+final documentation/evidence; launcher/gameplay code and content are unchanged.
+
+Destination run [42144749724](https://github.com/Zeigen-ft/Herps-Launcher/actions/runs/42144749724)
+passed Windows x64, macOS Intel, macOS ARM64 and release assembly. Each delivered
+platform passed 68/68 frozen cases with zero skips. Source suites passed with
+14 Windows and 3-per-Mac platform/input skips; exact cases are recorded.
+
+Read the [final report](RELEASE_PREPARATION_REPORT.md),
+[machine-readable evidence](RELEASE_VERIFICATION.json) and
+[download index](../../release/0.1.0/README.md). All six separate download ZIPs
+and all 14 checksummed release files were independently verified. The original
+repository's working tree and remote branch heads remain unchanged. No release,
+tag or visibility change was made. This is a prepared prerelease candidate;
+stable public-release acceptance remains open.
 
 Source baseline: run 42129264888 passed Windows x64, macOS Intel and Apple Silicon,
 with 68/68 frozen cases each. User-reported physical Windows crafting/persistence
@@ -50,10 +64,13 @@ observations remain unresolved. All Mac physical gameplay remains NOT RUN.
 
 ## Owner: manually publish the prerelease
 
-1. Wait for a validated migration merge and the final destination CI evidence.
-2. Download/extract **Herps-Launcher-0.1.0-release-ready** from the exact successful
-   destination workflow run. Do not substitute source-repository artifacts or
-   another same-named build. Verify its `SHA256SUMS.txt` and provenance.
+1. Review the final report, known issues and licence/distribution gates.
+2. Download/extract the exact [separate exports](../../release/0.1.0/README.md),
+   or **Herps-Launcher-0.1.0-release-ready** from destination run 42144749724.
+   Do not substitute source-repository artifacts or another same-named build.
+   Verify its `SHA256SUMS.txt` and provenance. The separate guides ZIP contains
+   `release-files/`; use that folder's files. `EXPORT_VERIFICATION.json` is
+   additional export provenance, outside the original 15-file release set.
 3. In GitHub → **Zeigen-ft/Herps-Launcher → Releases → Draft a new release**,
    choose/create `v0.1.0` targeting the validated destination main commit. No tag
    or release is created by this automation.

@@ -1,0 +1,172 @@
+{
+  "schema": 1,
+  "repository": "Zeigen-ft/Herps-Launcher",
+  "version": "0.1.0",
+  "prerelease_candidate": true,
+  "native_build_source": "ada1c0fcec013ec15d2e8bff865a8bbb1eb875eb",
+  "native_run": 42144749724,
+  "export_run": 42169772706,
+  "export_workflow_source": "a7d42bc058890bc4842c56054cd870a87c59610f",
+  "release_created": false,
+  "tag_created": false,
+  "private_repository": true,
+  "release_file_count": 15,
+  "checksummed_file_count": 14,
+  "files": {
+    "Herps-Launcher-0.1.0-macOS-Intel.dmg": {
+      "sha256": "8803bae8124490ab69fbdb137222cef34cd01432ff5c1005b7dd13b29894867e",
+      "bytes": 166550044,
+      "artifact_id": 13480771423,
+      "artifact_member": "Herps-Launcher-0.1.0-macOS-Intel.dmg"
+    },
+    "Herps-Launcher-0.1.0-Windows-x64-Portable.zip": {
+      "sha256": "6442f72ec57b9237abb25a7e7da3ba8d450624d5680aa7ac08e133137c8c7942",
+      "bytes": 137733840,
+      "artifact_id": 13480746663,
+      "artifact_member": "Herps-Launcher-0.1.0-Windows-x64-Portable.zip"
+    },
+    "Herps-Launcher-0.1.0-Windows-x64-Setup.exe": {
+      "sha256": "f9e7bfbb6cf1fd374b222a41bf6f2a014da6b17bc30d01d05a5320e36c625a2c",
+      "bytes": 102636657,
+      "artifact_id": 13480642033,
+      "artifact_member": "Herps-Launcher-0.1.0-Windows-x64-Setup.exe"
+    },
+    "herspers_rl_chainmail-0.1.0.hmod": {
+      "sha256": "015c3d553a6a2bcfed4412559b9b83bc3ef65599d539a7686e65577ec4c5c346",
+      "bytes": 40002,
+      "artifact_id": 13480597213,
+      "artifact_member": "herspers_rl_chainmail-0.1.0.hmod"
+    },
+    "INSTALLATION.md": {
+      "sha256": "9d3fb1369a2c994f0a2b683f50bdf26a00efdade54bea43fef4b6b2ceeec66f6",
+      "bytes": 33905,
+      "artifact_id": 13480547286,
+      "artifact_member": "release-files/INSTALLATION.md"
+    },
+    "LICENSE": {
+      "sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986",
+      "bytes": 35149,
+      "artifact_id": 13480547286,
+      "artifact_member": "release-files/LICENSE"
+    },
+    "LICENSES.zip": {
+      "sha256": "1cf80a4f9ee276306348647f92f114e33c9bd81d66152caa016368cc7761c3b6",
+      "bytes": 501794,
+      "artifact_id": 13480547286,
+      "artifact_member": "release-files/LICENSES.zip"
+    },
+    "QUICK_START.md": {
+      "sha256": "71877d635ad2b60ab7a9f3b1c522eb94f29d4d641a41b1d71814082a6599a790",
+      "bytes": 4540,
+      "artifact_id": 13480547286,
+      "artifact_member": "release-files/QUICK_START.md"
+    },
+    "README.md": {
+      "sha256": "c4007da0c31fee3809c861eb13327ea4ccb0ae328d5e0ef8bf59fa9bb2b6b9cd",
+      "bytes": 5329,
+      "artifact_id": 13480547286,
+      "artifact_member": "release-files/README.md"
+    },
+    "RELEASE_MANIFEST.json": {
+      "sha256": "ff5be26f72b1860029523902d299fea7a73ab9462dd994a3c2ca49c76278d94e",
+      "bytes": 2860,
+      "artifact_id": 13480547286,
+      "artifact_member": "release-files/RELEASE_MANIFEST.json"
+    },
+    "RELEASE_NOTES.md": {
+      "sha256": "4769975b464c98e7386af7e99c7792447bbf54c91743f2c098f7d1587b5bca6c",
+      "bytes": 6326,
+      "artifact_id": 13480547286,
+      "artifact_member": "release-files/RELEASE_NOTES.md"
+    },
+    "RLCraft-2.9.3-Local-Inspector.zip": {
+      "sha256": "25dbf5eecd60507f353913a4e500d04b7edb5adacea11bb4500c6ab8d77ea34c",
+      "bytes": 26760,
+      "artifact_id": 13480547286,
+      "artifact_member": "release-files/RLCraft-2.9.3-Local-Inspector.zip"
+    },
+    "SHA256SUMS.txt": {
+      "sha256": "ef81b765046042fb3278462cb03e83b7bd80dcfe8e0db483ef2caaf6dfb3df8a",
+      "bytes": 1286,
+      "artifact_id": 13480547286,
+      "artifact_member": "release-files/SHA256SUMS.txt"
+    },
+    "THIRD_PARTY_NOTICES.md": {
+      "sha256": "31421f8a5adbf107d78ebe78294442d159024d06dc03f1bb2424ad7253c5ad1b",
+      "bytes": 2179,
+      "artifact_id": 13480547286,
+      "artifact_member": "release-files/THIRD_PARTY_NOTICES.md"
+    },
+    "Herps-Launcher-0.1.0-macOS-Apple-Silicon.dmg": {
+      "sha256": "bb4e7a0d5077d8230498195fdc7250fd243da5885f7eb39773739ff37449b891",
+      "bytes": 159407599,
+      "artifact_id": 13480492694,
+      "artifact_member": "Herps-Launcher-0.1.0-macOS-Apple-Silicon.dmg"
+    }
+  },
+  "download_artifacts": [
+    {
+      "id": 13480771423,
+      "name": "Herps-Launcher-0.1.0-macOS-Intel",
+      "bytes": 166550230,
+      "sha256": "4a2fc95351323ffad509ea0fb4964ef1b13c98b8a91b200725c99a481947585c",
+      "expires_at": "2027-02-04T05:40:10Z",
+      "url": "https://github.com/Zeigen-ft/Herps-Launcher/actions/runs/42169772706/artifacts/13480771423",
+      "verified": true
+    },
+    {
+      "id": 13480746663,
+      "name": "Herps-Launcher-0.1.0-Windows-x64-Portable",
+      "bytes": 137734044,
+      "sha256": "eb53dd729cd5616371b4c3862206e6f48beb200253b445a4670bda381d54b765",
+      "expires_at": "2027-02-04T05:40:10Z",
+      "url": "https://github.com/Zeigen-ft/Herps-Launcher/actions/runs/42169772706/artifacts/13480746663",
+      "verified": true
+    },
+    {
+      "id": 13480642033,
+      "name": "Herps-Launcher-0.1.0-Windows-x64-Setup",
+      "bytes": 102636855,
+      "sha256": "9b46025e7b7ebcfbe39ed58b28f99e56245722fd30938ed36d5348378eb8b24d",
+      "expires_at": "2027-02-04T05:40:10Z",
+      "url": "https://github.com/Zeigen-ft/Herps-Launcher/actions/runs/42169772706/artifacts/13480642033",
+      "verified": true
+    },
+    {
+      "id": 13480597213,
+      "name": "Herps-Launcher-0.1.0-Chainmail",
+      "bytes": 14083,
+      "sha256": "800f6a7af395f72b6f4a075c553194db315ce48179e4e3a8ca67ba105708d030",
+      "expires_at": "2027-02-04T05:40:10Z",
+      "url": "https://github.com/Zeigen-ft/Herps-Launcher/actions/runs/42169772706/artifacts/13480597213",
+      "verified": true
+    },
+    {
+      "id": 13480547286,
+      "name": "Herps-Launcher-0.1.0-Guides-Checksums-Notices",
+      "bytes": 512734,
+      "sha256": "0470f2929e960624becc1aa903ba3112b9b3a76f887b8b854e441989b255ae84",
+      "expires_at": "2027-02-04T05:40:10Z",
+      "url": "https://github.com/Zeigen-ft/Herps-Launcher/actions/runs/42169772706/artifacts/13480547286",
+      "verified": true
+    },
+    {
+      "id": 13480492694,
+      "name": "Herps-Launcher-0.1.0-macOS-Apple-Silicon",
+      "bytes": 159407801,
+      "sha256": "1e9264149d60c88bf2ee59b8a1b83a5cffc721a867435f55c0cfef55a7be59cf",
+      "expires_at": "2027-02-04T05:40:10Z",
+      "url": "https://github.com/Zeigen-ft/Herps-Launcher/actions/runs/42169772706/artifacts/13480492694",
+      "verified": true
+    }
+  ],
+  "combined_artifact": {
+    "id": 13474495737,
+    "name": "Herps-Launcher-0.1.0-release-ready",
+    "bytes": 518599788,
+    "sha256": "63f167633fb593f5574281f766ba8ed6663d2f4ffb3ce5678851d5fb29fa16ca",
+    "url": "https://github.com/Zeigen-ft/Herps-Launcher/actions/runs/42144749724/artifacts/13474495737"
+  },
+  "integrity": "All six export archives and every release-file checksum independently verified. The combined ZIP was fetched and checked by the read-only GitHub export job; local connector transfer of that large outer ZIP timed out.",
+  "access": "Sign into a GitHub account authorized for this private repository. Actions ZIP downloads expire; see expires_at. No permanent public release URL exists."
+}

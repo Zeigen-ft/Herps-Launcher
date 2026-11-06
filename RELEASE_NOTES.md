@@ -87,3 +87,17 @@ launcher code remains GPLv3. Horizon, Qt/PySide, the recipe source and dependenc
 retain their own notices. See `LICENSE`, `THIRD_PARTY_NOTICES.md` and `LICENSES.zip`.
 Historical security/distribution gates remain; this migration is not a new full
 native/transitive vulnerability or legal-clearance certification.
+
+## Destination build and downloads
+
+Destination run [42144749724](https://github.com/Zeigen-ft/Herps-Launcher/actions/runs/42144749724)
+passed all three native targets and release assembly from
+`ada1c0fcec013ec15d2e8bff865a8bbb1eb875eb`. Every delivered cohort passed 68/68
+with zero skips. The source suites passed 415/429 on Windows (14 platform/input
+skips) and 426/429 on each Mac (3 platform/input skips). These are automated checks.
+
+[Separate downloads and publishing instructions](https://github.com/Zeigen-ft/Herps-Launcher/blob/main/release/0.1.0/README.md)
+· [Exact prepared release notes and hashes](https://github.com/Zeigen-ft/Herps-Launcher/blob/main/release/0.1.0/RELEASE_NOTES.md)
+· [Verification report](https://github.com/Zeigen-ft/Herps-Launcher/blob/main/docs/migration/RELEASE_PREPARATION_REPORT.md).
+The prepared CI notes/guides and packages remain byte-identical to their checksum
+manifest; this repository page also links the final migration evidence.

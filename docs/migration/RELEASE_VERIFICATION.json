@@ -1,0 +1,262 @@
+{
+  "schema": 1,
+  "recorded_utc_date": "2026-11-06",
+  "repository": "Zeigen-ft/Herps-Launcher",
+  "source_repository": {
+    "repository": "Zeigen-ft/Herspers-Minecraft",
+    "feature_head": "962a1ada14ec553c540347c539c2b9c112c0270d",
+    "main_head": "8c35f56ad7e25b8035a8b1cbe57f2fe168e85550",
+    "working_tree_clean": true,
+    "remote_heads_unchanged": true
+  },
+  "migration": {
+    "pull_request": "https://github.com/Zeigen-ft/Herps-Launcher/pull/1",
+    "tested_head": "ada1c0fcec013ec15d2e8bff865a8bbb1eb875eb",
+    "merge_commit": "568bcd9c5fd4e4a42a2269a49b65c6680503d224",
+    "merge_tree_identical_to_tested_head": true,
+    "both_histories_preserved": true,
+    "runtime_and_content_unchanged_from_imported_source": true
+  },
+  "native_run": {
+    "id": 42144749724,
+    "url": "https://github.com/Zeigen-ft/Herps-Launcher/actions/runs/42144749724",
+    "source_commit": "ada1c0fcec013ec15d2e8bff865a8bbb1eb875eb",
+    "status": "success",
+    "jobs": {
+      "windows": 127653395212,
+      "macos-intel": 127653395473,
+      "macos-arm64": 127653395487,
+      "release-files": 127687294567
+    }
+  },
+  "platforms": {
+    "windows": {
+      "source_commit": "ada1c0fcec013ec15d2e8bff865a8bbb1eb875eb",
+      "platform": "Windows-2025Server-10.0.26100-SP0",
+      "architecture": "x86_64",
+      "files": {
+        "Herps-Launcher-0.1.0-Windows-x64-Setup.exe": {
+          "sha256": "f9e7bfbb6cf1fd374b222a41bf6f2a014da6b17bc30d01d05a5320e36c625a2c",
+          "bytes": 102636657,
+          "original_filename": "Herps-Launcher-0.1.0-Windows-x64-Setup.exe"
+        },
+        "Herps-Launcher-0.1.0-Windows-x64-Portable.zip": {
+          "sha256": "6442f72ec57b9237abb25a7e7da3ba8d450624d5680aa7ac08e133137c8c7942",
+          "bytes": 137733840,
+          "original_filename": "Herps-Launcher-0.1.0-x86_64-pc-windows-msvc-9skf846p.zip"
+        }
+      },
+      "frozen_tests": 68,
+      "frozen_skipped": [],
+      "interactive_verified": false,
+      "gameplay_verified": false,
+      "signing": "unsigned Windows installer"
+    },
+    "macos-intel": {
+      "source_commit": "ada1c0fcec013ec15d2e8bff865a8bbb1eb875eb",
+      "platform": "macOS-15.7.9-x86_64-i386-64bit",
+      "architecture": "x86_64",
+      "files": {
+        "Herps-Launcher-0.1.0-macOS-Intel.dmg": {
+          "sha256": "8803bae8124490ab69fbdb137222cef34cd01432ff5c1005b7dd13b29894867e",
+          "bytes": 166550044,
+          "original_filename": "Herps-Launcher-0.1.0-x86_64-apple-darwin-59dhn7xk.dmg"
+        }
+      },
+      "frozen_tests": 68,
+      "frozen_skipped": [],
+      "interactive_verified": false,
+      "gameplay_verified": false,
+      "signing": "ad hoc/development; not notarized"
+    },
+    "macos-arm64": {
+      "source_commit": "ada1c0fcec013ec15d2e8bff865a8bbb1eb875eb",
+      "platform": "macOS-15.8.2-arm64-arm-64bit",
+      "architecture": "arm64",
+      "files": {
+        "Herps-Launcher-0.1.0-macOS-Apple-Silicon.dmg": {
+          "sha256": "bb4e7a0d5077d8230498195fdc7250fd243da5885f7eb39773739ff37449b891",
+          "bytes": 159407599,
+          "original_filename": "Herps-Launcher-0.1.0-aarch64-apple-darwin-hgo0zqrd.dmg"
+        }
+      },
+      "frozen_tests": 68,
+      "frozen_skipped": [],
+      "interactive_verified": false,
+      "gameplay_verified": false,
+      "signing": "ad hoc/development; not notarized"
+    }
+  },
+  "original_artifact_downloads": [
+    {
+      "artifact": "Herps-Launcher-evidence-Windows-x86_64",
+      "sha256": "1a6519a6bfddde5a64a4c4e3117790cff9b7ac61bfb8376881c9f873751c2016",
+      "bytes": 677669,
+      "verified": true
+    },
+    {
+      "artifact": "Herps-Launcher-0.1.0-Windows-x86_64",
+      "sha256": "7f831173783c9572865bf65cb8e2548539c531a933bef63b21ab2bbad433a182",
+      "bytes": 238494001,
+      "verified": true
+    },
+    {
+      "artifact": "RLCraft-Chainmail-0.1.0-Windows-x86_64",
+      "sha256": "c9be6f0bf55b7593e2bc0665c6e21ff6a58fb86372f42b55aa01c99cb15e9eec",
+      "bytes": 15276,
+      "verified": true
+    },
+    {
+      "artifact": "Herps-Launcher-evidence-macOS-x86_64",
+      "sha256": "fe9e002c2608453352dec0eacf9f424ae39b2b699d78ae792d4c831e0f07f839",
+      "bytes": 208411,
+      "verified": true
+    },
+    {
+      "artifact": "RLCraft-Chainmail-0.1.0-macOS-x86_64",
+      "sha256": "1d40b60e215403a4cb33d898252579ecf247dd414a188904c58618f58286ca64",
+      "bytes": 14687,
+      "verified": true
+    },
+    {
+      "artifact": "Herps-Launcher-evidence-macOS-arm64",
+      "sha256": "9c241cd3a4610a0d8ebaaf8a9e4c3f530e2538e1c14b270e1bf068bf11f5bc57",
+      "bytes": 208434,
+      "verified": true
+    },
+    {
+      "artifact": "Herps-Launcher-0.1.0-macOS-x86_64",
+      "sha256": "74c08fefe4e0e852133ee7eb1c86a8146a3cc9ace9b22278dc0a0f18bdf09ca1",
+      "bytes": 143402168,
+      "verified": true
+    },
+    {
+      "artifact": "Herps-Launcher-0.1.0-macOS-arm64",
+      "sha256": "8d2d8ed86975c73cbff1bb7643d33f3cb00c2f31dee2dde99669774a65496de7",
+      "bytes": 136182194,
+      "verified": true
+    },
+    {
+      "artifact": "RLCraft-Chainmail-0.1.0-macOS-arm64",
+      "sha256": "ce80c8998ebcd2d4ea0c0f3bfda2ec166c3cfe66fb6bad97a9856f9cbb2d3161",
+      "bytes": 14687,
+      "verified": true
+    }
+  ],
+  "local_full_suite": {
+    "collected": 429,
+    "passed": 414,
+    "skipped": 15,
+    "failures": 0,
+    "note": "Real pinned backend and offscreen Qt; platform/input-dependent skips, not physical gameplay."
+  },
+  "native_source_suites": {
+    "windows": {
+      "collected": 429,
+      "passed": 415,
+      "skipped": 14,
+      "failures": 0,
+      "skip_cases": [
+        "test_clean_launch_uses_separate_game_folder_and_original_binary (test_herps_launcher.LauncherTests.test_clean_launch_uses_separate_game_folder_and_original_binary) ... skipped 'Owned POSIX process fixture'",
+        "test_failed_resource_check_does_not_start_game_and_releases_lock (test_herps_launcher.LauncherTests.test_failed_resource_check_does_not_start_game_and_releases_lock) ... skipped 'Owned POSIX process fixture'",
+        "test_play_real_child_logs_exit_and_relaunch_without_touching_saves (test_herps_launcher.LauncherTests.test_play_real_child_logs_exit_and_relaunch_without_touching_saves) ... skipped 'Owned POSIX child fixture; Windows CI covers native tests separately'",
+        "test_supplied_apk (test_inspect_apk.ApkTests.test_supplied_apk) ... skipped 'Set HORIZON_TEST_APK to run supplied-APK integration'",
+        "test_actual_dialog_scripts_compile_on_mac (test_macos_launcher.MacLauncherTests.test_actual_dialog_scripts_compile_on_mac) ... skipped 'Mac Bash behavior tests need Unix paths and executable scripts'",
+        "test_dialog_cancellation_preserves_original_preparer_failure (test_macos_launcher.MacLauncherTests.test_dialog_cancellation_preserves_original_preparer_failure) ... skipped 'Mac Bash behavior tests need Unix paths and executable scripts'",
+        "test_failed_resource_check_prints_error_and_opens_preparation (test_macos_launcher.MacLauncherTests.test_failed_resource_check_prints_error_and_opens_preparation) ... skipped 'Mac Bash behavior tests need Unix paths and executable scripts'",
+        "test_game_failure_surfaces_log_and_preserves_client_status (test_macos_launcher.MacLauncherTests.test_game_failure_surfaces_log_and_preserves_client_status) ... skipped 'Mac Bash behavior tests need Unix paths and executable scripts'",
+        "test_non_mac_host_is_rejected_before_creating_player_data (test_macos_launcher.MacLauncherTests.test_non_mac_host_is_rejected_before_creating_player_data) ... skipped 'Mac Bash behavior tests need Unix paths and executable scripts'",
+        "test_open_failure_preserves_preparer_error_and_prints_manual_path (test_macos_launcher.MacLauncherTests.test_open_failure_preserves_preparer_error_and_prints_manual_path) ... skipped 'Mac Bash behavior tests need Unix paths and executable scripts'",
+        "test_prepared_resources_launch_client_with_literal_arguments_and_profile (test_macos_launcher.MacLauncherTests.test_prepared_resources_launch_client_with_literal_arguments_and_profile) ... skipped 'Mac Bash behavior tests need Unix paths and executable scripts'",
+        "test_show_resource_log_uses_exact_path_without_starting_game (test_macos_launcher.MacLauncherTests.test_show_resource_log_uses_exact_path_without_starting_game) ... skipped 'Mac Bash behavior tests need Unix paths and executable scripts'",
+        "test_case_collision_is_rejected (test_package_bedrock_windows.BedrockPackagingTests.test_case_collision_is_rejected) ... skipped 'Filesystem cannot construct distinct case-colliding files'",
+        "test_linked_profile_and_settings_preserve_external_files (test_rlcraft_chainmail.ChainmailTests.test_linked_profile_and_settings_preserve_external_files) ... skipped 'Windows link guards are exercised with junctions separately'"
+      ]
+    },
+    "macos-arm64": {
+      "collected": 429,
+      "passed": 426,
+      "skipped": 3,
+      "failures": 0,
+      "skip_cases": [
+        "test_supplied_apk (test_inspect_apk.ApkTests.test_supplied_apk) ... skipped 'Set HORIZON_TEST_APK to run supplied-APK integration'",
+        "test_case_collision_is_rejected (test_package_bedrock_windows.BedrockPackagingTests.test_case_collision_is_rejected) ... skipped 'Filesystem cannot construct distinct case-colliding files'",
+        "test_windows_junction_cannot_redirect_installation (test_rlcraft_chainmail.ChainmailTests.test_windows_junction_cannot_redirect_installation) ... skipped 'Windows junction behavior requires Windows'"
+      ]
+    },
+    "macos-intel": {
+      "collected": 429,
+      "passed": 426,
+      "skipped": 3,
+      "failures": 0,
+      "skip_cases": [
+        "test_supplied_apk (test_inspect_apk.ApkTests.test_supplied_apk) ... skipped 'Set HORIZON_TEST_APK to run supplied-APK integration'",
+        "test_case_collision_is_rejected (test_package_bedrock_windows.BedrockPackagingTests.test_case_collision_is_rejected) ... skipped 'Filesystem cannot construct distinct case-colliding files'",
+        "test_windows_junction_cannot_redirect_installation (test_rlcraft_chainmail.ChainmailTests.test_windows_junction_cannot_redirect_installation) ... skipped 'Windows junction behavior requires Windows'"
+      ]
+    }
+  },
+  "export": {
+    "run": 42169772706,
+    "job": 127734611277,
+    "source_commit": "a7d42bc058890bc4842c56054cd870a87c59610f",
+    "status": "success",
+    "native_binaries_rebuilt": false,
+    "verified_release_checksums": 14,
+    "verified_export_archive_hashes": 6
+  },
+  "post_merge_portable_runs": {
+    "migration_merge": 42169516304,
+    "export_workflow": 42169744482,
+    "status": "success"
+  },
+  "physical_windows": {
+    "kind": "user-reported; not observed by Codex",
+    "source_repository": "Zeigen-ft/Herspers-Minecraft",
+    "run": 42118750443,
+    "source_commit": "8fb33fb04b6a3a7dd94d83ca81b08267efe7d4c9",
+    "crafting_and_persistence_modes": [
+      "Survival",
+      "Creative"
+    ],
+    "passed": [
+      "enabled launch",
+      "four nuggets to one plate",
+      "four plates to chainmail boots",
+      "boots equipped; +1 Armor",
+      "plate and boots remain after full game and launcher restart in the same world"
+    ],
+    "unresolved_observations": [
+      "earlier loading-logo stall",
+      "initially empty crafting output"
+    ],
+    "cause_or_fix_verified": false,
+    "new_native_assets_physically_accepted": false
+  },
+  "macos_physical_gameplay": "NOT RUN",
+  "unreported_windows_edge_cases": "NOT RUN",
+  "unsupported": [
+    "full RLCraft/FunCraft compatibility",
+    "original Forge/Fabric JAR execution",
+    "Java bridges",
+    "Java Mods Build/Test",
+    "whole-Modpack Play",
+    "Reskillable Defense gate",
+    "Forge-save migration",
+    "verified missing-content recovery"
+  ],
+  "failures_and_limitations": [
+    "No destination application/build/test failure observed in the passing native run; source-suite platform/input skips are listed below.",
+    "Combined 518599788-byte connector download timed out twice; direct redirected CLI download returned HTTP 403. A read-only GitHub export job retrieved the same exact artifact and verified all files, and six smaller exports were independently downloaded and hashed.",
+    "Two local export downloads were interrupted by workspace disk exhaustion; only redundant task caches and duplicate reconstruction files were removed, then both downloads completed and passed hashes.",
+    "Native files, guides, notices and release manifest match; auxiliary inspector receipt records the different local merge HEAD and ordering, changing its ZIP and appended release-notes hash. Only the original CI files are selected for distribution; no bit-for-bit reproducibility claim.",
+    "One local YAML validation attempt used a venv without PyYAML; host Python parsed the workflow and ran the actual-file validator successfully.",
+    "Experimental shader/legacy product jobs intentionally did not run; no shader, Bedrock or unrelated OS improvement is claimed.",
+    "Windows installer unsigned; Mac development/ad hoc signatures, not notarized. No signing credentials or new paid services used.",
+    "Historical bounded dependency review is retained; complete current native/transitive vulnerabilities, Qt licensing/corresponding source and distribution risk disposition remain gates.",
+    "Private repository, Actions artifact expiry, missing native manual acceptance and unmeasured hardware minima prevent a stable public-release readiness claim."
+  ],
+  "release_created": false,
+  "tag_created": false,
+  "repository_visibility_changed": false
+}
