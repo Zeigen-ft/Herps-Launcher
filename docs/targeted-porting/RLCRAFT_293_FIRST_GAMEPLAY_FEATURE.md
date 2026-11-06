@@ -113,5 +113,5 @@ major engine change, stop for approval; do not hide the limitation or discard
 data to pass. Parsing/registry fixtures, successful packaging and synthetic files
 cannot substitute for real crafting and world-load observations.
 
-Until that evidence exists, keep this feature experimental/unverified and the
+Until that evidence exists, keep this feature experimental/partially verified and the
 original whole-mod row BLOCKED. No complete RLCraft acceptance is implied.

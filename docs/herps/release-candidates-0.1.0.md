@@ -5,11 +5,12 @@ Updated **2026-11-06, Asia/Singapore**. Branch:
 
 ## Release-readiness assessment
 
-The first small RLCraft-inspired gameplay replacement has **user-reported
-physical Windows evidence in both Survival and Creative**: enabled launch,
-both recipes, boots equipped with **+1 Armor**, and both items retained after
+The first small RLCraft-inspired gameplay replacement has **five user-reported
+physical Windows checks PASS**: enabled launch, both recipes, boots equipped
+with **+1 Armor**, and both items retained after
 completely closing/restarting the game and launcher and reopening the same
-world. This report is tied to [Windows run 42118750443](https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/42118750443)
+world. Crafting and persistence were confirmed in **both Survival and Creative**.
+This report is tied to [Windows run 42118750443](https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/42118750443)
 at `8fb33fb04b6a3a7dd94d83ca81b08267efe7d4c9`, not every subsequent build.
 See [exact physical/automated evidence and hashes](../targeted-porting/RLCRAFT_CHAINMAIL_VERIFICATION.md).
 
@@ -24,7 +25,8 @@ documentation/candidate preparation step claims no new gameplay fix.
 | macOS Intel | Gameplay **NOT RUN** | Native artifact verification and full physical acceptance required |
 | macOS Apple Silicon ARM64 | Gameplay **NOT RUN** | Native artifact verification and full physical acceptance required; distinguish runner OS from deployment support |
 
-Unreported physical cases remain **NOT RUN**: wrong inputs/layouts and offsets,
+Unreported physical cases remain **NOT RUN**: clean resource preparation,
+wrong inputs/layouts and offsets,
 shift/repeated inventory accounting and duplication, chest persistence,
 durability, backup restore, cross-profile hash preservation, clean install/
 upgrade/removal, failure recovery, developer-tools-absent setup and explicit
@@ -55,16 +57,48 @@ historical; no fresh all-dependency vulnerability clearance is asserted.
 
 ## Candidate downloads and checksums
 
-Three-platform builds are being prepared from one documentation update with
-gameplay/application code unchanged from `8fb33fb`. **Pending builds have no
-approved download/hash yet.** The completed table will be on the feature branch:
-https://github.com/Zeigen-ft/Herspers-Minecraft/blob/feature/herps-java-compatibility/docs/herps/release-candidates-0.1.0.md
+Three fresh candidates completed successfully in [run 42129264888](https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/42129264888) at
+**`5bb63ec18088f2c7ae22b11bd63c7f092d91a6ff`**. Gameplay, content, engine inputs and build code are unchanged
+from physically tested source `8fb33fb04b6a3a7dd94d83ca81b08267efe7d4c9`; only documentation changed
+before this build. New package hashes differ and have their own CI evidence.
 
-| Target | Build/download | Package SHA-256 | Native verification |
+Every candidate/evidence/content outer ZIP and all inner installer/portable/DMG
+members were downloaded and independently SHA-256 hashed. Values match GitHub
+artifact digests, `candidate.json`, `SHA256SUMS` and native lifecycle receipts.
+The checksums below refer to the **inner installer/DMG**, not the outer download.
+
+| Target | Successful download and exact inner filename | Inner SHA-256 | Automated verification |
 | --- | --- | --- | --- |
-| Windows x64 | PENDING new candidate; original verified run linked above | PENDING | Original: 421 source cases, 14 platform skips; 68 installed cases passed without skips |
-| macOS Intel x86_64 | PENDING | PENDING | NOT RUN for this candidate |
-| macOS Apple Silicon ARM64 | PENDING | PENDING | NOT RUN for this candidate |
+| Windows x64 | [Herps-Launcher-0.1.0-Windows-x86_64](https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/42129264888/artifacts/13463659146) — `Herps-Launcher-0.1.0-Windows-x64-Setup.exe` | `f05dfee0ad34f48a84ed79a3eb3a4108753302c0ee31170b243fbbef99bef68e` | 407/421 source passed; 14 recorded skips; 68/68 frozen passed |
+| macOS Intel x86_64 | [Herps-Launcher-0.1.0-macOS-x86_64](https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/42129264888/artifacts/13464239628) — `Herps-Launcher-0.1.0-x86_64-apple-darwin-bc_livxs.dmg` | `2a677ae88a8eca79984798a2bf8114c57c49fd9f903dde642cc10bfcb4a043f2` | 418/421 source passed; 3 recorded skips; 68/68 frozen passed |
+| macOS Apple Silicon ARM64 | [Herps-Launcher-0.1.0-macOS-arm64](https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/42129264888/artifacts/13463561293) — `Herps-Launcher-0.1.0-aarch64-apple-darwin-biioohlp.dmg` | `87d138d92223818e1be16dc5de6829211c7a56fcb11c64ed383c1b99d9d51609` | 418/421 source passed; 3 recorded skips; 68/68 frozen passed |
+
+[Complete checksums, including the Windows portable ZIP](RELEASE-CANDIDATES-SHA256SUMS.txt).
+[Machine-readable provenance, outer-artifact hashes, skip cases and receipts](release-candidates-0.1.0-evidence.json).
+
+All three delivered launchers opened seven pages, ran bundled helpers and the
+68-case frozen cohort with Rust/Cargo absent from PATH. The three chainmail
+and three FunCraft backup UI cases are required. macOS architecture, DMG integrity,
+strict/deep ad hoc signatures, copied-app execution and support-data preservation
+passed. Windows installer path rejection, replacement/removal preservation and
+owned native-mod compile/selection/rollback passed. These use owned fixtures;
+they do not establish physical installation or real Mac gameplay. The Windows
+native recipe probe passed ten synthetic-resource cases; no Mac-specific recipe
+matcher/gameplay run is claimed by that Windows result.
+
+Native CI platforms: Windows **Windows-2025Server-10.0.26100-SP0**;
+Intel **macOS-15.7.9-x86_64-i386-64bit**;
+Apple Silicon **macOS-15.8.2-arm64-arm-64bit**.
+Mac source skips were the supplied APK, case-colliding filesystem fixture and
+Windows junction case; Windows skip IDs/reasons are in the evidence index.
+All three frozen suites had zero skips. Source skip IDs/reasons remain in the
+evidence index and do not count as physical testing. No notarization was requested. Artifacts expire; verify this
+exact run and hashes before use, rather than substituting a same-named artifact.
+
+This final post-build table is newer than the build-time documentation inside
+the packages. That documentation points to this feature-branch page because
+artifact IDs/hashes exist only after upload. This post-build metadata update changes documentation only; the tested build
+source and downloaded files remain identified by their recorded commits/hashes.
 
 Architecture-independent content: `herspers_rl_chainmail-0.1.0.hmod`, 40,002 bytes,
 SHA-256 `015c3d553a6a2bcfed4412559b9b83bc3ef65599d539a7686e65577ec4c5c346`.

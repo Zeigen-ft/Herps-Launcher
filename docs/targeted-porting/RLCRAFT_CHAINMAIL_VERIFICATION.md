@@ -5,7 +5,8 @@ Updated **2026-11-06, Asia/Singapore**. Branch:
 `4520bb66a13257ac45cc4de8a7de1b6c67718eff`; verified gameplay implementation:
 `8fb33fb04b6a3a7dd94d83ca81b08267efe7d4c9`.
 
-**Five user-reported physical Windows checks PASS, in Survival and Creative.**
+**Five user-reported physical Windows checks PASS. Crafting and inventory
+persistence were confirmed in both Survival and Creative.**
 Complete native acceptance and all Mac gameplay remain open. See the
 [release notes, current candidate hashes and installation instructions](../herps/release-candidates-0.1.0.md).
 
@@ -94,7 +95,8 @@ for newly prepared candidates and their own provenance/checksums.
 
 ## Remaining physical cases
 
-**NOT RUN:** all invalid ingredients/layouts/offsets, exact repeated/shift-click
+**NOT RUN:** clean resource preparation from official matching files, all
+invalid ingredients/layouts/offsets, exact repeated/shift-click
 consumption and duplication, chest persistence, armor damage/durability,
 cross-profile/save/backup hash preservation, physical backup restoration,
 clean installation/upgrade/removal, missing-content/crash/disk/lock recovery,
@@ -133,3 +135,18 @@ stay disabled. FunCraft's manual backup is a separate small replacement;
 **Internal candidates only; public release not approved.** The two unresolved
 observations, remaining physical cases and security/distribution gates remain.
 No main merge, tag, new engine feature or public release is included.
+
+## Fresh three-platform internal candidate set
+
+[Run 42129264888](https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/42129264888) completed Windows x64, macOS 15 Intel and macOS 15
+Apple Silicon candidates at `5bb63ec18088f2c7ae22b11bd63c7f092d91a6ff`. All packages/evidence were downloaded
+and independently hashed. Each delivered launcher passed the 68-case frozen
+cohort with no developer Rust tools on PATH; full per-platform counts, skipped
+cases, artifact IDs, architecture and install instructions are in the
+[release notes](../herps/release-candidates-0.1.0.md) and
+[evidence index](../herps/release-candidates-0.1.0-evidence.json).
+
+Application/content/build code is unchanged from `8fb33fb04b6a3a7dd94d83ca81b08267efe7d4c9`. These
+are fresh CI-verified candidates, not a transfer of the user's physical report
+to new hashes or to Macs. All Mac gameplay and unreported physical cases remain
+NOT RUN. The earlier stall/empty-output observations remain unresolved.

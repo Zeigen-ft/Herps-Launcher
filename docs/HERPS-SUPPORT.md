@@ -10,8 +10,8 @@ launcher's support floor. Bedrock is a separate product.
 | --- | --- | --- |
 | Windows x64 | Windows 11 is the primary candidate target | Native CI/installer checks passed; user reports enabled launch, plate/boots crafting, +1 Armor equip and inventory persistence in Survival/Creative on run 42118750443. Full clean-machine/edge acceptance pending |
 | Windows 10 x64 | Legacy experimental compatibility only | No Windows 10-specific interactive evidence; not stable-supported |
-| Mac ARM64 | macOS 15 baseline; macOS 26 experimental fallback target | 15 has Phase 5C evidence; Phase 5D hosted capacity blocked. 26.6.2 automated verification passed separately; interactive acceptance remains open |
-| Mac Intel x86_64 | macOS 15 is the current candidate target | Native delivered-DMG automation; physical interactive acceptance pending |
+| Mac ARM64 | macOS 15 baseline; macOS 26 experimental fallback target | macOS 15.8.2 ARM64 delivered-DMG CI and 68 frozen cases passed in run 42129264888; physical gameplay remains NOT RUN. Historical 26.6.2 evidence remains experimental |
+| Mac Intel x86_64 | macOS 15 is the current candidate target | macOS 15.7.9 x86_64 delivered-DMG CI and 68 frozen cases passed in run 42129264888; physical gameplay remains NOT RUN |
 | macOS 12–14 | Compatibility targets, experimental until individually tested | Qt 6.8 requires macOS 12+; CI on 15 does not certify older OS versions |
 | macOS newer than 15 | Experimental until tested and explicitly added to the matrix | Newer hardware/OS is useful additional evidence, not proof of macOS 15 acceptance |
 | macOS 11 and older | Launcher unsupported | Game-only package minimum does not establish launcher compatibility |

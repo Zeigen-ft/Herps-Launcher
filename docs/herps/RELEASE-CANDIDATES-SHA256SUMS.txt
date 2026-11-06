@@ -1,0 +1,5 @@
+87d138d92223818e1be16dc5de6829211c7a56fcb11c64ed383c1b99d9d51609  Herps-Launcher-0.1.0-aarch64-apple-darwin-biioohlp.dmg
+2a677ae88a8eca79984798a2bf8114c57c49fd9f903dde642cc10bfcb4a043f2  Herps-Launcher-0.1.0-x86_64-apple-darwin-bc_livxs.dmg
+f05dfee0ad34f48a84ed79a3eb3a4108753302c0ee31170b243fbbef99bef68e  Herps-Launcher-0.1.0-Windows-x64-Setup.exe
+1cb19c59497f7c5acecae2df5663f00cb461a2829deafa8a80f1cf5e6157eee2  Herps-Launcher-0.1.0-x86_64-pc-windows-msvc-dg5uq_qt.zip
+015c3d553a6a2bcfed4412559b9b83bc3ef65599d539a7686e65577ec4c5c346  herspers_rl_chainmail-0.1.0.hmod

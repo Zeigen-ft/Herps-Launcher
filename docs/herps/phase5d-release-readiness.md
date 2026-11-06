@@ -31,7 +31,7 @@ Baseline: `4bcb4564abae7cbeb12f8f1645dd58ae858c5339` on
 not approval for a stable public release. Interactive acceptance and actual
 Minecraft gameplay are not established by automated tests.
 
-## Assessment summary
+## Historical Phase 5D assessment summary
 
 | Target | Automated result | Native interactive / gameplay |
 | --- | --- | --- |
