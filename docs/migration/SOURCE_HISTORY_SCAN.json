@@ -1,0 +1,9 @@
+{
+  "source_commit": "962a1ada14ec553c540347c539c2b9c112c0270d",
+  "commits": 74,
+  "history_blobs_scanned": 430,
+  "largest_blob_bytes": 802121,
+  "forbidden_binary_paths": [],
+  "high_confidence_secret_findings": [],
+  "scope": "All blobs reachable from the verified source branch; high-confidence patterns and binary-extension inventory, not a complete security certification."
+}

@@ -8,20 +8,21 @@ on:
         options: [all, windows, macos-arm64, macos-x64, macos-arm64-26]
         default: all
   pull_request:
-    paths: ['content/**', 'tools/build_rlcraft_chainmail.py', 'tools/verify_rlcraft_chainmail.py', 'herps_launcher/**', 'tools/package_herps.py', 'tools/package_macos.py', 'tools/package_windows.py', 'tools/prepare_upstream.py', 'tools/verify_herps*.py', 'tools/release_evidence.py', 'tools/windows_installer.py', 'tools/smoke_herps_native.py', 'tools/ci_run.py', 'tools/inspect_targeted_packs.py', 'tools/smoke_targeted_backup.py', 'tools/inspect_rlcraft_293.py', 'tools/package_rlcraft_inspector.py', 'packaging/**', 'tests/**', 'scripts/build_*.sh', 'scripts/build_*.ps1', 'patches/**', 'upstream.lock.json', 'docs/**', 'licenses/**', 'LICENSE', '.github/workflows/herps-launcher.yml']
+    paths: ['README.md', 'INSTALLATION.md', 'QUICK_START.md', 'RELEASE_NOTES.md', 'THIRD_PARTY_NOTICES.md', 'tools/prepare_launcher_release.py', 'content/**', 'tools/build_rlcraft_chainmail.py', 'tools/verify_rlcraft_chainmail.py', 'herps_launcher/**', 'tools/package_herps.py', 'tools/package_macos.py', 'tools/package_windows.py', 'tools/prepare_upstream.py', 'tools/verify_herps*.py', 'tools/release_evidence.py', 'tools/windows_installer.py', 'tools/smoke_herps_native.py', 'tools/ci_run.py', 'tools/inspect_targeted_packs.py', 'tools/smoke_targeted_backup.py', 'tools/inspect_rlcraft_293.py', 'tools/package_rlcraft_inspector.py', 'packaging/**', 'tests/**', 'scripts/build_*.sh', 'scripts/build_*.ps1', 'patches/**', 'upstream.lock.json', 'docs/**', 'licenses/**', 'LICENSE', '.github/workflows/herps-launcher.yml']
   push:
     branches: [main, feature/herps-launcher-cross-platform]
-    paths: ['content/**', 'tools/build_rlcraft_chainmail.py', 'tools/verify_rlcraft_chainmail.py', 'herps_launcher/**', 'tools/package_herps.py', 'tools/package_macos.py', 'tools/package_windows.py', 'tools/prepare_upstream.py', 'tools/verify_herps*.py', 'tools/release_evidence.py', 'tools/windows_installer.py', 'tools/smoke_herps_native.py', 'tools/ci_run.py', 'tools/inspect_targeted_packs.py', 'tools/smoke_targeted_backup.py', 'tools/inspect_rlcraft_293.py', 'tools/package_rlcraft_inspector.py', 'packaging/**', 'tests/**', 'scripts/build_*.sh', 'scripts/build_*.ps1', 'patches/**', 'upstream.lock.json', 'docs/**', 'licenses/**', 'LICENSE', '.github/workflows/herps-launcher.yml']
+    paths: ['README.md', 'INSTALLATION.md', 'QUICK_START.md', 'RELEASE_NOTES.md', 'THIRD_PARTY_NOTICES.md', 'tools/prepare_launcher_release.py', 'content/**', 'tools/build_rlcraft_chainmail.py', 'tools/verify_rlcraft_chainmail.py', 'herps_launcher/**', 'tools/package_herps.py', 'tools/package_macos.py', 'tools/package_windows.py', 'tools/prepare_upstream.py', 'tools/verify_herps*.py', 'tools/release_evidence.py', 'tools/windows_installer.py', 'tools/smoke_herps_native.py', 'tools/ci_run.py', 'tools/inspect_targeted_packs.py', 'tools/smoke_targeted_backup.py', 'tools/inspect_rlcraft_293.py', 'tools/package_rlcraft_inspector.py', 'packaging/**', 'tests/**', 'scripts/build_*.sh', 'scripts/build_*.ps1', 'patches/**', 'upstream.lock.json', 'docs/**', 'licenses/**', 'LICENSE', '.github/workflows/herps-launcher.yml']
 permissions:
   contents: read
 jobs:
   desktop:
+    if: ${{ github.event_name != 'push' || github.repository == 'Zeigen-ft/Herspers-Minecraft' }}
     strategy:
       fail-fast: false
       matrix:
         include: ${{ fromJSON(inputs.platform == 'macos-arm64-26' && '[{"os":"macos-26","arch":"arm64","python_arch":"arm64"}]' || inputs.platform == 'windows' && '[{"os":"windows-latest","arch":"x86_64","python_arch":"x64"}]' || inputs.platform == 'macos-arm64' && '[{"os":"macos-15","arch":"arm64","python_arch":"arm64"}]' || inputs.platform == 'macos-x64' && '[{"os":"macos-15-intel","arch":"x86_64","python_arch":"x64"}]' || '[{"os":"windows-latest","arch":"x86_64","python_arch":"x64"},{"os":"macos-15","arch":"arm64","python_arch":"arm64"},{"os":"macos-15-intel","arch":"x86_64","python_arch":"x64"}]') }}
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 100
+    timeout-minutes: 180
     env:
       CARGO_BUILD_JOBS: '3'
       QT_QPA_PLATFORM: offscreen
@@ -31,6 +32,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -209,3 +211,41 @@ jobs:
             dist/herps/**/package.json
             dist/herps/installed-launcher-smoke.json
           if-no-files-found: warn
+
+  release-files:
+    name: Prepare files for manual prerelease publication
+    needs: desktop
+    if: ${{ needs.desktop.result == 'success' && (github.event_name == 'pull_request' || inputs.platform == 'all') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Download real native packages without merging their receipt paths
+        uses: actions/download-artifact@v4
+        with:
+          pattern: Herps-Launcher-0.1.0-*
+          path: distribution-inputs
+      - name: Download native verification evidence
+        uses: actions/download-artifact@v4
+        with:
+          pattern: Herps-Launcher-evidence-*
+          path: distribution-inputs
+      - name: Download reviewed native content
+        uses: actions/download-artifact@v4
+        with:
+          pattern: RLCraft-Chainmail-0.1.0-*
+          path: distribution-inputs
+      - name: Verify and prepare manual release assets and guides
+        run: python tools/prepare_launcher_release.py --inputs distribution-inputs --output dist/release-ready --expected-source '${{ github.event.pull_request.head.sha || github.sha }}'
+      - name: Upload complete release-ready files without publishing a release
+        uses: actions/upload-artifact@v4
+        with:
+          name: Herps-Launcher-0.1.0-release-ready
+          path: dist/release-ready/
+          if-no-files-found: error

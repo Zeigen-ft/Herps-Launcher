@@ -18,7 +18,9 @@ class ReleaseEvidenceTests(unittest.TestCase):
             self.assertIn("docs/HERPS-LAUNCHER.md", (output / 'START-HERE.txt').read_text())
             for name in ('docs/HERPS-LAUNCHER.md', 'docs/HERPS-SUPPORT.md',
                          'docs/herps/native-acceptance.md', 'docs/herps/release-security.md',
-                         'licenses/Qt-PySide-NOTICE.md', 'LICENSE-HERPS.txt'):
+                         'licenses/Qt-PySide-NOTICE.md', 'LICENSE-HERPS.txt',
+                         'INSTALLATION.md', 'QUICK_START.md', 'RELEASE_NOTES.md',
+                         'THIRD_PARTY_NOTICES.md'):
                 self.assertTrue((output / name).is_file(), name)
 
     def test_resolved_inventory_preserves_qt_notices_despite_distribution_name_normalization(self):

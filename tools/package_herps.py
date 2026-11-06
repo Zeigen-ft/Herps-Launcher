@@ -140,13 +140,17 @@ def copy_documentation(output: Path):
     """Keep relative links valid in the delivered offline documentation."""
     shutil.copytree(ROOT / "docs", output / "docs")
     shutil.copytree(ROOT / "licenses", output / "licenses")
-    shutil.copy2(ROOT / "README.md", output / "README.md")
+    for name in ("README.md", "INSTALLATION.md", "QUICK_START.md", "RELEASE_NOTES.md", "THIRD_PARTY_NOTICES.md"):
+        shutil.copy2(ROOT / name, output / name)
+    shutil.copy2(ROOT / "upstream.lock.json", output / "upstream.lock.json")
+    shutil.copytree(ROOT / "content/rlcraft_chainmail", output / "content/rlcraft_chainmail")
     shutil.copy2(ROOT / "LICENSE", output / "LICENSE")
     shutil.copy2(ROOT / "LICENSE", output / "LICENSE-HERPS.txt")
     for source, destination in (("HERPS-LAUNCHER.md", "START-HERE.txt"),
                                 ("herps/java-mods.md", "JAVA-MODS.txt"),
                                 ("HERPS-SUPPORT.md", "SUPPORT.md")):
         (output / destination).write_text(
+            ("Start with QUICK_START.md; full user guide: INSTALLATION.md.\n" if destination == "START-HERE.txt" else "") +
             f"Herps Launcher candidate documentation: docs/{source}\n"
             "Internal verification build; not a stable public release.\n", encoding="utf-8")
     for name in ("Horizon-LICENSE.txt", "Horizon-THIRD_PARTY_NOTICES.md"):
