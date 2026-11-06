@@ -1,0 +1,24 @@
+--- a/crates/horizon-client/src/game/frames.rs
++++ b/crates/horizon-client/src/game/frames.rs
+@@ -520,17 +520,21 @@
+                 Some(&owner),
+                 id as i32,
+             );
++            self.mark_rendered_item(out.len(), &stack.item);
+             self.submit_item_world(
+                 &state,
+                 m,
+                 horizon_client::block_entity_render::vertex_light(light),
+                 out,
+             );
++            self.mark_rendered_item(out.len(), "");
+             self.cull_entity_vertices(out, entity_start);
+         }
+         for (id, m, light) in maps {
+             let entity_start = out.len();
++            self.mark_rendered_item(out.len(), "minecraft:filled_map");
+             self.map_vertices(id, true, m, light, out);
++            self.mark_rendered_item(out.len(), "");
+             self.cull_entity_vertices(out, entity_start);
+         }
+     }

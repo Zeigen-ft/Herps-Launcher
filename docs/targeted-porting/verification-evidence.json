@@ -1,0 +1,227 @@
+{
+  "schema": 1,
+  "date": "2026-11-05",
+  "timezone": "Asia/Singapore",
+  "baseline": "3112e32346999e6326af93e7cde804a41b847ace",
+  "inventory_commit": "038f9f4378def1cde7f5c37c6e62b0a1d87600ad",
+  "implementation_commit": "018490526da46b607f6cec46d762a825e7fecc27",
+  "fun_inventory_sha256": "613851b5c2f8370371f0b304d8752d2c584b3f82ccfb6565044bfd0fa9641095",
+  "source_tests": {
+    "platform": "Linux",
+    "run": 376,
+    "passed": 362,
+    "skipped": 14,
+    "failures": 0,
+    "errors": 0,
+    "log_sha256": "0bc696ed100cbbb2540b48895d66c06c0eeb655cd944a87530ce8cac3c4284a2",
+    "skip_cases": [
+      {
+        "id": "test_inspect_apk.ApkTests.test_supplied_apk",
+        "reason": "Set HORIZON_TEST_APK to run supplied-APK integration"
+      },
+      {
+        "id": "test_macos_launcher.MacLauncherTests.test_actual_dialog_scripts_compile_on_mac",
+        "reason": "AppleScript compilation requires macOS"
+      },
+      {
+        "id": "test_windows_stack_repair.StackRepairTests.test_existing_backup_is_never_overwritten",
+        "reason": "PowerShell is required to exercise Windows stack repair"
+      },
+      {
+        "id": "test_windows_stack_repair.StackRepairTests.test_invalid_header_offsets_and_directory_counts_are_refused",
+        "reason": "PowerShell is required to exercise Windows stack repair"
+      },
+      {
+        "id": "test_windows_stack_repair.StackRepairTests.test_invalid_stack_values_are_refused",
+        "reason": "PowerShell is required to exercise Windows stack repair"
+      },
+      {
+        "id": "test_windows_stack_repair.StackRepairTests.test_larger_existing_reserve_is_not_lowered",
+        "reason": "PowerShell is required to exercise Windows stack repair"
+      },
+      {
+        "id": "test_windows_stack_repair.StackRepairTests.test_linked_executable_is_refused",
+        "reason": "PowerShell is required to exercise Windows stack repair"
+      },
+      {
+        "id": "test_windows_stack_repair.StackRepairTests.test_modified_executable_is_refused_without_changing_expected_checksum",
+        "reason": "PowerShell is required to exercise Windows stack repair"
+      },
+      {
+        "id": "test_windows_stack_repair.StackRepairTests.test_only_stack_reserve_changes_and_original_is_backed_up",
+        "reason": "PowerShell is required to exercise Windows stack repair"
+      },
+      {
+        "id": "test_windows_stack_repair.StackRepairTests.test_original_package_metadata_is_required",
+        "reason": "PowerShell is required to exercise Windows stack repair"
+      },
+      {
+        "id": "test_windows_stack_repair.StackRepairTests.test_repair_is_idempotent",
+        "reason": "PowerShell is required to exercise Windows stack repair"
+      },
+      {
+        "id": "test_windows_stack_repair.StackRepairTests.test_signed_executable_is_refused",
+        "reason": "PowerShell is required to exercise Windows stack repair"
+      },
+      {
+        "id": "test_windows_stack_repair.StackRepairTests.test_truncated_and_non_pe_files_are_refused",
+        "reason": "PowerShell is required to exercise Windows stack repair"
+      },
+      {
+        "id": "test_windows_stack_repair.StackRepairTests.test_wrong_architecture_or_dll_is_refused",
+        "reason": "PowerShell is required to exercise Windows stack repair"
+      }
+    ]
+  },
+  "frozen_probe": {
+    "status": "passed",
+    "tests_run": 65,
+    "failures": [],
+    "errors": [],
+    "skipped": [],
+    "tools_on_path": {
+      "cargo": null,
+      "rustc": null,
+      "rustup": null
+    },
+    "persistent_reload_verified": true,
+    "interactive_verified": false,
+    "gameplay_verified": false,
+    "tests": [
+      "test_javamods_ui.JavaModsPageBackendTests.test_actual_false_positive_works_is_rendered_as_unsupported_with_full_evidence",
+      "test_javamods_ui.JavaModsPageBackendTests.test_background_analysis_keeps_event_loop_live_and_blocks_profile_mutations",
+      "test_javamods_ui.JavaModsPageBackendTests.test_cancel_is_unavailable_once_result_recording_begins",
+      "test_javamods_ui.JavaModsPageBackendTests.test_cancelled_analysis_discards_new_report_after_passive_worker_finishes",
+      "test_javamods_ui.JavaModsPageBackendTests.test_json_and_readable_exports_preserve_actual_backend_evidence",
+      "test_javamods_ui.JavaModsPageBackendTests.test_port_enable_disable_and_backup_preserve_saves_and_original_import",
+      "test_javamods_ui.JavaModsPageBackendTests.test_resolve_dependencies_uses_user_directory_and_retains_hash_evidence",
+      "test_javamods_ui.JavaModsPageBackendTests.test_saved_report_is_revalidated_before_rendering_after_profile_reload",
+      "test_javamods_ui.JavaModsPageTests.test_fabric_forge_neoforge_imports_retain_local_copies_without_execution",
+      "test_javamods_ui.JavaModsPageTests.test_failed_library_load_stops_retrying_and_keeps_actionable_error",
+      "test_javamods_ui.JavaModsPageTests.test_failed_subprocess_shows_exit_stdout_stderr_and_raw_diagnostics",
+      "test_javamods_ui.JavaModsPageTests.test_imports_and_selection_are_isolated_per_profile",
+      "test_javamods_ui.JavaModsPageTests.test_java_mods_registration_preserves_all_existing_pages",
+      "test_javamods_ui.JavaModsPageTests.test_missing_binary_failure_is_visible_without_a_success_claim",
+      "test_javamods_ui.JavaModsPageTests.test_ui_never_promotes_forged_saved_success_statuses",
+      "test_modpacks_ui.ModpacksPageTests.test_backup_and_existing_controls_remain_reachable_at_small_window_sizes",
+      "test_modpacks_ui.ModpacksPageTests.test_curseforge_user_instance_resolution_needs_no_api_key_or_download",
+      "test_modpacks_ui.ModpacksPageTests.test_failed_backend_retains_real_exit_stdout_stderr_in_view_errors",
+      "test_modpacks_ui.ModpacksPageTests.test_false_positive_works_stays_unsupported_in_coverage_and_errors",
+      "test_modpacks_ui.ModpacksPageTests.test_hash_mismatch_is_visible_and_does_not_enable_play",
+      "test_modpacks_ui.ModpacksPageTests.test_import_analyze_and_resolve_keep_all_mod_rows_and_required_columns",
+      "test_modpacks_ui.ModpacksPageTests.test_json_and_text_exports_retain_pack_coverage_and_backend_evidence",
+      "test_modpacks_ui.ModpacksPageTests.test_pack_analysis_stays_off_gui_thread_and_busy_guard_preserves_profile",
+      "test_modpacks_ui.ModpacksPageTests.test_packwiz_explains_backend_limitation_and_never_offers_play",
+      "test_modpacks_ui.ModpacksPageTests.test_partial_port_has_data_outputs_but_play_remains_disabled",
+      "test_modpacks_ui.ModpacksPageTests.test_profiles_isolate_pack_snapshots_and_report_selection",
+      "test_modpacks_ui.ModpacksPageTests.test_seventh_page_registration_preserves_all_existing_pages",
+      "test_modpacks_ui.ModpacksPageTests.test_targeted_backup_cancellation_unknown_pack_and_profile_switch_fail_closed",
+      "test_modpacks_ui.ModpacksPageTests.test_targeted_world_backup_and_verification_do_not_unlock_java_or_pack_play",
+      "test_javamods_library.LibraryImportTests.test_changed_import_is_detected_and_preserved",
+      "test_javamods_library.LibraryImportTests.test_import_cannot_race_existing_game_operation_lock",
+      "test_javamods_library.LibraryImportTests.test_import_three_loaders_copies_owned_archives_without_subprocesses",
+      "test_javamods_library.LibraryImportTests.test_profiles_have_independent_imports_and_dependency_selections",
+      "test_javamods_library.LibraryImportTests.test_symlinked_profile_ancestor_cannot_redirect_mutations",
+      "test_javamods_library.LibraryImportTests.test_system_style_link_above_support_root_is_allowed",
+      "test_javamods_library.LibraryPortTests.test_changed_generated_data_is_refused_after_report_receipt",
+      "test_javamods_library.LibraryPortTests.test_changed_saved_report_cannot_install",
+      "test_javamods_library.LibraryPortTests.test_cross_profile_port_selection_cannot_affect_original",
+      "test_javamods_library.LibraryPortTests.test_existing_folder_id_is_never_overwritten",
+      "test_javamods_library.LibraryPortTests.test_false_positive_works_cannot_install_an_unsupported_port",
+      "test_javamods_library.LibraryPortTests.test_installed_data_edits_are_preserved_and_not_managed_blindly",
+      "test_javamods_library.LibraryPortTests.test_real_data_folder_uses_engine_setting_starts_disabled_and_backs_up",
+      "test_javamods_library.LibraryPortTests.test_receipt_write_failure_rolls_back_only_new_installation",
+      "test_modpacks_service.ModpackServiceTests.test_analysis_and_port_only_invoke_allowlisted_passive_rust_commands",
+      "test_modpacks_service.ModpackServiceTests.test_changed_generated_port_tree_is_demoted_on_load_and_export",
+      "test_modpacks_service.ModpackServiceTests.test_correct_sha1_cannot_hide_a_conflicting_known_sha512",
+      "test_modpacks_service.ModpackServiceTests.test_curseforge_manifest_ids_resolve_from_user_instance_without_api_key",
+      "test_modpacks_service.ModpackServiceTests.test_curseforge_modlist_cannot_silently_remove_manifest_only_entries",
+      "test_modpacks_service.ModpackServiceTests.test_declared_hash_mismatch_does_not_accept_same_filename",
+      "test_modpacks_service.ModpackServiceTests.test_embedded_modrinth_mod_is_inspected_without_network_or_user_folder",
+      "test_modpacks_service.ModpackServiceTests.test_export_json_and_text_preserve_original_evidence_and_unplayable_summary",
+      "test_modpacks_service.ModpackServiceTests.test_imported_pack_snapshot_survives_original_removal_and_detects_snapshot_edits",
+      "test_modpacks_service.ModpackServiceTests.test_missing_modrinth_files_remain_visible_as_unsupported_rows",
+      "test_modpacks_service.ModpackServiceTests.test_modrinth_import_resolves_owned_files_and_retains_every_coverage_column",
+      "test_modpacks_service.ModpackServiceTests.test_original_works_false_positive_retains_missing_dependency_and_unsupported_features",
+      "test_modpacks_service.ModpackServiceTests.test_pack_storage_is_profile_isolated_and_existing_game_files_are_untouched",
+      "test_modpacks_service.ModpackServiceTests.test_packwiz_is_explicitly_unsupported_without_inventing_a_parser",
+      "test_modpacks_service.ModpackServiceTests.test_partial_data_carry_preserves_unsupported_rows_and_never_becomes_playable",
+      "test_modpacks_service.ModpackServiceTests.test_partial_port_prunes_mod_whose_dependency_is_only_an_external_file",
+      "test_modpacks_service.ModpackServiceTests.test_prism_multimc_instance_uses_real_backend_import",
+      "test_modpacks_service.ModpackServiceTests.test_renaming_an_unrelated_jar_to_a_curseforge_placeholder_cannot_prove_identity",
+      "test_modpacks_service.ModpackServiceTests.test_saved_pack_report_cannot_forge_playable_or_tested_success",
+      "test_modpacks_service.ModpackServiceTests.test_sha512_mismatch_does_not_accept_same_filename",
+      "test_modpacks_service.ModpackServiceTests.test_sha512_only_index_resolves_renamed_local_file_without_losing_hash_evidence",
+      "test_modpacks_service.ModpackServiceTests.test_symlinked_profile_parent_cannot_redirect_pack_import"
+    ],
+    "platform": "Linux only; developer packaging probe, not a supported end-user distribution",
+    "receipt_sha256": "59bb58997797bb989a61f8966848f1bd30a9d0c3936d62a05e7e2766ad191020",
+    "test_log_sha256": "6772a866bb94c7fbe94e3796016da3ea02d62ac709a5645026a18185c0a2a25e",
+    "build_log_sha256": "d6dac362f2f981282083ece8ee48f8c96306aff02568a06e34bbf25ef8feee96",
+    "executable_sha256": "8ed5613c56aa95bf56689e647e84cb1d3a25a67183506b3474644c78947fcd82",
+    "executable_bytes": 2565680
+  },
+  "actual_input_probe": {
+    "schema": 1,
+    "platform": "Linux",
+    "input_sha256": "09db709ff9ddcdabdf080ba814afe3c3c453e32dfde38356b99a00bed58ee12e",
+    "backend_sha256": "41568d0cc7ebd7306f2f44fc9a646b7d80d0581b4b92fedc8d074d9706dadb8e",
+    "input_identity": {
+      "available": true,
+      "name": "FunCraft - FC",
+      "version": "Release 1.1.1 - hotfix",
+      "feature": "funcraft-manual-world-backup",
+      "pack_sha256": "09db709ff9ddcdabdf080ba814afe3c3c453e32dfde38356b99a00bed58ee12e",
+      "reason": "Available: manual backup of stopped Herspers worlds. Original Java mods, live/timed backups and pack gameplay remain unsupported."
+    },
+    "commands": [
+      {
+        "program": "horizon-port-pack",
+        "command": "import",
+        "exit_code": 0
+      }
+    ],
+    "source_files": {
+      "herps_launcher/modpacks/targeted_backup.py": "69ba9ea1fbcfc921bea350d6e9c640754d6b6c2e0dff692a7bc089ccbca0c8c9",
+      "herps_launcher/modpacks/page.py": "77f1a5785ef59eb8277c70670d41c97d5fde29a7dbe826b9f9d6145f529c8803"
+    },
+    "developer_tools_on_path": false,
+    "backup": {
+      "schema": 1,
+      "feature": "funcraft-manual-world-backup",
+      "verified": true,
+      "profile": "funcraft_trial",
+      "files": 1,
+      "bytes": 75,
+      "archive_sha256": "75c0625d48665577b4209ab1a81066213c1fff9a8e8dae75368a60c01211a305",
+      "path": "$OWNED_TEST_SUPPORT/herps-launcher/targeted-backups/funcraft/funcraft_trial/20261105-045810-oyvb3d2p/worlds.zip",
+      "gameplay_verified": false,
+      "note": "Archive integrity verified; world loading and original-pack gameplay are not established",
+      "source_tree_unchanged": true
+    },
+    "source_hashes_preserved": {
+      "herps-launcher/profiles/funcraft_trial/saves/Owned/level.dat": "4b00c4ec2317714fa07b207806a0932d9ab130e583845b7aee510530668306e8",
+      "game/saves/Untouched/level.dat": "4b00c4ec2317714fa07b207806a0932d9ab130e583845b7aee510530668306e8",
+      "herps-launcher/profiles/funcraft_trial/options.txt": "02fcd2b83a3d479d311edb0a5153cbf6a1906d4479696d2daa655ee5efe7dedc",
+      "herps-launcher/settings.json": "93d6bd10fe725f84d5fe7c973447745551baad624136e6c8045cfb1defa87e9a"
+    },
+    "scratch_unzip_roundtrip": true,
+    "fixture_note": "Owned sentinel bytes; not a valid Minecraft world; no original mod code/assets executed",
+    "interactive_verified": false,
+    "gameplay_verified": false,
+    "rlcraft_2_9_3_inspected": false
+  },
+  "rlcraft_2_9_3": {
+    "inspected": false,
+    "reason": "Upload exceeds 32 MiB transfer limit; user-supplied repository declares a different version",
+    "reference_repo": "2XD/RL-Craft",
+    "reference_commit": "8519c53bd0bca16e2be6b76b4f38df0320a75577",
+    "reference_version": "2.8.2"
+  },
+  "phase5d_core_and_engine_changed": false,
+  "original_java_execution_enabled": false,
+  "original_pack_gameplay_verified": false,
+  "native_windows_new_feature_verified": false,
+  "native_macos_new_feature_verified": false,
+  "public_release_approved": false
+}

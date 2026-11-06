@@ -1,0 +1,133 @@
+--- a/crates/horizon-client/src/game.rs
++++ b/crates/horizon-client/src/game.rs
+@@ -1713,6 +1713,8 @@
+     clouds: Arc<(u32, u32, Vec<bool>)>,
+     /// misc/forcefield.png: (width, height, RGBA) for the world border wall.
+     forcefield: Arc<(u32, u32, Vec<u8>)>,
++    /// Exact recognized resource-pack lightmap profile, resolved with the overlay.
++    resource_pack_fullbright: bool,
+ }
+ impl PackResources {
+     /// Everything a pack overlay at `root` provides, over `assets` and `render`
+@@ -1773,6 +1775,7 @@
+             names: Arc::new(Names::load(root)),
+             clouds: Arc::new(load_clouds(root)),
+             forcefield: Arc::new(load_forcefield(root)),
++            resource_pack_fullbright: horizon_client::gfx::lightmap::fullbright_override(root),
+         }
+     }
+ }
+@@ -12397,8 +12400,12 @@
+     }
+     /// FirstPersonHandsAndItemsRenderer: the right arm or the held items of
+     /// both hands in view space, converted to camera-relative world space.
+-    fn hand_geometry(&mut self, alpha: f64) -> Vec<Vertex> {
++    fn hand_geometry(
++        &mut self,
++        alpha: f64,
++    ) -> (Vec<Vertex>, Vec<horizon_client::gfx::pack_draw::ItemSpan>) {
+         let mut out = Vec::new();
++        let mut hand_items = Vec::new();
+         // GameRenderer.renderItemInHand: F1 hides the hand with the HUD.
+         if self.spectator()
+             || self.ui.hide_gui
+@@ -12410,7 +12417,7 @@
+                 .is_none_or(|p| p.health.dead_or_dying())
+             || self.screen == Screen::Dead
+         {
+-            return out;
++            return (out, hand_items);
+         }
+         let a = alpha as f32;
+         // FirstPersonHandsAndItemsRenderer: the swing goes to the hand that
+@@ -12481,6 +12488,13 @@
+                         self.first_person_arm(arm, to_world * pose, packed, &mut out);
+                     }
+                 }
++                if self.pack_ids.is_some() {
++                    horizon_client::gfx::pack_draw::ItemSpan::mark(
++                        &mut hand_items,
++                        out.len(),
++                        self.rendered_item_id_for_pack(&stack.item),
++                    );
++                }
+                 match hold {
+                     MapHold::TwoHanded => self.two_handed_map_geometry(
+                         to_world,
+@@ -12496,6 +12510,9 @@
+                         packed,
+                         &mut out,
+                     ),
++                }
++                if self.pack_ids.is_some() {
++                    horizon_client::gfx::pack_draw::ItemSpan::mark(&mut hand_items, out.len(), 0);
+                 }
+                 continue;
+             }
+@@ -12597,12 +12614,22 @@
+                 eye[1].floor() as i32,
+                 eye[2].floor() as i32,
+             );
++            if self.pack_ids.is_some() {
++                horizon_client::gfx::pack_draw::ItemSpan::mark(
++                    &mut hand_items,
++                    out.len(),
++                    self.rendered_item_id_for_pack(&stack.item),
++                );
++            }
+             self.submit_item_world(
+                 &state,
+                 m,
+                 horizon_client::block_entity_render::vertex_light(light),
+                 &mut out,
+             );
++            if self.pack_ids.is_some() {
++                horizon_client::gfx::pack_draw::ItemSpan::mark(&mut hand_items, out.len(), 0);
++            }
+         }
+         // The hand has its own submit storage, which never uses improved
+         // transparency (`LevelRenderer` alone calls `setUseImprovedTransparency`):
+@@ -12610,7 +12637,7 @@
+         for vertex in &mut out {
+             vertex.layer &= !horizon_client::gfx::OIT_ENTITY;
+         }
+-        out
++        (out, hand_items)
+     }
+     /// The renderer for the window, with the current block sprites, GUI
+     /// atlas and world border texture.
+@@ -14051,8 +14078,8 @@
+         } else {
+             (Vec::new(), None)
+         };
+-        let mut hand = if title || self.scoping() {
+-            Vec::new()
++        let (mut hand, hand_items) = if title || self.scoping() {
++            (Vec::new(), Vec::new())
+         } else {
+             self.hand_geometry(camera_alpha)
+         };
+@@ -14182,6 +14209,7 @@
+             },
+             stars: stars.filter(|_| self.settings.horizon.sky || title),
+             hand: &hand,
++            hand_items: &hand_items,
+             hand_fov_degrees: self.hud_fov_degrees(camera_alpha as f32, camera.to_array()),
+             screen: &screen,
+             pack: pack_inputs,
+@@ -18061,6 +18089,7 @@
+         previous,
+         api,
+     ))?;
++    renderer.resource_pack_fullbright = pack.resource_pack_fullbright;
+     renderer.hud.sprite_animations = atlas
+         .sprite_animations
+         .iter()
+@@ -18193,6 +18222,7 @@
+         celestial: &[],
+         stars: None,
+         hand: &[],
++        hand_items: &[],
+         hand_fov_degrees: 70.0,
+         screen: &[],
+         pack: Default::default(),

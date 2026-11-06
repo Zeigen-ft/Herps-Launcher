@@ -1,0 +1,13 @@
+{
+  "repository": "https://github.com/Vasysik/horizon-android",
+  "commit": "7301f6fdd7f470b11317276e7a11b4dc615c137a",
+  "archive_url": "https://codeload.github.com/Vasysik/horizon-android/tar.gz/7301f6fdd7f470b11317276e7a11b4dc615c137a",
+  "archive_sha256": "9280910d4feb890e8e2b48ebe1d309fec12f222281072b63fb578f34d7840f61",
+  "archive_root": "horizon-android-7301f6fdd7f470b11317276e7a11b4dc615c137a",
+  "rust_toolchain": "1.95.0",
+  "horizon_version": "0.7.6",
+  "minecraft_edition": "Java",
+  "minecraft_version": "26.3",
+  "java_major": 25,
+  "apk_sha256": "f432e75cffb7f8ca147fe325e51aa410038c8257c38a822277ed9762ba3127db"
+}

@@ -1,0 +1,68 @@
+name: Build macOS apps
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/macos.yml'
+      - 'scripts/build_macos.sh'
+      - 'scripts/smoke_macos.sh'
+      - 'packaging/launch.command'
+      - 'packaging/prepare.command'
+      - 'packaging/launcher.c'
+      - 'packaging/launcher_windows.rs'
+      - 'packaging/private_server.rs'
+      - 'tools/fetch_upstream.py'
+      - 'tools/prepare_upstream.py'
+      - 'patches/**'
+      - 'tools/package_macos.py'
+      - 'docs/SHADERS.md'
+      - 'tests/test_prepare_upstream.py'
+      - 'tests/test_windows_stack_repair.py'
+      - 'tests/test_windows_launcher.py'
+      - 'upstream.lock.json'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: macos-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [arm64, x86_64]
+    env:
+      CARGO_BUILD_JOBS: '3'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install pinned launcher Rust for tooling checks
+        run: rustup toolchain install 1.95.0 --profile minimal
+      - name: Tooling tests
+        shell: bash
+        run: |
+          set +e
+          python3 -m unittest discover -s tests -v > tooling-tests.log 2>&1
+          result=$?
+          cat tooling-tests.log
+          if [ "$result" -ne 0 ]; then
+            python3 - <<'PY'
+          from pathlib import Path
+          text = '\n'.join(Path('tooling-tests.log').read_text(errors='replace').splitlines()[-100:])
+          text = text.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A')
+          print('::error title=Tooling tests failed::' + text)
+          PY
+          fi
+          exit "$result"
+      - name: Build, verify architecture and sign ad hoc
+        run: bash scripts/build_macos.sh "${{ matrix.arch }}"
+      - name: Upload build artifacts (gameplay remains unverified)
+        uses: actions/upload-artifact@v4
+        with:
+          name: Herspers-Minecraft-${{ matrix.arch }}
+          path: dist/${{ matrix.arch }}/*.zip
+          if-no-files-found: error

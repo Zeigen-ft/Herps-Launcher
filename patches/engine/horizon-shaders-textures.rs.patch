@@ -1,0 +1,282 @@
+--- /dev/null
++++ b/crates/horizon-shaders/src/textures.rs
+@@ -0,0 +1,279 @@
++// SPDX-License-Identifier: MIT
++//! Encoded custom images declared by `texture.*` properties. The renderer
++//! decodes these bytes and binds them at the declared render-stage boundary.
++use crate::{Pack, Properties, buffer_index};
++
++/// Limits apply to encoded bytes; the renderer also bounds decoded dimensions.
++pub const MAX_CUSTOM_TEXTURE_BYTES: usize = 16 * 1024 * 1024;
++pub const MAX_CUSTOM_TEXTURE_TOTAL_BYTES: usize = 64 * 1024 * 1024;
++pub const MAX_CUSTOM_TEXTURES: usize = 64;
++
++#[derive(Clone, Debug, PartialEq, Eq)]
++pub struct CustomTexture {
++    /// `*` for the global noise texture, otherwise a canonical render stage.
++    pub stage: String,
++    pub sampler: String,
++    /// Normalized path relative to the pack's `shaders/` folder.
++    pub path: String,
++    pub data: Vec<u8>,
++}
++
++impl CustomTexture {
++    pub fn matches(&self, stage: &str, sampler: &str) -> bool {
++        (self.stage == "*" || self.stage == stage) && same_sampler(&self.sampler, sampler)
++    }
++}
++
++fn same_sampler(a: &str, b: &str) -> bool {
++    a == b
++        || buffer_index(a)
++            .zip(buffer_index(b))
++            .is_some_and(|(a, b)| a == b)
++}
++
++fn binding(key: &str) -> Option<(&str, &str)> {
++    let rest = key.strip_prefix("texture.")?;
++    if matches!(rest, "noise" | "noisetex") {
++        return Some(("*", "noisetex"));
++    }
++    let (stage, sampler) = rest.split_once('.')?;
++    let valid_stage = matches!(
++        stage,
++        "gbuffers" | "deferred" | "composite" | "prepare" | "shadow" | "shadowcomp" | "final"
++    );
++    let valid_sampler = sampler.starts_with(|c: char| c.is_ascii_alphabetic() || c == '_')
++        && sampler
++            .chars()
++            .all(|c| c.is_ascii_alphanumeric() || c == '_');
++    (valid_stage && valid_sampler).then_some((stage, sampler))
++}
++
++fn image_path(value: &str) -> Option<String> {
++    // A leading slash refers to the pack root, never the host filesystem.
++    let path = value.trim().trim_start_matches('/');
++    if path.is_empty() || path.contains(['\\', ':']) || path.chars().any(char::is_control) {
++        return None;
++    }
++    let parts: Vec<_> = path
++        .split('/')
++        .filter(|p| !p.is_empty() && *p != ".")
++        .collect();
++    if parts.is_empty() || parts.contains(&"..") {
++        return None;
++    }
++    Some(parts.join("/"))
++}
++
++/// Reads custom image declarations without exposing or rewriting pack programs.
++/// Raw/3D texture descriptors are diagnosed instead of silently using placeholders.
++pub fn custom_textures(pack: &Pack, properties: &Properties) -> (Vec<CustomTexture>, Vec<String>) {
++    load(
++        pack,
++        properties,
++        MAX_CUSTOM_TEXTURE_BYTES,
++        MAX_CUSTOM_TEXTURE_TOTAL_BYTES,
++    )
++}
++
++fn load(
++    pack: &Pack,
++    properties: &Properties,
++    per_texture: usize,
++    total_limit: usize,
++) -> (Vec<CustomTexture>, Vec<String>) {
++    let mut textures: Vec<CustomTexture> = Vec::new();
++    let mut notes = Vec::new();
++    let mut total = 0usize;
++    for entry in properties
++        .entries
++        .iter()
++        .filter(|e| e.key.starts_with("texture."))
++    {
++        let Some((stage, sampler)) = binding(&entry.key) else {
++            notes.push(format!(
++                "{}: malformed or unsupported custom texture binding",
++                entry.key
++            ));
++            continue;
++        };
++        let words: Vec<_> = entry.value.split_whitespace().collect();
++        if words.len() != 1 {
++            notes.push(format!(
++                "{}: raw/3D texture descriptors are not supported; expected one encoded image path",
++                entry.key
++            ));
++            continue;
++        }
++        let Some(path) = image_path(words[0]) else {
++            notes.push(format!("{}: invalid custom texture path", entry.key));
++            continue;
++        };
++        let old = textures
++            .iter()
++            .position(|t| t.stage == stage && same_sampler(&t.sampler, sampler));
++        if old.is_none() && textures.len() >= MAX_CUSTOM_TEXTURES {
++            notes.push(format!(
++                "{}: custom textures exceed the {MAX_CUSTOM_TEXTURES}-texture limit",
++                entry.key
++            ));
++            continue;
++        }
++        let old_bytes = old.map_or(0, |i| textures[i].data.len());
++        let remaining = total_limit.saturating_sub(total - old_bytes);
++        if remaining == 0 {
++            notes.push(format!(
++                "{}: custom textures exceed the {total_limit}-byte aggregate limit",
++                entry.key
++            ));
++            continue;
++        }
++        let Some(data) = pack.read_limited(&path, per_texture.min(remaining)) else {
++            notes.push(format!(
++                "{}: {path}: missing/unreadable image or exceeds the {}-byte encoded limit",
++                entry.key,
++                per_texture.min(remaining)
++            ));
++            continue;
++        };
++        if data.is_empty() {
++            notes.push(format!("{}: {path}: empty custom image", entry.key));
++            continue;
++        }
++        if let Some(i) = old {
++            total -= textures.remove(i).data.len();
++            notes.push(format!(
++                "{}: replaces an earlier binding for the same texture sampler",
++                entry.key
++            ));
++        }
++        total += data.len();
++        textures.push(CustomTexture {
++            stage: stage.into(),
++            sampler: sampler.into(),
++            path,
++            data,
++        });
++    }
++    (textures, notes)
++}
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++    use crate::{
++        Macros,
++        pack::tests::{temp_dir, zip},
++    };
++
++    fn properties(text: &str) -> Properties {
++        Properties::parse(text, &Macros::standard())
++    }
++    fn pack(files: &[(&str, &str)]) -> Pack {
++        Pack::from_zip_bytes("original-test.zip", zip(files)).unwrap()
++    }
++
++    #[test]
++    fn noise_and_stage_images_keep_exact_archive_bytes() {
++        let pack = pack(&[
++            ("shaders/lib/noise.png", "noise"),
++            ("shaders/lib/clouds.png", "clouds"),
++        ]);
++        let p = properties(
++            "texture.noise=lib/noise.png\ntexture.deferred.colortex3=/lib/./clouds.png\ntexture.gbuffers.gaux4=lib/clouds.png",
++        );
++        let (textures, notes) = custom_textures(&pack, &p);
++        assert!(notes.is_empty(), "{notes:?}");
++        assert_eq!(textures.len(), 3);
++        assert_eq!(textures[0].data, b"noise");
++        assert!(textures[0].matches("shadow", "noisetex"));
++        assert!(!textures[1].matches("deferred", "gdepth"));
++        assert!(textures[1].matches("deferred", "composite"));
++        assert!(!textures[1].matches("composite", "colortex3"));
++        assert!(textures[2].matches("gbuffers", "colortex7"));
++        assert_eq!(textures[1].path, "lib/clouds.png");
++        assert_eq!(textures[1].data, b"clouds");
++    }
++
++    #[test]
++    fn folder_images_and_noise_alias_are_supported() {
++        let dir = temp_dir("custom-texture");
++        std::fs::create_dir_all(dir.join("shaders/lib")).unwrap();
++        std::fs::write(dir.join("shaders/lib/image.png"), b"image").unwrap();
++        let pack = Pack::open(&dir).unwrap();
++        let (images, notes) = custom_textures(&pack, &properties("texture.noisetex=lib/image.png"));
++        assert!(notes.is_empty());
++        assert_eq!(images[0].data, b"image");
++        std::fs::remove_dir_all(dir).unwrap();
++    }
++
++    #[test]
++    fn malformed_missing_raw_and_traversal_paths_are_diagnosed() {
++        let pack = pack(&[("shaders/exists.png", "ok")]);
++        let p = properties(
++            "texture.noise=../outside.png\ntexture.deferred.x=missing.png\ntexture.composite.raw=raw.bin TEXTURE_3D RGBA8 8 8 8 RGBA UNSIGNED_BYTE\ntexture.unknown.x=exists.png\ntexture.gbuffers.bad.name=exists.png\ntexture.final.x=C:/host.png",
++        );
++        let (images, notes) = custom_textures(&pack, &p);
++        assert!(images.is_empty());
++        assert_eq!(notes.len(), 6);
++        assert!(notes.iter().any(|n| n.contains("raw/3D")));
++        assert!(notes.iter().any(|n| n.contains("missing.png")));
++    }
++
++    #[test]
++    fn encoded_and_aggregate_limits_are_enforced_without_big_allocations() {
++        let pack = pack(&[
++            ("shaders/a.png", "12345"),
++            ("shaders/b.png", "abcdef"),
++            ("shaders/c.png", "7890"),
++        ]);
++        let p = properties(
++            "texture.noise=a.png\ntexture.deferred.colortex0=b.png\ntexture.composite.colortex1=c.png",
++        );
++        let (images, notes) = load(&pack, &p, 5, 8);
++        assert_eq!(images.len(), 1);
++        assert_eq!(images[0].data, b"12345");
++        assert_eq!(notes.len(), 2);
++        assert!(pack.read_limited("a.png", 4).is_none());
++        assert_eq!(pack.read_limited("a.png", 5).unwrap(), b"12345");
++    }
++
++    #[test]
++    fn later_alias_binding_replaces_an_earlier_binding_without_overcounting() {
++        let pack = pack(&[("shaders/a.png", "aaaa"), ("shaders/b.png", "bb")]);
++        let p = properties("texture.gbuffers.gaux4=a.png\ntexture.gbuffers.colortex7=b.png");
++        let (images, notes) = load(&pack, &p, 4, 4);
++        assert_eq!(images.len(), 1);
++        assert_eq!(images[0].data, b"bb");
++        assert_eq!(notes.len(), 1);
++        assert!(images[0].matches("gbuffers", "gaux4"));
++    }
++
++    #[test]
++    fn tiny_images_cannot_exceed_the_texture_count_limit() {
++        let pack = pack(&[("shaders/a.png", "x")]);
++        let text = (0..=MAX_CUSTOM_TEXTURES)
++            .map(|i| format!("texture.gbuffers.image{i}=a.png"))
++            .collect::<Vec<_>>()
++            .join("\n");
++        let (images, notes) = custom_textures(&pack, &properties(&text));
++        assert_eq!(images.len(), MAX_CUSTOM_TEXTURES);
++        assert_eq!(notes.len(), 1);
++        assert!(notes[0].contains("64-texture limit"));
++    }
++
++    #[test]
++    fn load_post_carries_custom_images_and_reports_missing_files() {
++        let pack = pack(&[("shaders/noise.png", "encoded bytes")]);
++        let p = properties("texture.noise=noise.png\ntexture.composite.colortex3=missing.png");
++        let post = crate::load_post(
++            &pack,
++            "",
++            &p,
++            &Macros::standard(),
++            &crate::GameInputs::default(),
++        );
++        assert_eq!(post.textures.len(), 1);
++        assert_eq!(post.textures[0].data, b"encoded bytes");
++        assert!(post.notes.iter().any(|note| note.contains("missing.png")));
++    }
++}

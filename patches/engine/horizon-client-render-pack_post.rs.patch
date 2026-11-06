@@ -1,0 +1,276 @@
+--- a/crates/horizon-client-render/src/gfx/pack_post.rs
++++ b/crates/horizon-client-render/src/gfx/pack_post.rs
+@@ -15,6 +15,10 @@
+ 
+ use horizon_shaders::{Format, Group, Kind, Post, Val};
+ 
++#[cfg(test)]
++#[path = "pack_post_tests.rs"]
++mod custom_texture_tests;
++
+ use super::pack_draw::DrawUniforms;
+ use super::pack_entities::{PROGRAMS, PackEntities};
+ use super::pack_sky::PackSky;
+@@ -30,7 +34,9 @@
+     /// `depthtex1`/`depthtex2`: depth without translucent terrain (a copy taken before it).
+     Depth1,
+     Noise,
+-    /// A 1×1 stand-in for names this slice does not provide yet (custom textures...).
++    /// A PNG provided by the pack for this stage and sampler.
++    Custom(usize),
++    /// A 1×1 stand-in for names this slice does not provide yet.
+     Dummy,
+     /// A 1×1 depth of 1.0 behind a comparison sampler, until shadow maps exist: no shadow.
+     Shadow,
+@@ -71,7 +77,7 @@
+                 Self::Nearest
+             }
+             Source::Depth | Source::Depth1 | Source::ShadowDepth(_, false) => Self::Nearest,
+-            Source::Noise => Self::Repeat,
++            Source::Noise | Source::Custom(_) => Self::Repeat,
+             Source::Shadow | Source::ShadowDepth(_, true) => Self::Comparison,
+             // Blocks look as the game draws them: nearest texels.
+             Source::Atlas => Self::NearestRepeat,
+@@ -312,6 +318,7 @@
+     main: u16,
+     targets: Option<Targets>,
+     noise: wgpu::TextureView,
++    custom_textures: Vec<wgpu::TextureView>,
+     dummy: wgpu::TextureView,
+     /// The stand-in shadow map and its comparison sampler; cleared on the first frame.
+     shadow: (wgpu::TextureView, wgpu::Sampler),
+@@ -432,9 +439,20 @@
+     side: u32,
+     texels: &[u8],
+ ) -> wgpu::TextureView {
++    texture_rgba(device, queue, label, side, side, texels)
++}
++
++fn texture_rgba(
++    device: &wgpu::Device,
++    queue: &wgpu::Queue,
++    label: &str,
++    width: u32,
++    height: u32,
++    texels: &[u8],
++) -> wgpu::TextureView {
+     let size = wgpu::Extent3d {
+-        width: side,
+-        height: side,
++        width,
++        height,
+         depth_or_array_layers: 1,
+     };
+     let tex = device.create_texture(&wgpu::TextureDescriptor {
+@@ -452,12 +470,119 @@
+         texels,
+         wgpu::TexelCopyBufferLayout {
+             offset: 0,
+-            bytes_per_row: Some(side * 4),
++            bytes_per_row: Some(width * 4),
+             rows_per_image: None,
+         },
+         size,
+     );
+     tex.create_view(&Default::default())
++}
++
++/// Decode only bounded PNG images, preserving their rows and their actual
++/// (possibly non-square) dimensions. Limits apply before allocating pixels.
++fn custom_png(bytes: &[u8], max_side: u32) -> Result<(u32, u32, Vec<u8>), String> {
++    const MAX_PIXELS_BYTES: usize = 64 * 1024 * 1024;
++    let mut decoder = png::Decoder::new(std::io::Cursor::new(bytes));
++    decoder.set_limits(png::Limits {
++        bytes: MAX_PIXELS_BYTES,
++    });
++    decoder.set_transformations(png::Transformations::EXPAND | png::Transformations::STRIP_16);
++    let mut reader = decoder.read_info().map_err(|e| e.to_string())?;
++    let (width, height) = (reader.info().width, reader.info().height);
++    let pixels = u64::from(width) * u64::from(height);
++    if width == 0
++        || height == 0
++        || width > max_side
++        || height > max_side
++        || pixels > (MAX_PIXELS_BYTES / 4) as u64
++    {
++        return Err("custom texture exceeds the device or decoded-image size limit".into());
++    }
++    let size = reader
++        .output_buffer_size()
++        .ok_or("custom texture is too large")?;
++    if size > MAX_PIXELS_BYTES {
++        return Err("custom texture decoded-image size limit".into());
++    }
++    let mut data = vec![0; size];
++    let info = reader.next_frame(&mut data).map_err(|e| e.to_string())?;
++    let channels = info.color_type.samples();
++    let mut rgba = Vec::with_capacity(pixels as usize * 4);
++    for p in data[..info.buffer_size()].chunks_exact(channels) {
++        rgba.extend_from_slice(&match channels {
++            4 => [p[0], p[1], p[2], p[3]],
++            3 => [p[0], p[1], p[2], 255],
++            2 => [p[0], p[0], p[0], p[1]],
++            1 => [p[0], p[0], p[0], 255],
++            _ => return Err("unsupported PNG colour type".into()),
++        });
++    }
++    Ok((width, height, rgba))
++}
++
++fn custom_images(
++    device: &wgpu::Device,
++    queue: &wgpu::Queue,
++    declarations: Vec<horizon_shaders::CustomTexture>,
++    notes: &mut Vec<String>,
++) -> (Vec<horizon_shaders::CustomTexture>, Vec<wgpu::TextureView>) {
++    let (mut accepted, mut views) = (Vec::new(), Vec::new());
++    let mut loaded = HashMap::<String, wgpu::TextureView>::new();
++    let mut decoded_bytes = 0usize;
++    for mut declaration in declarations {
++        let view = if let Some(view) = loaded.get(&declaration.path) {
++            view.clone()
++        } else {
++            let result = custom_png(&declaration.data, device.limits().max_texture_dimension_2d);
++            let (width, height, pixels) = match result {
++                Ok(image) if decoded_bytes + image.2.len() <= 64 * 1024 * 1024 => image,
++                Ok(_) => {
++                    notes.push("custom texture aggregate decoded-image size limit".into());
++                    continue;
++                }
++                Err(error) => {
++                    notes.push(format!("custom texture {}: {error}", declaration.path));
++                    continue;
++                }
++            };
++            decoded_bytes += pixels.len();
++            let view = texture_rgba(device, queue, &declaration.path, width, height, &pixels);
++            loaded.insert(declaration.path.clone(), view.clone());
++            notes.push(format!(
++                "custom texture {} loaded ({width}x{height})",
++                declaration.path
++            ));
++            view
++        };
++        declaration.data = Vec::new();
++        accepted.push(declaration);
++        views.push(view);
++    }
++    (accepted, views)
++}
++
++fn custom_slot(
++    group: Group,
++    sampler: &str,
++    textures: &[horizon_shaders::CustomTexture],
++) -> Option<usize> {
++    let stage = match group {
++        Group::Prepare => "prepare",
++        Group::Deferred => "deferred",
++        Group::Composite => "composite",
++        Group::Final => "final",
++        Group::Gbuffers | Group::Translucent => "gbuffers",
++        Group::Shadow => "shadow",
++        Group::ShadowComp => "shadowcomp",
++    };
++    textures
++        .iter()
++        .position(|t| t.stage == stage && t.matches(stage, sampler))
++        .or_else(|| {
++            textures
++                .iter()
++                .position(|t| t.stage == "*" && t.matches(stage, sampler))
++        })
+ }
+ 
+ fn sampler(
+@@ -704,6 +829,7 @@
+     geometry: Option<&Geometry<'_>>,
+     custom: &[String],
+     draws: &wgpu::BindGroupLayout,
++    textures: &[horizon_shaders::CustomTexture],
+ ) -> Option<Pass> {
+     let features = device.features();
+     // The frame's uniforms, then the pack's custom ones.
+@@ -736,7 +862,9 @@
+         None => 0,
+     };
+     for s in &interface.samplers {
+-        let mut src = source(&s.name, p.group.shadow(), shadow.is_some(), watershadow);
++        let mut src = custom_slot(p.group, &s.name, textures)
++            .map(Source::Custom)
++            .unwrap_or_else(|| source(&s.name, p.group.shadow(), shadow.is_some(), watershadow));
+         let blank = match src {
+             // The shadow pass writes the shadow map.
+             Source::ShadowDepth(..) => p.group == Group::Shadow,
+@@ -985,6 +1113,8 @@
+         });
+         let mut notes = post.notes;
+         notes.extend(post.config.notes);
++        let (texture_declarations, custom_textures) =
++            custom_images(device, queue, post.textures, &mut notes);
+         let shadow_config = post.config.shadow.clone();
+         let mut custom = post.custom;
+         let custom_names: Vec<String> = custom.uniforms().map(|u| u.0.to_owned()).collect();
+@@ -1020,6 +1150,7 @@
+                 geometry,
+                 &custom_names,
+                 &draws.layout,
++                &texture_declarations,
+             )?;
+             if !in_shadow {
+                 used |= pass.reads | pass.written | pass.flip;
+@@ -1138,7 +1269,9 @@
+             ids: None,
+             cull: false,
+         });
+-        let hand_geometry = world.hand.then(|| super::pack_hand::PackHand::new(device));
++        let hand_geometry = world
++            .hand
++            .then(|| super::pack_hand::PackHand::new(device, &draws.layout));
+         let hand = post.hand.zip(hand_geometry).and_then(|(p, geometry)| {
+             let g = Geometry {
+                 buffers: &entity_buffers,
+@@ -1448,6 +1581,7 @@
+             main: 0,
+             targets: None,
+             noise: noise(device, queue),
++            custom_textures,
+             dummy: texture(device, queue, "Shader pack stand-in", 1, &white),
+             shadow: (
+                 device
+@@ -1589,6 +1723,7 @@
+                         _ => &targets.depth,
+                     },
+                     Source::Noise => &self.noise,
++                    Source::Custom(index) => &self.custom_textures[index],
+                     Source::Dummy => &self.dummy,
+                     Source::Shadow => &self.shadow.0,
+                     Source::Atlas => pass
+@@ -1965,7 +2100,7 @@
+             frame.depth_far,
+             frame.bob,
+         );
+-        geometry.prepare(device, queue, frame.hand, projection);
++        geometry.prepare(device, queue, frame.hand, frame.hand_items, projection);
+         if geometry.quads > 0 {
+             let group = self.bind(device, queue, &mut pass, size);
+             {
+@@ -1973,12 +2108,14 @@
+                 rp.set_pipeline(&pass.pipeline);
+                 rp.set_bind_group(0, &group, &[]);
+                 rp.set_bind_group(1, &geometry.group, &[]);
+-                if pass.draw {
+-                    self.draws.bind(&mut rp, "HAND_SOLID");
+-                }
+                 rp.set_vertex_buffer(0, geometry.vertices());
+                 rp.set_index_buffer(geometry.indices.slice(..), wgpu::IndexFormat::Uint32);
+-                rp.draw_indexed(0..geometry.quads * 6, 0, 0..1);
++                for draw in &geometry.draws {
++                    if pass.draw {
++                        rp.set_bind_group(2, &geometry.draw_group, &[geometry.offset(draw.slot)]);
++                    }
++                    rp.draw_indexed(0..draw.quads * 6, draw.base as i32, 0..1);
++                }
+             }
+             self.mips_valid &= !pass.written;
+         }

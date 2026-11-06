@@ -1,0 +1,125 @@
+{
+  "upstream_commit": "7301f6fdd7f470b11317276e7a11b4dc615c137a",
+  "files": [
+    {
+      "path": "crates/horizon-client/src/game/entity_culling.rs",
+      "before_sha256": "799c5f7766f1287cbbef87a29b0bc7d7384e2cd4068818ca6aef1b4d55d32010",
+      "after_sha256": "e83e1ed0aae1eeb677e01bb48d120fc5dffceb6fa12f161e18fbe571ad5f82a8",
+      "patch": "engine/crates-horizon-client-src-game-entity_culling.rs.patch"
+    },
+    {
+      "path": "crates/horizon-client/src/game/frames.rs",
+      "before_sha256": "08ea91b1e49b27ea23a9409f2d6d6eb531218a7b9a4cc58333058703d9e8e0d7",
+      "after_sha256": "d87d3f9b7e7105a1dc1e9fd10c54266521bd03e975bf123dd876dcd37452bc28",
+      "patch": "engine/crates-horizon-client-src-game-frames.rs.patch"
+    },
+    {
+      "path": "crates/horizon-client/src/game/item_draw.rs",
+      "before_sha256": "518d512911e812ade5346bd0e64ec329634483aa182785ea45a30eb41941f4f1",
+      "after_sha256": "e0456a7c9f9f2d258158287efd31ff9309730cb27f385ce3af015885ca790215",
+      "patch": "engine/crates-horizon-client-src-game-item_draw.rs.patch"
+    },
+    {
+      "path": "crates/horizon-client/src/game/mob_blocks.rs",
+      "before_sha256": "cc40892f972c6cba90dab8819b2686d50bc42fe0968b55fa8cc6032663f3277f",
+      "after_sha256": "83f6178e866896289e75495676c2874f1589a36ac6dc6f3d7a81deb138fd9b18",
+      "patch": "engine/crates-horizon-client-src-game-mob_blocks.rs.patch"
+    },
+    {
+      "path": "crates/horizon-client/src/game/perspective.rs",
+      "before_sha256": "4910c20b90261802e0f870023ceb03daf6a2f7ba424a6a5ed40a0c88d67d38e8",
+      "after_sha256": "e1dcebafe7e9bdd1099d1df6e50c103eb68f41883170309673e3f6840b3af141",
+      "patch": "engine/crates-horizon-client-src-game-perspective.rs.patch"
+    },
+    {
+      "path": "crates/horizon-client/src/game/shader_packs.rs",
+      "before_sha256": "4e8b0ccaea80294340046b06e354ceed3d9c56f0972c78dc7e9e418c2119004c",
+      "after_sha256": "08d6795e8ed63f84ba13c4d320d994b87a3a84736c24065d4265e6577b87f23c",
+      "patch": "engine/crates-horizon-client-src-game-shader_packs.rs.patch"
+    },
+    {
+      "path": "crates/horizon-client/src/game.rs",
+      "before_sha256": "de63b396454bbd394d4f3ca72fe0a54b83e3c0171cab6aca73b94bcd9c0de1bf",
+      "after_sha256": "9d63b877ee732d75a22e317b516aa69f4869e0f28585254ecb44269b4b9eb17e",
+      "patch": "engine/crates-horizon-client-src-game.rs.patch"
+    },
+    {
+      "path": "crates/horizon-client-render/src/gfx/lightmap.rs",
+      "before_sha256": null,
+      "after_sha256": "c81fbeb10aee6e95d820cf48fba41740a548aa54fda9ed95c8a09de2ff8a56b1",
+      "patch": "engine/crates-horizon-client-render-src-gfx-lightmap.rs.patch"
+    },
+    {
+      "path": "crates/horizon-client-render/src/gfx/pack_draw.rs",
+      "before_sha256": "bfa2759f72ff558a23a8d770260da586ff66d476a6436f632c7ddb5fd801f510",
+      "after_sha256": "b5393182a2159156e5e7d6e464894b0008167ad5ed31284737b9fe3c58b7ec16",
+      "patch": "engine/crates-horizon-client-render-src-gfx-pack_draw.rs.patch"
+    },
+    {
+      "path": "crates/horizon-client-render/src/gfx/pack_entities.rs",
+      "before_sha256": "c0b9944ba951ceb7c383f4889f2fd81f6a4d366fa586ac8c371b2738a0c9faf5",
+      "after_sha256": "bb4c25ba2cff0a9c94d280b71f1f8a1121fbcb86a6b43af87948fab693d0e8d4",
+      "patch": "engine/crates-horizon-client-render-src-gfx-pack_entities.rs.patch"
+    },
+    {
+      "path": "crates/horizon-client-render/src/gfx/pack_hand.rs",
+      "before_sha256": "096c6dbfd4e10da8afcdf461b4b6a7b7787af42ade752f0e01ff1093d1553228",
+      "after_sha256": "b3e394af558a15b14300dcc9e5f3e6ade61fb9f8f2e163ea55f4b217afe13758",
+      "patch": "engine/crates-horizon-client-render-src-gfx-pack_hand.rs.patch"
+    },
+    {
+      "path": "crates/horizon-client-render/src/gfx/pack_post.rs",
+      "before_sha256": "e0e95e1546f632abed44bc60517567b8476f01992fb78c9d930675fc99932a64",
+      "after_sha256": "4f964bf4367921f23fcea7581177221730208b372f21a37d651cc9805a2b65a4",
+      "patch": "engine/horizon-client-render-pack_post.rs.patch"
+    },
+    {
+      "path": "crates/horizon-client-render/src/gfx/pack_post_tests.rs",
+      "before_sha256": null,
+      "after_sha256": "7b0e80b57757f54aa6afde1fcdf8ce34b0e7f94c3b8b3a3ce6505975a6c37598",
+      "patch": "engine/horizon-client-render-pack_post_tests.rs.patch"
+    },
+    {
+      "path": "crates/horizon-client-render/src/gfx/pack_uniforms.rs",
+      "before_sha256": "4b62e1572dd02b4e7101e137c506a7a1ba46086330ad3e702476c1bfee3fbdb8",
+      "after_sha256": "86ae83c22da3d7ffe9245ec75a14423488864f358e9ef3c1197247bf9ae69907",
+      "patch": "engine/crates-horizon-client-render-src-gfx-pack_uniforms.rs.patch"
+    },
+    {
+      "path": "crates/horizon-client-render/src/gfx.rs",
+      "before_sha256": "6a2d38794c062121bd81a71231ac9388741396e0ecb4f5fadcff2696c0dad33a",
+      "after_sha256": "f3ea4ee9222c56121cee179f1b66eccea063473300d07e9733726e11efa4e7f1",
+      "patch": "engine/crates-horizon-client-render-src-gfx.rs.patch"
+    },
+    {
+      "path": "crates/horizon-shaders/src/lib.rs",
+      "before_sha256": "37fd6bd5b4047e8d43df50291401f529a29bebc3c0fb1d740530405ab6496b02",
+      "after_sha256": "f762e7d8309dbb6047b73a70010d6f4e2169a11cd215449c3d26f4cbe17334ab",
+      "patch": "engine/horizon-shaders-lib.rs.patch"
+    },
+    {
+      "path": "crates/horizon-shaders/src/pack.rs",
+      "before_sha256": "ec078c2e6ee9a184d9ef5956bb9972743692c3fd358c213154a21aed34529c7b",
+      "after_sha256": "ccd5941e379633873656376be1a7289a800cbfc5b153379dc04ca82875f1a50a",
+      "patch": "engine/horizon-shaders-pack.rs.patch"
+    },
+    {
+      "path": "crates/horizon-shaders/src/post.rs",
+      "before_sha256": "1af9d960d17c489d5244d5d5639391caee1b326025987af40abc92597cd9ee36",
+      "after_sha256": "eb0f271ef7e52f82b2357bfe05463b620421952cd7ed6561c3c729acaf2ae8ac",
+      "patch": "engine/horizon-shaders-post.rs.patch"
+    },
+    {
+      "path": "crates/horizon-shaders/src/textures.rs",
+      "before_sha256": null,
+      "after_sha256": "c2208aec309eac2f698dc96b479dbe99be3cbee9ae313dd3e7ce8aa48f688886",
+      "patch": "engine/horizon-shaders-textures.rs.patch"
+    },
+    {
+      "path": "crates/horizon-shaders/src/translate/mod.rs",
+      "before_sha256": "0fcca49d533dcc39777140f52aeaeb373543b6c5cdb55b5c9aeb82591a8537a2",
+      "after_sha256": "18c0b8f8cca9cff45280ed9460bb4831d07caf026c737323e159760db9364926",
+      "patch": "engine/crates-horizon-shaders-src-translate-mod.rs.patch"
+    }
+  ]
+}

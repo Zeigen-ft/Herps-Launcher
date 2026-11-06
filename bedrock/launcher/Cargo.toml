@@ -1,0 +1,19 @@
+[package]
+name = "herspers-bedrock-launcher"
+version = "0.3.0"
+edition = "2021"
+rust-version = "1.95"
+license = "GPL-3.0-only"
+description = "Independent launcher for the separately licensed native Cinnabar Bedrock client"
+
+[[bin]]
+name = "Herspers-Bedrock"
+path = "../../packaging/launcher_bedrock.rs"
+
+[dependencies]
+serde_json = "=1.0.151"
+sha2 = "=0.10.9"
+
+[profile.release]
+opt-level = 3
+strip = "debuginfo"

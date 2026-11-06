@@ -1,0 +1,95 @@
+--- a/crates/horizon-client/src/game/shader_packs.rs
++++ b/crates/horizon-client/src/game/shader_packs.rs
+@@ -157,6 +157,32 @@
+             .get(&(at.x >> 4, at.z >> 4))
+             .map(|c| c.biome(at.x, at.y, at.z));
+         let (held_items, held_light) = self.held_for_pack();
++        // The camera keeps interpolating while the world is frozen. Use its fraction
++        // for the model eye, while weather above follows the world fraction.
++        let relative_eye_position =
++            self.shader_relative_eye_position(camera, self.clock.camera_fraction() as f32);
++        let velocity = self.player.as_ref().map_or(0.0, |player| {
++            if self.clock.paused() {
++                return 0.0;
++            }
++            // A network client's movement timer can slow below 20Hz but never
++            // speeds above it when its server raises the world tick rate.
++            let seconds = self.clock.tick_duration().as_secs_f64();
++            let seconds = if self.remote.is_some() {
++                seconds.max(0.05)
++            } else {
++                seconds
++            };
++            horizon_client::gfx::pack_uniforms::player_displacement_speed(
++                glam::DVec3::new(
++                    self.previous_position.x,
++                    self.previous_position.y,
++                    self.previous_position.z,
++                ),
++                glam::DVec3::new(player.position.x, player.position.y, player.position.z),
++                seconds,
++            )
++        });
+         let info = biome.map(|b| self.res.biomes().get(b));
+         PackInputs {
+             day_time: self.world.day_time,
+@@ -181,6 +207,9 @@
+             rainfall: info.map_or(0.0, |b| b.downfall),
+             held_items,
+             held_light,
++            player_mood: self.ambience.moodiness,
++            relative_eye_position,
++            velocity,
+         }
+     }
+ 
+@@ -201,6 +230,17 @@
+             format!("Shader pack {name} could not be loaded and was turned off"),
+             0xFF5555,
+         ));
++    }
++
++    /// item.properties ID for one rendered item, independent of held-light ordering.
++    /// An empty name denotes an empty hand/arm rather than an unmapped item.
++    pub(super) fn rendered_item_id_for_pack(&self, name: &str) -> i32 {
++        if name.is_empty() {
++            return 0;
++        }
++        self.pack_ids.as_ref().map_or(0, |ids| {
++            ids.items.get(name).copied().unwrap_or(ids.missing_item)
++        })
+     }
+ 
+     /// `heldItemId(2)` and `heldBlockLightValue(2)`: main hand, then off hand (5.2, 5.3).
+@@ -235,6 +275,31 @@
+ }
+ 
+ impl Game<'_> {
++    /// Starts the item's own draw while preserving its parent entity/block kind.
++    /// An empty name restores the non-item part of that entity.
++    pub(super) fn mark_rendered_item(&self, start: usize, name: &str) {
++        if self.pack_ids.is_none() {
++            return;
++        }
++        let item_id = self.rendered_item_id_for_pack(name);
++        let mut spans = self.entity_spans.borrow_mut();
++        let Some(last) = spans.last().copied() else {
++            return;
++        };
++        if last.item_id == item_id {
++            return;
++        }
++        let span = EntitySpan {
++            start: start as u32,
++            item_id,
++            ..last
++        };
++        match spans.last_mut() {
++            Some(last) if last.start == span.start => *last = span,
++            _ => spans.push(span),
++        }
++    }
++
+     /// Starts a span of the entity geometry at vertex `start` for entity type `name`
+     /// (`minecraft:zombie`; "" for one the pack cannot name). Nothing without a pack.
+     pub(super) fn mark_entity(&self, start: usize, name: &str) {

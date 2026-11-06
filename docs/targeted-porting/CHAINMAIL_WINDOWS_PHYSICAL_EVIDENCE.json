@@ -1,0 +1,78 @@
+{
+  "schema": 1,
+  "recorded_date": "2026-11-06",
+  "recorded_timezone": "Asia/Singapore",
+  "evidence_type": "user_reported_physical_gameplay",
+  "tester": "User / repository owner",
+  "platform": "Windows x64 PC",
+  "exact_os_build_cpu_gpu": "Not supplied; Windows 11 x64 was previously offered for testing",
+  "test_execution_date": null,
+  "game_modes": [
+    "Survival",
+    "Creative"
+  ],
+  "screenshots_or_logs_supplied_with_report": false,
+  "workflow_run_id": 42118750443,
+  "source_commit": "8fb33fb04b6a3a7dd94d83ca81b08267efe7d4c9",
+  "feature": "Chainmail Plate and Boots",
+  "version": "0.1.0",
+  "package_sha256": "015c3d553a6a2bcfed4412559b9b83bc3ef65599d539a7686e65577ec4c5c346",
+  "candidate_artifact_id": 13458724088,
+  "installer_sha256": "3943c72dd0bf8eb6dd45918c95696816de9891390c1173fccb4778156dae29b2",
+  "portable_sha256": "82f28bde3df89c7d90c870bd7b735de1b7b7ea39dca3e1298ae2acbfef5efefd",
+  "candidate_member_actually_used": "User identified the workflow run, not installer versus portable ZIP",
+  "results": [
+    {
+      "case": "Launch Minecraft with native content enabled",
+      "status": "PASS"
+    },
+    {
+      "case": "Four iron nuggets produce a Chainmail Plate",
+      "status": "PASS"
+    },
+    {
+      "case": "Four Chainmail Plates produce Chainmail Boots",
+      "status": "PASS"
+    },
+    {
+      "case": "Equip Chainmail Boots and observe +1 Armor",
+      "status": "PASS"
+    },
+    {
+      "case": "Fully close Minecraft and Herspers Launcher, restart both, reopen the same world, retain plate and boots in inventory",
+      "status": "PASS"
+    }
+  ],
+  "observations": [
+    {
+      "case": "Earlier loading-logo stall",
+      "status": "OBSERVED_UNRESOLVED",
+      "later_observation": "Later launches succeeded",
+      "cause_resolved": false
+    },
+    {
+      "case": "Initially empty recipe output",
+      "status": "OBSERVED_UNRESOLVED",
+      "later_observation": "Later crafting succeeded",
+      "cause_resolved": false
+    }
+  ],
+  "not_run": [
+    "Clean resource preparation from the official matching Minecraft files",
+    "All invalid ingredients, grid layouts and offsets",
+    "Exact repeated and shift-click ingredient accounting / duplication checks",
+    "Chest persistence, armor damage and durability",
+    "Cross-profile and existing-save hash preservation on physical hardware",
+    "Physical installation, replacement, uninstall/reinstall and backup restoration",
+    "Missing or disabled content recovery and crash / disk / lock failures",
+    "Developer-tools-absent physical environment",
+    "Explicit graphics, audio, shader and multiplayer acceptance",
+    "macOS Intel gameplay",
+    "macOS Apple Silicon gameplay"
+  ],
+  "full_native_acceptance": false,
+  "full_rlcraft_compatibility": false,
+  "full_funcraft_compatibility": false,
+  "public_release_approved": false,
+  "game_modes_scope": "Crafting and inventory persistence were confirmed in both modes; launch/equipment were PASS without separate mode-by-mode detail."
+}

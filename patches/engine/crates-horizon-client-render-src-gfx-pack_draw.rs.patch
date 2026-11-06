@@ -1,0 +1,164 @@
+--- a/crates/horizon-client-render/src/gfx/pack_draw.rs
++++ b/crates/horizon-client-render/src/gfx/pack_draw.rs
+@@ -16,6 +16,8 @@
+     pub stage: u32,
+     /// `entityId` for entities, `blockEntityId` for block entities (5.3), else 0.
+     pub id: i32,
++    /// `currentRenderedItemId` from `item.properties`, or 0 outside an item draw.
++    pub item_id: i32,
+     /// An entity part that blends (a name tag, a shadow): `gbuffers_entities_translucent`.
+     pub translucent: bool,
+     /// Hidden from the camera (Horizon's entity culling, the player in first person): only the
+@@ -27,7 +29,46 @@
+     pub emissive: bool,
+ }
+ 
++/// An item (or empty arm, id 0) in the first-person hand's vertex list.
++#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
++pub struct ItemSpan {
++    pub start: u32,
++    pub item_id: i32,
++}
++
++impl ItemSpan {
++    /// Starts a run, replacing an empty previous run and coalescing equal ids.
++    pub fn mark(spans: &mut Vec<Self>, start: usize, item_id: i32) {
++        let span = Self {
++            start: start as u32,
++            item_id,
++        };
++        match spans.last_mut() {
++            Some(last) if last.start == span.start => *last = span,
++            Some(last) if last.item_id == item_id => {}
++            _ => spans.push(span),
++        }
++    }
++}
++
+ impl EntitySpan {
++    /// Drops markers whose geometry was removed by camera occlusion. The boundary
++    /// keeps the parent entity kind, with no item active for subsequent geometry.
++    pub fn truncate(spans: &mut Vec<Self>, vertices: usize) {
++        while spans
++            .last()
++            .is_some_and(|span| span.start as usize > vertices)
++        {
++            spans.pop();
++        }
++        if let Some(last) = spans
++            .last_mut()
++            .filter(|span| span.start as usize == vertices)
++        {
++            last.item_id = 0;
++        }
++    }
++
+     /// Marks vertices `start..end` of `spans`' list (one entity) as hidden: the span covering
+     /// `start` is split there, the spans inside are hidden, and the geometry after `end` goes
+     /// on in the last span's kind. False when no span covers `start`.
+@@ -58,8 +99,26 @@
+     }
+ }
+ 
+-/// `HzDraw`'s size: `renderStage`, `entityId`, `blockEntityId`, a pad, `entityColor`.
++/// `HzDraw`'s std140 size: four integers followed by `entityColor`.
+ const SIZE: u32 = 32;
++
++/// Preserves the 32-byte draw ABI while using its old padding for the rendered item.
++pub(super) fn slot_bytes(
++    stage: u32,
++    entity: i32,
++    block: i32,
++    item: i32,
++    color: [f32; 4],
++) -> [u8; 32] {
++    let mut bytes = [0; 32];
++    for (offset, value) in [(0, stage as i32), (4, entity), (8, block), (12, item)] {
++        bytes[offset..offset + 4].copy_from_slice(&value.to_le_bytes());
++    }
++    for (i, value) in color.into_iter().enumerate() {
++        bytes[16 + i * 4..20 + i * 4].copy_from_slice(&value.to_le_bytes());
++    }
++    bytes
++}
+ 
+ pub(super) struct DrawUniforms {
+     pub layout: wgpu::BindGroupLayout,
+@@ -122,7 +181,76 @@
+ 
+ #[cfg(test)]
+ mod tests {
+-    use super::EntitySpan;
++    use super::{EntitySpan, ItemSpan, slot_bytes};
++
++    #[test]
++    fn rendered_item_reuses_draw_padding_without_moving_entity_color() {
++        let bytes = slot_bytes(3, 17, 29, -123, [0.25, 0.5, 0.75, 1.0]);
++        assert_eq!(bytes.len(), 32);
++        for (offset, expected) in [(0, 3), (4, 17), (8, 29), (12, -123)] {
++            assert_eq!(
++                i32::from_le_bytes(bytes[offset..offset + 4].try_into().unwrap()),
++                expected
++            );
++        }
++        assert_eq!(f32::from_le_bytes(bytes[16..20].try_into().unwrap()), 0.25);
++        assert_eq!(f32::from_le_bytes(bytes[28..32].try_into().unwrap()), 1.0);
++    }
++
++    #[test]
++    fn hand_item_runs_keep_different_items_and_remove_empty_runs() {
++        let mut spans = Vec::new();
++        ItemSpan::mark(&mut spans, 0, 0);
++        ItemSpan::mark(&mut spans, 4, 101);
++        ItemSpan::mark(&mut spans, 12, 101);
++        ItemSpan::mark(&mut spans, 20, 0);
++        ItemSpan::mark(&mut spans, 20, 202);
++        ItemSpan::mark(&mut spans, 28, 0);
++        assert_eq!(
++            spans,
++            [
++                ItemSpan {
++                    start: 0,
++                    item_id: 0
++                },
++                ItemSpan {
++                    start: 4,
++                    item_id: 101
++                },
++                ItemSpan {
++                    start: 20,
++                    item_id: 202
++                },
++                ItemSpan {
++                    start: 28,
++                    item_id: 0
++                }
++            ]
++        );
++    }
++
++    #[test]
++    fn occluding_one_item_removes_later_markers_before_the_next_item() {
++        let mut spans = vec![
++            span(0, 7),
++            EntitySpan {
++                item_id: 101,
++                ..span(8, 7)
++            },
++            span(16, 7),
++        ];
++        EntitySpan::truncate(&mut spans, 8);
++        assert_eq!(spans, [span(0, 7), span(8, 7)]);
++        // A visible second item starts at the culled item's former boundary.
++        *spans.last_mut().unwrap() = EntitySpan {
++            item_id: 202,
++            ..span(8, 9)
++        };
++        spans.push(span(12, 9));
++        assert!(spans.windows(2).all(|pair| pair[0].start < pair[1].start));
++        assert_eq!(spans[1].item_id, 202);
++        assert_eq!(spans[2].item_id, 0);
++    }
+ 
+     fn span(start: u32, id: i32) -> EntitySpan {
+         EntitySpan {
