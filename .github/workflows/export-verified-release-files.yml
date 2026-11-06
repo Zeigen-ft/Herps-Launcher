@@ -1,0 +1,139 @@
+name: Export verified 0.1.0 release files
+
+# Repackage only the already validated migration build. No native rebuild,
+# executable invocation, tag creation or release publication occurs here.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      SOURCE_RUN: '42144749724'
+      SOURCE_COMMIT: ada1c0fcec013ec15d2e8bff865a8bbb1eb875eb
+      SOURCE_ARTIFACT: '13474495737'
+      SOURCE_ARTIFACT_SHA256: 63f167633fb593f5574281f766ba8ed6663d2f4ffb3ce5678851d5fb29fa16ca
+    steps:
+      - name: Check exact successful source run and artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: python
+        run: |
+          import json, os, subprocess
+          repo = os.environ['GITHUB_REPOSITORY']
+          assert repo == 'Zeigen-ft/Herps-Launcher'
+          def get(path):
+              return json.loads(subprocess.check_output(['gh', 'api', path], text=True))
+          run = get(f"repos/{repo}/actions/runs/{os.environ['SOURCE_RUN']}")
+          assert run['status'] == 'completed' and run['conclusion'] == 'success'
+          assert run['head_sha'] == os.environ['SOURCE_COMMIT']
+          assert run['path'] == '.github/workflows/herps-launcher.yml'
+          artifact = get(f"repos/{repo}/actions/artifacts/{os.environ['SOURCE_ARTIFACT']}")
+          assert artifact['name'] == 'Herps-Launcher-0.1.0-release-ready'
+          assert artifact['workflow_run']['id'] == int(os.environ['SOURCE_RUN'])
+          assert artifact['digest'] == 'sha256:' + os.environ['SOURCE_ARTIFACT_SHA256']
+          assert artifact['expired'] is False
+      - name: Retrieve the verified combined files without rebuilding
+        uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: '42144749724'
+          name: Herps-Launcher-0.1.0-release-ready
+          path: release-files
+      - name: Verify every release-file checksum and source identity
+        shell: python
+        run: |
+          import hashlib, json, os
+          from pathlib import Path
+          root = Path('release-files')
+          expected = {
+              'Herps-Launcher-0.1.0-Windows-x64-Setup.exe',
+              'Herps-Launcher-0.1.0-Windows-x64-Portable.zip',
+              'Herps-Launcher-0.1.0-macOS-Intel.dmg',
+              'Herps-Launcher-0.1.0-macOS-Apple-Silicon.dmg',
+              'herspers_rl_chainmail-0.1.0.hmod', 'README.md', 'INSTALLATION.md',
+              'QUICK_START.md', 'RELEASE_NOTES.md', 'LICENSE', 'THIRD_PARTY_NOTICES.md',
+              'LICENSES.zip', 'RLCraft-2.9.3-Local-Inspector.zip',
+              'RELEASE_MANIFEST.json', 'SHA256SUMS.txt',
+          }
+          assert {p.name for p in root.iterdir()} == expected
+          checksums = {}
+          for line in (root / 'SHA256SUMS.txt').read_text(encoding='utf-8').splitlines():
+              sha, name = line.split('  ', 1)
+              assert name in expected - {'SHA256SUMS.txt'} and name not in checksums
+              path = root / name
+              assert path.is_file() and not path.is_symlink()
+              with path.open('rb') as stream:
+                  actual = hashlib.file_digest(stream, 'sha256').hexdigest()
+              assert actual == sha, name
+              checksums[name] = {'sha256': actual, 'bytes': path.stat().st_size}
+          assert set(checksums) == expected - {'SHA256SUMS.txt'}
+          manifest = json.loads((root / 'RELEASE_MANIFEST.json').read_text(encoding='utf-8'))
+          assert manifest['source_commit'] == os.environ['SOURCE_COMMIT']
+          assert manifest['repository'] == os.environ['GITHUB_REPOSITORY']
+          assert manifest['public_release_created'] is False and manifest['tag_created'] is False
+          assert set(manifest['platforms']) == {'windows', 'macos-intel', 'macos-arm64'}
+          for platform in manifest['platforms'].values():
+              assert platform['source_commit'] == os.environ['SOURCE_COMMIT']
+              assert platform['frozen_tests'] == 68 and platform['frozen_skipped'] == []
+              assert platform['gameplay_verified'] is False and platform['interactive_verified'] is False
+              for name, receipt in platform['files'].items():
+                  assert checksums[name]['sha256'] == receipt['sha256']
+                  assert checksums[name]['bytes'] == receipt['bytes']
+          report = {
+              'source_run': int(os.environ['SOURCE_RUN']),
+              'source_commit': os.environ['SOURCE_COMMIT'],
+              'source_artifact': int(os.environ['SOURCE_ARTIFACT']),
+              'source_artifact_sha256': os.environ['SOURCE_ARTIFACT_SHA256'],
+              'verified_files': checksums,
+              'native_binaries_rebuilt': False,
+              'release_created': False, 'tag_created': False,
+          }
+          Path('EXPORT_VERIFICATION.json').write_text(json.dumps(report, indent=2) + '\n')
+          print('PASS: all 14 file hashes, exact native source, and claim boundaries')
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Herps-Launcher-0.1.0-Windows-x64-Setup
+          path: release-files/Herps-Launcher-0.1.0-Windows-x64-Setup.exe
+          compression-level: 0
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Herps-Launcher-0.1.0-Windows-x64-Portable
+          path: release-files/Herps-Launcher-0.1.0-Windows-x64-Portable.zip
+          compression-level: 0
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Herps-Launcher-0.1.0-macOS-Intel
+          path: release-files/Herps-Launcher-0.1.0-macOS-Intel.dmg
+          compression-level: 0
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Herps-Launcher-0.1.0-macOS-Apple-Silicon
+          path: release-files/Herps-Launcher-0.1.0-macOS-Apple-Silicon.dmg
+          compression-level: 0
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Herps-Launcher-0.1.0-Chainmail
+          path: release-files/herspers_rl_chainmail-0.1.0.hmod
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Herps-Launcher-0.1.0-Guides-Checksums-Notices
+          path: |
+            release-files/*.md
+            release-files/LICENSE
+            release-files/LICENSES.zip
+            release-files/RLCraft-2.9.3-Local-Inspector.zip
+            release-files/RELEASE_MANIFEST.json
+            release-files/SHA256SUMS.txt
+            EXPORT_VERIFICATION.json
+          if-no-files-found: error
