@@ -1,0 +1,46 @@
+--- a/crates/horizon-shaders/src/translate/mod.rs
++++ b/crates/horizon-shaders/src/translate/mod.rs
+@@ -50,11 +50,12 @@
+ }
+ 
+ /// The uniforms a gbuffers program reads per draw (5.3's "D"), in a block of their own
+-/// (`HzDraw`, std140: three ints, a pad, a vec4; 32 bytes) the game sets for each draw.
+-pub const DRAW_UNIFORMS: [(&str, &str); 4] = [
++/// (`HzDraw`, std140: four ints and a vec4; 32 bytes) the game sets for each draw.
++pub const DRAW_UNIFORMS: [(&str, &str); 5] = [
+     ("renderStage", "int"),
+     ("entityId", "int"),
+     ("blockEntityId", "int"),
++    ("currentRenderedItemId", "int"),
+     ("entityColor", "vec4"),
+ ];
+ 
+@@ -302,7 +303,7 @@
+         if draw {
+             h.push_str(
+                 "layout(set = 2, binding = 0) uniform HzDraw { int renderStage; int entityId; \
+-                 int blockEntityId; int hz_draw_pad; vec4 entityColor; };\n",
++                 int blockEntityId; int currentRenderedItemId; vec4 entityColor; };\n",
+             );
+         }
+         for s in &samplers {
+@@ -803,9 +804,9 @@
+                    light = (gl_TextureMatrix[1] * gl_MultiTexCoord1).xy;\n    color = gl_Color;\n    \
+                    normal = normalize(gl_NormalMatrix * gl_Normal);\n    id = mc_Entity.x + mc_midTexCoord.x;\n}\n";
+         let fsh = "#version 120\nuniform sampler2D texture;\nuniform sampler2D lightmap;\nuniform mat4 gbufferModelView;\n\
+-                   uniform int renderStage;\nvarying vec2 uv;\nvarying vec2 light;\nvarying vec4 color;\nvarying vec3 normal;\nvarying float id;\n\
++                   uniform int renderStage;\nuniform int currentRenderedItemId;\nvarying vec2 uv;\nvarying vec2 light;\nvarying vec4 color;\nvarying vec3 normal;\nvarying float id;\n\
+                    void main() {\n    vec4 c = texture2D(texture, uv) * texture2D(lightmap, light) * color;\n    \
+-                   /* DRAWBUFFERS:02 */\n    gl_FragData[0] = c * gl_FragCoord.z * float(renderStage);\n    \
++                   /* DRAWBUFFERS:02 */\n    gl_FragData[0] = c * gl_FragCoord.z * float(renderStage + currentRenderedItemId);\n    \
+                    gl_FragData[1] = vec4(normal * 0.5 + 0.5, id);\n}\n";
+         let files: Vec<(String, &str)> =
+             [("gbuffers_terrain.vsh", vsh), ("gbuffers_terrain.fsh", fsh)]
+@@ -846,6 +847,7 @@
+         assert_eq!(p.interface.outputs, vec![0, 1]);
+         // renderStage is set per draw, in its own block.
+         assert!(p.interface.draw && !names.contains(&"renderStage"));
++        assert!(!names.contains(&"currentRenderedItemId"));
+         let per_draw = p.fragment.global_variables.iter().any(|(_, v)| {
+             v.binding
+                 .as_ref()

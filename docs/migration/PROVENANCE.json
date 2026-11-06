@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "source_repository": "Zeigen-ft/Herspers-Minecraft",
+  "source_branch": "feature/herps-java-compatibility",
+  "source_commit": "962a1ada14ec553c540347c539c2b9c112c0270d",
+  "source_file_count": 203,
+  "destination_initial_commit": "bbc4b1927f73048feb0de92a563caa0c89dffe67",
+  "destination_initial_license": "licenses/Herps-Launcher-initial-MIT.txt",
+  "root_license": "GPL-3.0-only; imported unchanged from the verified source",
+  "source_working_tree_modified": false,
+  "method": "Non-destructive merge of unrelated histories; original seed and complete verified source ancestry retained."
+}

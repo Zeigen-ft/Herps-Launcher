@@ -1,0 +1,190 @@
+--- a/crates/horizon-client-render/src/gfx/pack_hand.rs
++++ b/crates/horizon-client-render/src/gfx/pack_hand.rs
+@@ -5,6 +5,7 @@
+ use glam::Mat4;
+ 
+ use super::Vertex;
++use super::pack_draw::{ItemSpan, slot_bytes};
+ 
+ /// `MC_HAND_DEPTH`'s value (1.5): the hand's depth is scaled by it through its projection, so
+ /// that it sits in front of the world in the shared depth buffer.
+@@ -46,10 +47,22 @@
+     capacity: u32,
+     /// Quads uploaded this frame.
+     pub quads: u32,
++    draw_buffer: wgpu::Buffer,
++    pub draw_group: wgpu::BindGroup,
++    draw_stride: u64,
++    draw_layout: wgpu::BindGroupLayout,
++    /// Draws preserve distinct main/offhand item IDs and the empty arm's zero ID.
++    pub draws: Vec<HandDraw>,
++}
++
++pub struct HandDraw {
++    pub base: u32,
++    pub quads: u32,
++    pub slot: u32,
+ }
+ 
+ impl PackHand {
+-    pub fn new(device: &wgpu::Device) -> Self {
++    pub fn new(device: &wgpu::Device, draw_layout: &wgpu::BindGroupLayout) -> Self {
+         let entry = |binding, ty| wgpu::BindGroupLayoutEntry {
+             binding,
+             visibility: wgpu::ShaderStages::VERTEX,
+@@ -75,6 +88,10 @@
+         });
+         let capacity = 256;
+         let (vertices, group) = Self::vertex_buffer(device, &layout, &uniform, capacity);
++        let draw_stride = 32u64.max(u64::from(
++            device.limits().min_uniform_buffer_offset_alignment,
++        ));
++        let (draw_buffer, draw_group) = Self::draw_buffer(device, draw_layout, draw_stride, 8);
+         Self {
+             indices: super::pack_entities::quad_indices(device, capacity),
+             layout,
+@@ -83,7 +100,43 @@
+             group,
+             capacity,
+             quads: 0,
+-        }
++            draw_buffer,
++            draw_group,
++            draw_stride,
++            draw_layout: draw_layout.clone(),
++            draws: Vec::new(),
++        }
++    }
++
++    fn draw_buffer(
++        device: &wgpu::Device,
++        layout: &wgpu::BindGroupLayout,
++        stride: u64,
++        slots: u64,
++    ) -> (wgpu::Buffer, wgpu::BindGroup) {
++        let buffer = device.create_buffer(&wgpu::BufferDescriptor {
++            label: Some("Shader pack hand item draws"),
++            size: stride * slots,
++            usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
++            mapped_at_creation: false,
++        });
++        let group = device.create_bind_group(&wgpu::BindGroupDescriptor {
++            label: Some("Shader pack hand item draws"),
++            layout,
++            entries: &[wgpu::BindGroupEntry {
++                binding: 0,
++                resource: wgpu::BindingResource::Buffer(wgpu::BufferBinding {
++                    buffer: &buffer,
++                    offset: 0,
++                    size: wgpu::BufferSize::new(32),
++                }),
++            }],
++        });
++        (buffer, group)
++    }
++
++    pub fn offset(&self, slot: u32) -> u32 {
++        (u64::from(slot) * self.draw_stride) as u32
+     }
+ 
+     fn vertex_buffer(
+@@ -123,9 +176,11 @@
+         device: &wgpu::Device,
+         queue: &wgpu::Queue,
+         hand: &[Vertex],
++        items: &[ItemSpan],
+         projection: Mat4,
+     ) {
+         self.quads = (hand.len() / 4) as u32;
++        self.draws.clear();
+         if self.quads == 0 {
+             return;
+         }
+@@ -138,16 +193,87 @@
+         queue.write_buffer(&self.vertices, 0, bytemuck::cast_slice(hand));
+         let matrices = [projection, projection.inverse()].map(|m| m.to_cols_array());
+         queue.write_buffer(&self.uniform, 0, bytemuck::cast_slice(&matrices));
++        let runs = item_runs(self.quads, items);
++        let mut bytes = vec![0u8; runs.len() * self.draw_stride as usize];
++        for (slot, &(base, quads, item)) in runs.iter().enumerate() {
++            let offset = slot * self.draw_stride as usize;
++            bytes[offset..offset + 32].copy_from_slice(&slot_bytes(
++                horizon_shaders::render_stage("HAND_SOLID"),
++                0,
++                0,
++                item,
++                [0.0; 4],
++            ));
++            self.draws.push(HandDraw {
++                base: base * 4,
++                quads,
++                slot: slot as u32,
++            });
++        }
++        if bytes.len() as u64 > self.draw_buffer.size() {
++            (self.draw_buffer, self.draw_group) = Self::draw_buffer(
++                device,
++                &self.draw_layout,
++                self.draw_stride,
++                (runs.len() as u64).next_power_of_two(),
++            );
++        }
++        queue.write_buffer(&self.draw_buffer, 0, &bytes);
+     }
+ 
+     pub fn vertices(&self) -> wgpu::BufferSlice<'_> {
+         self.vertices.slice(..)
+     }
++}
++
++/// Covers every hand quad once, including unmarked empty arms and trailing effects.
++fn item_runs(quads: u32, spans: &[ItemSpan]) -> Vec<(u32, u32, i32)> {
++    let (mut cursor, mut item) = (0, 0);
++    let mut runs = Vec::new();
++    for span in spans {
++        let next = (span.start / 4).min(quads);
++        if next < cursor {
++            continue;
++        }
++        if next > cursor {
++            runs.push((cursor, next - cursor, item));
++        }
++        cursor = next;
++        item = span.item_id;
++    }
++    if cursor < quads {
++        runs.push((cursor, quads - cursor, item));
++    }
++    runs
+ }
+ 
+ #[cfg(test)]
+ mod tests {
+     use super::*;
++
++    #[test]
++    fn item_runs_preserve_arms_both_hands_and_trailing_effects() {
++        let spans = [
++            ItemSpan {
++                start: 8,
++                item_id: 1001,
++            },
++            ItemSpan {
++                start: 20,
++                item_id: 1002,
++            },
++            ItemSpan {
++                start: 28,
++                item_id: 0,
++            },
++        ];
++        assert_eq!(
++            item_runs(9, &spans),
++            [(0, 2, 0), (2, 3, 1001), (5, 2, 1002), (7, 2, 0)]
++        );
++        assert_eq!(item_runs(2, &[]), [(0, 2, 0)]);
++        assert!(item_runs(0, &spans).is_empty());
++    }
+ 
+     /// The hand's window depth lies within `MC_HAND_DEPTH` of the middle (packs tell the hand
+     /// apart by it), and x, y match the plain projection.

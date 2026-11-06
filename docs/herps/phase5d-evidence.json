@@ -1,0 +1,249 @@
+{
+  "schema": 1,
+  "baseline": "4bcb4564abae7cbeb12f8f1645dd58ae858c5339",
+  "candidate_implementation": "1066092d15a8287cb3855a344650e93996acb433",
+  "ci_hardening": "81e99058ed077fe5cf0301ea4cb3d3c154216748",
+  "local": {
+    "python_tests": {
+      "run": 347,
+      "passed": 333,
+      "skipped": 14,
+      "failed": 0,
+      "log_sha256": "d63bb7775e19197cd445baf9f4d1cdbe5e50c0a8d9e0bf7e08227de45a99a78a"
+    },
+    "preparer_rust_library": {
+      "passed": 49,
+      "failed": 0,
+      "ignored": 0,
+      "platform": "Linux",
+      "real_gameplay": false
+    }
+  },
+  "windows": {
+    "run_id": 41868081178,
+    "job_id": 126707426909,
+    "status": "success",
+    "platform": "Windows-2025Server-10.0.26100-SP0",
+    "source_tests": {
+      "run": 345,
+      "passed": 332,
+      "skipped": 13,
+      "failed": 0
+    },
+    "frozen_tests": {
+      "run": 62,
+      "failed": 0,
+      "skipped": 0
+    },
+    "early_path_rejection_before_copy": true,
+    "existing_profile_and_preference_preserved": true,
+    "preserved_file_hashes": {
+      "game\\options.txt": "4fc5a5f8bcc5c930c78048d5aac2ab10e81d4ebad9aa7c351aeaa4efc1613a06",
+      "herps-launcher\\settings.json": "6f9ebb3e1466856e26e1c3ecfa0ad5efcdaea2e2e9643b0023e9e70a5c3552db",
+      "game\\shaderpacks\\owned.txt": "4fc5a5f8bcc5c930c78048d5aac2ab10e81d4ebad9aa7c351aeaa4efc1613a06",
+      "game\\horizon-mod-data\\existing\\data.txt": "4fc5a5f8bcc5c930c78048d5aac2ab10e81d4ebad9aa7c351aeaa4efc1613a06",
+      "game\\saves\\Existing\\level.dat": "4fc5a5f8bcc5c930c78048d5aac2ab10e81d4ebad9aa7c351aeaa4efc1613a06",
+      "herps-launcher\\profiles\\existing\\saves\\Existing\\level.dat": "4fc5a5f8bcc5c930c78048d5aac2ab10e81d4ebad9aa7c351aeaa4efc1613a06",
+      "herps-launcher\\profiles\\owned_acceptance\\saves\\Owned\\level.dat": "fe0b6d4ccdae359392e280fd37a346637178ab553f315d23e692081713a0e0ee"
+    },
+    "setup_sha256": "2c0c92eeefacb5f45dbfbfa963ff16a356019d874d6d35853cda8af3624e5d64",
+    "artifacts": {
+      "package": {
+        "id": 13344443296,
+        "sha256": "fde28ecfba49e6fe9dd4fc7d523641bcca685427f6b031a20e4d746008708dcb"
+      },
+      "evidence": {
+        "id": 13344777645,
+        "sha256": "7ff19aee916755be41110283107700786a9c9256b5ac39aa2232288f109459e9"
+      }
+    },
+    "candidate": {
+      "source_commit": "1066092d15a8287cb3855a344650e93996acb433",
+      "artifacts": [
+        {
+          "file": "Herps-Launcher-0.1.0-Windows-x64-Setup.exe",
+          "bytes": 102409437,
+          "sha256": "2c0c92eeefacb5f45dbfbfa963ff16a356019d874d6d35853cda8af3624e5d64"
+        },
+        {
+          "file": "Herps-Launcher-0.1.0-x86_64-pc-windows-msvc-zfk3k5fu.zip",
+          "bytes": 137376282,
+          "sha256": "96739154688e1e7a23197b44ace2c3559bde27c3be3d4a67aa0b1233869f3e77"
+        }
+      ],
+      "requirements_sha256": "53d5aa9d757f097595cb5c5d1b2786bac397528cf82fcb7cf93d77d28a38b56c",
+      "upstream_lock_sha256": "62d66a9e94f689dadacaea9bbc01e818cc09e38847c0ebe5f1a7fc6b00b96975",
+      "interactive_verified": false,
+      "gameplay_verified": false,
+      "public_release_approved": false,
+      "reproducibility": "pinned recipe and recorded hashes; not bit-for-bit reproducible"
+    },
+    "builder_python": "3.12.10",
+    "rust_toolchain": "1.95.0"
+  },
+  "intel": {
+    "run_id": 41868094624,
+    "job_id": 126707475113,
+    "status": "success",
+    "platform": "macOS-15.7.9-x86_64-i386-64bit",
+    "source_tests": {
+      "run": 345,
+      "passed": 343,
+      "skipped": 2,
+      "failed": 0
+    },
+    "frozen_tests": {
+      "run": 62,
+      "failed": 0,
+      "skipped": 0
+    },
+    "dmg_sha256": "5f5491966255bb7743a6b5f8ec61b2326e8c448f6b56db8af1d19e78fc42c523",
+    "artifacts": {
+      "package": {
+        "id": 13347810432,
+        "sha256": "3ed738fd26e566e80828780f4d3302c2ac642c510315a6264943f01cb316f8e5"
+      },
+      "evidence": {
+        "id": 13347780503,
+        "sha256": "5add35e0980efb73f95d1f6e1fdf0e981ae6ca7dcb43df250aaf10399c987925"
+      }
+    },
+    "builder_python": "3.12.10",
+    "rust_toolchain": "1.95.0",
+    "candidate": {
+      "source_commit": "1066092d15a8287cb3855a344650e93996acb433",
+      "artifacts": [
+        {
+          "file": "Herps-Launcher-0.1.0-x86_64-apple-darwin-pcw9t4lo.dmg",
+          "bytes": 164346267,
+          "sha256": "5f5491966255bb7743a6b5f8ec61b2326e8c448f6b56db8af1d19e78fc42c523"
+        }
+      ],
+      "requirements_sha256": "fa45cc4954e69f6d8be74d9681b314bbf943bfa8c21bd4be8fd9eb4db6b2a019",
+      "upstream_lock_sha256": "b34077d6e6eb39d56f7dd98235b63ba50dd2d9c00aae576964478ceba0171993",
+      "interactive_verified": false,
+      "gameplay_verified": false,
+      "public_release_approved": false,
+      "reproducibility": "pinned recipe and recorded hashes; not bit-for-bit reproducible"
+    }
+  },
+  "arm64_15": {
+    "run_id": 41868087286,
+    "attempts": 2,
+    "result": "not executed: hosted capacity failure"
+  },
+  "arm64_26": {
+    "run_id": 41930710396,
+    "result": "success",
+    "scope": "experimental fallback; not macOS 15 acceptance",
+    "source_commit": "81e99058ed077fe5cf0301ea4cb3d3c154216748",
+    "job_id": 126926577809,
+    "platform": "macOS-26.6.2-arm64-arm-64bit",
+    "source_tests": {
+      "run": 347,
+      "passed": 345,
+      "skipped": 2,
+      "failed": 0
+    },
+    "frozen_tests": {
+      "run": 62,
+      "failed": 0,
+      "skipped": 0
+    },
+    "dmg_sha256": "fdbd4593304130e07d42c4f9cf485ce605e95f53c12e3f6fbd8292e741202a4a",
+    "artifacts": {
+      "package": {
+        "id": 13373530525,
+        "sha256": "12456cf9561be2eb7ec4a921e4ec92625b34f62c0d2bc7fd94200c660b8ce84b"
+      },
+      "evidence": {
+        "id": 13372079838,
+        "sha256": "4edf56a189681b59b4b2f38651ca3963cdfcf7dc6339b5e8caf6b27f3a97b53a"
+      }
+    },
+    "candidate": {
+      "source_commit": "81e99058ed077fe5cf0301ea4cb3d3c154216748",
+      "artifacts": [
+        {
+          "file": "Herps-Launcher-0.1.0-aarch64-apple-darwin-sjw1xd7t.dmg",
+          "bytes": 168313958,
+          "sha256": "fdbd4593304130e07d42c4f9cf485ce605e95f53c12e3f6fbd8292e741202a4a"
+        }
+      ],
+      "requirements_sha256": "fa45cc4954e69f6d8be74d9681b314bbf943bfa8c21bd4be8fd9eb4db6b2a019",
+      "upstream_lock_sha256": "b34077d6e6eb39d56f7dd98235b63ba50dd2d9c00aae576964478ceba0171993",
+      "interactive_verified": false,
+      "gameplay_verified": false,
+      "public_release_approved": false,
+      "reproducibility": "pinned recipe and recorded hashes; not bit-for-bit reproducible"
+    },
+    "builder_python": "3.12.10",
+    "rust_toolchain": "1.95.0"
+  },
+  "audits": {
+    "python_roots": {
+      "count": 7,
+      "known_vulnerabilities": 0
+    },
+    "windows_resolved_python": {
+      "count": 9,
+      "known_vulnerabilities": 0,
+      "scan_completed": true
+    },
+    "intel_resolved_python": {
+      "count": 8,
+      "known_vulnerabilities": 0,
+      "scan_completed": true
+    },
+    "rustsec": {
+      "tool": "cargo-audit 0.22.2",
+      "database_commit": "965bf9ad083b58e6340d65829d85217b18be9290",
+      "workspace_zip_advisory_count": 4,
+      "desktop_zip_version": "9.1.3",
+      "zip_2_4_2_consumer": "horizon-android; excluded from selected desktop dependency closure",
+      "tokio_1_53_2": "absent from target-resolved Windows/ARM64/Intel normal/build graphs with mods",
+      "remaining_warnings": [
+        "ttf-parser 0.25.1 unmaintained",
+        "clipboard-win 5.4.1 yanked"
+      ]
+    },
+    "arm64_resolved_python": {
+      "count": 8,
+      "known_vulnerabilities": 0,
+      "scan_completed": true
+    }
+  },
+  "interactive_verified": false,
+  "gameplay_verified": false,
+  "public_release_approved": false,
+  "updated_client_date": "2026-11-05",
+  "diagnostic_attempts": [
+    {
+      "run_id": 41860230975,
+      "source": "594440c",
+      "windows_source_tests": {
+        "run": 342,
+        "passed": 329,
+        "skipped": 13
+      },
+      "installer_exit": 5,
+      "evidence_id": 13340321311,
+      "evidence_sha256": "5452b8d6d538b44bf3efdef1dcd09e6c56e4e1e4ee739ad1fdbe77ee6354db7b"
+    },
+    {
+      "run_id": 41862145912,
+      "source": "57d7517",
+      "windows_source_tests": {
+        "run": 343,
+        "passed": 330,
+        "skipped": 13
+      },
+      "installer_exit": 5,
+      "cause": "long destination path; Inno aborted and rolled back",
+      "evidence_id": 13339609817,
+      "evidence_sha256": "0c7a1a22a79f6b3baf258ea1a21250b4044ad3362bef6576f45ca44e95e7382d"
+    }
+  ],
+  "phase5d_full_acceptance": "incomplete: native manual/gameplay and distribution sign-off remain open",
+  "input_hash_note": "Hashes bind raw checkout bytes. Windows CRLF normalization accounts for different requirements/upstream-lock hashes; LF-normalized inputs match the Mac candidates."
+}

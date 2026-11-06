@@ -1,0 +1,145 @@
+name: Build Windows PC app
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/windows.yml'
+      - 'scripts/build_windows.ps1'
+      - 'scripts/smoke_windows.ps1'
+      - 'scripts/repair_windows_stack.ps1'
+      - 'packaging/launcher_windows.rs'
+      - 'packaging/private_server.rs'
+      - 'packaging/windows/**'
+      - 'tools/package_windows.py'
+      - 'tools/package_macos.py'
+      - 'tools/fetch_upstream.py'
+      - 'tools/prepare_upstream.py'
+      - 'patches/**'
+      - 'tests/test_prepare_upstream.py'
+      - 'tests/test_windows_launcher.py'
+      - 'tests/test_package_windows.py'
+      - 'tests/test_windows_stack_repair.py'
+      - 'tests/fixtures/private_server_probe.rs'
+      - 'docs/INSTALL-WINDOWS.md'
+      - 'docs/HOSTING-TAILSCALE.md'
+      - 'docs/SHADERS.md'
+      - 'upstream.lock.json'
+      - 'LICENSE'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.repository == 'Zeigen-ft/Herspers-Minecraft' }}
+    runs-on: windows-latest
+    timeout-minutes: 90
+    env:
+      CARGO_BUILD_JOBS: '3'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install pinned Rust for early launcher tests
+        shell: pwsh
+        run: |
+          rustup toolchain install 1.95.0 --profile minimal
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          'RUSTUP_TOOLCHAIN=1.95.0' | Out-File -FilePath $env:GITHUB_ENV -Append
+      - name: Tooling and native launcher tests
+        shell: pwsh
+        run: |
+          $PSNativeCommandUseErrorActionPreference = $false
+          python -m unittest discover -s tests -v *> tooling-tests.log
+          $result = $LASTEXITCODE
+          Get-Content tooling-tests.log
+          $tail = (Get-Content tooling-tests.log -Tail 120) -join "`n"
+          $message = $tail.Replace('%', '%25').Replace("`r", '%0D').Replace("`n", '%0A')
+          if ($result -ne 0) {
+            Write-Output "::error title=Windows tooling tests failed::$message"
+          }
+          exit $result
+      - name: Restore pinned engine build cache
+        id: engine-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            .cache/target
+            .cache/upstream
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: windows-x64-rust-1.95-static-fast-stack16-shaders-v1-${{ hashFiles('upstream.lock.json', 'patches/**') }}
+          restore-keys: |
+            windows-x64-rust-1.95-static-fast-stack16-v2-
+      - name: Native engine and resource-preparer library tests
+        shell: pwsh
+        env:
+          HORIZON_VERSION: '0.7.6'
+          RUSTFLAGS: '-C target-feature=+crt-static -C link-arg=/STACK:16777216'
+          CARGO_TARGET_DIR: ${{ github.workspace }}/.cache/target
+        run: |
+          $PSNativeCommandUseErrorActionPreference = $false
+          $sourceRoot = python tools/prepare_upstream.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo +1.95.0 test --locked --profile fast --target x86_64-pc-windows-msvc --manifest-path "$sourceRoot/Cargo.toml" -p horizon-core -p horizon-prepare -p horizon-shaders -p horizon-shader-api --lib *> native-library-tests.log
+          $result = $LASTEXITCODE
+          Get-Content native-library-tests.log
+          $tail = (Get-Content native-library-tests.log -Tail 80) -join "`n"
+          $message = $tail.Replace('%', '%25').Replace("`r", '%0D').Replace("`n", '%0A')
+          if ($result -ne 0) {
+            Write-Output "::error title=Native Windows library tests failed::$message"
+          } else {
+            $summary = ((Get-Content native-library-tests.log | Select-String '^test result:') -join ' | ')
+            Write-Output "::notice title=Native Windows library test results::$summary"
+          }
+          exit $result
+      - name: Build and package Windows x64
+        id: native-build
+        shell: pwsh
+        run: |
+          try {
+            & ./scripts/build_windows.ps1 *>&1 | Tee-Object -FilePath build-windows.log
+          } catch {
+            $tail = (Get-Content build-windows.log -Tail 40 -ErrorAction SilentlyContinue) -join "`n"
+            $message = ($tail + "`n" + $_.Exception.Message).Replace('%', '%25').Replace("`r", '%0D').Replace("`n", '%0A')
+            Write-Output "::error title=Windows build failed::$message"
+            throw
+          }
+      - name: Run packaged Windows executables without game assets
+        shell: pwsh
+        run: |
+          try {
+            ./scripts/smoke_windows.ps1 -PackagePath 'dist/windows-x86_64/Herspers-Minecraft'
+          } catch {
+            $message = $_.Exception.Message.Replace('%', '%25').Replace("`r", '%0D').Replace("`n", '%0A')
+            Write-Output "::error title=Windows startup check failed::$message"
+            throw
+          }
+      - name: Upload Windows package
+        uses: actions/upload-artifact@v4
+        with:
+          name: Herspers-Minecraft-Windows-x64
+          path: dist/windows-x86_64/*.zip
+          if-no-files-found: error
+      - name: Preserve diagnostic build after a later check fails
+        if: failure() && steps.native-build.outcome == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: Windows-diagnostic-build-unverified
+          path: |
+            dist/windows-x86_64/*.zip
+            *-tests.log
+            build-windows.log
+          if-no-files-found: warn
+      - name: Retain compiled engine for future builds
+        if: always() && steps.native-build.outcome == 'success' && steps.engine-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            .cache/target
+            .cache/upstream
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: windows-x64-rust-1.95-static-fast-stack16-shaders-v1-${{ hashFiles('upstream.lock.json', 'patches/**') }}

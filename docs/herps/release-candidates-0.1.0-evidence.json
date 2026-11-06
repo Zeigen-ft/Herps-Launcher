@@ -1,0 +1,448 @@
+{
+  "schema": 1,
+  "recorded_date": "2026-11-06",
+  "timezone": "Asia/Singapore",
+  "candidate_source_commit": "5bb63ec18088f2c7ae22b11bd63c7f092d91a6ff",
+  "application_content_and_build_code_unchanged_from": "8fb33fb04b6a3a7dd94d83ca81b08267efe7d4c9",
+  "workflow_run_id": 42129264888,
+  "workflow_url": "https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/42129264888",
+  "workflow_conclusion": "success",
+  "jobs": [
+    {
+      "id": 127601434993,
+      "name": "desktop (macos-15-intel, x86_64, x64)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 127601435065,
+      "name": "desktop (windows-latest, x86_64, x64)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 127601435153,
+      "name": "desktop (macos-15, arm64, arm64)",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ],
+  "status": "CI_VERIFIED_INTERNAL_CANDIDATES",
+  "public_release_approved": false,
+  "full_native_acceptance": false,
+  "full_rlcraft_compatibility": false,
+  "full_funcraft_compatibility": false,
+  "physical_evidence_reference": {
+    "file": "../targeted-porting/CHAINMAIL_WINDOWS_PHYSICAL_EVIDENCE.json",
+    "type": "user_reported_physical_gameplay",
+    "workflow_run_id": 42118750443,
+    "source_commit": "8fb33fb04b6a3a7dd94d83ca81b08267efe7d4c9",
+    "reported_game_modes": [
+      "Survival",
+      "Creative"
+    ],
+    "scope": "Five Windows checks PASS; crafting and inventory persistence confirmed in both modes. Not a blanket acceptance of rebuilt artifacts.",
+    "unresolved_observations": [
+      "earlier loading-logo stall",
+      "initially empty recipe output"
+    ]
+  },
+  "platforms": [
+    {
+      "platform": "macos-arm64",
+      "source_commit": "5bb63ec18088f2c7ae22b11bd63c7f092d91a6ff",
+      "artifacts": {
+        "candidate": {
+          "platform": "macos-arm64",
+          "kind": "candidate",
+          "id": 13463561293,
+          "name": "Herps-Launcher-0.1.0-macOS-arm64",
+          "size_in_bytes": 140102299,
+          "digest": "sha256:9acc7eeadb460827a6d8a7a668e109ba32f28ee1237e2183a923c8558eb89e3b",
+          "download_url": "https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/42129264888/artifacts/13463561293"
+        },
+        "content": {
+          "platform": "macos-arm64",
+          "kind": "content",
+          "id": 13463476554,
+          "name": "RLCraft-Chainmail-0.1.0-macOS-arm64",
+          "size_in_bytes": 14688,
+          "digest": "sha256:938edaf11a52450597b49dec555052f604ebe34ba1c86d9f2da5e97e8b96a02a",
+          "download_url": "https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/42129264888/artifacts/13463476554"
+        },
+        "evidence": {
+          "platform": "macos-arm64",
+          "kind": "evidence",
+          "id": 13463226958,
+          "name": "Herps-Launcher-evidence-macOS-arm64",
+          "size_in_bytes": 208251,
+          "digest": "sha256:0c81f7f642506e8f65b68e8f5af3f3a827437b344bed793abc047d4c9585c64a",
+          "download_url": "https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/42129264888/artifacts/13463226958"
+        }
+      },
+      "member_hashes_independently_verified": true,
+      "deliverables": [
+        {
+          "file": "Herps-Launcher-0.1.0-aarch64-apple-darwin-biioohlp.dmg",
+          "bytes": 176579974,
+          "sha256": "87d138d92223818e1be16dc5de6829211c7a56fcb11c64ed383c1b99d9d51609"
+        }
+      ],
+      "input_hashes": {
+        "requirements_sha256": "fa45cc4954e69f6d8be74d9681b314bbf943bfa8c21bd4be8fd9eb4db6b2a019",
+        "upstream_lock_sha256": "b34077d6e6eb39d56f7dd98235b63ba50dd2d9c00aae576964478ceba0171993"
+      },
+      "notarization": {
+        "status": "not_requested",
+        "notarized": false,
+        "dmg_sha256": "87d138d92223818e1be16dc5de6829211c7a56fcb11c64ed383c1b99d9d51609"
+      },
+      "native_lifecycle": {
+        "status": "passed",
+        "architecture": "arm64",
+        "interactive_verified": false,
+        "gameplay_verified": false,
+        "platform": "macOS-15.8.2-arm64-arm-64bit",
+        "dmg_sha256": "87d138d92223818e1be16dc5de6829211c7a56fcb11c64ed383c1b99d9d51609",
+        "gatekeeper_interactive": "not tested",
+        "notarization": "not requested; development signing only"
+      },
+      "frozen": {
+        "status": "passed",
+        "interactive_verified": false,
+        "gameplay_verified": false,
+        "tools_on_path": {
+          "cargo": null,
+          "rustc": null,
+          "rustup": null
+        },
+        "tests_run": 68,
+        "skipped": [],
+        "targeted_backup_cases_verified": [
+          "test_modpacks_ui.ModpacksPageTests.test_backup_and_existing_controls_remain_reachable_at_small_window_sizes",
+          "test_modpacks_ui.ModpacksPageTests.test_targeted_backup_cancellation_unknown_pack_and_profile_switch_fail_closed",
+          "test_modpacks_ui.ModpacksPageTests.test_targeted_world_backup_and_verification_do_not_unlock_java_or_pack_play"
+        ],
+        "chainmail_cases_verified": [
+          "test_modpacks_ui.ModpacksPageTests.test_chainmail_cancel_profile_switch_and_existing_save_fail_closed",
+          "test_modpacks_ui.ModpacksPageTests.test_chainmail_controls_reachable_and_busy_install_is_blocked",
+          "test_modpacks_ui.ModpacksPageTests.test_chainmail_explicit_profile_install_starts_off_and_preserves_play_guards"
+        ]
+      },
+      "source_tests": {
+        "collected": 421,
+        "passed": 418,
+        "skipped": 3,
+        "failures": 0,
+        "skipped_cases": [
+          "test_supplied_apk (test_inspect_apk.ApkTests.test_supplied_apk) ... skipped 'Set HORIZON_TEST_APK to run supplied-APK integration'",
+          "test_case_collision_is_rejected (test_package_bedrock_windows.BedrockPackagingTests.test_case_collision_is_rejected) ... skipped 'Filesystem cannot construct distinct case-colliding files'",
+          "test_windows_junction_cannot_redirect_installation (test_rlcraft_chainmail.ChainmailTests.test_windows_junction_cannot_redirect_installation) ... skipped 'Windows junction behavior requires Windows'"
+        ]
+      },
+      "content": {
+        "schema": 1,
+        "source_commit": "5bb63ec18088f2c7ae22b11bd63c7f092d91a6ff",
+        "package": "herspers_rl_chainmail-0.1.0.hmod",
+        "sha256": "015c3d553a6a2bcfed4412559b9b83bc3ef65599d539a7686e65577ec4c5c346",
+        "size": 40002,
+        "default_enabled": false,
+        "gameplay_verified": false,
+        "engine_revision": "7301f6fdd7f470b11317276e7a11b4dc615c137a",
+        "api": "0.2",
+        "items": 1,
+        "recipes": 2,
+        "original_mod_code_or_assets_included": false
+      },
+      "native_recipe_probe": {
+        "status": "NOT RUN",
+        "scope": "No Mac-specific recipe matcher invocation; common content hash matches the Windows-validated package."
+      },
+      "ci_gameplay_verified": false,
+      "ci_interactive_verified": false,
+      "physical_acceptance_of_this_build": "NOT RUN"
+    },
+    {
+      "platform": "macos-intel",
+      "source_commit": "5bb63ec18088f2c7ae22b11bd63c7f092d91a6ff",
+      "artifacts": {
+        "evidence": {
+          "platform": "macos-intel",
+          "kind": "evidence",
+          "id": 13465945046,
+          "name": "Herps-Launcher-evidence-macOS-x86_64",
+          "size_in_bytes": 208236,
+          "digest": "sha256:e0fc6588d21946e924702b6e798f2c5b3160fb34f5338e7a7aa01b5624ed4da2",
+          "download_url": "https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/42129264888/artifacts/13465945046"
+        },
+        "content": {
+          "platform": "macos-intel",
+          "kind": "content",
+          "id": 13465565714,
+          "name": "RLCraft-Chainmail-0.1.0-macOS-x86_64",
+          "size_in_bytes": 14688,
+          "digest": "sha256:cfc6c75a2d67c55d49297ec50815a42721b6f08a1559919f31ff67937ecaf3a1",
+          "download_url": "https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/42129264888/artifacts/13465565714"
+        },
+        "candidate": {
+          "platform": "macos-intel",
+          "kind": "candidate",
+          "id": 13464239628,
+          "name": "Herps-Launcher-0.1.0-macOS-x86_64",
+          "size_in_bytes": 143785739,
+          "digest": "sha256:4d15fe3c53e01f6ccd6d6d7f4f82d380d92f626361963bae37be6309dfd721c6",
+          "download_url": "https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/42129264888/artifacts/13464239628"
+        }
+      },
+      "member_hashes_independently_verified": true,
+      "deliverables": [
+        {
+          "file": "Herps-Launcher-0.1.0-x86_64-apple-darwin-bc_livxs.dmg",
+          "bytes": 165996396,
+          "sha256": "2a677ae88a8eca79984798a2bf8114c57c49fd9f903dde642cc10bfcb4a043f2"
+        }
+      ],
+      "input_hashes": {
+        "requirements_sha256": "fa45cc4954e69f6d8be74d9681b314bbf943bfa8c21bd4be8fd9eb4db6b2a019",
+        "upstream_lock_sha256": "b34077d6e6eb39d56f7dd98235b63ba50dd2d9c00aae576964478ceba0171993"
+      },
+      "notarization": {
+        "status": "not_requested",
+        "notarized": false,
+        "dmg_sha256": "2a677ae88a8eca79984798a2bf8114c57c49fd9f903dde642cc10bfcb4a043f2"
+      },
+      "native_lifecycle": {
+        "status": "passed",
+        "architecture": "x86_64",
+        "interactive_verified": false,
+        "gameplay_verified": false,
+        "platform": "macOS-15.7.9-x86_64-i386-64bit",
+        "dmg_sha256": "2a677ae88a8eca79984798a2bf8114c57c49fd9f903dde642cc10bfcb4a043f2",
+        "gatekeeper_interactive": "not tested",
+        "notarization": "not requested; development signing only"
+      },
+      "frozen": {
+        "status": "passed",
+        "interactive_verified": false,
+        "gameplay_verified": false,
+        "tools_on_path": {
+          "cargo": null,
+          "rustc": null,
+          "rustup": null
+        },
+        "tests_run": 68,
+        "skipped": [],
+        "targeted_backup_cases_verified": [
+          "test_modpacks_ui.ModpacksPageTests.test_backup_and_existing_controls_remain_reachable_at_small_window_sizes",
+          "test_modpacks_ui.ModpacksPageTests.test_targeted_backup_cancellation_unknown_pack_and_profile_switch_fail_closed",
+          "test_modpacks_ui.ModpacksPageTests.test_targeted_world_backup_and_verification_do_not_unlock_java_or_pack_play"
+        ],
+        "chainmail_cases_verified": [
+          "test_modpacks_ui.ModpacksPageTests.test_chainmail_cancel_profile_switch_and_existing_save_fail_closed",
+          "test_modpacks_ui.ModpacksPageTests.test_chainmail_controls_reachable_and_busy_install_is_blocked",
+          "test_modpacks_ui.ModpacksPageTests.test_chainmail_explicit_profile_install_starts_off_and_preserves_play_guards"
+        ]
+      },
+      "source_tests": {
+        "collected": 421,
+        "passed": 418,
+        "skipped": 3,
+        "failures": 0,
+        "skipped_cases": [
+          "test_supplied_apk (test_inspect_apk.ApkTests.test_supplied_apk) ... skipped 'Set HORIZON_TEST_APK to run supplied-APK integration'",
+          "test_case_collision_is_rejected (test_package_bedrock_windows.BedrockPackagingTests.test_case_collision_is_rejected) ... skipped 'Filesystem cannot construct distinct case-colliding files'",
+          "test_windows_junction_cannot_redirect_installation (test_rlcraft_chainmail.ChainmailTests.test_windows_junction_cannot_redirect_installation) ... skipped 'Windows junction behavior requires Windows'"
+        ]
+      },
+      "content": {
+        "schema": 1,
+        "source_commit": "5bb63ec18088f2c7ae22b11bd63c7f092d91a6ff",
+        "package": "herspers_rl_chainmail-0.1.0.hmod",
+        "sha256": "015c3d553a6a2bcfed4412559b9b83bc3ef65599d539a7686e65577ec4c5c346",
+        "size": 40002,
+        "default_enabled": false,
+        "gameplay_verified": false,
+        "engine_revision": "7301f6fdd7f470b11317276e7a11b4dc615c137a",
+        "api": "0.2",
+        "items": 1,
+        "recipes": 2,
+        "original_mod_code_or_assets_included": false
+      },
+      "native_recipe_probe": {
+        "status": "NOT RUN",
+        "scope": "No Mac-specific recipe matcher invocation; common content hash matches the Windows-validated package."
+      },
+      "ci_gameplay_verified": false,
+      "ci_interactive_verified": false,
+      "physical_acceptance_of_this_build": "NOT RUN"
+    },
+    {
+      "platform": "windows",
+      "source_commit": "5bb63ec18088f2c7ae22b11bd63c7f092d91a6ff",
+      "artifacts": {
+        "content": {
+          "platform": "windows",
+          "kind": "content",
+          "id": 13464038438,
+          "name": "RLCraft-Chainmail-0.1.0-Windows-x86_64",
+          "size_in_bytes": 15277,
+          "digest": "sha256:c4740ddff7e2bf84fe99a32f38cf5353c887022164e979ec68812c708b14220b",
+          "download_url": "https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/42129264888/artifacts/13464038438"
+        },
+        "evidence": {
+          "platform": "windows",
+          "kind": "evidence",
+          "id": 13464033386,
+          "name": "Herps-Launcher-evidence-Windows-x86_64",
+          "size_in_bytes": 677281,
+          "digest": "sha256:3b995381c1ef5b83f36fc6169521948bb6a2ff9a9d01069d1e28163dc6332973",
+          "download_url": "https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/42129264888/artifacts/13464033386"
+        },
+        "candidate": {
+          "platform": "windows",
+          "kind": "candidate",
+          "id": 13463659146,
+          "name": "Herps-Launcher-0.1.0-Windows-x86_64",
+          "size_in_bytes": 238427488,
+          "digest": "sha256:e8d472eea50924782302c8c5516e3fcf2368742861abd66005ab2147dbc2b3a8",
+          "download_url": "https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/42129264888/artifacts/13463659146"
+        }
+      },
+      "member_hashes_independently_verified": true,
+      "deliverables": [
+        {
+          "file": "Herps-Launcher-0.1.0-Windows-x64-Setup.exe",
+          "bytes": 102606324,
+          "sha256": "f05dfee0ad34f48a84ed79a3eb3a4108753302c0ee31170b243fbbef99bef68e"
+        },
+        {
+          "file": "Herps-Launcher-0.1.0-x86_64-pc-windows-msvc-dg5uq_qt.zip",
+          "bytes": 137693687,
+          "sha256": "1cb19c59497f7c5acecae2df5663f00cb461a2829deafa8a80f1cf5e6157eee2"
+        }
+      ],
+      "input_hashes": {
+        "requirements_sha256": "53d5aa9d757f097595cb5c5d1b2786bac397528cf82fcb7cf93d77d28a38b56c",
+        "upstream_lock_sha256": "62d66a9e94f689dadacaea9bbc01e818cc09e38847c0ebe5f1a7fc6b00b96975"
+      },
+      "native_mod_regression": {
+        "status": "passed",
+        "target": "x86_64-pc-windows-msvc",
+        "revision": "7301f6fdd7f470b11317276e7a11b4dc615c137a",
+        "mixins": "4342a0bfbe71d4d14185528d64e496d6022f16a1",
+        "compiled_binary_sha256": "02214e736a52e78fcc8ee90b1bc9edebe9545823568a7239b6ab42c5b6c1c218",
+        "injected_marker_present": true,
+        "native_selection_verified": true,
+        "rollback_selection_verified": true,
+        "save_preserved": true,
+        "clean_binary_preserved": true,
+        "source_cache_preserved": true,
+        "hook_execution_verified": false,
+        "gameplay_verified": false
+      },
+      "native_lifecycle": {
+        "status": "passed",
+        "interactive_verified": false,
+        "gameplay_verified": false,
+        "platform": "Windows-2025Server-10.0.26100-SP0",
+        "setup_sha256": "f05dfee0ad34f48a84ed79a3eb3a4108753302c0ee31170b243fbbef99bef68e",
+        "overlong_destination_rejected_before_copy": true,
+        "existing_profile_and_preference_preserved": true
+      },
+      "frozen": {
+        "status": "passed",
+        "interactive_verified": false,
+        "gameplay_verified": false,
+        "tools_on_path": {
+          "cargo": null,
+          "rustc": null,
+          "rustup": null
+        },
+        "tests_run": 68,
+        "skipped": [],
+        "targeted_backup_cases_verified": [
+          "test_modpacks_ui.ModpacksPageTests.test_backup_and_existing_controls_remain_reachable_at_small_window_sizes",
+          "test_modpacks_ui.ModpacksPageTests.test_targeted_backup_cancellation_unknown_pack_and_profile_switch_fail_closed",
+          "test_modpacks_ui.ModpacksPageTests.test_targeted_world_backup_and_verification_do_not_unlock_java_or_pack_play"
+        ],
+        "chainmail_cases_verified": [
+          "test_modpacks_ui.ModpacksPageTests.test_chainmail_cancel_profile_switch_and_existing_save_fail_closed",
+          "test_modpacks_ui.ModpacksPageTests.test_chainmail_controls_reachable_and_busy_install_is_blocked",
+          "test_modpacks_ui.ModpacksPageTests.test_chainmail_explicit_profile_install_starts_off_and_preserves_play_guards"
+        ]
+      },
+      "source_tests": {
+        "collected": 421,
+        "passed": 407,
+        "skipped": 14,
+        "failures": 0,
+        "skipped_cases": [
+          "test_clean_launch_uses_separate_game_folder_and_original_binary (test_herps_launcher.LauncherTests.test_clean_launch_uses_separate_game_folder_and_original_binary) ... skipped 'Owned POSIX process fixture'",
+          "test_failed_resource_check_does_not_start_game_and_releases_lock (test_herps_launcher.LauncherTests.test_failed_resource_check_does_not_start_game_and_releases_lock) ... skipped 'Owned POSIX process fixture'",
+          "test_play_real_child_logs_exit_and_relaunch_without_touching_saves (test_herps_launcher.LauncherTests.test_play_real_child_logs_exit_and_relaunch_without_touching_saves) ... skipped 'Owned POSIX child fixture; Windows CI covers native tests separately'",
+          "test_supplied_apk (test_inspect_apk.ApkTests.test_supplied_apk) ... skipped 'Set HORIZON_TEST_APK to run supplied-APK integration'",
+          "test_actual_dialog_scripts_compile_on_mac (test_macos_launcher.MacLauncherTests.test_actual_dialog_scripts_compile_on_mac) ... skipped 'Mac Bash behavior tests need Unix paths and executable scripts'",
+          "test_dialog_cancellation_preserves_original_preparer_failure (test_macos_launcher.MacLauncherTests.test_dialog_cancellation_preserves_original_preparer_failure) ... skipped 'Mac Bash behavior tests need Unix paths and executable scripts'",
+          "test_failed_resource_check_prints_error_and_opens_preparation (test_macos_launcher.MacLauncherTests.test_failed_resource_check_prints_error_and_opens_preparation) ... skipped 'Mac Bash behavior tests need Unix paths and executable scripts'",
+          "test_game_failure_surfaces_log_and_preserves_client_status (test_macos_launcher.MacLauncherTests.test_game_failure_surfaces_log_and_preserves_client_status) ... skipped 'Mac Bash behavior tests need Unix paths and executable scripts'",
+          "test_non_mac_host_is_rejected_before_creating_player_data (test_macos_launcher.MacLauncherTests.test_non_mac_host_is_rejected_before_creating_player_data) ... skipped 'Mac Bash behavior tests need Unix paths and executable scripts'",
+          "test_open_failure_preserves_preparer_error_and_prints_manual_path (test_macos_launcher.MacLauncherTests.test_open_failure_preserves_preparer_error_and_prints_manual_path) ... skipped 'Mac Bash behavior tests need Unix paths and executable scripts'",
+          "test_prepared_resources_launch_client_with_literal_arguments_and_profile (test_macos_launcher.MacLauncherTests.test_prepared_resources_launch_client_with_literal_arguments_and_profile) ... skipped 'Mac Bash behavior tests need Unix paths and executable scripts'",
+          "test_show_resource_log_uses_exact_path_without_starting_game (test_macos_launcher.MacLauncherTests.test_show_resource_log_uses_exact_path_without_starting_game) ... skipped 'Mac Bash behavior tests need Unix paths and executable scripts'",
+          "test_case_collision_is_rejected (test_package_bedrock_windows.BedrockPackagingTests.test_case_collision_is_rejected) ... skipped 'Filesystem cannot construct distinct case-colliding files'",
+          "test_linked_profile_and_settings_preserve_external_files (test_rlcraft_chainmail.ChainmailTests.test_linked_profile_and_settings_preserve_external_files) ... skipped 'Windows link guards are exercised with junctions separately'"
+        ]
+      },
+      "content": {
+        "schema": 1,
+        "source_commit": "5bb63ec18088f2c7ae22b11bd63c7f092d91a6ff",
+        "package": "herspers_rl_chainmail-0.1.0.hmod",
+        "sha256": "015c3d553a6a2bcfed4412559b9b83bc3ef65599d539a7686e65577ec4c5c346",
+        "size": 40002,
+        "default_enabled": false,
+        "gameplay_verified": false,
+        "engine_revision": "7301f6fdd7f470b11317276e7a11b4dc615c137a",
+        "api": "0.2",
+        "items": 1,
+        "recipes": 2,
+        "original_mod_code_or_assets_included": false
+      },
+      "native_recipe_probe": {
+        "cases": [
+          "native_package_reader",
+          "native_content_api_02",
+          "one_item_two_recipes_no_code",
+          "native_content_overlay",
+          "item_template_name_model_fallback",
+          "vanilla_boots_unchanged",
+          "native_plate_2x2_and_all_table_offsets",
+          "native_boots_both_rows",
+          "wrong_inputs_and_extra_cells_rejected",
+          "stacked_match_output_count"
+        ],
+        "gameplay_verified": false,
+        "interactive_verified": false,
+        "native_recipe_matcher_verified": true,
+        "prepared_legitimate_resources_verified": false,
+        "save_load_verified": false,
+        "status": "passed",
+        "synthetic_resources": true,
+        "engine_revision": "7301f6fdd7f470b11317276e7a11b4dc615c137a",
+        "package_sha256": "015c3d553a6a2bcfed4412559b9b83bc3ef65599d539a7686e65577ec4c5c346",
+        "target": "x86_64-pc-windows-msvc",
+        "rust_toolchain": "1.95.0"
+      },
+      "ci_gameplay_verified": false,
+      "ci_interactive_verified": false,
+      "physical_acceptance_of_this_build": "NOT RUN"
+    }
+  ],
+  "limits": [
+    "All Mac physical gameplay NOT RUN",
+    "Untested Windows edge cases NOT RUN",
+    "No real notarization or publisher signing",
+    "Hashes establish integrity, not publisher authentication",
+    "Traceable pinned build recipe; not bit-for-bit reproducibility",
+    "Historical dependency/security review is not a fresh full vulnerability audit"
+  ]
+}

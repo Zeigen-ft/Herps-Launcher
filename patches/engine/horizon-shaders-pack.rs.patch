@@ -1,0 +1,37 @@
+--- a/crates/horizon-shaders/src/pack.rs
++++ b/crates/horizon-shaders/src/pack.rs
+@@ -132,6 +132,34 @@
+         let bytes = self.read(path)?;
+         let text = String::from_utf8_lossy(&bytes);
+         Some(text.strip_prefix('\u{feff}').unwrap_or(&text).to_owned())
++    }
++
++    /// Reads at most `max_bytes` of an untrusted encoded resource. An oversized,
++    /// missing or invalid path is refused before allocating its advertised size.
++    pub fn read_limited(&self, path: &str, max_bytes: usize) -> Option<Vec<u8>> {
++        let path = normalize(path)?;
++        let limit = u64::try_from(max_bytes).ok()?;
++        let read = |reader: &mut dyn Read| {
++            let mut bytes = Vec::new();
++            reader
++                .take(limit.saturating_add(1))
++                .read_to_end(&mut bytes)
++                .ok()?;
++            (bytes.len() <= max_bytes).then_some(bytes)
++        };
++        match &self.files {
++            Files::Folder(root) => {
++                let mut file = fs::File::open(root.join(path)).ok()?;
++                (file.metadata().ok()?.len() <= limit).then_some(())?;
++                read(&mut file)
++            }
++            Files::Zip { archive, entries } => {
++                let mut archive = archive.clone();
++                let mut entry = archive.by_index(*entries.get(&path)?).ok()?;
++                (entry.size() <= limit).then_some(())?;
++                read(&mut entry)
++            }
++        }
+     }
+ 
+     pub fn exists(&self, path: &str) -> bool {

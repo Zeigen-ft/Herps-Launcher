@@ -1,0 +1,75 @@
+name: Portable tooling checks
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+env:
+  QT_QPA_PLATFORM: offscreen
+  PYTHONUTF8: '1'
+jobs:
+  tooling:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install pinned launcher test dependencies
+        run: python -m pip install -r herps_launcher/requirements.txt
+      - name: Install pinned launcher Rust
+        run: rustup toolchain install 1.95.0 --profile minimal
+      - name: Stage reviewed native chainmail content
+        run: python tools/build_rlcraft_chainmail.py
+      - name: Portable tooling tests
+        shell: bash
+        run: |
+          set +e
+          python3 -m unittest discover -s tests -v > tooling-tests.log 2>&1
+          result=$?
+          cat tooling-tests.log
+          if [ "$result" -ne 0 ]; then
+            python3 - <<'PY'
+          from pathlib import Path
+          text = Path('tooling-tests.log').read_text(errors='replace')[-2500:]
+          text = text.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A')
+          print('::error title=Portable tooling tests failed::' + text)
+          PY
+          fi
+          exit "$result"
+      - run: for script in scripts/*.sh packaging/*.command; do bash -n "$script"; done
+  windows-tooling:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install pinned launcher test dependencies
+        run: python -m pip install -r herps_launcher/requirements.txt
+      - name: Install pinned Rust for native launcher tests
+        shell: pwsh
+        run: |
+          rustup toolchain install 1.95.0 --profile minimal
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          'RUSTUP_TOOLCHAIN=1.95.0' | Out-File -FilePath $env:GITHUB_ENV -Append
+      - name: Stage reviewed native chainmail content
+        run: python tools/build_rlcraft_chainmail.py
+      - name: Windows tooling tests
+        shell: pwsh
+        run: |
+          $PSNativeCommandUseErrorActionPreference = $false
+          python -m unittest discover -s tests -v *> tooling-tests.log
+          $result = $LASTEXITCODE
+          Get-Content tooling-tests.log
+          if ($result -ne 0) {
+            $tail = Get-Content -Raw tooling-tests.log
+            if ($tail.Length -gt 2500) { $tail = $tail.Substring($tail.Length - 2500) }
+            $message = $tail.Replace('%', '%25').Replace("`r", '%0D').Replace("`n", '%0A')
+            Write-Output "::error title=Windows tooling tests failed::$message"
+          }
+          exit $result

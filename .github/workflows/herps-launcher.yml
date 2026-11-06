@@ -1,0 +1,251 @@
+name: Build Herps Launcher
+on:
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: Platform packages to build
+        type: choice
+        options: [all, windows, macos-arm64, macos-x64, macos-arm64-26]
+        default: all
+  pull_request:
+    paths: ['README.md', 'INSTALLATION.md', 'QUICK_START.md', 'RELEASE_NOTES.md', 'THIRD_PARTY_NOTICES.md', 'tools/prepare_launcher_release.py', 'content/**', 'tools/build_rlcraft_chainmail.py', 'tools/verify_rlcraft_chainmail.py', 'herps_launcher/**', 'tools/package_herps.py', 'tools/package_macos.py', 'tools/package_windows.py', 'tools/prepare_upstream.py', 'tools/verify_herps*.py', 'tools/release_evidence.py', 'tools/windows_installer.py', 'tools/smoke_herps_native.py', 'tools/ci_run.py', 'tools/inspect_targeted_packs.py', 'tools/smoke_targeted_backup.py', 'tools/inspect_rlcraft_293.py', 'tools/package_rlcraft_inspector.py', 'packaging/**', 'tests/**', 'scripts/build_*.sh', 'scripts/build_*.ps1', 'patches/**', 'upstream.lock.json', 'docs/**', 'licenses/**', 'LICENSE', '.github/workflows/herps-launcher.yml']
+  push:
+    branches: [main, feature/herps-launcher-cross-platform]
+    paths: ['README.md', 'INSTALLATION.md', 'QUICK_START.md', 'RELEASE_NOTES.md', 'THIRD_PARTY_NOTICES.md', 'tools/prepare_launcher_release.py', 'content/**', 'tools/build_rlcraft_chainmail.py', 'tools/verify_rlcraft_chainmail.py', 'herps_launcher/**', 'tools/package_herps.py', 'tools/package_macos.py', 'tools/package_windows.py', 'tools/prepare_upstream.py', 'tools/verify_herps*.py', 'tools/release_evidence.py', 'tools/windows_installer.py', 'tools/smoke_herps_native.py', 'tools/ci_run.py', 'tools/inspect_targeted_packs.py', 'tools/smoke_targeted_backup.py', 'tools/inspect_rlcraft_293.py', 'tools/package_rlcraft_inspector.py', 'packaging/**', 'tests/**', 'scripts/build_*.sh', 'scripts/build_*.ps1', 'patches/**', 'upstream.lock.json', 'docs/**', 'licenses/**', 'LICENSE', '.github/workflows/herps-launcher.yml']
+permissions:
+  contents: read
+jobs:
+  desktop:
+    if: ${{ github.event_name != 'push' || github.repository == 'Zeigen-ft/Herspers-Minecraft' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(inputs.platform == 'macos-arm64-26' && '[{"os":"macos-26","arch":"arm64","python_arch":"arm64"}]' || inputs.platform == 'windows' && '[{"os":"windows-latest","arch":"x86_64","python_arch":"x64"}]' || inputs.platform == 'macos-arm64' && '[{"os":"macos-15","arch":"arm64","python_arch":"arm64"}]' || inputs.platform == 'macos-x64' && '[{"os":"macos-15-intel","arch":"x86_64","python_arch":"x64"}]' || '[{"os":"windows-latest","arch":"x86_64","python_arch":"x64"},{"os":"macos-15","arch":"arm64","python_arch":"arm64"},{"os":"macos-15-intel","arch":"x86_64","python_arch":"x64"}]') }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 180
+    env:
+      CARGO_BUILD_JOBS: '3'
+      QT_QPA_PLATFORM: offscreen
+      PYTHONUTF8: '1'
+      RUSTUP_TOOLCHAIN: '1.95.0'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          architecture: ${{ matrix.python_arch }}
+      - name: Install launcher tools
+        run: python -m pip install -r herps_launcher/requirements.txt
+      - name: Install pinned engine toolchain
+        run: rustup toolchain install 1.95.0 --profile minimal
+      - name: Reuse verified Windows engine build cache
+        if: runner.os == 'Windows'
+        uses: actions/cache@v4
+        with:
+          path: |
+            .cache/target
+            .cache/port-pack-target
+            .cache/upstream
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: windows-x64-rust-1.95-static-fast-stack16-shaders-v1-portpack-v1-${{ hashFiles('upstream.lock.json', 'patches/**') }}
+          restore-keys: windows-x64-rust-1.95-static-fast-stack16-shaders-v1-${{ hashFiles('upstream.lock.json', 'patches/**') }}
+      - name: Reuse macOS engine build cache
+        if: runner.os == 'macOS'
+        uses: actions/cache@v4
+        with:
+          path: |
+            .cache/target
+            .cache/port-pack-target
+            .cache/upstream
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: herps-engine-${{ matrix.os }}-${{ matrix.arch }}-rust-1.95-portpack-v1-${{ hashFiles('upstream.lock.json', 'patches/**') }}
+          restore-keys: herps-engine-${{ matrix.os }}-${{ matrix.arch }}-rust-1.95-${{ hashFiles('upstream.lock.json', 'patches/**') }}
+      - name: Build pinned port-pack for the native runner
+        shell: python
+        run: |
+          import json
+          import os
+          import sys
+          from pathlib import Path
+          sys.path.insert(0, str(Path.cwd()))
+          from herps_launcher.core import target
+          from tools.package_herps import build_port_pack
+          binary, evidence = build_port_pack(target())
+          Path("herps-port-pack-build.json").write_text(json.dumps(evidence, indent=2) + "\n", encoding="utf-8")
+          with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as environment:
+              environment.write(f"HERPS_TEST_PORT_PACK={binary}\n")
+      - name: Stage reviewed native chainmail content
+        run: python tools/build_rlcraft_chainmail.py
+      - name: Portable and desktop integration tests with the real backend
+        run: python tools/ci_run.py herps-tests.log python -m unittest discover -s tests -v
+      - name: Stage the standalone local RLCraft inspector
+        if: runner.os == 'Windows'
+        run: python tools/ci_run.py herps-rlcraft-inspector-package.log python tools/package_rlcraft_inspector.py --output dist/rlcraft-inspector
+      - name: Build Windows game
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: python tools/ci_run.py herps-game-build.log pwsh -NoLogo -NoProfile -File scripts/build_windows.ps1
+      - name: Validate chainmail with the pinned native content and recipe engine
+        if: runner.os == 'Windows'
+        run: python tools/ci_run.py herps-chainmail-native.log python tools/verify_rlcraft_chainmail.py --native-crafting --report dist/targeted-content/native-validation.json
+      - name: Stage separately downloadable chainmail content
+        run: python tools/build_rlcraft_chainmail.py --output dist/targeted-content
+      - name: Build macOS game
+        if: runner.os == 'macOS'
+        shell: bash
+        run: python tools/ci_run.py herps-game-build.log bash scripts/build_macos.sh '${{ matrix.arch }}'
+      - name: Package Windows launcher with game and source
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $sourceRoot = python tools/prepare_upstream.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python tools/ci_run.py herps-package.log python tools/package_herps.py --game dist/windows-x86_64/Herspers-Minecraft --source "$sourceRoot"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $compiler = 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe'
+          if (-not (Test-Path $compiler)) {
+            Write-Output '::error title=Installer compiler missing::Inno Setup 6 is required for installer generation'
+            throw 'Inno Setup 6 is required for installer generation'
+          }
+          $payload = Get-ChildItem dist/herps -Directory | Where-Object Name -Like 'herps-*' | Select-Object -First 1
+          # Inno's compressor cannot read some files under the long build prefix.
+          $shortPayload = Join-Path $env:RUNNER_TEMP 'herps-payload'
+          python -c 'import shutil,sys; shutil.copytree(sys.argv[1],sys.argv[2])' $payload.FullName $shortPayload
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $limits = python tools/windows_installer.py $shortPayload | ConvertFrom-Json
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $limits | ConvertTo-Json | Set-Content dist/herps/windows-path-limits.json
+          python tools/ci_run.py herps-installer-build.log "$compiler" "/DMaxPayloadFileChars=$($limits.file_chars)" "/DMaxPayloadDirChars=$($limits.directory_chars)" "/DPayload=$shortPayload" "/DOutput=$((Resolve-Path dist/herps).Path)" packaging/herps-windows.iss
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Install, start and uninstall Windows launcher
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $setup = Get-ChildItem dist/herps -Filter '*-Setup.exe' | Select-Object -First 1
+          if (-not $setup) { throw 'The installer was not generated' }
+          python tools/ci_run.py herps-installed-acceptance.log python tools/verify_herps_windows.py --setup $setup.FullName --output dist/herps/phase5d-evidence
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Compile, select and roll back an owned Windows native mod
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $sourceRoot = python tools/prepare_upstream.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python tools/ci_run.py herps-native-smoke.log python tools/smoke_herps_native.py --game dist/windows-x86_64/Herspers-Minecraft --source "$sourceRoot" --target-cache .cache/target --report dist/herps/native-build-proof.json
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Package macOS launcher and game DMG
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          source_dir=$(python tools/prepare_upstream.py)
+          python tools/ci_run.py herps-package.log python tools/package_herps.py --game 'dist/${{ matrix.arch }}/Herspers Minecraft.app' --source "$source_dir"
+      - name: Verify macOS DMG integrity
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          for image in dist/herps/*.dmg; do
+            python tools/ci_run.py herps-dmg-verify.log hdiutil verify "$image"
+          done
+      - name: Verify delivered macOS DMG without developer tools
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          for image in dist/herps/*.dmg; do
+            python tools/ci_run.py herps-delivered-dmg.log python tools/verify_herps_dmg.py --dmg "$image" --arch '${{ matrix.arch }}' --output dist/herps/phase5c-evidence
+          done
+      - name: Record internal candidate provenance and checksums
+        run: python tools/release_evidence.py dist/herps
+      - name: Upload separate versioned platform packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: Herps-Launcher-0.1.0-${{ runner.os }}-${{ matrix.arch }}
+          path: |
+            dist/herps/windows-path-limits.json
+            dist/herps/candidate.json
+            dist/herps/SHA256SUMS
+            dist/herps/*.notarization.json
+            dist/herps/*.zip
+            dist/herps/*.dmg
+            dist/herps/*.exe
+            dist/herps/native-build-proof.json
+          if-no-files-found: error
+      - name: Upload native chainmail content and validation
+        uses: actions/upload-artifact@v4
+        with:
+          name: RLCraft-Chainmail-0.1.0-${{ runner.os }}-${{ matrix.arch }}
+          path: dist/targeted-content/
+          if-no-files-found: error
+      - name: Upload the local RLCraft inspector
+        if: runner.os == 'Windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: RLCraft-2.9.3-Local-Inspector
+          path: dist/rlcraft-inspector/
+          if-no-files-found: error
+      - name: Upload packaging and backend evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Herps-Launcher-evidence-${{ runner.os }}-${{ matrix.arch }}
+          path: |
+            herps-*.log
+            herps-port-pack-build.json
+            dist/targeted-content/**
+            dist/rlcraft-inspector/inspector.json
+            dist/rlcraft-inspector/SHA256SUMS
+            dist/herps/phase5c-evidence/**
+            dist/herps/phase5d-evidence/**
+            dist/herps/**/python-dependencies.json
+            dist/herps/**/resolved-build-requirements.txt
+            dist/herps/**/python-notices/**
+            dist/herps/windows-path-limits.json
+            dist/herps/candidate.json
+            dist/herps/SHA256SUMS
+            dist/herps/*.notarization.json
+            dist/herps/**/launcher-smoke.json
+            dist/herps/**/package.json
+            dist/herps/installed-launcher-smoke.json
+          if-no-files-found: warn
+
+  release-files:
+    name: Prepare files for manual prerelease publication
+    needs: desktop
+    if: ${{ needs.desktop.result == 'success' && (github.event_name == 'pull_request' || inputs.platform == 'all') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Download real native packages without merging their receipt paths
+        uses: actions/download-artifact@v4
+        with:
+          pattern: Herps-Launcher-0.1.0-*
+          path: distribution-inputs
+      - name: Download native verification evidence
+        uses: actions/download-artifact@v4
+        with:
+          pattern: Herps-Launcher-evidence-*
+          path: distribution-inputs
+      - name: Download reviewed native content
+        uses: actions/download-artifact@v4
+        with:
+          pattern: RLCraft-Chainmail-0.1.0-*
+          path: distribution-inputs
+      - name: Verify and prepare manual release assets and guides
+        run: python tools/prepare_launcher_release.py --inputs distribution-inputs --output dist/release-ready --expected-source '${{ github.event.pull_request.head.sha || github.sha }}'
+      - name: Upload complete release-ready files without publishing a release
+        uses: actions/upload-artifact@v4
+        with:
+          name: Herps-Launcher-0.1.0-release-ready
+          path: dist/release-ready/
+          if-no-files-found: error

@@ -1,0 +1,7 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": ["nn", "nn"],
+  "key": {"n": "minecraft:iron_nugget"},
+  "result": {"id": "herspers_rl_chainmail:chainmail_plate", "count": 1}
+}

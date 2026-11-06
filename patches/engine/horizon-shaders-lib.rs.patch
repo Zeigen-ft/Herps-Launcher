@@ -1,0 +1,21 @@
+--- a/crates/horizon-shaders/src/lib.rs
++++ b/crates/horizon-shaders/src/lib.rs
+@@ -27,6 +27,7 @@
+ mod post;
+ mod preprocess;
+ mod properties;
++mod textures;
+ mod translate;
+ 
+ pub use biomes::{category as biome_category, precipitation as biome_precipitation};
+@@ -46,6 +47,10 @@
+ };
+ pub use preprocess::{Diagnostic, Origin, Preprocessed, preprocess};
+ pub use properties::{Entry, Note, Properties};
++pub use textures::{
++    CustomTexture, MAX_CUSTOM_TEXTURE_BYTES, MAX_CUSTOM_TEXTURE_TOTAL_BYTES, MAX_CUSTOM_TEXTURES,
++    custom_textures,
++};
+ pub use translate::{
+     AlphaTest, DRAW_UNIFORMS, Error, GbuffersInputs, Interface, Program, Sampler, Target, Uniform,
+     translate_composite, translate_gbuffers, translate_shadow,

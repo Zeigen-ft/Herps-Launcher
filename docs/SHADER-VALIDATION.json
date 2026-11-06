@@ -1,0 +1,251 @@
+{
+  "schema": 2,
+  "date": "2026-11-02",
+  "product_version": "0.2.3",
+  "engine_commit": "7301f6fdd7f470b11317276e7a11b4dc615c137a",
+  "patches_sha256": "4e1401f7860dfd7f4de8c45147958fe6a39ea53f65e4968c8907b277789243da",
+  "environment": {
+    "os": "Linux x86_64",
+    "backend": "Vulkan",
+    "adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+    "mesa": "25.0.7-2+deb13u1"
+  },
+  "checks": {
+    "shader_core": {
+      "passed": 59,
+      "failed": 0
+    },
+    "shader_api": {
+      "passed": 21,
+      "failed": 0
+    },
+    "optional_shader_corpus_test": {
+      "ignored": 1,
+      "note": "Real author packs were instead exercised by the explicit renderer GPU tests."
+    },
+    "renderer_pack_cpu": {
+      "passed": 44,
+      "failed": 0,
+      "ignored": 5
+    },
+    "explicit_renderer_run": {
+      "passed": 9,
+      "failed": 0,
+      "ignored": 0,
+      "gpu_tests": 4,
+      "cpu_tests": 5
+    },
+    "fullbright_cpu": {
+      "passed": 2,
+      "failed": 0,
+      "ignored": 1
+    },
+    "fullbright_uploaded_zip_integration": {
+      "passed": 1,
+      "failed": 0,
+      "ignored": 0
+    },
+    "wrapper_tests": {
+      "run": 132,
+      "skipped": 2,
+      "failed": 0
+    },
+    "client_check": {
+      "result": "passed",
+      "default_features": false,
+      "features": [
+        "mods"
+      ],
+      "source": "reconstructed exact patch set"
+    },
+    "source_reconstruction_and_lockfile": {
+      "result": "passed",
+      "modified_rust_files": 20
+    },
+    "native_builds": {
+      "windows": {
+        "result": "passed",
+        "source_commit": "674665b5519748cda523b8b01b980ee64b52b3a5",
+        "url": "https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/41467802883"
+      },
+      "macos": {
+        "result": "passed",
+        "url": "https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/41467803275",
+        "source_commit": "674665b5519748cda523b8b01b980ee64b52b3a5"
+      },
+      "shader_ci": {
+        "result": "passed",
+        "source_commit": "990352b5a3f96a43dcb5ebe8a4360ec3ecc59850",
+        "url": "https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/41466026846"
+      },
+      "tooling_ci": {
+        "result": "passed",
+        "source_commit": "8a0c0d6021fe6396f03c9850b34f7060ba9f857d",
+        "url": "https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/41468569223"
+      }
+    },
+    "renderer_all": {
+      "passed": 829,
+      "failed": 0,
+      "ignored": 26,
+      "backend": "verified software Vulkan"
+    }
+  },
+  "gpu_cases": [
+    {
+      "pack": "ComplementaryReimagined_r5.5.1.zip",
+      "dimension": 0,
+      "flat_terrain": false,
+      "required_post_pipelines": 8,
+      "result": "passed"
+    },
+    {
+      "pack": "ComplementaryReimagined_r5.5.1.zip",
+      "dimension": 0,
+      "flat_terrain": true,
+      "required_post_pipelines": 8,
+      "result": "passed"
+    },
+    {
+      "pack": "ComplementaryReimagined_r5.5.1.zip",
+      "dimension": -1,
+      "flat_terrain": false,
+      "required_post_pipelines": 8,
+      "result": "passed"
+    },
+    {
+      "pack": "ComplementaryReimagined_r5.5.1.zip",
+      "dimension": -1,
+      "flat_terrain": true,
+      "required_post_pipelines": 8,
+      "result": "passed"
+    },
+    {
+      "pack": "ComplementaryReimagined_r5.5.1.zip",
+      "dimension": 1,
+      "flat_terrain": false,
+      "required_post_pipelines": 8,
+      "result": "passed"
+    },
+    {
+      "pack": "ComplementaryReimagined_r5.5.1.zip",
+      "dimension": 1,
+      "flat_terrain": true,
+      "required_post_pipelines": 8,
+      "result": "passed"
+    },
+    {
+      "pack": "ComplementaryUnbound_r5.5.1.zip",
+      "dimension": 0,
+      "flat_terrain": false,
+      "required_post_pipelines": 8,
+      "result": "passed"
+    },
+    {
+      "pack": "ComplementaryUnbound_r5.5.1.zip",
+      "dimension": 0,
+      "flat_terrain": true,
+      "required_post_pipelines": 8,
+      "result": "passed"
+    },
+    {
+      "pack": "ComplementaryUnbound_r5.5.1.zip",
+      "dimension": -1,
+      "flat_terrain": false,
+      "required_post_pipelines": 8,
+      "result": "passed"
+    },
+    {
+      "pack": "ComplementaryUnbound_r5.5.1.zip",
+      "dimension": -1,
+      "flat_terrain": true,
+      "required_post_pipelines": 8,
+      "result": "passed"
+    },
+    {
+      "pack": "ComplementaryUnbound_r5.5.1.zip",
+      "dimension": 1,
+      "flat_terrain": false,
+      "required_post_pipelines": 8,
+      "result": "passed"
+    },
+    {
+      "pack": "ComplementaryUnbound_r5.5.1.zip",
+      "dimension": 1,
+      "flat_terrain": true,
+      "required_post_pipelines": 8,
+      "result": "passed"
+    }
+  ],
+  "rendered_scene": {
+    "adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+    "backend": "Vulkan",
+    "cases": [
+      {
+        "dimension": 0,
+        "finite_float_output": true,
+        "flat_terrain": false,
+        "frames": 3,
+        "pack": "ComplementaryReimagined_r5.5.1.zip",
+        "post_pipelines": 8,
+        "rgb_sum_max": 2.669541597366333,
+        "rgb_sum_min": 0.6256426572799683,
+        "size": [
+          64,
+          48
+        ],
+        "terrain_depth_pixels": 782,
+        "total_pixels": 3072
+      },
+      {
+        "dimension": 0,
+        "finite_float_output": true,
+        "flat_terrain": false,
+        "frames": 3,
+        "pack": "ComplementaryUnbound_r5.5.1.zip",
+        "post_pipelines": 8,
+        "rgb_sum_max": 2.6865406036376953,
+        "rgb_sum_min": 0.6898301243782043,
+        "size": [
+          64,
+          48
+        ],
+        "terrain_depth_pixels": 782,
+        "total_pixels": 3072
+      }
+    ],
+    "limits": [
+      "Original synthetic terrain only; no Minecraft assets, full world, gameplay or visual parity validation.",
+      "Native Windows DX12, Metal and player GPU performance remain untested."
+    ]
+  },
+  "uniform_diagnostics": {
+    "unknown_uniform_zero_fallbacks": 0,
+    "missing_biome_fallbacks": 0,
+    "scope": "12 exact pack/dimension/terrain cases; fullscreen object state is explicitly neutral"
+  },
+  "cross_backend_source_generation": [
+    "HLSL",
+    "MSL"
+  ],
+  "fullbright": {
+    "id": "fullbright-ub",
+    "name": "Fullbright Ubiquitous",
+    "version": "FUB 7.0 / Java 26.3",
+    "author": "WRP",
+    "filename": "Fullbright-UB-26.3 fub-7.0.zip",
+    "source": "user-upload",
+    "sha256": "a4c251fdee1a63cc19b5e7e4371f2146da41d619c2d8d31aab79379d01fcb2ae",
+    "lightmap_path": "assets/minecraft/shaders/core/lightmap.fsh",
+    "lightmap_sha256": "5eaad45db7ee7a6222bc3de4d21bdb810c1e320b954a919fbce0f8203a217dbf",
+    "redistributed": false,
+    "notes": "The uploaded archive has no license file and remains an external user input. Compatibility implements its constant-white lightmap behavior in original Rust."
+  },
+  "limits": [
+    "Full-world gameplay, visual parity, native Windows/DX12 or Metal GPU execution and GTX 960 performance remain untested.",
+    "Velocity units are a documented Herspers convention; camera splits use floor plus nonnegative fraction in f64.",
+    "Armor equipment/trim item IDs, geometry/compute programs and non-2D texture support remain incomplete.",
+    "BSL original artifact, exact version and compatibility remain blocked by the running cloud network policy; its official domains are saved in a draft but not applied.",
+    "Fullbright recognizes only the supplied exact lightmap shader, without bundling or executing its original GLSL."
+  ]
+}

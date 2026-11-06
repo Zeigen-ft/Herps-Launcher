@@ -1,0 +1,107 @@
+name: Experimental shader compatibility
+on:
+  push:
+    paths:
+      - '.github/workflows/shaders.yml'
+      - 'patches/**'
+      - 'tools/prepare_upstream.py'
+      - 'tools/fetch_upstream.py'
+      - 'tests/test_prepare_upstream.py'
+      - 'docs/shader-packs.lock.json'
+      - 'upstream.lock.json'
+  pull_request:
+    paths:
+      - '.github/workflows/shaders.yml'
+      - 'patches/**'
+      - 'tools/prepare_upstream.py'
+      - 'tools/fetch_upstream.py'
+      - 'tests/test_prepare_upstream.py'
+      - 'docs/shader-packs.lock.json'
+      - 'upstream.lock.json'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  complementary-pipelines:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.repository == 'Zeigen-ft/Herspers-Minecraft' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      CARGO_BUILD_JOBS: '4'
+      CARGO_TARGET_DIR: ${{ github.workspace }}/.cache/shader-target
+      HORIZON_TEST_SHADER_PACKS: ${{ github.workspace }}/.cache/shader-packs
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install pinned Rust and software Vulkan
+        run: |
+          rustup toolchain install 1.95.0 --profile minimal
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends mesa-vulkan-drivers
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          drivers = sorted(Path('/usr/share/vulkan/icd.d').glob('*lvp*.json'))
+          assert len(drivers) == 1, 'A software Vulkan ICD is required'
+          runtime = Path(os.environ['RUNNER_TEMP']) / 'herspers-vulkan-runtime'
+          runtime.mkdir(mode=0o700)
+          cache = Path(os.environ['RUNNER_TEMP']) / 'herspers-shader-cache'
+          cache.mkdir()
+          with open(os.environ['GITHUB_ENV'], 'a') as stream:
+              stream.write(f'VK_DRIVER_FILES={drivers[0]}\nXDG_RUNTIME_DIR={runtime}\nMESA_SHADER_CACHE_DIR={cache}\n')
+          PY
+      - name: Stage exact engine patches and verify unchanged author packs
+        run: |
+          python3 -m unittest discover -s tests -p test_prepare_upstream.py -v
+          python3 tools/prepare_upstream.py > prepared-source.txt
+          python3 - <<'PY'
+          import hashlib, json, os, urllib.request
+          from pathlib import Path
+          source = Path('prepared-source.txt').read_text().strip()
+          with open(os.environ['GITHUB_ENV'], 'a') as stream:
+              stream.write(f'HERSPERS_SHADER_SOURCE={source}\n')
+          root = Path(os.environ['HORIZON_TEST_SHADER_PACKS'])
+          root.mkdir(parents=True)
+          lock = json.loads(Path('docs/shader-packs.lock.json').read_text())
+          assert {p['id'] for p in lock['packs']} == {'complementary-reimagined', 'complementary-unbound'}
+          for pack in lock['packs']:
+              destination = root / pack['filename']
+              digest = hashlib.sha256()
+              size = 0
+              with urllib.request.urlopen(pack['url'], timeout=120) as response, destination.open('xb') as output:
+                  while block := response.read(1024 * 1024):
+                      size += len(block)
+                      assert size <= 64 * 1024 * 1024, 'Pack download exceeds size limit'
+                      digest.update(block)
+                      output.write(block)
+              assert digest.hexdigest() == pack['sha256'], f'Author pack checksum mismatch: {pack["id"]}'
+              print(pack['filename'], digest.hexdigest())
+          PY
+      - name: Shader-core and cross-backend API checks
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo +1.95.0 test --locked --manifest-path "$HERSPERS_SHADER_SOURCE/Cargo.toml" -p horizon-shaders --lib 2>&1 | tee shader-core.log
+          cargo +1.95.0 test --locked --manifest-path "$HERSPERS_SHADER_SOURCE/Cargo.toml" -p horizon-shader-api 2>&1 | tee shader-api.log
+      - name: Original image fixtures and required Complementary GPU pipelines
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo +1.95.0 test --locked --manifest-path "$HERSPERS_SHADER_SOURCE/Cargo.toml" -p horizon-client-render --lib pack_ --no-default-features 2>&1 | tee renderer-cpu.log
+          cargo +1.95.0 test --locked --manifest-path "$HERSPERS_SHADER_SOURCE/Cargo.toml" -p horizon-client-render --lib gfx::lightmap --no-default-features 2>&1 | tee -a renderer-cpu.log
+          cargo +1.95.0 test --locked --manifest-path "$HERSPERS_SHADER_SOURCE/Cargo.toml" -p horizon-client-render --lib custom_texture_tests --no-default-features -- --ignored --nocapture 2>&1 | tee renderer-gpu.log
+      - name: Preserve diagnostic logs (no third-party shader programs)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: experimental-shader-validation
+          path: |
+            shader-core.log
+            shader-api.log
+            renderer-cpu.log
+            renderer-gpu.log
+          if-no-files-found: ignore

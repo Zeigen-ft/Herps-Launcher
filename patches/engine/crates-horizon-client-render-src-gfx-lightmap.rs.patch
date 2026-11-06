@@ -1,0 +1,197 @@
+--- /dev/null
++++ b/crates/horizon-client-render/src/gfx/lightmap.rs
+@@ -0,0 +1,194 @@
++// SPDX-License-Identifier: MIT
++//! Native lightmap generation and the exact uploaded Fullbright UB 7.0 profile.
++//! Shader programs are not copied or executed here: the recognized fragment's
++//! constant-white output has the same effect as the native full-light lightmap.
++use crate::environment::Sky;
++use glam::Vec3;
++use sha2::{Digest, Sha256};
++use std::{fs::File, io::Read, path::Path};
++
++const FRAGMENT: &str = "assets/minecraft/shaders/core/lightmap.fsh";
++const FULLBRIGHT_UB_7: [u8; 32] = [
++    0x5e, 0xaa, 0xd4, 0x5d, 0xb7, 0xee, 0x7a, 0x62, 0x22, 0xbc, 0x3d, 0xe4, 0xd2, 0x1b, 0xdb, 0x81,
++    0x0c, 0x1e, 0x32, 0x0b, 0x95, 0x4a, 0x91, 0x9f, 0xbc, 0xe0, 0xf8, 0x20, 0x3a, 0x21, 0x7d, 0xbf,
++];
++
++/// Inspect only the effective overlay, after resource-pack precedence and filters.
++/// Unrecognized shader replacements keep native lighting; this is support for
++/// this precise uploaded profile, rather than a general core-shader interpreter.
++pub fn fullbright_override(root: &Path) -> bool {
++    let Ok(file) = File::open(root.join(FRAGMENT)) else {
++        return false;
++    };
++    let mut source = Vec::new();
++    if file.take(65_537).read_to_end(&mut source).is_err() || source.len() > 65_536 {
++        return false;
++    }
++    let digest: [u8; 32] = Sha256::digest(&source).into();
++    digest == FULLBRIGHT_UB_7
++}
++
++/// Generate all 256 lightmap entries using the normal engine algorithm, or the
++/// selected profile's constant-white RGBA result. No gameplay light is changed.
++pub(super) fn pixels(
++    sky: &Sky,
++    darkness: f32,
++    gamma: f32,
++    night_vision: f32,
++    flicker: f32,
++    boss_darken: f32,
++    fullbright: bool,
++) -> [u8; 16 * 16 * 4] {
++    if fullbright {
++        return [255; 16 * 16 * 4];
++    }
++    // lightmap.fsh: per (block, sky) level.
++    let brightness = |level: f32| level / (4.0 - 3.0 * level);
++    let mut pixels = [0u8; 16 * 16 * 4];
++    for s in 0..16 {
++        for b in 0..16 {
++            let block_level = b as f32 / 15.0;
++            let sky_level = s as f32 / 15.0;
++            let block_brightness = brightness(block_level) * (1.4 + flicker);
++            let sky_brightness = brightness(sky_level) * sky.sky_light_factor;
++            // NightVisionColor defaults to 0x999999.
++            let mut color =
++                Vec3::from(sky.ambient_light_color).max(Vec3::splat(0.6 * night_vision));
++            color += Vec3::from(sky.sky_light_color) * sky_brightness;
++            let parabolic = (2.0 * block_level - 1.0).powi(2);
++            let block_color = Vec3::from(sky.block_light_tint).lerp(Vec3::ONE, 0.9 * parabolic);
++            color += block_color * block_brightness;
++            // lightmap.fsh: a boss bar mixes the light toward 70/60/60%.
++            color = color.lerp(color * Vec3::new(0.7, 0.6, 0.6), boss_darken);
++            color -= Vec3::splat(darkness);
++            color = color.clamp(Vec3::ZERO, Vec3::ONE);
++            let max = color.max_element().max(1e-6);
++            let inverted = 1.0 - max;
++            let scaled = 1.0 - inverted.powi(4);
++            let not_gamma = color * (scaled / max);
++            color = color.lerp(not_gamma, gamma);
++            let i = (s * 16 + b) * 4;
++            pixels[i] = (color.x * 255.0) as u8;
++            pixels[i + 1] = (color.y * 255.0) as u8;
++            pixels[i + 2] = (color.z * 255.0) as u8;
++            pixels[i + 3] = 255;
++        }
++    }
++    pixels
++}
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++
++    struct Scratch(std::path::PathBuf);
++    impl Scratch {
++        fn new() -> Self {
++            let stamp = std::time::SystemTime::now()
++                .duration_since(std::time::UNIX_EPOCH)
++                .unwrap()
++                .as_nanos();
++            let path = std::env::temp_dir().join(format!(
++                "herspers-fullbright-{}-{stamp}",
++                std::process::id()
++            ));
++            std::fs::create_dir_all(&path).unwrap();
++            Self(path)
++        }
++    }
++    impl Drop for Scratch {
++        fn drop(&mut self) {
++            let _ = std::fs::remove_dir_all(&self.0);
++        }
++    }
++
++    fn write_fragment(root: &Path, source: &[u8]) {
++        let target = root.join(FRAGMENT);
++        std::fs::create_dir_all(target.parent().unwrap()).unwrap();
++        std::fs::write(target, source).unwrap();
++    }
++
++    #[test]
++    fn unrecognized_or_missing_core_shaders_do_not_enable_fullbright() {
++        let scratch = Scratch::new();
++        assert!(!fullbright_override(&scratch.0));
++        write_fragment(&scratch.0, b"original unrelated fragment fixture");
++        assert!(!fullbright_override(&scratch.0));
++        write_fragment(&scratch.0, &[0; 65_537]);
++        assert!(!fullbright_override(&scratch.0));
++    }
++
++    #[test]
++    fn fullbright_lightmap_is_white_during_darkness_and_restores_native_lighting() {
++        let sky = Sky {
++            sky_light_factor: 1.0,
++            sky_light_color: [1.0; 3],
++            block_light_tint: [1.0; 3],
++            ..Default::default()
++        };
++        let dark = pixels(&sky, 0.0, 0.0, 0.0, 0.0, 0.0, false);
++        assert_eq!(&dark[..4], &[0, 0, 0, 255]);
++        assert_eq!(&dark[dark.len() - 4..], &[255; 4]);
++        for night_vision in [0.0, 1.0] {
++            for darkness in [0.0, 1.0] {
++                assert_eq!(
++                    pixels(&sky, darkness, 1.0, night_vision, -0.5, 1.0, true),
++                    [255; 16 * 16 * 4],
++                );
++            }
++        }
++        assert_eq!(pixels(&sky, 0.0, 0.0, 0.0, 0.0, 0.0, false), dark);
++    }
++
++    /// The uploaded archive remains an external validation input, never source.
++    /// Exercise discovery, overlay precedence, content identification and removal.
++    #[test]
++    #[ignore = "requires the user's exact Fullbright UB 7.0 archive"]
++    fn uploaded_fullbright_pack_applies_with_resource_overlay_and_is_reversible() {
++        let input = std::env::var_os("HORIZON_TEST_FULLBRIGHT_PACK")
++            .expect("Set HORIZON_TEST_FULLBRIGHT_PACK to the uploaded unmodified ZIP");
++        let bytes = std::fs::read(&input).unwrap();
++        assert_eq!(
++            format!("{:x}", Sha256::digest(&bytes)),
++            "a4c251fdee1a63cc19b5e7e4371f2146da41d619c2d8d31aab79379d01fcb2ae",
++            "The integration input must be the exact user-provided archive",
++        );
++        let scratch = Scratch::new();
++        let vanilla = scratch.0.join("vanilla");
++        let directory = scratch.0.join("resourcepacks");
++        let cache = scratch.0.join("overlays");
++        std::fs::create_dir_all(&directory).unwrap();
++        write_fragment(&vanilla, b"original vanilla-lightmap fixture");
++        std::fs::write(directory.join("Fullbright-UB-26.3 fub-7.0.zip"), bytes).unwrap();
++        let overriding = directory.join("Higher priority");
++        write_fragment(&overriding, b"original different-lightmap fixture");
++        std::fs::write(
++            overriding.join("pack.mcmeta"),
++            br#"{"pack":{"description":"Original test overlay","min_format":[15,0],"max_format":[1000,0],"pack_format":97}}"#,
++        ).unwrap();
++        let found = crate::packs::discover(&vanilla, &directory);
++        let fullbright = found
++            .iter()
++            .find(|p| p.id == "file/Fullbright-UB-26.3 fub-7.0.zip")
++            .unwrap();
++        assert!(fullbright.compatible);
++        let higher = found
++            .iter()
++            .find(|p| p.id == "file/Higher priority")
++            .unwrap();
++        let active =
++            crate::packs::resource_root(&vanilla, std::slice::from_ref(fullbright), &cache)
++                .unwrap();
++        assert!(fullbright_override(&active));
++        let overridden =
++            crate::packs::resource_root(&vanilla, &[fullbright.clone(), higher.clone()], &cache)
++                .unwrap();
++        assert!(!fullbright_override(&overridden));
++        let reversed =
++            crate::packs::resource_root(&vanilla, &[higher.clone(), fullbright.clone()], &cache)
++                .unwrap();
++        assert!(fullbright_override(&reversed));
++        let removed = crate::packs::resource_root(&vanilla, &[], &cache).unwrap();
++        assert!(!fullbright_override(&removed));
++    }
++}

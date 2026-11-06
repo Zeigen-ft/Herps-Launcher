@@ -1,0 +1,13 @@
+--- a/crates/horizon-client/src/game/entity_culling.rs
++++ b/crates/horizon-client/src/game/entity_culling.rs
+@@ -55,6 +55,10 @@
+         // A shader pack's shadow pass still draws what the camera cannot see.
+         if hidden && !(self.pack_shadow_casters.0 && self.hide_spans_from(start, vertices.len())) {
+             vertices.truncate(start);
++            horizon_client::gfx::pack_draw::EntitySpan::truncate(
++                &mut self.entity_spans.borrow_mut(),
++                start,
++            );
+         }
+     }
+ }

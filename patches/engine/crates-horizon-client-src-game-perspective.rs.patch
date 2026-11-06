@@ -1,0 +1,32 @@
+--- a/crates/horizon-client/src/game/perspective.rs
++++ b/crates/horizon-client/src/game/perspective.rs
+@@ -294,6 +294,29 @@
+             view.x_rot,
+         ))
+     }
++    /// Iris's documented relativeEyePosition: camera minus the model eye, in
++    /// world axes. Compute the eye before third-person placement, with the same
++    /// interpolation and eye-height easing that Camera.align_with_entity uses.
++    pub(super) fn shader_relative_eye_position(
++        &mut self,
++        camera: glam::DVec3,
++        partial: f32,
++    ) -> [f32; 3] {
++        let entity = match self.camera_mob() {
++            Some(m) => Some(super::remote_camera::mob_camera_entity(m)),
++            None => self.player_camera_entity(),
++        };
++        let Some(entity) = entity else {
++            return [0.0; 3];
++        };
++        let eye_height =
++            self.view.eye_height_old + (self.view.eye_height - self.view.eye_height_old) * partial;
++        let eye = glam::DVec3::from_array(entity.previous)
++            .lerp(glam::DVec3::from_array(entity.position), f64::from(partial))
++            + glam::DVec3::Y * f64::from(eye_height);
++        (camera - eye).as_vec3().to_array()
++    }
++
+     /// The player as `Camera.alignWithEntity` sees it.
+     fn player_camera_entity(&mut self) -> Option<CameraEntity> {
+         let (scale, distance) = {

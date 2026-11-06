@@ -1,0 +1,86 @@
+name: Build Bedrock Windows app
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/bedrock-windows.yml'
+      - 'bedrock/**'
+      - 'bedrock-upstream.lock.json'
+      - 'packaging/launcher_bedrock.rs'
+      - 'scripts/build_bedrock_windows.ps1'
+      - 'scripts/smoke_bedrock_windows.ps1'
+      - 'tools/fetch_bedrock_upstream.py'
+      - 'tools/package_bedrock_windows.py'
+      - 'docs/INSTALL-BEDROCK-WINDOWS.md'
+      - 'docs/BEDROCK-LICENSES.md'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  package:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.repository == 'Zeigen-ft/Herspers-Minecraft' }}
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install the launcher Rust toolchain
+        shell: pwsh
+        run: |
+          rustup toolchain install 1.95.0 --profile minimal
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          'RUSTUP_TOOLCHAIN=1.95.0' | Out-File -FilePath $env:GITHUB_ENV -Append
+      - name: Tooling and native launcher tests
+        shell: pwsh
+        run: |
+          $PSNativeCommandUseErrorActionPreference = $false
+          python -m unittest discover -s tests -v *> bedrock-tests.log
+          $result = $LASTEXITCODE
+          Get-Content bedrock-tests.log
+          if ($result -ne 0) {
+            $text = ((Get-Content bedrock-tests.log -Tail 100) -join "`n").Replace('%', '%25').Replace("`r", '%0D').Replace("`n", '%0A')
+            Write-Output "::error title=Bedrock tooling tests failed::$text"
+          }
+          exit $result
+      - name: Verify and assemble the native Bedrock client
+        id: assemble
+        shell: pwsh
+        run: |
+          try {
+            & ./scripts/build_bedrock_windows.ps1 *>&1 | Tee-Object -FilePath bedrock-package.log
+          } catch {
+            $text = (((Get-Content bedrock-package.log -Tail 60 -ErrorAction SilentlyContinue) -join "`n") + "`n" + $_.Exception.Message).Replace('%', '%25').Replace("`r", '%0D').Replace("`n", '%0A')
+            Write-Output "::error title=Bedrock packaging failed::$text"
+            throw
+          }
+      - name: Verify native startup and the in-app resource setup
+        shell: pwsh
+        run: |
+          try {
+            ./scripts/smoke_bedrock_windows.ps1 -PackagePath 'dist/bedrock-windows-x64/Herspers-Bedrock'
+          } catch {
+            $text = $_.Exception.Message.Replace('%', '%25').Replace("`r", '%0D').Replace("`n", '%0A')
+            Write-Output "::error title=Bedrock native startup failed::$text"
+            throw
+          }
+      - name: Upload Bedrock Windows package
+        uses: actions/upload-artifact@v4
+        with:
+          name: Herspers-Bedrock-Windows-x64
+          path: |
+            dist/bedrock-windows-x64/*.zip
+            bedrock-startup-results.json
+          if-no-files-found: error
+      - name: Preserve diagnostics after a failed check
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Bedrock-diagnostics-unverified
+          path: |
+            bedrock-*.log
+            bedrock-startup-results.json
+          if-no-files-found: warn

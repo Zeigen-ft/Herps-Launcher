@@ -1,0 +1,2 @@
+# Engine patches apply byte-for-byte to the verified upstream archive.
+patches/** text eol=lf
