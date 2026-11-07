@@ -1,0 +1,8 @@
+id = "herspers_rl_flint"
+name = "Flint Survival Starter (experimental)"
+version = "0.1.0"
+description = "Native remake stage 1: flint shards, plant fiber, a knife and a hatchet. Independent starter recipes, not full RLCraft or No Tree Punching compatibility."
+authors = ["Herspers contributors"]
+api = "0.2"
+side = "both"
+capabilities = ["registries"]

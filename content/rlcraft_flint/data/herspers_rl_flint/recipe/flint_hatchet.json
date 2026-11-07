@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "fs",
+    " t"
+  ],
+  "key": {
+    "f": "herspers_rl_flint:flint_shard",
+    "s": "minecraft:string",
+    "t": "minecraft:stick"
+  },
+  "result": {
+    "id": "herspers_rl_flint:flint_hatchet",
+    "count": 1
+  }
+}

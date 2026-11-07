@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    "herspers_rl_flint:plant_fiber",
+    "herspers_rl_flint:plant_fiber",
+    "herspers_rl_flint:plant_fiber"
+  ],
+  "result": {
+    "id": "minecraft:string",
+    "count": 1
+  }
+}

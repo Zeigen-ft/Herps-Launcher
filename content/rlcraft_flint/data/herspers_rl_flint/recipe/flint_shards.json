@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    "minecraft:flint"
+  ],
+  "result": {
+    "id": "herspers_rl_flint:flint_shard",
+    "count": 2
+  }
+}

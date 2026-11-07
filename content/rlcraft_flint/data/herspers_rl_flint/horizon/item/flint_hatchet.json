@@ -1,0 +1,7 @@
+{
+  "template": "minecraft:wooden_axe",
+  "components": {
+    "minecraft:max_damage": 48,
+    "!minecraft:repairable": {}
+  }
+}

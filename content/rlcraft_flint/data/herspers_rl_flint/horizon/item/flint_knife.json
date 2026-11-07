@@ -1,0 +1,7 @@
+{
+  "template": "minecraft:wooden_sword",
+  "components": {
+    "minecraft:max_damage": 32,
+    "!minecraft:repairable": {}
+  }
+}

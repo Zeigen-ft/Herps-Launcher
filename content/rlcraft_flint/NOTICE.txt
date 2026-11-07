@@ -1,0 +1,15 @@
+Flint Survival Starter 0.1.0 — native remake stage 1
+Copyright (c) 2026 Herspers contributors. GPL-3.0-only; see LICENSE-HERPS.txt.
+
+These are independently authored additive native content definitions and recipes.
+RLCraft's early flint-tool survival is the inspiration, not a compatibility claim.
+No original RLCraft, No Tree Punching, Forge or Java code/assets are included.
+Vanilla item models/textures are referenced by identifier only and require the
+user's legitimately prepared Minecraft resources. No game artwork is copied.
+
+This stage deliberately uses crafting-grid flint shards and wheat-to-fiber.
+It does not implement knapping by right-clicking stone, grass-fiber drops,
+blocked tree punching, thirst, temperature, skills, limb health or custom mobs.
+The knife and hatchet inherit vanilla wooden sword/axe behavior respectively,
+with 32/48 maximum durability and no inherited anvil repair ingredient.
+Physical gameplay and multiplayer acceptance must be recorded separately.

@@ -1,0 +1,10 @@
+{
+  "title": "Flint Survival Starter",
+  "icon": "herspers_rl_flint:flint_hatchet",
+  "items": [
+    "herspers_rl_flint:flint_shard",
+    "herspers_rl_flint:plant_fiber",
+    "herspers_rl_flint:flint_knife",
+    "herspers_rl_flint:flint_hatchet"
+  ]
+}
