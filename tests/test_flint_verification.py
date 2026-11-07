@@ -31,7 +31,7 @@ class FlintSourceGuardTests(unittest.TestCase):
         (self.source / ".herspers-prepared.json").write_text(json.dumps(stamp))
 
     def test_matching_prepared_tree_and_complete_patch_fingerprint_are_accepted(self):
-        self.assertEqual(verified_source(self.source, self.root), self.source)
+        self.assertEqual(verified_source(self.source, self.root), self.source.resolve())
 
     def test_edited_source_and_edited_patch_are_both_refused(self):
         path = self.source / "owned.rs"; before = path.read_text()

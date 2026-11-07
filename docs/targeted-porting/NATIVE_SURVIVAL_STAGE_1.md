@@ -5,6 +5,11 @@ playable starter loop in a staged RLCraft-style remake, **not a complete RLCraft
 or No Tree Punching port**. It is independent of the original modpack import.
 No original Java code, textures or Forge execution is included.
 
+The engine repository was renamed during this work. Its commit and prepared
+source bytes remain unchanged; [archive equivalence evidence](UPSTREAM_RENAME_VERIFICATION.json)
+records every member comparison. Download metadata and cache identities were
+updated while retaining the old archives and source caches.
+
 ## Included gameplay
 
 Four new items and five **additive** crafting recipes:
