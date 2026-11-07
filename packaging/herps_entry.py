@@ -58,6 +58,9 @@ def port_pack_smoke(launcher, directory, evidence):
 
 
 if __name__ == "__main__":
+    if "--flint-acceptance" in sys.argv:
+        from flint_acceptance import run
+        raise SystemExit(run(sys.argv[sys.argv.index("--smoke-report") + 1]))
     if "--phase5c-acceptance" in sys.argv or "--native-acceptance" in sys.argv:
         from phase5c_acceptance import run
         raise SystemExit(run(sys.argv[sys.argv.index("--smoke-report") + 1]))

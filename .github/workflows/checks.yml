@@ -23,6 +23,8 @@ jobs:
         run: rustup toolchain install 1.95.0 --profile minimal
       - name: Stage reviewed native chainmail content
         run: python tools/build_rlcraft_chainmail.py
+      - name: Stage native flint survival content
+        run: python tools/build_rlcraft_flint.py
       - name: Portable tooling tests
         shell: bash
         run: |
@@ -59,6 +61,8 @@ jobs:
           'RUSTUP_TOOLCHAIN=1.95.0' | Out-File -FilePath $env:GITHUB_ENV -Append
       - name: Stage reviewed native chainmail content
         run: python tools/build_rlcraft_chainmail.py
+      - name: Stage native flint survival content
+        run: python tools/build_rlcraft_flint.py
       - name: Windows tooling tests
         shell: pwsh
         run: |

@@ -93,23 +93,30 @@ def build_port_pack(host_target: str) -> tuple[Path, dict]:
 
 def pyinstaller_command(output: Path, build: Path, helper: Path, port_pack: Path, host_target: str) -> list:
     from tools.build_rlcraft_chainmail import build as build_chainmail
+    from tools.build_rlcraft_flint import build as build_flint
     from herps_launcher.modpacks.chainmail import PACKAGE_NAME
+    from herps_launcher.modpacks.flint import PACKAGE_NAME as FLINT_PACKAGE
     content = ROOT / ".cache/targeted-content"
     build_chainmail(content)
+    build_flint(content)
     command = [sys.executable, "-m", "PyInstaller", "--noconfirm", "--clean", "--windowed", "--onedir",
         "--name", "Herps Launcher", "--paths", ROOT, "--distpath", output, "--workpath", build / "work", "--specpath", build,
         "--add-binary", f"{helper}{os.pathsep}.", "--add-binary", f"{port_pack}{os.pathsep}.",
         "--collect-submodules", "herps_launcher.javamods", "--collect-submodules", "herps_launcher.modpacks",
         "--add-data", f"{content / PACKAGE_NAME}{os.pathsep}targeted-content",
+        "--add-data", f"{content / FLINT_PACKAGE}{os.pathsep}targeted-content",
         "--hidden-import", "PySide6.QtTest", "--copy-metadata", "PySide6-Essentials", "--copy-metadata", "shiboken6"]
     # Opt-in delivered workflow verification on every supported target.
     command += ["--paths", ROOT / "packaging", "--hidden-import", "phase5c_acceptance",
+                "--hidden-import", "flint_acceptance",
                 "--hidden-import", "herps_entry", "--hidden-import", "unittest.mock",
                 "--hidden-import", "tools.make_javamods_fixtures",
                 "--hidden-import", "tools.make_modpack_fixtures"]
     for name in ("test_javamods_ui.py", "test_modpacks_ui.py",
                  "test_javamods_library.py", "test_modpacks_service.py"):
         command += ["--add-data", f"{ROOT / 'tests' / name}{os.pathsep}phase5c-tests"]
+    for name in ("test_rlcraft_flint.py", "test_rlcraft_flint_ui.py"):
+        command += ["--add-data", f"{ROOT / 'tests' / name}{os.pathsep}flint-tests"]
     if host_target.endswith("apple-darwin"):
         command += ["--osx-bundle-identifier", "io.herspers.herps-launcher", "--target-architecture", "arm64" if host_target.startswith("aarch64") else "x86_64"]
         if os.environ.get("HERPS_CODESIGN_IDENTITY"):
@@ -144,6 +151,7 @@ def copy_documentation(output: Path):
         shutil.copy2(ROOT / name, output / name)
     shutil.copy2(ROOT / "upstream.lock.json", output / "upstream.lock.json")
     shutil.copytree(ROOT / "content/rlcraft_chainmail", output / "content/rlcraft_chainmail")
+    shutil.copytree(ROOT / "content/rlcraft_flint", output / "content/rlcraft_flint")
     shutil.copy2(ROOT / "LICENSE", output / "LICENSE")
     shutil.copy2(ROOT / "LICENSE", output / "LICENSE-HERPS.txt")
     for source, destination in (("HERPS-LAUNCHER.md", "START-HERE.txt"),

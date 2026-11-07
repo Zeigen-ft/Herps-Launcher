@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (QAbstractItemView, QCheckBox, QFileDialog, QFrame
 from .service import ModpackLibrary
 from .targeted_backup import create_backup, eligibility, verify_backup
 from . import chainmail
+from . import flint
 
 
 UNSUPPORTED = "Unsupported"
@@ -111,6 +112,20 @@ class ModpacksPage(QWidget):
         self.chainmail_button = self._button(chain_layout, "Install chainmail crafting · disabled initially…", self.install_chainmail)
         self.chainmail_button.setMaximumWidth(520)
         box.addWidget(chain_box)
+
+        flint_box = QGroupBox("Native survival remake · Stage 1: Flint Survival Starter")
+        flint_layout = QVBoxLayout(flint_box)
+        self.flint_status = QLabel()
+        self.flint_status.setWordWrap(True)
+        flint_layout.addWidget(self.flint_status)
+        self.flint_consent = QCheckBox("Confirm disposable profile and closed games/servers")
+        self.flint_consent.setMaximumWidth(520)
+        self.flint_consent.setToolTip("Install into a new named profile before creating a world. Starts OFF; enable on Mods.")
+        self.flint_consent.toggled.connect(lambda _: self.busy_changed())
+        flint_layout.addWidget(self.flint_consent)
+        self.flint_button = self._button(flint_layout, "Install flint survival starter · disabled initially…", self.install_flint)
+        self.flint_button.setMaximumWidth(520)
+        box.addWidget(flint_box)
 
         self.summary = QLabel("Playable status: unverified. Import a pack to inspect every indexed mod.")
         self.summary.setWordWrap(True)
@@ -215,6 +230,9 @@ class ModpacksPage(QWidget):
             self.chainmail_consent.blockSignals(True)
             self.chainmail_consent.setChecked(False)
             self.chainmail_consent.blockSignals(False)
+            self.flint_consent.blockSignals(True)
+            self.flint_consent.setChecked(False)
+            self.flint_consent.blockSignals(False)
             self.summary.setText("Playable status: unverified. No pack analysis is selected for this profile.")
             self.status.setText(f"Profile: {profile}. Import a pack or load its retained local evidence.")
         self.binary_path.setText(self.launcher.config.get("port_pack_binary", ""))
@@ -251,6 +269,21 @@ class ModpacksPage(QWidget):
         available = not busy and valid and not installed and self.launcher.config["profile"] != "default"
         self.chainmail_consent.setEnabled(available)
         self.chainmail_button.setEnabled(available and self.chainmail_consent.isChecked())
+        installed, valid = False, True
+        try:
+            state = flint.status(self.launcher)
+            installed = state["installed"]
+            description = ("Installed · " + ("enabled" if state["enabled"] else "disabled; enable on Mods")) if installed else "Not installed"
+            self.flint_status.setText(f"Profile: {self.launcher.config['profile']} · {description}. "
+                "Flint shards, plant fiber, a knife and a hatchet; five additive recipes. "
+                "Experimental; physical gameplay NOT RUN. Keep enabled once saves exist. "
+                "This stage uses crafting-grid shards and wheat fiber; full RLCraft is unsupported.")
+        except (OSError, ValueError) as error:
+            valid = False
+            self.flint_status.setText(f"Preserve this profile and review flint content: {error}")
+        available = not busy and valid and not installed and self.launcher.config["profile"] != "default"
+        self.flint_consent.setEnabled(available)
+        self.flint_button.setEnabled(available and self.flint_consent.isChecked())
         # No verified runtime/content validation backend exists. A static Works
         # verdict or a carried folder can never unlock Play here.
         self.play_button.setEnabled(False)
@@ -281,6 +314,29 @@ class ModpacksPage(QWidget):
 
         self._run("Installing bundled chainmail content into the selected disposable profile…",
             lambda emit: chainmail.install(self.launcher, profile, disposable_confirmed=True, games_closed=True), completed)
+
+    def install_flint(self):
+        self.window.require_idle()
+        profile = self.launcher.config["profile"]
+        if not self.flint_consent.isChecked() or profile == "default":
+            raise ValueError("Select and explicitly confirm a fresh named disposable profile first")
+        answer = QMessageBox.warning(self, "Install native survival stage 1?",
+            f"Install Flint Survival Starter only into '{profile}'? Close all games and servers. "
+            "Use a disposable profile with no worlds. It starts OFF: enable on Mods before creating a world. "
+            "Keep it enabled after saves exist. This is an experimental starter, not the complete RLCraft pack.",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel,
+            QMessageBox.StandardButton.Cancel)
+        if answer != QMessageBox.StandardButton.Yes:
+            return
+
+        def completed(result):
+            self.details.setPlainText(json.dumps(result, indent=2))
+            self.status.setText(f"Installed disabled in {profile}. Open Mods, select Flint Survival Starter and enable it before creating a world.")
+            self.flint_consent.setChecked(False)
+            self.window.refresh()
+
+        self._run("Installing the native flint starter into the selected disposable profile…",
+            lambda emit: flint.install(self.launcher, profile, disposable_confirmed=True, games_closed=True), completed)
 
     def _run(self, label, function, done):
         self.window.require_idle()

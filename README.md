@@ -26,6 +26,9 @@ migration does not change visibility, create a release or create a tag.
 - Native `.hmod` content management and guarded, trusted `.hnmod` development tools.
 - **Chainmail Plate and Boots 0.1.0**, optional and disabled by default; installation
   is restricted to an explicitly confirmed fresh disposable profile.
+- **[Flint Survival Starter — native remake stage 1](docs/targeted-porting/NATIVE_SURVIVAL_STAGE_1.md)**
+  on the development branch: four native items and five starter recipes, OFF by
+  default with fresh-profile guards. Physical gameplay acceptance is pending.
 - The inspected FunCraft hotfix's bounded manual world-backup utility.
 - A standalone, passive local RLCraft 2.9.3 archive inspector.
 
