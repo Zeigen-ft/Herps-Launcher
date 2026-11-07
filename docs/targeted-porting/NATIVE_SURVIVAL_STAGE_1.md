@@ -38,8 +38,9 @@ empty  stick
 
 The knife copies vanilla wooden-sword components with **32 durability points**;
 the hatchet copies wooden-axe components with **48 durability points**. The
-native components provide weapon/tool behavior; physical damage, wear and block
-interaction must still be tested. Repair ingredients are removed rather than
+native components provide weapon/tool behavior. The user reports representative
+knife damage/wear and hatchet log-mining/drops/wear PASS; exact durability,
+breakage and other interactions still need testing. Repair ingredients are removed rather than
 silently allowing wooden-plank repairs. Vanilla tools and recipes are unchanged.
 
 Names distinguish the items from their referenced vanilla artwork: shard looks
@@ -108,14 +109,23 @@ removing managed content is blocked; missing/edited/disabled content blocks that
 profile's launch. Keep it enabled. These guards are not a missing-item recovery tool.
 The original Chainmail Plate and Boots 0.1.0 package and hash are unchanged.
 
-## Physical Windows acceptance — NOT RUN until you report it
+## Physical Windows acceptance checklist
 
-1. Obtain **one flint, one wheat and two sticks** through normal survival play.
+The user reported **ALL PASS** for the shorter chat Survival checklist on
+8 November 2026. Its scope covers launch, five recipes, representative tool use,
+wrong/repeated/shift crafting and full-restart item/damage persistence. See
+[the physical report](FLINT_WINDOWS_PHYSICAL_EVIDENCE.json). Chest, repair,
+breakage, combined-mod and preservation/failure cases below remain open; the reply
+did not reconfirm the exact installer, OS build or mode separately.
+
+1. Obtain **two flint, two wheat and two sticks** through normal survival play.
    Existing vanilla wood gathering remains available. Confirm the profile/mod
    name and record starting counts.
-2. Craft two shards, then three fibers, then one string. Craft the knife and
+2. Craft both flints into four shards and both wheats into six fibers, then take
+   **one** string from three fibers. Craft the knife and
    hatchet with the patterns above. Expect one of each tool and exact ingredient
-   use. Invalid ingredients/layouts must give no output or consumption.
+   use, leaving two spare shards and three spare fibers. Invalid ingredients/
+   layouts must give no output or consumption.
 3. Compare the hatchet on ordinary logs against a wooden axe and an empty hand.
    Check normal drops and tool wear. Use the knife as a sword, check damage/wear,
    and record results. Tool durability points are not a promise of the same
@@ -147,8 +157,8 @@ personal paths; do not upload copyrighted game resources or valuable worlds.
 
 ## Following stages
 
-1. Finish physical acceptance of this small starter loop; adjust only verified
-   defects and preserve its installed content identity.
+1. Retain the reported basic starter-loop passes; finish remaining physical edge
+   cases, adjust verified defects and preserve installed content identity.
 2. Evaluate grass-fiber harvesting and stone knapping against the existing
    native hooks, with one exact behavior and preservation test at a time.
 3. Treat thirst/temperature, skills/limb damage and combat as separate saved-state

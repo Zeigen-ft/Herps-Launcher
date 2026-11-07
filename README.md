@@ -28,7 +28,9 @@ migration does not change visibility, create a release or create a tag.
   is restricted to an explicitly confirmed fresh disposable profile.
 - **[Flint Survival Starter — native remake stage 1](docs/targeted-porting/NATIVE_SURVIVAL_STAGE_1.md)**
   on the development branch: four native items and five starter recipes, OFF by
-  default with fresh-profile guards. Physical gameplay acceptance is pending.
+  default with fresh-profile guards. The user reports the basic Windows Survival
+  checklist PASS; [scope and remaining tests](docs/targeted-porting/FLINT_WINDOWS_PHYSICAL_EVIDENCE.json)
+  are recorded separately from CI. Broader native acceptance remains open.
 - The inspected FunCraft hotfix's bounded manual world-backup utility.
 - A standalone, passive local RLCraft 2.9.3 archive inspector.
 

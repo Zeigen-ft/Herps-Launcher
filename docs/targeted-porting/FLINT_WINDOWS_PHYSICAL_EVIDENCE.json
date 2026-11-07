@@ -1,0 +1,104 @@
+{
+  "schema": 1,
+  "recorded_date": "2026-11-08",
+  "recorded_timezone": "Asia/Singapore",
+  "evidence_type": "user_reported_physical_gameplay",
+  "tester": "User",
+  "raw_user_report": "ALL PASS",
+  "observed_by_codex": false,
+  "screenshots_or_logs_supplied_with_report": false,
+  "test_execution_date": null,
+  "feature": "Flint Survival Starter",
+  "version": "0.1.0",
+  "platform_context": "Windows x64 PC; Windows 11 x64 was previously identified by the user",
+  "platform_explicitly_reconfirmed_in_this_message": false,
+  "game_mode_context": "Survival, as specified by the immediately preceding checklist",
+  "game_mode_explicitly_reconfirmed_in_this_message": false,
+  "exact_os_build_cpu_gpu": null,
+  "checklist_basis": "The immediately preceding five-step chat checklist: enabled launch; five recipes using 2 flint, 2 wheat and 2 sticks; tool damage/mining/drops/wear; wrong-input and repeated/shift-click accounting; full game/launcher restart with names, counts and tool damage retained.",
+  "reference_candidate": {
+    "workflow_run_id": 42383285455,
+    "source_commit": "005fe80c3e11a396fbdbc54d1ad3f9bbbac08d15",
+    "windows_artifact_id": 13580207560,
+    "mod_artifact_id": 13580237290,
+    "package": "herspers_rl_flint-0.1.0.hmod",
+    "package_sha256": "919745713d5233bcd4cfee4f3da04328d3808eb06b24df966f26b054a69b81cc",
+    "installer_sha256": "8f078900216f380956754b25248d51924e202d2a1917c8f92a1547e7337dcae0",
+    "basis": "This is the candidate supplied in this conversation. The latest ALL PASS message did not independently reconfirm the run, installer/portable choice or actual file hashes."
+  },
+  "workflow_run_explicitly_reconfirmed_by_user": null,
+  "candidate_member_actually_used": null,
+  "results": [
+    {
+      "case": "Launch with the native starter enabled",
+      "status": "PASS"
+    },
+    {
+      "case": "One vanilla flint produces two Flint Shards",
+      "status": "PASS"
+    },
+    {
+      "case": "One vanilla wheat produces three Plant Fibers",
+      "status": "PASS"
+    },
+    {
+      "case": "Three Plant Fibers in separate cells produce one vanilla string",
+      "status": "PASS"
+    },
+    {
+      "case": "Shard above stick produces one Flint Knife",
+      "status": "PASS"
+    },
+    {
+      "case": "Listed shard/string/stick pattern produces one Flint Hatchet",
+      "status": "PASS"
+    },
+    {
+      "case": "Listed starter-material accounting and final inventory: one knife, one hatchet, two spare shards and three spare fibers",
+      "status": "PASS"
+    },
+    {
+      "case": "Representative knife mob damage and tool wear",
+      "status": "PASS"
+    },
+    {
+      "case": "Representative hatchet log mining, normal drops, mining-speed check and tool wear",
+      "status": "PASS"
+    },
+    {
+      "case": "Tested wrong ingredient/layout gives no output or consumption",
+      "status": "PASS"
+    },
+    {
+      "case": "Tested repeated and shift-click crafting has correct counts without loss/duplication",
+      "status": "PASS"
+    },
+    {
+      "case": "Save, fully close game and launcher, restart both, reopen same profile/world, retain item names/counts and accumulated tool damage",
+      "status": "PASS"
+    }
+  ],
+  "result_scope": "Composite user confirmation of the supplied checklist; no per-case measurements, exhaustive grid coverage, separate mode results or independent observation were provided.",
+  "not_run_or_not_confirmed": [
+    "Creative-mode gameplay for this starter",
+    "Exhaustive recipes, all ingredient counts/layouts and all inventory/stack edge cases",
+    "Exact 32/48 durability-budget measurements, tool breakage and all repair paths",
+    "Chest persistence and dropped-item recovery",
+    "Combined chainmail/flint gameplay in one profile",
+    "Physical installation, update, uninstall/reinstall, backup restore and cross-profile hash preservation",
+    "Missing-content/receipt recovery and crash/disk/lock failures",
+    "Physical developer-tools-absent environment",
+    "Explicit graphics, audio, shader and performance/hardware-matrix acceptance",
+    "Multiplayer or dedicated-server behavior",
+    "macOS Intel and Apple Silicon gameplay",
+    "Exact installer/portable member, file hashes, OS build, CPU/GPU and test date"
+  ],
+  "earlier_observations_not_resolved": [
+    "Earlier chainmail loading-logo stall",
+    "Earlier initially empty chainmail recipe output"
+  ],
+  "full_native_acceptance": false,
+  "full_rlcraft_compatibility": false,
+  "full_no_tree_punching_compatibility": false,
+  "public_release_approved": false
+}

@@ -318,12 +318,12 @@
     "old_cache_preserved": true
   },
   "physical_acceptance": {
-    "windows_stage1_survival": "NOT RUN",
+    "windows_stage1_survival": "USER-REPORTED PASS: supplied Survival checklist context; not independently observed",
     "windows_stage1_creative": "NOT RUN",
     "macos_arm64_build_and_gameplay": "NOT RUN",
     "macos_intel_build_and_gameplay": "NOT RUN",
     "multiplayer": "NOT RUN",
-    "actual_world_save_load_relaunch": "NOT RUN"
+    "actual_world_save_load_relaunch": "USER-REPORTED PASS: full game/launcher restart, item names/counts/tool damage in the same world"
   },
   "prior_chainmail_physical_results": "Earlier user-reported Windows Survival/Creative results remain historical; not transferred to these new files or flint features.",
   "unresolved_observations": [
@@ -346,5 +346,12 @@
   "main_merged_or_modified": false,
   "existing_release_assets_modified": false,
   "signing": "Unsigned Windows internal test candidate; no new signing services/credentials",
-  "completion": "Stage-1 implementation and Windows automated verification passed; real gameplay acceptance remains open."
+  "completion": "Stage-1 implementation, Windows automated verification and user-reported basic Survival checklist passed; broader physical/native acceptance remains open.",
+  "physical_report": {
+    "file": "FLINT_WINDOWS_PHYSICAL_EVIDENCE.json",
+    "recorded_date": "2026-11-08",
+    "raw_user_report": "ALL PASS",
+    "candidate_association": "Previously supplied candidate; exact run/member/hashes not explicitly reconfirmed",
+    "full_native_acceptance": false
+  }
 }

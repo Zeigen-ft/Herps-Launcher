@@ -1,6 +1,7 @@
 # Native survival stage 1 — implementation and verification
 
-**Implemented and verified by Windows CI; physical gameplay acceptance is open.**
+**Windows CI passed; the user reports the basic Survival checklist PASS.
+Broader native acceptance remains open.**
 This is a small RLCraft-style native starter, not a complete RLCraft rewrite.
 
 Repository: `Zeigen-ft/Herps-Launcher`; branch `feature/rlcraft-native-stages`.
@@ -125,12 +126,40 @@ release. Actions artifacts expire; access follows the repository's permissions.
 - Compiler caches are retained after failed Windows verification to avoid
   repeatedly discarding completed compiler work. Hash/source gates stay enforced.
 
+## User-reported physical checklist
+
+On **8 November 2026 (Asia/Singapore)** the user replied **“ALL PASS”** to the
+immediately preceding Survival checklist. Record this as user-reported gameplay,
+separate from the automated evidence above; Codex did not observe it. No logs,
+screenshots, exact test date, hardware details or per-case measurements were supplied.
+
+| Reported case | Result |
+| --- | --- |
+| Launch with the starter enabled | USER-REPORTED PASS |
+| All five recipes and listed ingredient/final-inventory accounting | USER-REPORTED PASS |
+| Knife damages a mob and wears down | USER-REPORTED PASS |
+| Hatchet mines logs, gives normal drops and wears down; mining-speed check | USER-REPORTED PASS |
+| Tested wrong inputs/layouts give no output or consumption | USER-REPORTED PASS |
+| Tested repeated/shift-click crafting has correct counts without loss/duplication | USER-REPORTED PASS |
+| Save, fully close game and launcher, restart both and reopen the same world; names, counts and tool damage retained | USER-REPORTED PASS |
+
+Windows x64 and Survival are the context of the supplied checklist and earlier
+conversation; the short reply did not separately reconfirm OS/mode. The candidate
+associated with that checklist is run **42383285455**, source **005fe80**. The
+actual installer/portable member, run and hashes were not independently
+reconfirmed by the latest message. Do not treat this as physical acceptance of
+every download hash or another build. See the exact
+[physical evidence record](FLINT_WINDOWS_PHYSICAL_EVIDENCE.json).
+
 ## Remaining acceptance and scope
 
-**New-stage physical Windows Survival/Creative gameplay, real crafting ingredient
-consumption, combat, tool wear/breakage, actual world save/load/relaunch and
-multiplayer are NOT RUN. New-stage macOS Intel/ARM64 builds and all physical
-gameplay are NOT RUN.** CI fixtures and menu clicks do not establish those results.
+**Creative mode, chest persistence, tool breakage, exact durability budgets and
+repair paths, combined chainmail/flint gameplay, physical cross-profile/backup/
+installation preservation and failure recovery remain NOT RUN or unconfirmed.
+Multiplayer, new-stage macOS builds and all Mac gameplay remain NOT RUN.**
+Representative checklist passes do not establish exhaustive ingredient/layout,
+inventory, hardware, graphics/audio or performance coverage. Physical operation
+without developer tools was not separately confirmed; the automated proof remains.
 
 Earlier user-reported chainmail Windows Survival/Creative passes remain attached
 to their original candidate. The earlier loading-logo stall and initially empty
@@ -145,5 +174,5 @@ future work. Original Forge/Fabric JAR execution and whole-Modpack Play remain
 unsupported. Major engine/API changes need approval before implementation.
 
 Main, the source repository and existing release/tag assets were not modified by
-this work. No release was published. The next checkpoint is the real disposable
-Survival-world procedure before promoting this stage's gameplay claims.
+this work. No release was published. Basic gameplay now has a user-reported
+checkpoint; broader acceptance and the remaining staged features are still open.
