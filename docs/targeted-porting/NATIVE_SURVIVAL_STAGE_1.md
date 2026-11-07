@@ -58,8 +58,30 @@ hosting console does not automatically copy profile mods into its separate serve
 
 ## Install the internal candidate
 
-Use the exact successful **stage-1 Windows candidate run** recorded in
-`NATIVE_SURVIVAL_STAGE_1_VERIFICATION.md` after CI completes. Older published
+Use [successful Windows run 42383285455](https://github.com/Zeigen-ft/Herps-Launcher/actions/runs/42383285455),
+built from `005fe80c3e11a396fbdbc54d1ad3f9bbbac08d15`:
+
+- [Windows installer and portable package](https://github.com/Zeigen-ft/Herps-Launcher/actions/runs/42383285455/artifacts/13580207560)
+- [Separate native starter `.hmod` and engine validation](https://github.com/Zeigen-ft/Herps-Launcher/actions/runs/42383285455/artifacts/13580237290)
+- [Exact SHA-256 checksums](NATIVE_SURVIVAL_STAGE_1_SHA256SUMS.txt)
+- [Verification report](NATIVE_SURVIVAL_STAGE_1_VERIFICATION.md)
+
+Each Actions download is an outer ZIP; extract it first. The Windows artifact
+contains `Herps-Launcher-0.1.0-Windows-x64-Setup.exe` and a longer-named portable
+ZIP. Use the installer, or fully extract that inner portable ZIP before use.
+For example, in PowerShell opened in the extracted download folder:
+
+```powershell
+Get-FileHash -Algorithm SHA256 -LiteralPath '.\Herps-Launcher-0.1.0-Windows-x64-Setup.exe'
+```
+
+Expected installer SHA-256:
+`8f078900216f380956754b25248d51924e202d2a1917c8f92a1547e7337dcae0`.
+The standalone package is `herspers_rl_flint-0.1.0.hmod`, **42,887 bytes**, SHA-256
+`919745713d5233bcd4cfee4f3da04328d3808eb06b24df966f26b054a69b81cc`.
+It is already bundled with the new candidate; use the dedicated installer card.
+
+Older published
 installers do not have this new guarded installer/card. Do not replace a released
 installer/checksum with this experimental build.
 
@@ -68,9 +90,11 @@ installer/checksum with this experimental build.
    worlds and their previous launcher/content versions untouched.
 2. Install/extract the candidate normally. Prepare your own legitimate
    Minecraft Java 26.3 resources with JDK 25 and validate the installation.
+   If your existing 26.3 resources already pass validation, reuse them; no new
+   resource export is required by this data-only stage.
 3. On Home create/select a **new disposable named profile**, such as
    `flint_stage1_trial`. Do not create a world yet.
-4. Open **Modpacks → Native survival remake · Stage 1: Flint Survival Starter**.
+4. Open Modpacks and scroll to **Native survival remake · Stage 1: Flint Survival Starter**.
    Confirm the selected profile is disposable and all clients/servers are closed.
    Click **Install flint survival starter · disabled initially…** and confirm.
 5. Open **Mods**, select **Flint Survival Starter**, and enable it explicitly.
@@ -97,13 +121,19 @@ The original Chainmail Plate and Boots 0.1.0 package and hash are unchanged.
    and record results. Tool durability points are not a promise of the same
    number of uses: attacking/mining can consume different amounts.
 4. Test repeated/stacked crafting separately for correct counts and no duplication.
-   Check tool breakage and repair refusal only with disposable tools/worlds.
+   Check tool breakage and that wooden planks are not accepted as inherited repair
+   ingredients. Combining identical damaged tools is a separate untested case;
+   this stage does not claim to disable every possible repair operation.
 5. Keep both tools, a spare shard and fiber in inventory. Save and quit normally.
    Close the game and launcher completely. Reopen the same profile/world and
    confirm names, counts and previously accumulated durability damage remain.
 6. Test chest persistence and another save/reload separately. Hash external
    backups/other profiles before/after to check preservation. Never overwrite an
    existing save to test restoration.
+7. For an optional coexistence check, use another fresh disposable profile and
+   install/enable both chainmail and flint **before** creating a world. Repeat
+   both crafting loops and the full restart/inventory checks. Keep your earlier
+   chainmail world untouched; this combined physical case is NOT RUN.
 
 Use PASS / FAIL / BLOCKED / NOT RUN. An automated NBT/resource/recipe fixture is
 not real survival, combat, rendering, ingredient consumption or world loading.

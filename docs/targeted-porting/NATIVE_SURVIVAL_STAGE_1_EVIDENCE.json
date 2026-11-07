@@ -1,0 +1,350 @@
+{
+  "schema": 1,
+  "repository": "Zeigen-ft/Herps-Launcher",
+  "branch": "feature/rlcraft-native-stages",
+  "baseline_commit": "b292a48c279c2b718a5395fe5558f2ff83dcea30",
+  "tested_source_commit": "005fe80c3e11a396fbdbc54d1ad3f9bbbac08d15",
+  "native_ci": {
+    "run": 42383285455,
+    "job": 128435256574,
+    "conclusion": "success",
+    "platform": "Windows-2025Server-10.0.26100-SP0",
+    "url": "https://github.com/Zeigen-ft/Herps-Launcher/actions/runs/42383285455"
+  },
+  "portable_ci": {
+    "run": 42383045032,
+    "linux_job": 128434535466,
+    "windows_job": 128434535318,
+    "conclusion": "success",
+    "linux_result": {
+      "collected": 451,
+      "passed": 342,
+      "skipped": 109
+    },
+    "windows_result": {
+      "collected": 451,
+      "passed": 346,
+      "skipped": 105
+    }
+  },
+  "package": {
+    "schema": 1,
+    "source_commit": "005fe80c3e11a396fbdbc54d1ad3f9bbbac08d15",
+    "stage": 1,
+    "package": "herspers_rl_flint-0.1.0.hmod",
+    "sha256": "919745713d5233bcd4cfee4f3da04328d3808eb06b24df966f26b054a69b81cc",
+    "size": 42887,
+    "default_enabled": false,
+    "gameplay_verified": false,
+    "interactive_verified": false,
+    "engine_revision": "7301f6fdd7f470b11317276e7a11b4dc615c137a",
+    "api": "0.2",
+    "items": 4,
+    "recipes": 5,
+    "full_rlcraft_compatibility": false,
+    "original_mod_code_or_assets_included": false
+  },
+  "windows_files": {
+    "Herps-Launcher-0.1.0-Windows-x64-Setup.exe": {
+      "sha256": "8f078900216f380956754b25248d51924e202d2a1917c8f92a1547e7337dcae0",
+      "bytes": 102646273,
+      "original_filename": "Herps-Launcher-0.1.0-Windows-x64-Setup.exe"
+    },
+    "Herps-Launcher-0.1.0-Windows-x64-Portable.zip": {
+      "sha256": "f7a5d146f913cc6ff130327ed4b982a7040313a3582eb806baf78056e62d456d",
+      "bytes": 137788520,
+      "original_filename": "Herps-Launcher-0.1.0-x86_64-pc-windows-msvc-1lszx5se.zip"
+    }
+  },
+  "downloads": [
+    {
+      "id": 13580237290,
+      "name": "RLCraft-Native-Stage1-Flint-0.1.0-Windows-x86_64",
+      "sha256": "9f673b6c23d99a801f945d3b85a55ca8f5c7a2718a91a373712aaed055ef9772",
+      "bytes": 15619,
+      "verified": true,
+      "url": "https://github.com/Zeigen-ft/Herps-Launcher/actions/runs/42383285455/artifacts/13580237290"
+    },
+    {
+      "id": 13580207560,
+      "name": "Herps-Launcher-0.1.0-Windows-x86_64",
+      "sha256": "29933b839661c944cae7594faf498aab4d5eb8b9fe170befe810af39dab033c8",
+      "bytes": 238553880,
+      "verified": true,
+      "url": "https://github.com/Zeigen-ft/Herps-Launcher/actions/runs/42383285455/artifacts/13580207560"
+    },
+    {
+      "id": 13579699533,
+      "name": "Herps-Launcher-evidence-Windows-x86_64",
+      "sha256": "80242b73713974cb00775486256fefa7517811c9355042e98e3ad8689d011cb3",
+      "bytes": 706268,
+      "verified": true,
+      "url": "https://github.com/Zeigen-ft/Herps-Launcher/actions/runs/42383285455/artifacts/13579699533"
+    },
+    {
+      "id": 13579589736,
+      "name": "RLCraft-Chainmail-0.1.0-Windows-x86_64",
+      "sha256": "7e9248e449745f6966f57a537b9389d39c9909b458b88a8476fc6f7419916bf0",
+      "bytes": 15276,
+      "verified": true,
+      "url": "https://github.com/Zeigen-ft/Herps-Launcher/actions/runs/42383285455/artifacts/13579589736"
+    }
+  ],
+  "native_source_suite": {
+    "collected": 451,
+    "passed": 436,
+    "skipped": 15,
+    "skip_cases": [
+      "test_clean_launch_uses_separate_game_folder_and_original_binary (test_herps_launcher.LauncherTests.test_clean_launch_uses_separate_game_folder_and_original_binary) ... skipped 'Owned POSIX process fixture'",
+      "test_failed_resource_check_does_not_start_game_and_releases_lock (test_herps_launcher.LauncherTests.test_failed_resource_check_does_not_start_game_and_releases_lock) ... skipped 'Owned POSIX process fixture'",
+      "test_play_real_child_logs_exit_and_relaunch_without_touching_saves (test_herps_launcher.LauncherTests.test_play_real_child_logs_exit_and_relaunch_without_touching_saves) ... skipped 'Owned POSIX child fixture; Windows CI covers native tests separately'",
+      "test_supplied_apk (test_inspect_apk.ApkTests.test_supplied_apk) ... skipped 'Set HORIZON_TEST_APK to run supplied-APK integration'",
+      "test_actual_dialog_scripts_compile_on_mac (test_macos_launcher.MacLauncherTests.test_actual_dialog_scripts_compile_on_mac) ... skipped 'Mac Bash behavior tests need Unix paths and executable scripts'",
+      "test_dialog_cancellation_preserves_original_preparer_failure (test_macos_launcher.MacLauncherTests.test_dialog_cancellation_preserves_original_preparer_failure) ... skipped 'Mac Bash behavior tests need Unix paths and executable scripts'",
+      "test_failed_resource_check_prints_error_and_opens_preparation (test_macos_launcher.MacLauncherTests.test_failed_resource_check_prints_error_and_opens_preparation) ... skipped 'Mac Bash behavior tests need Unix paths and executable scripts'",
+      "test_game_failure_surfaces_log_and_preserves_client_status (test_macos_launcher.MacLauncherTests.test_game_failure_surfaces_log_and_preserves_client_status) ... skipped 'Mac Bash behavior tests need Unix paths and executable scripts'",
+      "test_non_mac_host_is_rejected_before_creating_player_data (test_macos_launcher.MacLauncherTests.test_non_mac_host_is_rejected_before_creating_player_data) ... skipped 'Mac Bash behavior tests need Unix paths and executable scripts'",
+      "test_open_failure_preserves_preparer_error_and_prints_manual_path (test_macos_launcher.MacLauncherTests.test_open_failure_preserves_preparer_error_and_prints_manual_path) ... skipped 'Mac Bash behavior tests need Unix paths and executable scripts'",
+      "test_prepared_resources_launch_client_with_literal_arguments_and_profile (test_macos_launcher.MacLauncherTests.test_prepared_resources_launch_client_with_literal_arguments_and_profile) ... skipped 'Mac Bash behavior tests need Unix paths and executable scripts'",
+      "test_show_resource_log_uses_exact_path_without_starting_game (test_macos_launcher.MacLauncherTests.test_show_resource_log_uses_exact_path_without_starting_game) ... skipped 'Mac Bash behavior tests need Unix paths and executable scripts'",
+      "test_case_collision_is_rejected (test_package_bedrock_windows.BedrockPackagingTests.test_case_collision_is_rejected) ... skipped 'Filesystem cannot construct distinct case-colliding files'",
+      "test_linked_profile_and_settings_preserve_external_files (test_rlcraft_chainmail.ChainmailTests.test_linked_profile_and_settings_preserve_external_files) ... skipped 'Windows link guards are exercised with junctions separately'",
+      "test_linked_mod_folder_and_receipt_cannot_redirect_install (test_rlcraft_flint.FlintTests.test_linked_mod_folder_and_receipt_cannot_redirect_install) ... skipped 'POSIX symlink fixture; Windows junction case is separate'"
+    ]
+  },
+  "native_flint_probe": {
+    "cases": [
+      "native_package_reader",
+      "four_items_five_recipes_no_code",
+      "native_creative_tab",
+      "native_content_overlay_and_vanilla_preservation",
+      "native_tool_durability_and_weapon_components",
+      "native_hatchet_mining_rules",
+      "native_shard_and_fiber_all_grid_offsets",
+      "native_knife_all_offsets",
+      "native_hatchet_all_offsets_and_mirrors",
+      "native_fiber_string_and_wrong_counts",
+      "native_existing_recipe_preserved",
+      "wrong_inputs_extra_cells_rejected",
+      "stacked_match_is_read_only"
+    ],
+    "gameplay_verified": false,
+    "interactive_verified": false,
+    "native_recipe_matcher_verified": true,
+    "native_tool_components_verified": true,
+    "prepared_legitimate_resources_verified": false,
+    "stage": 1,
+    "status": "passed",
+    "synthetic_resources": true,
+    "world_save_load_verified": false,
+    "engine_revision": "7301f6fdd7f470b11317276e7a11b4dc615c137a",
+    "package_sha256": "919745713d5233bcd4cfee4f3da04328d3808eb06b24df966f26b054a69b81cc",
+    "target": "x86_64-pc-windows-msvc",
+    "rust_toolchain": "1.95.0",
+    "source_commit": "005fe80c3e11a396fbdbc54d1ad3f9bbbac08d15"
+  },
+  "native_chainmail_probe": {
+    "cases": [
+      "native_package_reader",
+      "native_content_api_02",
+      "one_item_two_recipes_no_code",
+      "native_content_overlay",
+      "item_template_name_model_fallback",
+      "vanilla_boots_unchanged",
+      "native_plate_2x2_and_all_table_offsets",
+      "native_boots_both_rows",
+      "wrong_inputs_and_extra_cells_rejected",
+      "stacked_match_output_count"
+    ],
+    "gameplay_verified": false,
+    "interactive_verified": false,
+    "native_recipe_matcher_verified": true,
+    "prepared_legitimate_resources_verified": false,
+    "save_load_verified": false,
+    "status": "passed",
+    "synthetic_resources": true,
+    "engine_revision": "7301f6fdd7f470b11317276e7a11b4dc615c137a",
+    "package_sha256": "015c3d553a6a2bcfed4412559b9b83bc3ef65599d539a7686e65577ec4c5c346",
+    "target": "x86_64-pc-windows-msvc",
+    "rust_toolchain": "1.95.0"
+  },
+  "installed_flint": {
+    "status": "passed",
+    "stage": 1,
+    "tests": [
+      "test_rlcraft_flint.FlintTests.test_existing_saves_and_missing_consent_refuse_without_writes",
+      "test_rlcraft_flint.FlintTests.test_install_off_and_full_support_preservation",
+      "test_rlcraft_flint.FlintTests.test_removal_moves_only_owned_content_and_receipt",
+      "test_rlcraft_flint.FlintTests.test_save_guard_missing_tampered_disabled_blocks_launch",
+      "test_rlcraft_flint_ui.FlintPageTests.test_cancel_profile_switch_busy_and_existing_world_preserve_data",
+      "test_rlcraft_flint_ui.FlintPageTests.test_explicit_profile_install_starts_off_and_keeps_unsupported_play_disabled",
+      "test_rlcraft_flint_ui.FlintPageTests.test_flint_controls_remain_reachable_in_supported_small_windows"
+    ],
+    "interactive_verified": false,
+    "gameplay_verified": false,
+    "tools_on_path": {
+      "cargo": null,
+      "rustc": null,
+      "rustup": null
+    },
+    "package_sha256": "919745713d5233bcd4cfee4f3da04328d3808eb06b24df966f26b054a69b81cc",
+    "tests_run": 7,
+    "failures": [],
+    "errors": [],
+    "skipped": []
+  },
+  "legacy_frozen": {
+    "status": "passed",
+    "tests_run": 68,
+    "failures": [],
+    "errors": [],
+    "skipped": [],
+    "tools_on_path": {
+      "cargo": null,
+      "rustc": null,
+      "rustup": null
+    },
+    "chainmail_cases": [
+      "test_modpacks_ui.ModpacksPageTests.test_chainmail_cancel_profile_switch_and_existing_save_fail_closed",
+      "test_modpacks_ui.ModpacksPageTests.test_chainmail_controls_reachable_and_busy_install_is_blocked",
+      "test_modpacks_ui.ModpacksPageTests.test_chainmail_explicit_profile_install_starts_off_and_preserves_play_guards"
+    ],
+    "targeted_backup_cases": [
+      "test_modpacks_ui.ModpacksPageTests.test_backup_and_existing_controls_remain_reachable_at_small_window_sizes",
+      "test_modpacks_ui.ModpacksPageTests.test_targeted_backup_cancellation_unknown_pack_and_profile_switch_fail_closed",
+      "test_modpacks_ui.ModpacksPageTests.test_targeted_world_backup_and_verification_do_not_unlock_java_or_pack_play"
+    ]
+  },
+  "windows_lifecycle": {
+    "status": "passed",
+    "setup_sha256": "8f078900216f380956754b25248d51924e202d2a1917c8f92a1547e7337dcae0",
+    "overlong_destination_rejected_before_copy": true,
+    "existing_profile_and_preference_preserved": true,
+    "interactive_verified": false,
+    "gameplay_verified": false
+  },
+  "seven_page_navigation": 7,
+  "native_sdk_preservation": {
+    "status": "passed",
+    "target": "x86_64-pc-windows-msvc",
+    "revision": "7301f6fdd7f470b11317276e7a11b4dc615c137a",
+    "mixins": "4342a0bfbe71d4d14185528d64e496d6022f16a1",
+    "compiled_binary_sha256": "f3572f9be36d1ebabf4ad0fbda00a33b5cd9d6b27e7049efd4838cac72aeddc9",
+    "injected_marker_present": true,
+    "native_selection_verified": true,
+    "rollback_selection_verified": true,
+    "save_preserved": true,
+    "clean_binary_preserved": true,
+    "source_cache_preserved": true,
+    "hook_execution_verified": false,
+    "gameplay_verified": false
+  },
+  "portable_both_content_hashes_verified": true,
+  "local_full_suite": {
+    "collected": 451,
+    "passed": 435,
+    "skipped": 16,
+    "failures": 0
+  },
+  "local_frozen_linux": {
+    "kind": "Diagnostic Qt application bundle only; not a Linux game distribution or Windows gameplay test",
+    "runtime_source_commit": "98ee8a91e3135261827d4e0d6b3685a234c504ca",
+    "runtime_code_unchanged_at_tested_source": true,
+    "result": {
+      "status": "passed",
+      "stage": 1,
+      "tests": [
+        "test_rlcraft_flint.FlintTests.test_existing_saves_and_missing_consent_refuse_without_writes",
+        "test_rlcraft_flint.FlintTests.test_install_off_and_full_support_preservation",
+        "test_rlcraft_flint.FlintTests.test_removal_moves_only_owned_content_and_receipt",
+        "test_rlcraft_flint.FlintTests.test_save_guard_missing_tampered_disabled_blocks_launch",
+        "test_rlcraft_flint_ui.FlintPageTests.test_cancel_profile_switch_busy_and_existing_world_preserve_data",
+        "test_rlcraft_flint_ui.FlintPageTests.test_explicit_profile_install_starts_off_and_keeps_unsupported_play_disabled",
+        "test_rlcraft_flint_ui.FlintPageTests.test_flint_controls_remain_reachable_in_supported_small_windows"
+      ],
+      "interactive_verified": false,
+      "gameplay_verified": false,
+      "tools_on_path": {
+        "cargo": null,
+        "rustc": null,
+        "rustup": null
+      },
+      "package_sha256": "919745713d5233bcd4cfee4f3da04328d3808eb06b24df966f26b054a69b81cc",
+      "tests_run": 7,
+      "failures": [],
+      "errors": [],
+      "skipped": []
+    }
+  },
+  "failed_runs": [
+    {
+      "run": 42378825638,
+      "source": "395a8d52325f79faff82ee69c8a65a6064d37666",
+      "failure": "Pinned engine preparation failed before features staged. Upstream renamed; verified equal source, corrected download pin and cache isolation."
+    },
+    {
+      "run": 42378804613,
+      "source": "395a8d52325f79faff82ee69c8a65a6064d37666",
+      "failure": "Windows positive source-cache test compared expanded/short path strings. Assertion normalized; next portable run passed."
+    },
+    {
+      "run": 42379641236,
+      "source": "98ee8a91e3135261827d4e0d6b3685a234c504ca",
+      "failure": "Flint probe synthetic template omitted item-model/name defaults; assertion saw Null. Corrected fixture; gameplay package unchanged. Game build, 451 native-source tests (15 skips), and 10-case chainmail native probe passed; no installer produced."
+    }
+  ],
+  "local_debug_failures": [
+    "Initial packaging input contract expected five data entries; new bundle correctly has eight. Contract updated to require both hmods, four legacy test files and two new test files.",
+    "Owned loopback-port regression cannot bind inside default sandbox. Full suite rerun with the required permission passed without changing the server code.",
+    "New optional local-cache probe guard initially compared the manifest-only hash instead of the complete length-prefixed patch fingerprint; a subsequent local-variable scope error was also corrected. Source guards now have positive, edited-source/patch and wrong-lock regressions.",
+    "First local diagnostic PyInstaller command used spec-relative data paths. It was rerun with absolute paths; the product packager already used absolute paths. Frozen Linux diagnostic then passed 7/7 without developer tools."
+  ],
+  "upstream_rename": {
+    "schema": 1,
+    "commit": "7301f6fdd7f470b11317276e7a11b4dc615c137a",
+    "old_repository": "Vasysik/horizon-android",
+    "new_repository": "starling-client/starling",
+    "old_archive_sha256": "9280910d4feb890e8e2b48ebe1d309fec12f222281072b63fb578f34d7840f61",
+    "new_archive_sha256": "6c5d6f0b26f13aa157bebc950be4c37ccb9799f3df5e42ed149e6a75da8ca8da",
+    "old_archive_root": "horizon-android-7301f6fdd7f470b11317276e7a11b4dc615c137a",
+    "new_archive_root": "starling-7301f6fdd7f470b11317276e7a11b4dc615c137a",
+    "members": 4883,
+    "regular_files": 4158,
+    "members_equal_after_root_normalization": true,
+    "changed_members": [],
+    "comparison": "Every member relative path, type, mode, size, link and SHA-256 of regular-file bytes; no source executed.",
+    "patched_tree_sha256": "1f28fbaa20b871bbc5c678a1668ebc3ea63ce4191be364a0ecebb41824db6a7f",
+    "patched_tree_identical": true,
+    "old_cache_preserved": true
+  },
+  "physical_acceptance": {
+    "windows_stage1_survival": "NOT RUN",
+    "windows_stage1_creative": "NOT RUN",
+    "macos_arm64_build_and_gameplay": "NOT RUN",
+    "macos_intel_build_and_gameplay": "NOT RUN",
+    "multiplayer": "NOT RUN",
+    "actual_world_save_load_relaunch": "NOT RUN"
+  },
+  "prior_chainmail_physical_results": "Earlier user-reported Windows Survival/Creative results remain historical; not transferred to these new files or flint features.",
+  "unresolved_observations": [
+    "earlier loading-logo stall",
+    "initially empty chainmail recipe output"
+  ],
+  "unsupported": [
+    "complete RLCraft/No Tree Punching port",
+    "original Forge/Fabric JAR execution",
+    "Java bridge/Java Mods Build-Test",
+    "whole-Modpack Play",
+    "stone-click knapping",
+    "grass-fiber harvesting",
+    "blocked tree punching",
+    "thirst/temperature",
+    "skills/limb-health systems",
+    "new creatures/dimensions/Forge-world migration"
+  ],
+  "release_or_tag_created": false,
+  "main_merged_or_modified": false,
+  "existing_release_assets_modified": false,
+  "signing": "Unsigned Windows internal test candidate; no new signing services/credentials",
+  "completion": "Stage-1 implementation and Windows automated verification passed; real gameplay acceptance remains open."
+}

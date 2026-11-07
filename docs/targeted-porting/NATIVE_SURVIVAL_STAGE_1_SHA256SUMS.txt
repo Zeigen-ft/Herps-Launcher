@@ -1,0 +1,3 @@
+8f078900216f380956754b25248d51924e202d2a1917c8f92a1547e7337dcae0  Herps-Launcher-0.1.0-Windows-x64-Setup.exe
+f7a5d146f913cc6ff130327ed4b982a7040313a3582eb806baf78056e62d456d  Herps-Launcher-0.1.0-x86_64-pc-windows-msvc-1lszx5se.zip
+919745713d5233bcd4cfee4f3da04328d3808eb06b24df966f26b054a69b81cc  herspers_rl_flint-0.1.0.hmod
