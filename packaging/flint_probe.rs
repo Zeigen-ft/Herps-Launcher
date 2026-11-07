@@ -42,7 +42,7 @@ fn crafting(content: Content, work: &Path, cases: &mut Vec<&str>) -> Result<(), 
     fs::write(base.join("facts.json"), br#"{"states":[],"defaults":{}}"#)?;
     fs::write(base.join("gameplay-facts.json"), br#"{"states":[]}"#)?;
     // Independently authored minimal resource facts, not copied Minecraft data.
-    let vanilla = json!({
+    let mut vanilla = json!({
         "minecraft:flint": {"minecraft:max_stack_size": 64},
         "minecraft:wheat": {"minecraft:max_stack_size": 64},
         "minecraft:stick": {"minecraft:max_stack_size": 64},
@@ -62,6 +62,12 @@ fn crafting(content: Content, work: &Path, cases: &mut Vec<&str>) -> Result<(), 
                 "id": "minecraft:base_attack_damage", "amount": 6.0,
                 "operation": "add_value", "slot": "mainhand"}]}
     });
+    // Prepared Minecraft templates have model/name components. Include those
+    // relevant defaults in our owned fixtures so identifier rewriting is tested.
+    for (id, components) in vanilla.as_object_mut().unwrap() {
+        components["minecraft:item_model"] = json!(id);
+        components["minecraft:item_name"] = json!({"translate": format!("item.minecraft.{}", id.trim_start_matches("minecraft:"))});
+    }
     fs::write(base.join("items.json"), serde_json::to_vec(&vanilla)?)?;
     let vanilla_recipe = json!({"type": "minecraft:crafting_shapeless",
         "ingredients": ["minecraft:string", "minecraft:string"],

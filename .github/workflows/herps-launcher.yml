@@ -226,6 +226,17 @@ jobs:
             dist/herps/**/package.json
             dist/herps/installed-launcher-smoke.json
           if-no-files-found: warn
+      - name: Retain Windows compiler cache after failed verification
+        if: ${{ failure() && runner.os == 'Windows' }}
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            .cache/target
+            .cache/port-pack-target
+            .cache/upstream
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: windows-x64-rust-1.95-static-fast-stack16-shaders-v1-portpack-v1-${{ hashFiles('upstream.lock.json', 'patches/**') }}
 
   release-files:
     name: Prepare files for manual prerelease publication
