@@ -226,16 +226,19 @@ class PyInstallerInputsTests(unittest.TestCase):
                 self.assertEqual(packages, ["herps_launcher.javamods", "herps_launcher.modpacks"])
                 data = [str(command[i + 1]) for i, arg in enumerate(command) if arg == "--add-data"]
                 self.assertFalse(any(name in item for item in data for name in ("horizon-port-pack", "herps-host")))
-                self.assertEqual(len(data), 11)
+                self.assertEqual(len(data), 14)
                 self.assertEqual(sum(item.endswith("phase5c-tests") for item in data), 4)
                 self.assertEqual(sum(item.endswith("flint-tests") for item in data), 2)
                 self.assertEqual(sum(item.endswith("gathering-tests") for item in data), 2)
+                self.assertEqual(sum(item.endswith("woodcutting-tests") for item in data), 2)
                 self.assertTrue(any("herspers_rl_chainmail-0.1.0.hmod" in item and item.endswith("targeted-content") for item in data))
                 self.assertTrue(any("herspers_rl_flint-0.1.0.hmod" in item and item.endswith("targeted-content") for item in data))
                 self.assertTrue(any("herspers_rl_gathering-0.1.0.hmod" in item and item.endswith("targeted-content") for item in data))
+                self.assertTrue(any("herspers_rl_woodcutting-0.1.0.hmod" in item and item.endswith("targeted-content") for item in data))
                 hidden = [str(command[i + 1]) for i, arg in enumerate(command) if arg == "--hidden-import"]
                 self.assertIn("flint_acceptance", hidden)
                 self.assertIn("gathering_acceptance", hidden)
+                self.assertIn("woodcutting_acceptance", hidden)
                 if target.endswith("apple-darwin"):
                     expected = "arm64" if target.startswith("aarch64") else "x86_64"
                     self.assertEqual(command[command.index("--target-architecture") + 1], expected)

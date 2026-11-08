@@ -1,5 +1,10 @@
 # Licences and third-party notices
 
+The original Woodcutting Progression engine extension in
+`native/rlcraft_woodcutting/` uses the MIT license retained beside its sources.
+Its tag-only `.hmod`, launcher integration and tools use the repository's GPLv3
+license. No original No Tree Punching/Forge implementation or assets are included.
+
 The original Flint Gathering engine extension in `native/rlcraft_gathering/`
 uses the MIT license retained beside its sources. Its tag-only `.hmod`, launcher
 integration and tools use this repository's GPLv3 license. No original Java mod

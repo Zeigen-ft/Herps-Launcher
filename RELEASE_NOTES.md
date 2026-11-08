@@ -2,6 +2,17 @@
 
 Official home: https://github.com/Zeigen-ft/Herps-Launcher
 
+## Development candidate — native survival stage 3
+
+[Woodcutting Progression 0.1.0](docs/targeted-porting/NATIVE_SURVIVAL_STAGE_3.md)
+adds an optional Survival log-breaking requirement: use a main-hand Flint Hatchet
+or axe. Existing drops/wear, other modes and non-log blocks keep their prior path.
+Install all three stages in a fresh disposable profile before creating a world.
+The new package starts OFF; no earlier package is upgraded or automatically enabled.
+Native Windows verification is pending; physical progression/gameplay and macOS
+remain **NOT RUN**. See [verification](docs/targeted-porting/NATIVE_SURVIVAL_STAGE_3_VERIFICATION.md).
+This is not full RLCraft/FunCraft or No Tree Punching, and does not publish a release.
+
 ## Development candidate — native survival stage 2
 
 [Flint Gathering 0.1.0](docs/targeted-porting/NATIVE_SURVIVAL_STAGE_2.md) adds opt-in

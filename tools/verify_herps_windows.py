@@ -137,7 +137,8 @@ def verify(setup, output):
             for mode, name in [('--smoke-test', 'installed-smoke.json'),
                                ('--native-acceptance', 'installed-workflows.json'),
                                ('--flint-acceptance', 'installed-flint.json'),
-                               ('--gathering-acceptance', 'installed-gathering.json')]:
+                               ('--gathering-acceptance', 'installed-gathering.json'),
+                               ('--woodcutting-acceptance', 'installed-woodcutting.json')]:
                 receipt = output / name
                 receipt.unlink(missing_ok=True)
                 command([launcher, mode, '--require-installation', '--require-port-pack',
@@ -150,12 +151,16 @@ def verify(setup, output):
                     raise ValueError('Delivered candidate did not verify the three FunCraft backup cases')
                 if mode == '--native-acceptance' and len(data.get('chainmail_cases_verified', [])) != 3:
                     raise ValueError('Delivered candidate did not verify the three chainmail installation cases')
-                if mode in ('--flint-acceptance', '--gathering-acceptance'):
-                    if mode == '--gathering-acceptance':
+                if mode in ('--flint-acceptance', '--gathering-acceptance', '--woodcutting-acceptance'):
+                    expected_cases = 7
+                    if mode == '--woodcutting-acceptance':
+                        from herps_launcher.modpacks.woodcutting import PACKAGE_SHA256
+                        expected_cases = 8
+                    elif mode == '--gathering-acceptance':
                         from herps_launcher.modpacks.gathering import PACKAGE_SHA256
                     else:
                         from herps_launcher.modpacks.flint import PACKAGE_SHA256
-                    if (data.get('tests_run') != 7 or data.get('failures') or data.get('errors')
+                    if (data.get('tests_run') != expected_cases or data.get('failures') or data.get('errors')
                             or data.get('skipped') or any(data.get('tools_on_path', {}).values())
                             or set(data.get('tools_on_path', {})) != {'cargo', 'rustc', 'rustup'}
                             or data.get('package_sha256') != PACKAGE_SHA256

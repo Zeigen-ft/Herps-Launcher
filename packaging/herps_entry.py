@@ -58,6 +58,9 @@ def port_pack_smoke(launcher, directory, evidence):
 
 
 if __name__ == "__main__":
+    if "--woodcutting-acceptance" in sys.argv:
+        from woodcutting_acceptance import run
+        raise SystemExit(run(sys.argv[sys.argv.index("--smoke-report") + 1]))
     if "--gathering-acceptance" in sys.argv:
         from gathering_acceptance import run
         raise SystemExit(run(sys.argv[sys.argv.index("--smoke-report") + 1]))

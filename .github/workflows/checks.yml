@@ -27,6 +27,8 @@ jobs:
         run: python tools/build_rlcraft_flint.py
       - name: Stage opt-in native gathering content
         run: python tools/build_rlcraft_gathering.py
+      - name: Stage opt-in woodcutting progression content
+        run: python tools/build_rlcraft_woodcutting.py
       - name: Portable tooling tests
         shell: bash
         run: |
@@ -67,6 +69,8 @@ jobs:
         run: python tools/build_rlcraft_flint.py
       - name: Stage opt-in native gathering content
         run: python tools/build_rlcraft_gathering.py
+      - name: Stage opt-in woodcutting progression content
+        run: python tools/build_rlcraft_woodcutting.py
       - name: Windows tooling tests
         shell: pwsh
         run: |

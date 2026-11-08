@@ -38,6 +38,9 @@ migration does not change visibility, create a release or create a tag.
   [individual-case scope and remaining acceptance](docs/targeted-porting/GATHERING_WINDOWS_USER_REPORT.json)
   are recorded separately from CI. macOS gameplay remains NOT RUN.
 - A standalone, passive local RLCraft 2.9.3 archive inspector.
+- **[Woodcutting Progression — native remake stage 3](docs/targeted-porting/NATIVE_SURVIVAL_STAGE_3.md)**:
+  an optional main-hand axe/hatchet requirement for Survival logs. It starts OFF
+  in a fresh disposable profile; all new physical gameplay remains NOT RUN.
 
 ## Supported testing scope
 
