@@ -23,6 +23,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         vanilla.insert(id.clone(), serde_json::json!({"minecraft:max_stack_size":64,
             "minecraft:item_model":id, "minecraft:item_name":{"text":name}}));
     }
+    // The starter removes the inherited repair ingredient. The native content
+    // validator learns valid component names from the vanilla table, so our
+    // owned sword/axe fixtures must include that relevant real-world default.
+    for name in ["wooden_sword", "wooden_axe"] {
+        let tool = vanilla.get_mut(&format!("minecraft:{name}")).unwrap();
+        tool["minecraft:max_stack_size"] = serde_json::json!(1);
+        tool["minecraft:max_damage"] = serde_json::json!(59);
+        tool["minecraft:repairable"] = serde_json::json!({"items":"minecraft:oak_planks"});
+    }
     fs::write(base.join("items.json"), serde_json::to_vec(&vanilla)?)?;
     let mut mods = vec![ContentMod { id: starter.manifest.id.clone(),
         content: Content::read(Path::new(&args[1]), &starter.manifest)? }];
