@@ -6,8 +6,9 @@ Minecraft **26.3** engine and resource format **97.1**. A launcher reinstall,
 Java mod loader or Rust tools are not needed to use it.
 
 The pack adapts the supplied `Better-Leaves-9.6.zip` by Motschen (MIT). Its
-included 92 asset files remain byte-identical: 14 leaf blockstate definitions,
-56 child models, eight shared models and 14 leaf textures. Metadata is narrowed
+included 108 asset files remain byte-identical: 14 leaf blockstate definitions,
+56 world child models, 14 canonical item models, ten shared models and 14 leaf
+textures. Metadata is narrowed
 to the actual target version; unused models and Java-mod namespace overrides
 are omitted. No engine, gameplay, block ID, collision, drop or world data changes.
 The original MIT copyright/permission notice is retained.
@@ -69,7 +70,8 @@ python tools/build_better_leaves.py --original "path/to/Better-Leaves-9.6.zip"
 
 The native verifier compiles the pinned engine's model/blockstate baker, PNG
 decoder and unmodified metadata-format helpers. It checks 224 variants and
-2,240 baked quads, including four unculled fringe quads per variant. The empty
+2,240 world quads, including four unculled fringe quads per variant, plus 84 item
+quads using cropped texture UVs. The empty
 vanilla parent used in the probe is an owned fixture; the installed pack instead
 uses the user's legitimate Minecraft resources. No GPU, real world, interactive
 pack selection or actual performance is verified by that probe. No untrusted

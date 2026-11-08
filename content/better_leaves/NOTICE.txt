@@ -10,8 +10,9 @@ Adaptation metadata/documentation Copyright (c) 2026 Herps contributors, MIT.
 Launcher and build tools retain their separate project licences.
 
 The adaptation pins pack metadata to Herps' Minecraft 26.3 resource format 97.1.
-It retains the 14 supplied minecraft leaf blockstate definitions and their exact
-reachable models/textures. Included source asset bytes are unchanged. Unused
+It retains the 14 supplied minecraft leaf blockstate definitions, canonical leaf
+item models and their exact required parents/textures. Included source asset bytes
+are unchanged. Unused
 models and overrides for unsupported Java mods are omitted. Such overrides do
 not implement those mods or register their blocks in Herps.
 

@@ -144,12 +144,15 @@ def validate_graph(files, target_blocks):
         choices = definition["variants"][""]
         for choice in choices if isinstance(choices, list) else [choices]:
             check_faces(*visit(choice["model"])); variants += 1
+        # Vanilla item definitions reference the canonical block model rather
+        # than the numbered world variants. Its UVs crop the enlarged texture.
+        check_faces(*visit("minecraft:block/" + block))
     if reached != set(models):
         raise ValueError("Unused model included in focused pack")
     pngs = {n for n in files if n.startswith("assets/") and n.endswith(".png")}
     if textures != pngs:
         raise ValueError("Unused/missing texture in focused pack")
-    return {"blocks": len(target_blocks), "models": len(models), "textures": len(textures),
+    return {"blocks": len(target_blocks), "models": len(models), "textures": len(textures), "inventory_models": len(target_blocks),
             "blockstate_variants": variants, "external_parent": "minecraft:block/block"}
 
 

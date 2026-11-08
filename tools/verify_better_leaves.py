@@ -61,7 +61,7 @@ def main():
         binary = ROOT / ".cache/better-leaves-target/fast" / ("herps-better-leaves-probe.exe" if sys.platform == "win32" else "herps-better-leaves-probe")
         subprocess.run([str(binary), str(expanded), str(SOURCE / "upstream.json"), str(report.resolve())], check=True, env=env)
         result = json.loads(report.read_text())
-        if result.get("status") != "passed" or len(result.get("cases", [])) != 8:
+        if result.get("status") != "passed" or len(result.get("cases", [])) != 9:
             raise ValueError("Native asset verification incomplete")
         result.update(source_commit=packaged["source_commit"], engine_revision=REVISION, rust_toolchain=RUST,
             package_sha256=packaged["sha256"], platform=sys.platform,

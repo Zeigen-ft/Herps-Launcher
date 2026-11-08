@@ -1,5 +1,5 @@
 //! Actual pinned asset/model/metadata/PNG code; no Game, GPU or world simulation.
-use horizon_assets::{bake::{bake_block_model, BlockModelTransform}, blockstate::{BlockStateDefinition, VariantSet},
+use horizon_assets::{bake::{bake_block_model, bake_model, BlockModelTransform}, blockstate::{BlockStateDefinition, VariantSet},
     model::CuboidModel, resolve::ModelLibrary};
 use std::{collections::{BTreeMap, BTreeSet}, fs, io::BufReader, path::{Path, PathBuf}};
 mod native_pack_format;
@@ -30,12 +30,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     assert_eq!((min,max),(current,current));
     let mut models=BTreeMap::new();
     for ns in ["minecraft","betterleaves"] {model_files(root,&root.join(format!("assets/{ns}/models")),&mut models)?;}
-    assert_eq!(models.len(),64);
+    assert_eq!(models.len(),80);
     // Owned empty parent stands in for vanilla's block/block display defaults.
     // It is only a fixture; the delivered pack uses legitimate vanilla resources.
     models.insert("minecraft:block/block".into(),CuboidModel::from_json("{}")?);
     let library=ModelLibrary::new(models)?;
-    let mut variants=0;let mut quads_total=0;let mut tint_counts=BTreeMap::<i32,usize>::new();
+    let mut variants=0;let mut quads_total=0;let mut inventory_quads=0;let mut tint_counts=BTreeMap::<i32,usize>::new();
     let mut sprites=BTreeSet::new();
     for block in manifest["target_blocks"].as_array().ok_or("targets missing")? {
         let id=format!("minecraft:{}",block.as_str().ok_or("bad block")?);
@@ -59,8 +59,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
             quads_total+=quads.len();variants+=1;
         }
+        let item=library.resolve(&format!("minecraft:block/{}",block.as_str().unwrap()))?;
+        assert!(item.unresolved_textures.is_empty());assert_eq!(item.elements().len(),1);
+        let faces=bake_model(&item)?;assert_eq!(faces.len(),6);
+        for q in faces {
+            assert!(q.uv.iter().flatten().all(|v|(0.24999..=0.75001).contains(v)));
+            assert!(asset(root,&q.material.sprite,"textures",".png").is_file());
+            inventory_quads+=1;
+        }
     }
-    assert_eq!(variants,224);assert_eq!(quads_total,2240);assert_eq!(sprites.len(),14);
+    assert_eq!(variants,224);assert_eq!(quads_total,2240);assert_eq!(sprites.len(),14);assert_eq!(inventory_quads,84);
     let mut alpha=serde_json::Map::new();
     for sprite in sprites {
         let mut decoder=png::Decoder::new(BufReader::new(fs::File::open(asset(root,&sprite,"textures",".png"))?));
@@ -76,11 +84,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
     fs::write(&args[3],serde_json::to_vec_pretty(&serde_json::json!({
         "status":"passed","cases":["actual_native_pack_format_validator_97_1",
-            "native_64_models_parent_and_texture_resolution","native_14_weighted_blockstates",
+            "native_80_models_parent_and_texture_resolution","native_14_weighted_blockstates",
             "native_224_rotated_variants_2240_quads","four_unculled_bush_fringe_faces_per_variant",
             "finite_geometry_and_normalized_uv","native_tint_indices_preserved",
-            "native_png_decoder_14_rgba_cutout_textures"],
-        "models":64,"leaf_definitions":14,"variants":variants,"quads":quads_total,
+            "native_png_decoder_14_rgba_cutout_textures","native_14_inventory_models_crop_32px_textures"],
+        "models":80,"leaf_definitions":14,"variants":variants,"quads":quads_total,"inventory_quads":inventory_quads,
         "tint_counts":tint_counts,"texture_alpha":alpha,"owned_vanilla_parent_fixture":true,
         "metadata_parser":"unmodified production packs.rs format helpers extracted by the verifier",
         "visual_verified":false,"gameplay_verified":false,"performance_verified":false,

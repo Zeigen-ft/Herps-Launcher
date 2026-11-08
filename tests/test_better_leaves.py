@@ -28,9 +28,9 @@ class BetterLeavesTests(unittest.TestCase):
 
     def test_curated_assets_have_complete_closed_dependencies_and_upstream_pins(self):
         files, record, graph = leaves.payload()
-        self.assertEqual(graph, {"blocks": 14, "models": 64, "textures": 14,
+        self.assertEqual(graph, {"blocks": 14, "models": 80, "textures": 14, "inventory_models": 14,
             "blockstate_variants": 224, "external_parent": "minecraft:block/block"})
-        self.assertEqual(len(files), 97)
+        self.assertEqual(len(files), 113)
         self.assertEqual(record["archive_sha256"], leaves.SOURCE_SHA256)
         for name, expected in record["source_files"].items():
             self.assertEqual(leaves.digest(files[name]), expected)
@@ -114,3 +114,13 @@ class BetterLeavesTests(unittest.TestCase):
         # Validating the parent before merging child slots would reject the pack.
         stats = leaves.validate_graph(files, record["target_blocks"])
         self.assertEqual(stats["textures"], 14)
+
+    def test_leaf_item_models_are_kept_as_well_as_world_variants(self):
+        files, record, graph = leaves.payload()
+        for block in record["target_blocks"]:
+            self.assertIn(f"assets/minecraft/models/block/{block}.json", files)
+        self.assertEqual(graph["inventory_models"], 14)
+        for parent in ["leaves", "leaves_notint"]:
+            model = json.loads(files[f"assets/betterleaves/models/block/{parent}.json"])
+            for face in model["elements"][0]["faces"].values():
+                self.assertEqual(face["uv"], [4, 4, 12, 12])
