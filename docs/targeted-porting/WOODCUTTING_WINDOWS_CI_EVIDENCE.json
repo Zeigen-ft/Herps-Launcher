@@ -1,0 +1,1739 @@
+{
+  "schema": 1,
+  "run": 42472666400,
+  "source_commit": "9f196479726ed69e959665a9604133daf58dcde1",
+  "status": "passed",
+  "outer_artifacts": [
+    {
+      "id": 13615370828,
+      "name": "RLCraft-2.9.3-Local-Inspector",
+      "size_in_bytes": 27118,
+      "digest": "sha256:340adaab6a98b13169c7f1cf3abf3645f8426caee5c1ec389b59d605f7c5723c"
+    },
+    {
+      "id": 13615196606,
+      "name": "RLCraft-Chainmail-0.1.0-Windows-x86_64",
+      "size_in_bytes": 15276,
+      "digest": "sha256:72226d3be05bf538951d609daf96ce081417f6d35f059e4612e1809562c871b9"
+    },
+    {
+      "id": 13615181805,
+      "name": "Herps-Launcher-0.1.0-Windows-x86_64",
+      "size_in_bytes": 238681921,
+      "digest": "sha256:f20bfc23e9a0f55d717cb401424c7e6a27edaacce9a835393d40e19c580a59c1"
+    },
+    {
+      "id": 13615047937,
+      "name": "RLCraft-Native-Stage3-Woodcutting-0.1.0-Windows-x86_64",
+      "size_in_bytes": 15265,
+      "digest": "sha256:6bf9beb85acfc43d0332f4009f79fbe13bb5309c62e65237370f75069222d892"
+    },
+    {
+      "id": 13614858784,
+      "name": "RLCraft-Native-Stage1-Flint-0.1.0-Windows-x86_64",
+      "size_in_bytes": 15620,
+      "digest": "sha256:dca6c159714fbd428461ea607cadf59c915b910ecfe928c3974d921455918e22"
+    },
+    {
+      "id": 13614754492,
+      "name": "Herps-Launcher-evidence-Windows-x86_64",
+      "size_in_bytes": 762086,
+      "digest": "sha256:2aecc9f492fcfc3b25d9d52d6ab872ffc8f810ff81a2dae16a45229fc1a83b22"
+    },
+    {
+      "id": 13614749621,
+      "name": "RLCraft-Native-Stage2-Gathering-0.1.0-Windows-x86_64",
+      "size_in_bytes": 15169,
+      "digest": "sha256:9cb80f2cf8d778a6b4f5766c1ea33a97a604e7e3645d8beb62dc7fcbb8faa672"
+    }
+  ],
+  "existing_release_contract": {
+    "source_commit": "9f196479726ed69e959665a9604133daf58dcde1",
+    "platform": "Windows-2025Server-10.0.26100-SP0",
+    "architecture": "x86_64",
+    "files": {
+      "Herps-Launcher-0.1.0-Windows-x64-Setup.exe": {
+        "sha256": "079af345af99d93d34b54bc4bb6361f849f42ddb6cd9e31adf97f90ec1c89458",
+        "bytes": 102646686,
+        "original_filename": "Herps-Launcher-0.1.0-Windows-x64-Setup.exe"
+      },
+      "Herps-Launcher-0.1.0-Windows-x64-Portable.zip": {
+        "sha256": "dc09ab91d5e7dd8b745ff528653b38625525d3058f6e2072cc173c35d3b2647c",
+        "bytes": 137923695,
+        "original_filename": "Herps-Launcher-0.1.0-x86_64-pc-windows-msvc-3xds63sm.zip"
+      }
+    },
+    "frozen_tests": 68,
+    "frozen_skipped": [],
+    "interactive_verified": false,
+    "gameplay_verified": false,
+    "signing": "unsigned Windows installer"
+  },
+  "native_gathering": {
+    "cases": [
+      "native_addon_package_no_code_or_new_items",
+      "starter_alone_has_no_opt_in_tag",
+      "enabled_addon_resolves_existing_items_in_native_tag_loader",
+      "all_existing_item_components_unchanged"
+    ],
+    "full_rlcraft_compatibility": false,
+    "gameplay_verified": false,
+    "interactive_verified": false,
+    "stage": 2,
+    "status": "passed",
+    "synthetic_resources": true,
+    "world_save_load_verified": false,
+    "engine_revision": "7301f6fdd7f470b11317276e7a11b4dc615c137a",
+    "package_sha256": "177c3f4eefedd4f0e4eda4e54634efeee555e4b22dd13e0ec022733328fb87fd",
+    "starter_sha256": "919745713d5233bcd4cfee4f3da04328d3808eb06b24df966f26b054a69b81cc",
+    "target": "x86_64-pc-windows-msvc",
+    "rust_toolchain": "1.95.0",
+    "rules": {
+      "tests_run": 12,
+      "passed": 12,
+      "failed": 0,
+      "skipped": 0,
+      "scope": "actual transaction rules with owned inventory/block doubles; not Game adapter execution"
+    },
+    "source_commit": "9f196479726ed69e959665a9604133daf58dcde1"
+  },
+  "native_woodcutting": {
+    "cases": [
+      "native_tag_only_package_no_new_items_or_recipes",
+      "earlier_stages_do_not_enable_restriction",
+      "native_log_and_axe_tags_drive_policy",
+      "hatchet_and_seven_owned_axe_fixtures_pass",
+      "nonlogs_and_bootstrap_plants_unrestricted",
+      "all_existing_item_components_unchanged",
+      "owned_leaf_stick_loot_unchanged_and_evaluated",
+      "owned_dead_bush_stick_loot_unchanged_and_evaluated"
+    ],
+    "full_rlcraft_compatibility": false,
+    "gameplay_verified": false,
+    "interactive_verified": false,
+    "legitimate_resource_bootstrap_verified": false,
+    "stage": 3,
+    "status": "passed",
+    "synthetic_resources": true,
+    "world_save_load_verified": false,
+    "engine_revision": "7301f6fdd7f470b11317276e7a11b4dc615c137a",
+    "package_sha256": "52e3586e103e4893f37f2141983a7503fa01dacb494144056f86897089abbc13",
+    "starter_sha256": "919745713d5233bcd4cfee4f3da04328d3808eb06b24df966f26b054a69b81cc",
+    "target": "x86_64-pc-windows-msvc",
+    "rust_toolchain": "1.95.0",
+    "rules": {
+      "tests_run": 9,
+      "passed": 9,
+      "failed": 0,
+      "skipped": 0,
+      "scope": "actual progression policy; not live Game hook execution"
+    },
+    "source_commit": "9f196479726ed69e959665a9604133daf58dcde1"
+  },
+  "source_tests": {
+    "collected": 486,
+    "passed": 471,
+    "failed": 0,
+    "skipped": [
+      {
+        "test": "test_herps_launcher.LauncherTests.test_clean_launch_uses_separate_game_folder_and_original_binary",
+        "reason": "Owned POSIX process fixture"
+      },
+      {
+        "test": "test_herps_launcher.LauncherTests.test_failed_resource_check_does_not_start_game_and_releases_lock",
+        "reason": "Owned POSIX process fixture"
+      },
+      {
+        "test": "test_herps_launcher.LauncherTests.test_play_real_child_logs_exit_and_relaunch_without_touching_saves",
+        "reason": "Owned POSIX child fixture; Windows CI covers native tests separately"
+      },
+      {
+        "test": "test_inspect_apk.ApkTests.test_supplied_apk",
+        "reason": "Set HORIZON_TEST_APK to run supplied-APK integration"
+      },
+      {
+        "test": "test_macos_launcher.MacLauncherTests.test_actual_dialog_scripts_compile_on_mac",
+        "reason": "Mac Bash behavior tests need Unix paths and executable scripts"
+      },
+      {
+        "test": "test_macos_launcher.MacLauncherTests.test_dialog_cancellation_preserves_original_preparer_failure",
+        "reason": "Mac Bash behavior tests need Unix paths and executable scripts"
+      },
+      {
+        "test": "test_macos_launcher.MacLauncherTests.test_failed_resource_check_prints_error_and_opens_preparation",
+        "reason": "Mac Bash behavior tests need Unix paths and executable scripts"
+      },
+      {
+        "test": "test_macos_launcher.MacLauncherTests.test_game_failure_surfaces_log_and_preserves_client_status",
+        "reason": "Mac Bash behavior tests need Unix paths and executable scripts"
+      },
+      {
+        "test": "test_macos_launcher.MacLauncherTests.test_non_mac_host_is_rejected_before_creating_player_data",
+        "reason": "Mac Bash behavior tests need Unix paths and executable scripts"
+      },
+      {
+        "test": "test_macos_launcher.MacLauncherTests.test_open_failure_preserves_preparer_error_and_prints_manual_path",
+        "reason": "Mac Bash behavior tests need Unix paths and executable scripts"
+      },
+      {
+        "test": "test_macos_launcher.MacLauncherTests.test_prepared_resources_launch_client_with_literal_arguments_and_profile",
+        "reason": "Mac Bash behavior tests need Unix paths and executable scripts"
+      },
+      {
+        "test": "test_macos_launcher.MacLauncherTests.test_show_resource_log_uses_exact_path_without_starting_game",
+        "reason": "Mac Bash behavior tests need Unix paths and executable scripts"
+      },
+      {
+        "test": "test_package_bedrock_windows.BedrockPackagingTests.test_case_collision_is_rejected",
+        "reason": "Filesystem cannot construct distinct case-colliding files"
+      },
+      {
+        "test": "test_rlcraft_chainmail.ChainmailTests.test_linked_profile_and_settings_preserve_external_files",
+        "reason": "Windows link guards are exercised with junctions separately"
+      },
+      {
+        "test": "test_rlcraft_flint.FlintTests.test_linked_mod_folder_and_receipt_cannot_redirect_install",
+        "reason": "POSIX symlink fixture; Windows junction case is separate"
+      }
+    ]
+  },
+  "frozen_cohorts": {
+    "legacy": 68,
+    "flint": 7,
+    "gathering": 7,
+    "woodcutting": 8,
+    "total": 90,
+    "skipped": 0
+  },
+  "engine_source_windows": {
+    "modified": true,
+    "upstream_commit": "7301f6fdd7f470b11317276e7a11b4dc615c137a",
+    "patches_sha256": "d0a7d4c2601c6f8590ff378be7281969136ffdad42c38d5a388fd53350956052",
+    "prepared_tree_sha256": "a9af4d2a23fada2285b9dd5a547afad6e3036e77b9dc8c5da1d5cbf89719cda7",
+    "provenance_file": "engine-patches.json",
+    "native_features": [
+      "rlcraft-gathering-1",
+      "rlcraft-woodcutting-1"
+    ]
+  },
+  "uninstallers": [
+    {
+      "stage": "first",
+      "path": "D:\\a\\_temp\\hwd-fqven5lc\\Installed Apps With Spaces\\unins000.exe",
+      "sha256": "6a563bb07bd508533d6bfc980c1229b2e2e35d57e93a0663a4d40f3739259db7",
+      "waits_for_process_tree": true
+    },
+    {
+      "stage": "final",
+      "path": "D:\\a\\_temp\\hwd-fqven5lc\\Installed Apps With Spaces\\unins000.exe",
+      "sha256": "6a563bb07bd508533d6bfc980c1229b2e2e35d57e93a0663a4d40f3739259db7",
+      "waits_for_process_tree": true
+    }
+  ],
+  "new_native_tag_present_in_actual_game_binary": true,
+  "all_bundled_content_hashes_verified": true,
+  "gameplay_verified": false,
+  "interactive_verified": false,
+  "full_rlcraft_compatibility": false,
+  "public_release_approved": false,
+  "local_source_tests": {
+    "collected": 486,
+    "passed": 468,
+    "failed": 0,
+    "skipped": [
+      {
+        "test": "test_inspect_apk.ApkTests.test_supplied_apk",
+        "reason": "Set HORIZON_TEST_APK to run supplied-APK integration"
+      },
+      {
+        "test": "test_macos_launcher.MacLauncherTests.test_actual_dialog_scripts_compile_on_mac",
+        "reason": "AppleScript compilation requires macOS"
+      },
+      {
+        "test": "test_rlcraft_chainmail.ChainmailTests.test_windows_junction_cannot_redirect_installation",
+        "reason": "Windows junction behavior requires Windows"
+      },
+      {
+        "test": "test_rlcraft_flint.FlintTests.test_windows_junction_cannot_redirect_flint_install",
+        "reason": "Windows junction behavior requires Windows"
+      },
+      {
+        "test": "test_rlcraft_gathering.GatheringTests.test_windows_junction_cannot_redirect_addon_install",
+        "reason": "Windows junction behavior requires Windows"
+      },
+      {
+        "test": "test_rlcraft_woodcutting.WoodcuttingTests.test_windows_junction_cannot_redirect_addon_install",
+        "reason": "Windows junction behavior requires Windows"
+      },
+      {
+        "test": "test_windows_stack_repair.StackRepairTests.test_existing_backup_is_never_overwritten",
+        "reason": "PowerShell is required to exercise Windows stack repair"
+      },
+      {
+        "test": "test_windows_stack_repair.StackRepairTests.test_invalid_header_offsets_and_directory_counts_are_refused",
+        "reason": "PowerShell is required to exercise Windows stack repair"
+      },
+      {
+        "test": "test_windows_stack_repair.StackRepairTests.test_invalid_stack_values_are_refused",
+        "reason": "PowerShell is required to exercise Windows stack repair"
+      },
+      {
+        "test": "test_windows_stack_repair.StackRepairTests.test_larger_existing_reserve_is_not_lowered",
+        "reason": "PowerShell is required to exercise Windows stack repair"
+      },
+      {
+        "test": "test_windows_stack_repair.StackRepairTests.test_linked_executable_is_refused",
+        "reason": "PowerShell is required to exercise Windows stack repair"
+      },
+      {
+        "test": "test_windows_stack_repair.StackRepairTests.test_modified_executable_is_refused_without_changing_expected_checksum",
+        "reason": "PowerShell is required to exercise Windows stack repair"
+      },
+      {
+        "test": "test_windows_stack_repair.StackRepairTests.test_only_stack_reserve_changes_and_original_is_backed_up",
+        "reason": "PowerShell is required to exercise Windows stack repair"
+      },
+      {
+        "test": "test_windows_stack_repair.StackRepairTests.test_original_package_metadata_is_required",
+        "reason": "PowerShell is required to exercise Windows stack repair"
+      },
+      {
+        "test": "test_windows_stack_repair.StackRepairTests.test_repair_is_idempotent",
+        "reason": "PowerShell is required to exercise Windows stack repair"
+      },
+      {
+        "test": "test_windows_stack_repair.StackRepairTests.test_signed_executable_is_refused",
+        "reason": "PowerShell is required to exercise Windows stack repair"
+      },
+      {
+        "test": "test_windows_stack_repair.StackRepairTests.test_truncated_and_non_pe_files_are_refused",
+        "reason": "PowerShell is required to exercise Windows stack repair"
+      },
+      {
+        "test": "test_windows_stack_repair.StackRepairTests.test_wrong_architecture_or_dll_is_refused",
+        "reason": "PowerShell is required to exercise Windows stack repair"
+      }
+    ],
+    "real_pinned_backend": true
+  },
+  "local_frozen_woodcutting": {
+    "status": "passed",
+    "stage": 3,
+    "tests": [
+      "test_rlcraft_woodcutting.WoodcuttingTests.test_dependency_and_old_engine_are_rejected_without_installing",
+      "test_rlcraft_woodcutting.WoodcuttingTests.test_enable_and_launch_require_enabled_unchanged_starter",
+      "test_rlcraft_woodcutting.WoodcuttingTests.test_failed_receipt_write_rolls_back_new_files_and_preserves_settings",
+      "test_rlcraft_woodcutting.WoodcuttingTests.test_gathering_dependency_cannot_be_bypassed",
+      "test_rlcraft_woodcutting.WoodcuttingTests.test_install_disabled_preserves_starter_other_profiles_and_backups",
+      "test_rlcraft_woodcutting.WoodcuttingTests.test_saved_profiles_cannot_disable_remove_or_launch_missing_content",
+      "test_rlcraft_woodcutting_ui.WoodcuttingPageTests.test_stage3_consent_resets_and_controls_remain_reachable",
+      "test_rlcraft_woodcutting_ui.WoodcuttingPageTests.test_stage3_install_off_explicit_enable_and_unsupported_workflows_stay_disabled"
+    ],
+    "interactive_verified": false,
+    "gameplay_verified": false,
+    "tools_on_path": {
+      "cargo": null,
+      "rustc": null,
+      "rustup": null
+    },
+    "package_sha256": "52e3586e103e4893f37f2141983a7503fa01dacb494144056f86897089abbc13",
+    "tests_run": 8,
+    "failures": [],
+    "errors": [],
+    "skipped": []
+  },
+  "portable_ci": {
+    "run": 42472651265,
+    "status": "passed",
+    "source_commit": "9f196479726ed69e959665a9604133daf58dcde1",
+    "jobs": [
+      {
+        "job": "tooling",
+        "job_id": 128706840429,
+        "platform": "Ubuntu 26.04 x86_64",
+        "collected": 486,
+        "passed": 371,
+        "failed": 0,
+        "skipped": [
+          {
+            "test": "test_herps_entry.BundledEntrySmokeTests.test_external_override_cannot_satisfy_bundled_smoke",
+            "reason": "Set HERPS_TEST_PORT_PACK to the pinned executable"
+          },
+          {
+            "test": "test_herps_entry.BundledEntrySmokeTests.test_real_bundled_helper_checks_data_and_rejects_false_positive_works",
+            "reason": "Set HERPS_TEST_PORT_PACK to the pinned executable"
+          },
+          {
+            "test": "test_herps_ui.DesktopTests.test_all_seven_sidebar_buttons_navigate_actual_pages",
+            "reason": "Install herps_launcher/requirements.txt for desktop integration tests"
+          },
+          {
+            "test": "test_herps_ui.DesktopTests.test_favorite_server_is_saved_and_selected_through_widgets",
+            "reason": "Install herps_launcher/requirements.txt for desktop integration tests"
+          },
+          {
+            "test": "test_herps_ui.DesktopTests.test_play_button_runs_worker_and_reenables_after_exit",
+            "reason": "Install herps_launcher/requirements.txt for desktop integration tests"
+          },
+          {
+            "test": "test_herps_ui.DesktopTests.test_profile_selection_changes_game_directory_and_persists",
+            "reason": "Install herps_launcher/requirements.txt for desktop integration tests"
+          },
+          {
+            "test": "test_herps_ui.DesktopTests.test_tailscale_result_is_visible_on_home_and_multiplayer",
+            "reason": "Install herps_launcher/requirements.txt for desktop integration tests"
+          },
+          {
+            "test": "test_inspect_apk.ApkTests.test_supplied_apk",
+            "reason": "Set HORIZON_TEST_APK to run supplied-APK integration"
+          },
+          {
+            "test": "test_javamods_adapter.PortPackIntegrationTests.test_actual_works_with_access_widener_stays_unsupported",
+            "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+          },
+          {
+            "test": "test_javamods_adapter.PortPackIntegrationTests.test_actual_works_with_minecraft_version_mismatch_stays_unsupported",
+            "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+          },
+          {
+            "test": "test_javamods_adapter.PortPackIntegrationTests.test_actual_works_with_missing_dependency_stays_unsupported",
+            "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+          },
+          {
+            "test": "test_javamods_adapter.PortPackIntegrationTests.test_actual_works_with_required_mixins_stays_unsupported",
+            "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+          },
+          {
+            "test": "test_javamods_adapter.PortPackIntegrationTests.test_actual_works_with_unreadable_class_stays_unsupported",
+            "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+          },
+          {
+            "test": "test_javamods_adapter.PortPackIntegrationTests.test_duplicate_dependency_ids_are_ambiguous_not_silently_selected",
+            "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+          },
+          {
+            "test": "test_javamods_adapter.PortPackIntegrationTests.test_fully_local_pack_port_uses_real_carry_without_claiming_playability",
+            "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+          },
+          {
+            "test": "test_javamods_adapter.PortPackIntegrationTests.test_instance_analysis_preserves_every_mod_and_missing_dependencies",
+            "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+          },
+          {
+            "test": "test_javamods_adapter.PortPackIntegrationTests.test_local_port_retains_data_carry_without_successful_gameplay_claim",
+            "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+          },
+          {
+            "test": "test_javamods_adapter.PortPackIntegrationTests.test_missing_pack_jar_remains_an_unsupported_record_without_download",
+            "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+          },
+          {
+            "test": "test_javamods_adapter.PortPackIntegrationTests.test_missing_transitive_dependency_blocks_apparently_successful_parent",
+            "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+          },
+          {
+            "test": "test_javamods_adapter.PortPackIntegrationTests.test_mrpack_resolves_user_file_by_declared_hash_with_different_filename",
+            "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+          },
+          {
+            "test": "test_javamods_adapter.PortPackIntegrationTests.test_mrpack_same_filename_with_wrong_hash_is_not_accepted",
+            "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+          },
+          {
+            "test": "test_javamods_adapter.PortPackIntegrationTests.test_pack_archive_path_traversal_is_refused_before_backend",
+            "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+          },
+          {
+            "test": "test_javamods_adapter.PortPackIntegrationTests.test_profile_and_each_run_have_separate_workspaces",
+            "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+          },
+          {
+            "test": "test_javamods_adapter.PortPackIntegrationTests.test_pure_content_requires_porting_but_never_claims_native_or_tested",
+            "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+          },
+          {
+            "test": "test_javamods_adapter.PortPackIntegrationTests.test_readable_java_class_in_dependency_is_not_treated_as_data_only",
+            "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+          },
+          {
+            "test": "test_javamods_adapter.PortPackIntegrationTests.test_required_mixins_in_dependency_block_apparently_successful_parent",
+            "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+          },
+          {
+            "test": "test_javamods_adapter.PortPackIntegrationTests.test_standalone_port_cannot_prove_carry_of_satisfied_dependency_ensemble",
+            "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+          },
+          {
+            "test": "test_javamods_adapter.PortPackIntegrationTests.test_symlinked_profile_ancestor_cannot_escape_profile",
+            "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+          },
+          {
+            "test": "test_javamods_adapter.PortPackIntegrationTests.test_symlinked_profile_workspace_cannot_escape_profile",
+            "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+          },
+          {
+            "test": "test_javamods_adapter.PortPackIntegrationTests.test_unknown_inventory_class_or_confidence_cannot_hide_behind_works",
+            "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+          },
+          {
+            "test": "test_javamods_adapter.PortPackIntegrationTests.test_unreadable_dependency_blocks_apparently_successful_parent",
+            "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+          },
+          {
+            "test": "test_javamods_adapter.PortPackIntegrationTests.test_uppercase_declared_sha1_matches_the_same_local_file",
+            "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+          },
+          {
+            "test": "test_javamods_adapter.PortPackIntegrationTests.test_user_dependency_wrong_version_is_not_accepted_by_id_alone",
+            "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+          },
+          {
+            "test": "test_javamods_adapter.PortPackIntegrationTests.test_works_cannot_hide_kept_custom_recipes_or_unreadable_carry_files",
+            "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+          },
+          {
+            "test": "test_javamods_cli.RealCliTests.test_actual_analyze_pack_and_local_jar_port_commands",
+            "reason": "Set HERPS_TEST_PORT_PACK to the pinned executable for command integration"
+          },
+          {
+            "test": "test_javamods_cli.RealCliTests.test_actual_check_and_both_report_export_formats",
+            "reason": "Set HERPS_TEST_PORT_PACK to the pinned executable for command integration"
+          },
+          {
+            "test": "test_javamods_cli.RealCliTests.test_actual_false_positive_works_cli_retains_raw_but_returns_unsupported",
+            "reason": "Set HERPS_TEST_PORT_PACK to the pinned executable for command integration"
+          },
+          {
+            "test": "test_javamods_cli.RealCliTests.test_actual_package_module_executes_a_headless_check",
+            "reason": "Set HERPS_TEST_PORT_PACK to the pinned executable for command integration"
+          },
+          {
+            "test": "test_javamods_cli.RealCliTests.test_export_demotes_forged_native_tested_and_missing_check_claims",
+            "reason": "Set HERPS_TEST_PORT_PACK to the pinned executable for command integration"
+          },
+          {
+            "test": "test_javamods_cli.RealCliTests.test_export_rejects_changed_or_missing_input_snapshot_as_insufficient",
+            "reason": "Set HERPS_TEST_PORT_PACK to the pinned executable for command integration"
+          },
+          {
+            "test": "test_javamods_cli.RealCliTests.test_export_revalidates_dependencies_after_diagnostics_and_status_are_forged",
+            "reason": "Set HERPS_TEST_PORT_PACK to the pinned executable for command integration"
+          },
+          {
+            "test": "test_javamods_library.LibraryPortTests.test_changed_generated_data_is_refused_after_report_receipt",
+            "reason": "Set HERPS_TEST_PORT_PACK for real data-port tests"
+          },
+          {
+            "test": "test_javamods_library.LibraryPortTests.test_changed_saved_report_cannot_install",
+            "reason": "Set HERPS_TEST_PORT_PACK for real data-port tests"
+          },
+          {
+            "test": "test_javamods_library.LibraryPortTests.test_cross_profile_port_selection_cannot_affect_original",
+            "reason": "Set HERPS_TEST_PORT_PACK for real data-port tests"
+          },
+          {
+            "test": "test_javamods_library.LibraryPortTests.test_existing_folder_id_is_never_overwritten",
+            "reason": "Set HERPS_TEST_PORT_PACK for real data-port tests"
+          },
+          {
+            "test": "test_javamods_library.LibraryPortTests.test_false_positive_works_cannot_install_an_unsupported_port",
+            "reason": "Set HERPS_TEST_PORT_PACK for real data-port tests"
+          },
+          {
+            "test": "test_javamods_library.LibraryPortTests.test_installed_data_edits_are_preserved_and_not_managed_blindly",
+            "reason": "Set HERPS_TEST_PORT_PACK for real data-port tests"
+          },
+          {
+            "test": "test_javamods_library.LibraryPortTests.test_real_data_folder_uses_engine_setting_starts_disabled_and_backs_up",
+            "reason": "Set HERPS_TEST_PORT_PACK for real data-port tests"
+          },
+          {
+            "test": "test_javamods_library.LibraryPortTests.test_receipt_write_failure_rolls_back_only_new_installation",
+            "reason": "Set HERPS_TEST_PORT_PACK for real data-port tests"
+          },
+          {
+            "test": "test_javamods_ui.JavaModsPageBackendTests.test_actual_false_positive_works_is_rendered_as_unsupported_with_full_evidence",
+            "reason": "Install pinned launcher requirements for Qt integration"
+          },
+          {
+            "test": "test_javamods_ui.JavaModsPageBackendTests.test_background_analysis_keeps_event_loop_live_and_blocks_profile_mutations",
+            "reason": "Install pinned launcher requirements for Qt integration"
+          },
+          {
+            "test": "test_javamods_ui.JavaModsPageBackendTests.test_cancel_is_unavailable_once_result_recording_begins",
+            "reason": "Install pinned launcher requirements for Qt integration"
+          },
+          {
+            "test": "test_javamods_ui.JavaModsPageBackendTests.test_cancelled_analysis_discards_new_report_after_passive_worker_finishes",
+            "reason": "Install pinned launcher requirements for Qt integration"
+          },
+          {
+            "test": "test_javamods_ui.JavaModsPageBackendTests.test_json_and_readable_exports_preserve_actual_backend_evidence",
+            "reason": "Install pinned launcher requirements for Qt integration"
+          },
+          {
+            "test": "test_javamods_ui.JavaModsPageBackendTests.test_port_enable_disable_and_backup_preserve_saves_and_original_import",
+            "reason": "Install pinned launcher requirements for Qt integration"
+          },
+          {
+            "test": "test_javamods_ui.JavaModsPageBackendTests.test_resolve_dependencies_uses_user_directory_and_retains_hash_evidence",
+            "reason": "Install pinned launcher requirements for Qt integration"
+          },
+          {
+            "test": "test_javamods_ui.JavaModsPageBackendTests.test_saved_report_is_revalidated_before_rendering_after_profile_reload",
+            "reason": "Install pinned launcher requirements for Qt integration"
+          },
+          {
+            "test": "test_javamods_ui.JavaModsPageTests.test_fabric_forge_neoforge_imports_retain_local_copies_without_execution",
+            "reason": "Install pinned launcher requirements for Qt integration"
+          },
+          {
+            "test": "test_javamods_ui.JavaModsPageTests.test_failed_library_load_stops_retrying_and_keeps_actionable_error",
+            "reason": "Install pinned launcher requirements for Qt integration"
+          },
+          {
+            "test": "test_javamods_ui.JavaModsPageTests.test_failed_subprocess_shows_exit_stdout_stderr_and_raw_diagnostics",
+            "reason": "Install pinned launcher requirements for Qt integration"
+          },
+          {
+            "test": "test_javamods_ui.JavaModsPageTests.test_imports_and_selection_are_isolated_per_profile",
+            "reason": "Install pinned launcher requirements for Qt integration"
+          },
+          {
+            "test": "test_javamods_ui.JavaModsPageTests.test_java_mods_registration_preserves_all_existing_pages",
+            "reason": "Install pinned launcher requirements for Qt integration"
+          },
+          {
+            "test": "test_javamods_ui.JavaModsPageTests.test_missing_binary_failure_is_visible_without_a_success_claim",
+            "reason": "Install pinned launcher requirements for Qt integration"
+          },
+          {
+            "test": "test_javamods_ui.JavaModsPageTests.test_ui_never_promotes_forged_saved_success_statuses",
+            "reason": "Install pinned launcher requirements for Qt integration"
+          },
+          {
+            "test": "test_macos_launcher.MacLauncherTests.test_actual_dialog_scripts_compile_on_mac",
+            "reason": "AppleScript compilation requires macOS"
+          },
+          {
+            "test": "test_modpacks_service.ModpackServiceTests.test_analysis_and_port_only_invoke_allowlisted_passive_rust_commands",
+            "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+          },
+          {
+            "test": "test_modpacks_service.ModpackServiceTests.test_changed_generated_port_tree_is_demoted_on_load_and_export",
+            "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+          },
+          {
+            "test": "test_modpacks_service.ModpackServiceTests.test_correct_sha1_cannot_hide_a_conflicting_known_sha512",
+            "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+          },
+          {
+            "test": "test_modpacks_service.ModpackServiceTests.test_curseforge_manifest_ids_resolve_from_user_instance_without_api_key",
+            "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+          },
+          {
+            "test": "test_modpacks_service.ModpackServiceTests.test_curseforge_modlist_cannot_silently_remove_manifest_only_entries",
+            "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+          },
+          {
+            "test": "test_modpacks_service.ModpackServiceTests.test_declared_hash_mismatch_does_not_accept_same_filename",
+            "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+          },
+          {
+            "test": "test_modpacks_service.ModpackServiceTests.test_embedded_modrinth_mod_is_inspected_without_network_or_user_folder",
+            "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+          },
+          {
+            "test": "test_modpacks_service.ModpackServiceTests.test_export_json_and_text_preserve_original_evidence_and_unplayable_summary",
+            "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+          },
+          {
+            "test": "test_modpacks_service.ModpackServiceTests.test_imported_pack_snapshot_survives_original_removal_and_detects_snapshot_edits",
+            "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+          },
+          {
+            "test": "test_modpacks_service.ModpackServiceTests.test_missing_modrinth_files_remain_visible_as_unsupported_rows",
+            "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+          },
+          {
+            "test": "test_modpacks_service.ModpackServiceTests.test_modrinth_import_resolves_owned_files_and_retains_every_coverage_column",
+            "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+          },
+          {
+            "test": "test_modpacks_service.ModpackServiceTests.test_original_works_false_positive_retains_missing_dependency_and_unsupported_features",
+            "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+          },
+          {
+            "test": "test_modpacks_service.ModpackServiceTests.test_pack_storage_is_profile_isolated_and_existing_game_files_are_untouched",
+            "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+          },
+          {
+            "test": "test_modpacks_service.ModpackServiceTests.test_packwiz_is_explicitly_unsupported_without_inventing_a_parser",
+            "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+          },
+          {
+            "test": "test_modpacks_service.ModpackServiceTests.test_partial_data_carry_preserves_unsupported_rows_and_never_becomes_playable",
+            "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+          },
+          {
+            "test": "test_modpacks_service.ModpackServiceTests.test_partial_port_prunes_mod_whose_dependency_is_only_an_external_file",
+            "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+          },
+          {
+            "test": "test_modpacks_service.ModpackServiceTests.test_prism_multimc_instance_uses_real_backend_import",
+            "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+          },
+          {
+            "test": "test_modpacks_service.ModpackServiceTests.test_renaming_an_unrelated_jar_to_a_curseforge_placeholder_cannot_prove_identity",
+            "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+          },
+          {
+            "test": "test_modpacks_service.ModpackServiceTests.test_saved_pack_report_cannot_forge_playable_or_tested_success",
+            "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+          },
+          {
+            "test": "test_modpacks_service.ModpackServiceTests.test_sha512_mismatch_does_not_accept_same_filename",
+            "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+          },
+          {
+            "test": "test_modpacks_service.ModpackServiceTests.test_sha512_only_index_resolves_renamed_local_file_without_losing_hash_evidence",
+            "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+          },
+          {
+            "test": "test_modpacks_service.ModpackServiceTests.test_symlinked_profile_parent_cannot_redirect_pack_import",
+            "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+          },
+          {
+            "test": "test_modpacks_ui.ModpacksPageTests.test_backup_and_existing_controls_remain_reachable_at_small_window_sizes",
+            "reason": "Install pinned launcher requirements for Qt integration"
+          },
+          {
+            "test": "test_modpacks_ui.ModpacksPageTests.test_chainmail_cancel_profile_switch_and_existing_save_fail_closed",
+            "reason": "Install pinned launcher requirements for Qt integration"
+          },
+          {
+            "test": "test_modpacks_ui.ModpacksPageTests.test_chainmail_controls_reachable_and_busy_install_is_blocked",
+            "reason": "Install pinned launcher requirements for Qt integration"
+          },
+          {
+            "test": "test_modpacks_ui.ModpacksPageTests.test_chainmail_explicit_profile_install_starts_off_and_preserves_play_guards",
+            "reason": "Install pinned launcher requirements for Qt integration"
+          },
+          {
+            "test": "test_modpacks_ui.ModpacksPageTests.test_curseforge_user_instance_resolution_needs_no_api_key_or_download",
+            "reason": "Install pinned launcher requirements for Qt integration"
+          },
+          {
+            "test": "test_modpacks_ui.ModpacksPageTests.test_failed_backend_retains_real_exit_stdout_stderr_in_view_errors",
+            "reason": "Install pinned launcher requirements for Qt integration"
+          },
+          {
+            "test": "test_modpacks_ui.ModpacksPageTests.test_false_positive_works_stays_unsupported_in_coverage_and_errors",
+            "reason": "Install pinned launcher requirements for Qt integration"
+          },
+          {
+            "test": "test_modpacks_ui.ModpacksPageTests.test_hash_mismatch_is_visible_and_does_not_enable_play",
+            "reason": "Install pinned launcher requirements for Qt integration"
+          },
+          {
+            "test": "test_modpacks_ui.ModpacksPageTests.test_import_analyze_and_resolve_keep_all_mod_rows_and_required_columns",
+            "reason": "Install pinned launcher requirements for Qt integration"
+          },
+          {
+            "test": "test_modpacks_ui.ModpacksPageTests.test_json_and_text_exports_retain_pack_coverage_and_backend_evidence",
+            "reason": "Install pinned launcher requirements for Qt integration"
+          },
+          {
+            "test": "test_modpacks_ui.ModpacksPageTests.test_pack_analysis_stays_off_gui_thread_and_busy_guard_preserves_profile",
+            "reason": "Install pinned launcher requirements for Qt integration"
+          },
+          {
+            "test": "test_modpacks_ui.ModpacksPageTests.test_packwiz_explains_backend_limitation_and_never_offers_play",
+            "reason": "Install pinned launcher requirements for Qt integration"
+          },
+          {
+            "test": "test_modpacks_ui.ModpacksPageTests.test_partial_port_has_data_outputs_but_play_remains_disabled",
+            "reason": "Install pinned launcher requirements for Qt integration"
+          },
+          {
+            "test": "test_modpacks_ui.ModpacksPageTests.test_profiles_isolate_pack_snapshots_and_report_selection",
+            "reason": "Install pinned launcher requirements for Qt integration"
+          },
+          {
+            "test": "test_modpacks_ui.ModpacksPageTests.test_seventh_page_registration_preserves_all_existing_pages",
+            "reason": "Install pinned launcher requirements for Qt integration"
+          },
+          {
+            "test": "test_modpacks_ui.ModpacksPageTests.test_targeted_backup_cancellation_unknown_pack_and_profile_switch_fail_closed",
+            "reason": "Install pinned launcher requirements for Qt integration"
+          },
+          {
+            "test": "test_modpacks_ui.ModpacksPageTests.test_targeted_world_backup_and_verification_do_not_unlock_java_or_pack_play",
+            "reason": "Install pinned launcher requirements for Qt integration"
+          },
+          {
+            "test": "test_rlcraft_chainmail.ChainmailTests.test_windows_junction_cannot_redirect_installation",
+            "reason": "Windows junction behavior requires Windows"
+          },
+          {
+            "test": "test_rlcraft_flint.FlintTests.test_windows_junction_cannot_redirect_flint_install",
+            "reason": "Windows junction behavior requires Windows"
+          },
+          {
+            "test": "test_rlcraft_flint_ui.FlintPageTests.test_cancel_profile_switch_busy_and_existing_world_preserve_data",
+            "reason": "Install pinned Qt requirements"
+          },
+          {
+            "test": "test_rlcraft_flint_ui.FlintPageTests.test_explicit_profile_install_starts_off_and_keeps_unsupported_play_disabled",
+            "reason": "Install pinned Qt requirements"
+          },
+          {
+            "test": "test_rlcraft_flint_ui.FlintPageTests.test_flint_controls_remain_reachable_in_supported_small_windows",
+            "reason": "Install pinned Qt requirements"
+          },
+          {
+            "test": "test_rlcraft_gathering.GatheringTests.test_windows_junction_cannot_redirect_addon_install",
+            "reason": "Windows junction behavior requires Windows"
+          },
+          {
+            "test": "test_rlcraft_gathering_ui.GatheringPageTests.test_stage2_consent_resets_and_controls_remain_reachable",
+            "reason": "Install pinned Qt requirements"
+          },
+          {
+            "test": "test_rlcraft_gathering_ui.GatheringPageTests.test_stage2_install_off_explicit_enable_and_unsupported_workflows_stay_disabled",
+            "reason": "Install pinned Qt requirements"
+          },
+          {
+            "test": "test_rlcraft_woodcutting.WoodcuttingTests.test_windows_junction_cannot_redirect_addon_install",
+            "reason": "Windows junction behavior requires Windows"
+          },
+          {
+            "test": "test_rlcraft_woodcutting_ui.WoodcuttingPageTests.test_stage3_consent_resets_and_controls_remain_reachable",
+            "reason": "Install pinned Qt requirements"
+          },
+          {
+            "test": "test_rlcraft_woodcutting_ui.WoodcuttingPageTests.test_stage3_install_off_explicit_enable_and_unsupported_workflows_stay_disabled",
+            "reason": "Install pinned Qt requirements"
+          }
+        ],
+        "log_source": "job-specific GitHub connector log; the gh combined run log duplicated Windows output"
+      },
+      {
+        "job": "windows-tooling",
+        "collected": 486,
+        "passed": 381,
+        "failed": 0,
+        "skipped": [
+          {
+            "test": "test_herps_entry.BundledEntrySmokeTests.test_external_override_cannot_satisfy_bundled_smoke",
+            "reason": "Set HERPS_TEST_PORT_PACK to the pinned executable"
+          },
+          {
+            "test": "test_herps_entry.BundledEntrySmokeTests.test_real_bundled_helper_checks_data_and_rejects_false_positive_works",
+            "reason": "Set HERPS_TEST_PORT_PACK to the pinned executable"
+          },
+          {
+            "test": "test_herps_launcher.LauncherTests.test_clean_launch_uses_separate_game_folder_and_original_binary",
+            "reason": "Owned POSIX process fixture"
+          },
+          {
+            "test": "test_herps_launcher.LauncherTests.test_failed_resource_check_does_not_start_game_and_releases_lock",
+            "reason": "Owned POSIX process fixture"
+          },
+          {
+            "test": "test_herps_launcher.LauncherTests.test_play_real_child_logs_exit_and_relaunch_without_touching_saves",
+            "reason": "Owned POSIX child fixture; Windows CI covers native tests separately"
+          },
+          {
+            "test": "test_inspect_apk.ApkTests.test_supplied_apk",
+            "reason": "Set HORIZON_TEST_APK to run supplied-APK integration"
+          },
+          {
+            "test": "test_javamods_adapter.PortPackIntegrationTests.test_actual_works_with_access_widener_stays_unsupported",
+            "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+          },
+          {
+            "test": "test_javamods_adapter.PortPackIntegrationTests.test_actual_works_with_minecraft_version_mismatch_stays_unsupported",
+            "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+          },
+          {
+            "test": "test_javamods_adapter.PortPackIntegrationTests.test_actual_works_with_missing_dependency_stays_unsupported",
+            "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+          },
+          {
+            "test": "test_javamods_adapter.PortPackIntegrationTests.test_actual_works_with_required_mixins_stays_unsupported",
+            "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+          },
+          {
+            "test": "test_javamods_adapter.PortPackIntegrationTests.test_actual_works_with_unreadable_class_stays_unsupported",
+            "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+          },
+          {
+            "test": "test_javamods_adapter.PortPackIntegrationTests.test_duplicate_dependency_ids_are_ambiguous_not_silently_selected",
+            "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+          },
+          {
+            "test": "test_javamods_adapter.PortPackIntegrationTests.test_fully_local_pack_port_uses_real_carry_without_claiming_playability",
+            "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+          },
+          {
+            "test": "test_javamods_adapter.PortPackIntegrationTests.test_instance_analysis_preserves_every_mod_and_missing_dependencies",
+            "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+          },
+          {
+            "test": "test_javamods_adapter.PortPackIntegrationTests.test_local_port_retains_data_carry_without_successful_gameplay_claim",
+            "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+          },
+          {
+            "test": "test_javamods_adapter.PortPackIntegrationTests.test_missing_pack_jar_remains_an_unsupported_record_without_download",
+            "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+          },
+          {
+            "test": "test_javamods_adapter.PortPackIntegrationTests.test_missing_transitive_dependency_blocks_apparently_successful_parent",
+            "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+          },
+          {
+            "test": "test_javamods_adapter.PortPackIntegrationTests.test_mrpack_resolves_user_file_by_declared_hash_with_different_filename",
+            "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+          },
+          {
+            "test": "test_javamods_adapter.PortPackIntegrationTests.test_mrpack_same_filename_with_wrong_hash_is_not_accepted",
+            "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+          },
+          {
+            "test": "test_javamods_adapter.PortPackIntegrationTests.test_pack_archive_path_traversal_is_refused_before_backend",
+            "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+          },
+          {
+            "test": "test_javamods_adapter.PortPackIntegrationTests.test_profile_and_each_run_have_separate_workspaces",
+            "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+          },
+          {
+            "test": "test_javamods_adapter.PortPackIntegrationTests.test_pure_content_requires_porting_but_never_claims_native_or_tested",
+            "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+          },
+          {
+            "test": "test_javamods_adapter.PortPackIntegrationTests.test_readable_java_class_in_dependency_is_not_treated_as_data_only",
+            "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+          },
+          {
+            "test": "test_javamods_adapter.PortPackIntegrationTests.test_required_mixins_in_dependency_block_apparently_successful_parent",
+            "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+          },
+          {
+            "test": "test_javamods_adapter.PortPackIntegrationTests.test_standalone_port_cannot_prove_carry_of_satisfied_dependency_ensemble",
+            "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+          },
+          {
+            "test": "test_javamods_adapter.PortPackIntegrationTests.test_symlinked_profile_ancestor_cannot_escape_profile",
+            "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+          },
+          {
+            "test": "test_javamods_adapter.PortPackIntegrationTests.test_symlinked_profile_workspace_cannot_escape_profile",
+            "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+          },
+          {
+            "test": "test_javamods_adapter.PortPackIntegrationTests.test_unknown_inventory_class_or_confidence_cannot_hide_behind_works",
+            "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+          },
+          {
+            "test": "test_javamods_adapter.PortPackIntegrationTests.test_unreadable_dependency_blocks_apparently_successful_parent",
+            "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+          },
+          {
+            "test": "test_javamods_adapter.PortPackIntegrationTests.test_uppercase_declared_sha1_matches_the_same_local_file",
+            "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+          },
+          {
+            "test": "test_javamods_adapter.PortPackIntegrationTests.test_user_dependency_wrong_version_is_not_accepted_by_id_alone",
+            "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+          },
+          {
+            "test": "test_javamods_adapter.PortPackIntegrationTests.test_works_cannot_hide_kept_custom_recipes_or_unreadable_carry_files",
+            "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+          },
+          {
+            "test": "test_javamods_cli.RealCliTests.test_actual_analyze_pack_and_local_jar_port_commands",
+            "reason": "Set HERPS_TEST_PORT_PACK to the pinned executable for command integration"
+          },
+          {
+            "test": "test_javamods_cli.RealCliTests.test_actual_check_and_both_report_export_formats",
+            "reason": "Set HERPS_TEST_PORT_PACK to the pinned executable for command integration"
+          },
+          {
+            "test": "test_javamods_cli.RealCliTests.test_actual_false_positive_works_cli_retains_raw_but_returns_unsupported",
+            "reason": "Set HERPS_TEST_PORT_PACK to the pinned executable for command integration"
+          },
+          {
+            "test": "test_javamods_cli.RealCliTests.test_actual_package_module_executes_a_headless_check",
+            "reason": "Set HERPS_TEST_PORT_PACK to the pinned executable for command integration"
+          },
+          {
+            "test": "test_javamods_cli.RealCliTests.test_export_demotes_forged_native_tested_and_missing_check_claims",
+            "reason": "Set HERPS_TEST_PORT_PACK to the pinned executable for command integration"
+          },
+          {
+            "test": "test_javamods_cli.RealCliTests.test_export_rejects_changed_or_missing_input_snapshot_as_insufficient",
+            "reason": "Set HERPS_TEST_PORT_PACK to the pinned executable for command integration"
+          },
+          {
+            "test": "test_javamods_cli.RealCliTests.test_export_revalidates_dependencies_after_diagnostics_and_status_are_forged",
+            "reason": "Set HERPS_TEST_PORT_PACK to the pinned executable for command integration"
+          },
+          {
+            "test": "test_javamods_library.LibraryPortTests.test_changed_generated_data_is_refused_after_report_receipt",
+            "reason": "Set HERPS_TEST_PORT_PACK for real data-port tests"
+          },
+          {
+            "test": "test_javamods_library.LibraryPortTests.test_changed_saved_report_cannot_install",
+            "reason": "Set HERPS_TEST_PORT_PACK for real data-port tests"
+          },
+          {
+            "test": "test_javamods_library.LibraryPortTests.test_cross_profile_port_selection_cannot_affect_original",
+            "reason": "Set HERPS_TEST_PORT_PACK for real data-port tests"
+          },
+          {
+            "test": "test_javamods_library.LibraryPortTests.test_existing_folder_id_is_never_overwritten",
+            "reason": "Set HERPS_TEST_PORT_PACK for real data-port tests"
+          },
+          {
+            "test": "test_javamods_library.LibraryPortTests.test_false_positive_works_cannot_install_an_unsupported_port",
+            "reason": "Set HERPS_TEST_PORT_PACK for real data-port tests"
+          },
+          {
+            "test": "test_javamods_library.LibraryPortTests.test_installed_data_edits_are_preserved_and_not_managed_blindly",
+            "reason": "Set HERPS_TEST_PORT_PACK for real data-port tests"
+          },
+          {
+            "test": "test_javamods_library.LibraryPortTests.test_real_data_folder_uses_engine_setting_starts_disabled_and_backs_up",
+            "reason": "Set HERPS_TEST_PORT_PACK for real data-port tests"
+          },
+          {
+            "test": "test_javamods_library.LibraryPortTests.test_receipt_write_failure_rolls_back_only_new_installation",
+            "reason": "Set HERPS_TEST_PORT_PACK for real data-port tests"
+          },
+          {
+            "test": "test_javamods_ui.JavaModsPageBackendTests.test_actual_false_positive_works_is_rendered_as_unsupported_with_full_evidence",
+            "reason": "Set HERPS_TEST_PORT_PACK to the actual pinned executable for Java Mods UI regressions"
+          },
+          {
+            "test": "test_javamods_ui.JavaModsPageBackendTests.test_background_analysis_keeps_event_loop_live_and_blocks_profile_mutations",
+            "reason": "Set HERPS_TEST_PORT_PACK to the actual pinned executable for Java Mods UI regressions"
+          },
+          {
+            "test": "test_javamods_ui.JavaModsPageBackendTests.test_cancel_is_unavailable_once_result_recording_begins",
+            "reason": "Set HERPS_TEST_PORT_PACK to the actual pinned executable for Java Mods UI regressions"
+          },
+          {
+            "test": "test_javamods_ui.JavaModsPageBackendTests.test_cancelled_analysis_discards_new_report_after_passive_worker_finishes",
+            "reason": "Set HERPS_TEST_PORT_PACK to the actual pinned executable for Java Mods UI regressions"
+          },
+          {
+            "test": "test_javamods_ui.JavaModsPageBackendTests.test_json_and_readable_exports_preserve_actual_backend_evidence",
+            "reason": "Set HERPS_TEST_PORT_PACK to the actual pinned executable for Java Mods UI regressions"
+          },
+          {
+            "test": "test_javamods_ui.JavaModsPageBackendTests.test_port_enable_disable_and_backup_preserve_saves_and_original_import",
+            "reason": "Set HERPS_TEST_PORT_PACK to the actual pinned executable for Java Mods UI regressions"
+          },
+          {
+            "test": "test_javamods_ui.JavaModsPageBackendTests.test_resolve_dependencies_uses_user_directory_and_retains_hash_evidence",
+            "reason": "Set HERPS_TEST_PORT_PACK to the actual pinned executable for Java Mods UI regressions"
+          },
+          {
+            "test": "test_javamods_ui.JavaModsPageBackendTests.test_saved_report_is_revalidated_before_rendering_after_profile_reload",
+            "reason": "Set HERPS_TEST_PORT_PACK to the actual pinned executable for Java Mods UI regressions"
+          },
+          {
+            "test": "test_macos_launcher.MacLauncherTests.test_actual_dialog_scripts_compile_on_mac",
+            "reason": "Mac Bash behavior tests need Unix paths and executable scripts"
+          },
+          {
+            "test": "test_macos_launcher.MacLauncherTests.test_dialog_cancellation_preserves_original_preparer_failure",
+            "reason": "Mac Bash behavior tests need Unix paths and executable scripts"
+          },
+          {
+            "test": "test_macos_launcher.MacLauncherTests.test_failed_resource_check_prints_error_and_opens_preparation",
+            "reason": "Mac Bash behavior tests need Unix paths and executable scripts"
+          },
+          {
+            "test": "test_macos_launcher.MacLauncherTests.test_game_failure_surfaces_log_and_preserves_client_status",
+            "reason": "Mac Bash behavior tests need Unix paths and executable scripts"
+          },
+          {
+            "test": "test_macos_launcher.MacLauncherTests.test_non_mac_host_is_rejected_before_creating_player_data",
+            "reason": "Mac Bash behavior tests need Unix paths and executable scripts"
+          },
+          {
+            "test": "test_macos_launcher.MacLauncherTests.test_open_failure_preserves_preparer_error_and_prints_manual_path",
+            "reason": "Mac Bash behavior tests need Unix paths and executable scripts"
+          },
+          {
+            "test": "test_macos_launcher.MacLauncherTests.test_prepared_resources_launch_client_with_literal_arguments_and_profile",
+            "reason": "Mac Bash behavior tests need Unix paths and executable scripts"
+          },
+          {
+            "test": "test_macos_launcher.MacLauncherTests.test_show_resource_log_uses_exact_path_without_starting_game",
+            "reason": "Mac Bash behavior tests need Unix paths and executable scripts"
+          },
+          {
+            "test": "test_modpacks_service.ModpackServiceTests.test_analysis_and_port_only_invoke_allowlisted_passive_rust_commands",
+            "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+          },
+          {
+            "test": "test_modpacks_service.ModpackServiceTests.test_changed_generated_port_tree_is_demoted_on_load_and_export",
+            "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+          },
+          {
+            "test": "test_modpacks_service.ModpackServiceTests.test_correct_sha1_cannot_hide_a_conflicting_known_sha512",
+            "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+          },
+          {
+            "test": "test_modpacks_service.ModpackServiceTests.test_curseforge_manifest_ids_resolve_from_user_instance_without_api_key",
+            "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+          },
+          {
+            "test": "test_modpacks_service.ModpackServiceTests.test_curseforge_modlist_cannot_silently_remove_manifest_only_entries",
+            "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+          },
+          {
+            "test": "test_modpacks_service.ModpackServiceTests.test_declared_hash_mismatch_does_not_accept_same_filename",
+            "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+          },
+          {
+            "test": "test_modpacks_service.ModpackServiceTests.test_embedded_modrinth_mod_is_inspected_without_network_or_user_folder",
+            "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+          },
+          {
+            "test": "test_modpacks_service.ModpackServiceTests.test_export_json_and_text_preserve_original_evidence_and_unplayable_summary",
+            "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+          },
+          {
+            "test": "test_modpacks_service.ModpackServiceTests.test_imported_pack_snapshot_survives_original_removal_and_detects_snapshot_edits",
+            "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+          },
+          {
+            "test": "test_modpacks_service.ModpackServiceTests.test_missing_modrinth_files_remain_visible_as_unsupported_rows",
+            "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+          },
+          {
+            "test": "test_modpacks_service.ModpackServiceTests.test_modrinth_import_resolves_owned_files_and_retains_every_coverage_column",
+            "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+          },
+          {
+            "test": "test_modpacks_service.ModpackServiceTests.test_original_works_false_positive_retains_missing_dependency_and_unsupported_features",
+            "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+          },
+          {
+            "test": "test_modpacks_service.ModpackServiceTests.test_pack_storage_is_profile_isolated_and_existing_game_files_are_untouched",
+            "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+          },
+          {
+            "test": "test_modpacks_service.ModpackServiceTests.test_packwiz_is_explicitly_unsupported_without_inventing_a_parser",
+            "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+          },
+          {
+            "test": "test_modpacks_service.ModpackServiceTests.test_partial_data_carry_preserves_unsupported_rows_and_never_becomes_playable",
+            "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+          },
+          {
+            "test": "test_modpacks_service.ModpackServiceTests.test_partial_port_prunes_mod_whose_dependency_is_only_an_external_file",
+            "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+          },
+          {
+            "test": "test_modpacks_service.ModpackServiceTests.test_prism_multimc_instance_uses_real_backend_import",
+            "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+          },
+          {
+            "test": "test_modpacks_service.ModpackServiceTests.test_renaming_an_unrelated_jar_to_a_curseforge_placeholder_cannot_prove_identity",
+            "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+          },
+          {
+            "test": "test_modpacks_service.ModpackServiceTests.test_saved_pack_report_cannot_forge_playable_or_tested_success",
+            "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+          },
+          {
+            "test": "test_modpacks_service.ModpackServiceTests.test_sha512_mismatch_does_not_accept_same_filename",
+            "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+          },
+          {
+            "test": "test_modpacks_service.ModpackServiceTests.test_sha512_only_index_resolves_renamed_local_file_without_losing_hash_evidence",
+            "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+          },
+          {
+            "test": "test_modpacks_service.ModpackServiceTests.test_symlinked_profile_parent_cannot_redirect_pack_import",
+            "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+          },
+          {
+            "test": "test_modpacks_ui.ModpacksPageTests.test_backup_and_existing_controls_remain_reachable_at_small_window_sizes",
+            "reason": "Set HERPS_TEST_PORT_PACK for actual modpack UI integration"
+          },
+          {
+            "test": "test_modpacks_ui.ModpacksPageTests.test_chainmail_cancel_profile_switch_and_existing_save_fail_closed",
+            "reason": "Set HERPS_TEST_PORT_PACK for actual modpack UI integration"
+          },
+          {
+            "test": "test_modpacks_ui.ModpacksPageTests.test_chainmail_controls_reachable_and_busy_install_is_blocked",
+            "reason": "Set HERPS_TEST_PORT_PACK for actual modpack UI integration"
+          },
+          {
+            "test": "test_modpacks_ui.ModpacksPageTests.test_chainmail_explicit_profile_install_starts_off_and_preserves_play_guards",
+            "reason": "Set HERPS_TEST_PORT_PACK for actual modpack UI integration"
+          },
+          {
+            "test": "test_modpacks_ui.ModpacksPageTests.test_curseforge_user_instance_resolution_needs_no_api_key_or_download",
+            "reason": "Set HERPS_TEST_PORT_PACK for actual modpack UI integration"
+          },
+          {
+            "test": "test_modpacks_ui.ModpacksPageTests.test_failed_backend_retains_real_exit_stdout_stderr_in_view_errors",
+            "reason": "Set HERPS_TEST_PORT_PACK for actual modpack UI integration"
+          },
+          {
+            "test": "test_modpacks_ui.ModpacksPageTests.test_false_positive_works_stays_unsupported_in_coverage_and_errors",
+            "reason": "Set HERPS_TEST_PORT_PACK for actual modpack UI integration"
+          },
+          {
+            "test": "test_modpacks_ui.ModpacksPageTests.test_hash_mismatch_is_visible_and_does_not_enable_play",
+            "reason": "Set HERPS_TEST_PORT_PACK for actual modpack UI integration"
+          },
+          {
+            "test": "test_modpacks_ui.ModpacksPageTests.test_import_analyze_and_resolve_keep_all_mod_rows_and_required_columns",
+            "reason": "Set HERPS_TEST_PORT_PACK for actual modpack UI integration"
+          },
+          {
+            "test": "test_modpacks_ui.ModpacksPageTests.test_json_and_text_exports_retain_pack_coverage_and_backend_evidence",
+            "reason": "Set HERPS_TEST_PORT_PACK for actual modpack UI integration"
+          },
+          {
+            "test": "test_modpacks_ui.ModpacksPageTests.test_pack_analysis_stays_off_gui_thread_and_busy_guard_preserves_profile",
+            "reason": "Set HERPS_TEST_PORT_PACK for actual modpack UI integration"
+          },
+          {
+            "test": "test_modpacks_ui.ModpacksPageTests.test_packwiz_explains_backend_limitation_and_never_offers_play",
+            "reason": "Set HERPS_TEST_PORT_PACK for actual modpack UI integration"
+          },
+          {
+            "test": "test_modpacks_ui.ModpacksPageTests.test_partial_port_has_data_outputs_but_play_remains_disabled",
+            "reason": "Set HERPS_TEST_PORT_PACK for actual modpack UI integration"
+          },
+          {
+            "test": "test_modpacks_ui.ModpacksPageTests.test_profiles_isolate_pack_snapshots_and_report_selection",
+            "reason": "Set HERPS_TEST_PORT_PACK for actual modpack UI integration"
+          },
+          {
+            "test": "test_modpacks_ui.ModpacksPageTests.test_seventh_page_registration_preserves_all_existing_pages",
+            "reason": "Set HERPS_TEST_PORT_PACK for actual modpack UI integration"
+          },
+          {
+            "test": "test_modpacks_ui.ModpacksPageTests.test_targeted_backup_cancellation_unknown_pack_and_profile_switch_fail_closed",
+            "reason": "Set HERPS_TEST_PORT_PACK for actual modpack UI integration"
+          },
+          {
+            "test": "test_modpacks_ui.ModpacksPageTests.test_targeted_world_backup_and_verification_do_not_unlock_java_or_pack_play",
+            "reason": "Set HERPS_TEST_PORT_PACK for actual modpack UI integration"
+          },
+          {
+            "test": "test_package_bedrock_windows.BedrockPackagingTests.test_case_collision_is_rejected",
+            "reason": "Filesystem cannot construct distinct case-colliding files"
+          },
+          {
+            "test": "test_rlcraft_chainmail.ChainmailTests.test_linked_profile_and_settings_preserve_external_files",
+            "reason": "Windows link guards are exercised with junctions separately"
+          },
+          {
+            "test": "test_rlcraft_flint.FlintTests.test_linked_mod_folder_and_receipt_cannot_redirect_install",
+            "reason": "POSIX symlink fixture; Windows junction case is separate"
+          }
+        ],
+        "job_id": 128706840557,
+        "platform": "Windows Server 2025 x86_64",
+        "log_source": "job-specific GitHub connector log, cross-checked with gh output"
+      }
+    ]
+  },
+  "artifact_provenance": [
+    {
+      "id": 13615370828,
+      "name": "RLCraft-2.9.3-Local-Inspector",
+      "size_in_bytes": 27118,
+      "url": "https://api.github.com/repos/Zeigen-ft/Herps-Launcher/actions/artifacts/13615370828",
+      "archive_download_url": "https://api.github.com/repos/Zeigen-ft/Herps-Launcher/actions/artifacts/13615370828/zip",
+      "expired": false,
+      "created_at": "2026-11-08T11:19:19Z",
+      "expires_at": "2027-02-06T10:44:07Z",
+      "updated_at": "2026-11-08T11:19:19Z",
+      "digest": "sha256:340adaab6a98b13169c7f1cf3abf3645f8426caee5c1ec389b59d605f7c5723c",
+      "workflow_run": {
+        "id": 42472666400,
+        "repository_id": 1444001642,
+        "head_repository_id": 1444001642,
+        "head_branch": "feature/rlcraft-native-stages",
+        "head_sha": "9f196479726ed69e959665a9604133daf58dcde1"
+      }
+    },
+    {
+      "id": 13615196606,
+      "name": "RLCraft-Chainmail-0.1.0-Windows-x86_64",
+      "size_in_bytes": 15276,
+      "url": "https://api.github.com/repos/Zeigen-ft/Herps-Launcher/actions/artifacts/13615196606",
+      "archive_download_url": "https://api.github.com/repos/Zeigen-ft/Herps-Launcher/actions/artifacts/13615196606/zip",
+      "expired": false,
+      "created_at": "2026-11-08T11:19:15Z",
+      "expires_at": "2027-02-06T10:44:07Z",
+      "updated_at": "2026-11-08T11:19:15Z",
+      "digest": "sha256:72226d3be05bf538951d609daf96ce081417f6d35f059e4612e1809562c871b9",
+      "workflow_run": {
+        "id": 42472666400,
+        "repository_id": 1444001642,
+        "head_repository_id": 1444001642,
+        "head_branch": "feature/rlcraft-native-stages",
+        "head_sha": "9f196479726ed69e959665a9604133daf58dcde1"
+      }
+    },
+    {
+      "id": 13615181805,
+      "name": "Herps-Launcher-0.1.0-Windows-x86_64",
+      "size_in_bytes": 238681921,
+      "url": "https://api.github.com/repos/Zeigen-ft/Herps-Launcher/actions/artifacts/13615181805",
+      "archive_download_url": "https://api.github.com/repos/Zeigen-ft/Herps-Launcher/actions/artifacts/13615181805/zip",
+      "expired": false,
+      "created_at": "2026-11-08T11:19:14Z",
+      "expires_at": "2027-02-06T10:44:07Z",
+      "updated_at": "2026-11-08T11:19:14Z",
+      "digest": "sha256:f20bfc23e9a0f55d717cb401424c7e6a27edaacce9a835393d40e19c580a59c1",
+      "workflow_run": {
+        "id": 42472666400,
+        "repository_id": 1444001642,
+        "head_repository_id": 1444001642,
+        "head_branch": "feature/rlcraft-native-stages",
+        "head_sha": "9f196479726ed69e959665a9604133daf58dcde1"
+      }
+    },
+    {
+      "id": 13615047937,
+      "name": "RLCraft-Native-Stage3-Woodcutting-0.1.0-Windows-x86_64",
+      "size_in_bytes": 15265,
+      "url": "https://api.github.com/repos/Zeigen-ft/Herps-Launcher/actions/artifacts/13615047937",
+      "archive_download_url": "https://api.github.com/repos/Zeigen-ft/Herps-Launcher/actions/artifacts/13615047937/zip",
+      "expired": false,
+      "created_at": "2026-11-08T11:19:18Z",
+      "expires_at": "2027-02-06T10:44:07Z",
+      "updated_at": "2026-11-08T11:19:18Z",
+      "digest": "sha256:6bf9beb85acfc43d0332f4009f79fbe13bb5309c62e65237370f75069222d892",
+      "workflow_run": {
+        "id": 42472666400,
+        "repository_id": 1444001642,
+        "head_repository_id": 1444001642,
+        "head_branch": "feature/rlcraft-native-stages",
+        "head_sha": "9f196479726ed69e959665a9604133daf58dcde1"
+      }
+    },
+    {
+      "id": 13614858784,
+      "name": "RLCraft-Native-Stage1-Flint-0.1.0-Windows-x86_64",
+      "size_in_bytes": 15620,
+      "url": "https://api.github.com/repos/Zeigen-ft/Herps-Launcher/actions/artifacts/13614858784",
+      "archive_download_url": "https://api.github.com/repos/Zeigen-ft/Herps-Launcher/actions/artifacts/13614858784/zip",
+      "expired": false,
+      "created_at": "2026-11-08T11:19:16Z",
+      "expires_at": "2027-02-06T10:44:07Z",
+      "updated_at": "2026-11-08T11:19:16Z",
+      "digest": "sha256:dca6c159714fbd428461ea607cadf59c915b910ecfe928c3974d921455918e22",
+      "workflow_run": {
+        "id": 42472666400,
+        "repository_id": 1444001642,
+        "head_repository_id": 1444001642,
+        "head_branch": "feature/rlcraft-native-stages",
+        "head_sha": "9f196479726ed69e959665a9604133daf58dcde1"
+      }
+    },
+    {
+      "id": 13614754492,
+      "name": "Herps-Launcher-evidence-Windows-x86_64",
+      "size_in_bytes": 762086,
+      "url": "https://api.github.com/repos/Zeigen-ft/Herps-Launcher/actions/artifacts/13614754492",
+      "archive_download_url": "https://api.github.com/repos/Zeigen-ft/Herps-Launcher/actions/artifacts/13614754492/zip",
+      "expired": false,
+      "created_at": "2026-11-08T11:19:22Z",
+      "expires_at": "2027-02-06T10:44:07Z",
+      "updated_at": "2026-11-08T11:19:22Z",
+      "digest": "sha256:2aecc9f492fcfc3b25d9d52d6ab872ffc8f810ff81a2dae16a45229fc1a83b22",
+      "workflow_run": {
+        "id": 42472666400,
+        "repository_id": 1444001642,
+        "head_repository_id": 1444001642,
+        "head_branch": "feature/rlcraft-native-stages",
+        "head_sha": "9f196479726ed69e959665a9604133daf58dcde1"
+      }
+    },
+    {
+      "id": 13614749621,
+      "name": "RLCraft-Native-Stage2-Gathering-0.1.0-Windows-x86_64",
+      "size_in_bytes": 15169,
+      "url": "https://api.github.com/repos/Zeigen-ft/Herps-Launcher/actions/artifacts/13614749621",
+      "archive_download_url": "https://api.github.com/repos/Zeigen-ft/Herps-Launcher/actions/artifacts/13614749621/zip",
+      "expired": false,
+      "created_at": "2026-11-08T11:19:17Z",
+      "expires_at": "2027-02-06T10:44:07Z",
+      "updated_at": "2026-11-08T11:19:17Z",
+      "digest": "sha256:9cb80f2cf8d778a6b4f5766c1ea33a97a604e7e3645d8beb62dc7fcbb8faa672",
+      "workflow_run": {
+        "id": 42472666400,
+        "repository_id": 1444001642,
+        "head_repository_id": 1444001642,
+        "head_branch": "feature/rlcraft-native-stages",
+        "head_sha": "9f196479726ed69e959665a9604133daf58dcde1"
+      }
+    }
+  ],
+  "native_ci": {
+    "conclusion": "success",
+    "headSha": "9f196479726ed69e959665a9604133daf58dcde1",
+    "jobs": [
+      {
+        "completedAt": "2026-11-08T11:22:22Z",
+        "conclusion": "success",
+        "databaseId": 128706897441,
+        "name": "desktop (windows-latest, x86_64, x64)",
+        "startedAt": "2026-11-08T10:44:10Z",
+        "status": "completed",
+        "steps": [
+          {
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run actions/checkout@v4",
+            "number": 2,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run actions/setup-python@v5",
+            "number": 3,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Install launcher tools",
+            "number": 4,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Install pinned engine toolchain",
+            "number": 5,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Reuse verified Windows engine build cache",
+            "number": 6,
+            "status": "completed"
+          },
+          {
+            "conclusion": "skipped",
+            "name": "Reuse macOS engine build cache",
+            "number": 7,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Build pinned port-pack for the native runner",
+            "number": 8,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Stage reviewed native chainmail content",
+            "number": 9,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Stage native survival remake stage 1",
+            "number": 10,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Stage native survival gathering add-on",
+            "number": 11,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Stage native woodcutting progression add-on",
+            "number": 12,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Portable and desktop integration tests with the real backend",
+            "number": 13,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Stage the standalone local RLCraft inspector",
+            "number": 14,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Build Windows game",
+            "number": 15,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Validate chainmail with the pinned native content and recipe engine",
+            "number": 16,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Validate flint starter with the pinned Rust recipe and item engine",
+            "number": 17,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Verify native gathering tags and transaction rules",
+            "number": 18,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Verify woodcutting tags, policy and bootstrap loot fixtures",
+            "number": 19,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Stage separately downloadable woodcutting content",
+            "number": 20,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Stage separately downloadable gathering content",
+            "number": 21,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Stage separately downloadable chainmail content",
+            "number": 22,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Stage separately downloadable flint survival content",
+            "number": 23,
+            "status": "completed"
+          },
+          {
+            "conclusion": "skipped",
+            "name": "Build macOS game",
+            "number": 24,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Package Windows launcher with game and source",
+            "number": 25,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Install, start and uninstall Windows launcher",
+            "number": 26,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Compile, select and roll back an owned Windows native mod",
+            "number": 27,
+            "status": "completed"
+          },
+          {
+            "conclusion": "skipped",
+            "name": "Package macOS launcher and game DMG",
+            "number": 28,
+            "status": "completed"
+          },
+          {
+            "conclusion": "skipped",
+            "name": "Verify macOS DMG integrity",
+            "number": 29,
+            "status": "completed"
+          },
+          {
+            "conclusion": "skipped",
+            "name": "Verify delivered macOS DMG without developer tools",
+            "number": 30,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Record internal candidate provenance and checksums",
+            "number": 31,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Upload separate versioned platform packages",
+            "number": 32,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Upload native chainmail content and validation",
+            "number": 33,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Upload native flint survival content and validation",
+            "number": 34,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Upload native gathering content and verification",
+            "number": 35,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Upload native woodcutting content and verification",
+            "number": 36,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Upload the local RLCraft inspector",
+            "number": 37,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Upload packaging and backend evidence",
+            "number": 38,
+            "status": "completed"
+          },
+          {
+            "conclusion": "skipped",
+            "name": "Retain Windows compiler cache after failed verification",
+            "number": 39,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Post Reuse verified Windows engine build cache",
+            "number": 76,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Post Run actions/setup-python@v5",
+            "number": 77,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@v4",
+            "number": 78,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 79,
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/Zeigen-ft/Herps-Launcher/actions/runs/42472666400/job/128706897441"
+      },
+      {
+        "completedAt": "2026-11-08T11:22:23Z",
+        "conclusion": "skipped",
+        "databaseId": 128715662274,
+        "name": "Prepare files for manual prerelease publication",
+        "startedAt": "2026-11-08T11:22:23Z",
+        "status": "completed",
+        "steps": [],
+        "url": "https://github.com/Zeigen-ft/Herps-Launcher/actions/runs/42472666400/job/128715662274"
+      }
+    ],
+    "status": "completed",
+    "url": "https://github.com/Zeigen-ft/Herps-Launcher/actions/runs/42472666400"
+  },
+  "auxiliary_shader_workflow": {
+    "conclusion": "skipped",
+    "jobs": [
+      {
+        "completedAt": "2026-11-08T10:43:52Z",
+        "conclusion": "skipped",
+        "databaseId": 128706841642,
+        "name": "complementary-pipelines",
+        "startedAt": "2026-11-08T10:43:52Z",
+        "status": "completed",
+        "steps": [],
+        "url": "https://github.com/Zeigen-ft/Herps-Launcher/actions/runs/42472651101/job/128706841642"
+      }
+    ],
+    "status": "completed"
+  },
+  "native_ci_failures": [],
+  "ci_warnings": [
+    "GitHub Actions Node.js 20 deprecation/Node.js 24 migration warning",
+    "Actions runtime punycode and url.parse deprecation warnings"
+  ],
+  "candidate": {
+    "source_commit": "9f196479726ed69e959665a9604133daf58dcde1",
+    "artifacts": [
+      {
+        "file": "Herps-Launcher-0.1.0-Windows-x64-Setup.exe",
+        "bytes": 102646686,
+        "sha256": "079af345af99d93d34b54bc4bb6361f849f42ddb6cd9e31adf97f90ec1c89458"
+      },
+      {
+        "file": "Herps-Launcher-0.1.0-x86_64-pc-windows-msvc-3xds63sm.zip",
+        "bytes": 137923695,
+        "sha256": "dc09ab91d5e7dd8b745ff528653b38625525d3058f6e2072cc173c35d3b2647c"
+      }
+    ],
+    "requirements_sha256": "53d5aa9d757f097595cb5c5d1b2786bac397528cf82fcb7cf93d77d28a38b56c",
+    "upstream_lock_sha256": "d9adba26684f8f41a8ed6c05d5daa8a7b36e842481196a80f2450f5e281f34ed",
+    "interactive_verified": false,
+    "gameplay_verified": false,
+    "public_release_approved": false,
+    "reproducibility": "pinned recipe and recorded hashes; not bit-for-bit reproducible"
+  },
+  "source_baseline": "24499167a60c104d2f24b8e70b54da3f02892d2e",
+  "implementation_commits": [
+    "d2cb7a33ea85c63a0120e16bc766372d34cf8490",
+    "9f196479726ed69e959665a9604133daf58dcde1"
+  ],
+  "physical_testing": {
+    "Windows 11 Stage 3 gameplay": "NOT RUN",
+    "natural legitimate-resource bootstrap": "NOT RUN",
+    "tool damage and breakage in a world": "NOT RUN",
+    "full restart inventory/block/world persistence": "NOT RUN",
+    "cross-profile physical preservation": "NOT RUN",
+    "combined Chainmail and Stage 3 gameplay": "NOT RUN",
+    "backup restore with Stage 3 content": "NOT RUN",
+    "macOS ARM64 build and gameplay": "NOT RUN",
+    "macOS Intel build and gameplay": "NOT RUN",
+    "multiplayer": "NOT RUN"
+  },
+  "main_reference_unchanged": "b292a48c279c2b718a5395fe5558f2ff83dcea30",
+  "audit_observations": [
+    "The gh combined portable run log duplicated Windows output under tooling; Linux per-job connector logs establish 486 collected, 371 passed, 115 skipped. No test rerun or code change was required."
+  ]
+}

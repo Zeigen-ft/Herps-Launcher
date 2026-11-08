@@ -30,8 +30,27 @@ that as BLOCKED/FAIL and stop the trial rather than changing a valuable world.
 
 ## Install the internal candidate
 
-Use the Stage 3 Windows candidate linked by [the verification report](NATIVE_SURVIVAL_STAGE_3_VERIFICATION.md)
-after its native checks pass. Earlier installers cannot provide this restriction.
+Use the [verified Stage 3 Windows test download](https://github.com/Zeigen-ft/Herps-Launcher/actions/runs/42472666400/artifacts/13615181805)
+from run **42472666400**, source **`9f196479726ed69e959665a9604133daf58dcde1`**.
+Sign in to GitHub, download `Herps-Launcher-0.1.0-Windows-x86_64`, then right-click
+the downloaded ZIP → **Extract All**. Open the extracted folder and find
+`Herps-Launcher-0.1.0-Windows-x64-Setup.exe`.
+
+Before running it, open PowerShell in that extracted folder and enter:
+
+```powershell
+Get-FileHash '.\Herps-Launcher-0.1.0-Windows-x64-Setup.exe' -Algorithm SHA256
+```
+
+The hash must be exactly:
+
+```text
+079af345af99d93d34b54bc4bb6361f849f42ddb6cd9e31adf97f90ec1c89458
+```
+
+Stop if it differs. [The verification report](NATIVE_SURVIVAL_STAGE_3_VERIFICATION.md)
+has the portable ZIP hash, detailed CI results and remaining limitations.
+Earlier installers cannot provide this restriction.
 Normal use needs no Rust/Cargo or Visual Studio. Keep existing tested installers
 and profiles until this new disposable trial is accepted.
 
@@ -74,6 +93,16 @@ Windows build, profile and mode. These instructions are not evidence of success.
 3. Cut three short-grass/fern plants with the knife, make string from their
    three fibers, and craft the existing hatchet. Expect one knife, one hatchet
    and two spare shards, with normal knife wear. No wheat is needed for this route.
+   All recipes fit the small 2×2 crafting grid in your inventory:
+
+   ```text
+   Knife:                 Hatchet:
+   [Flint Shard] [empty]  [Flint Shard] [String]
+   [Stick]       [empty]  [empty]       [Stick]
+   ```
+
+   To make one string, place three Plant Fibers in three separate crafting
+   slots. Use the modded **Flint Shard**, not plain vanilla flint, in these recipes.
 4. Put the hatchet in the **main hand**. Break logs: check normal drops and wear,
    then make a vanilla axe and repeat. Check ordinary and stripped logs/wood
    where available; optional stems require their own recorded case.

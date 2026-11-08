@@ -9,8 +9,15 @@ adds an optional Survival log-breaking requirement: use a main-hand Flint Hatche
 or axe. Existing drops/wear, other modes and non-log blocks keep their prior path.
 Install all three stages in a fresh disposable profile before creating a world.
 The new package starts OFF; no earlier package is upgraded or automatically enabled.
-Native Windows verification is pending; physical progression/gameplay and macOS
-remain **NOT RUN**. See [verification](docs/targeted-porting/NATIVE_SURVIVAL_STAGE_3_VERIFICATION.md).
+Windows native run [42472666400](https://github.com/Zeigen-ft/Herps-Launcher/actions/runs/42472666400)
+passed at `9f196479726ed69e959665a9604133daf58dcde1`: 471 source tests passed
+with 15 recorded skips, all 90 frozen workflow tests passed, and the native
+content, installer and SDK regressions passed. All seven artifact digests and
+delivered package/source hashes were independently checked.
+[Installer/portable download](https://github.com/Zeigen-ft/Herps-Launcher/actions/runs/42472666400/artifacts/13615181805),
+[checksums](docs/targeted-porting/WOODCUTTING_WINDOWS_SHA256SUMS.txt) and
+[verification](docs/targeted-porting/NATIVE_SURVIVAL_STAGE_3_VERIFICATION.md) are available.
+Physical progression/gameplay and all new macOS builds/gameplay remain **NOT RUN**.
 This is not full RLCraft/FunCraft or No Tree Punching, and does not publish a release.
 
 ## Development candidate — native survival stage 2

@@ -82,6 +82,12 @@ For optional chainmail crafting, make a **different fresh disposable profile
 before creating a world**. Follow [the Chainmail steps](INSTALLATION.md#test-chainmail-plate-and-boots).
 The package starts OFF and must be enabled on Mods. Keep it enabled once saves exist.
 
+For the optional native survival remake, use the separate
+[Stage 3 installation and Survival checklist](docs/targeted-porting/NATIVE_SURVIVAL_STAGE_3.md).
+It requires a matching Windows internal candidate and all three stages in a
+**new disposable profile before world creation**. Stage 3 physical gameplay is
+NOT RUN; existing release installers do not include it.
+
 ## If something goes wrong
 
 Use Home → **Open launcher and game logs**. Read

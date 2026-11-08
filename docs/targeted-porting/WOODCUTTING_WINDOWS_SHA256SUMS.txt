@@ -1,0 +1,13 @@
+079af345af99d93d34b54bc4bb6361f849f42ddb6cd9e31adf97f90ec1c89458  Herps-Launcher-0.1.0-Windows-x64-Setup.exe
+dc09ab91d5e7dd8b745ff528653b38625525d3058f6e2072cc173c35d3b2647c  Herps-Launcher-0.1.0-x86_64-pc-windows-msvc-3xds63sm.zip
+340adaab6a98b13169c7f1cf3abf3645f8426caee5c1ec389b59d605f7c5723c  RLCraft-2.9.3-Local-Inspector.zip
+72226d3be05bf538951d609daf96ce081417f6d35f059e4612e1809562c871b9  RLCraft-Chainmail-0.1.0-Windows-x86_64.zip
+f20bfc23e9a0f55d717cb401424c7e6a27edaacce9a835393d40e19c580a59c1  Herps-Launcher-0.1.0-Windows-x86_64.zip
+6bf9beb85acfc43d0332f4009f79fbe13bb5309c62e65237370f75069222d892  RLCraft-Native-Stage3-Woodcutting-0.1.0-Windows-x86_64.zip
+dca6c159714fbd428461ea607cadf59c915b910ecfe928c3974d921455918e22  RLCraft-Native-Stage1-Flint-0.1.0-Windows-x86_64.zip
+2aecc9f492fcfc3b25d9d52d6ab872ffc8f810ff81a2dae16a45229fc1a83b22  Herps-Launcher-evidence-Windows-x86_64.zip
+9cb80f2cf8d778a6b4f5766c1ea33a97a604e7e3645d8beb62dc7fcbb8faa672  RLCraft-Native-Stage2-Gathering-0.1.0-Windows-x86_64.zip
+015c3d553a6a2bcfed4412559b9b83bc3ef65599d539a7686e65577ec4c5c346  herspers_rl_chainmail-0.1.0.hmod
+919745713d5233bcd4cfee4f3da04328d3808eb06b24df966f26b054a69b81cc  herspers_rl_flint-0.1.0.hmod
+177c3f4eefedd4f0e4eda4e54634efeee555e4b22dd13e0ec022733328fb87fd  herspers_rl_gathering-0.1.0.hmod
+52e3586e103e4893f37f2141983a7503fa01dacb494144056f86897089abbc13  herspers_rl_woodcutting-0.1.0.hmod
