@@ -1,0 +1,16 @@
+Plant Fiber Bandage 0.1.0 — native survival stage 4
+Copyright (c) 2026 Herspers contributors. GPL-3.0-only; see LICENSE-HERPS.txt.
+
+These are independently authored additive native content definitions and a recipe.
+No original RLCraft, First Aid, Forge or Java code/assets are included or executed.
+This is an ordinary whole-player Regeneration consumable, not First Aid's limb
+health, wounds, damage model, healing selection or a complete modpack port.
+The paper model/texture is referenced by identifier only and requires the user's
+legitimately prepared Minecraft resources. No game artwork is copied.
+
+Three Plant Fibers in separate crafting slots plus one string make one bandage.
+Hold use for two seconds: successful completion grants Regeneration I for five
+seconds and uses one bandage in Survival. Interrupting use follows the engine's
+existing consumable behavior. It supplies no food and can be used at full hunger
+or health, where it may be wasted. Repeated use follows vanilla effect refreshing,
+not stacking, and Creative retains items. All real gameplay remains NOT RUN.

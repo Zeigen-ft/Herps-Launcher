@@ -15,7 +15,7 @@ from .targeted_backup import create_backup, eligibility, verify_backup
 from . import chainmail
 from . import flint
 from . import gathering
-from . import woodcutting
+from . import woodcutting, bandage
 
 
 UNSUPPORTED = "Unsupported"
@@ -157,6 +157,20 @@ class ModpacksPage(QWidget):
         self.woodcutting_button.setMaximumWidth(520)
         box.addWidget(woodcutting_box)
 
+        bandage_box = QGroupBox("Native survival remake · Stage 4: Plant Fiber Bandage")
+        bandage_layout = QVBoxLayout(bandage_box)
+        self.bandage_status = QLabel()
+        self.bandage_status.setWordWrap(True)
+        bandage_layout.addWidget(self.bandage_status)
+        self.bandage_consent = QCheckBox("Confirm disposable profile and closed games/servers")
+        self.bandage_consent.setMaximumWidth(520)
+        self.bandage_consent.toggled.connect(lambda _: self.busy_changed())
+        bandage_layout.addWidget(self.bandage_consent)
+        self.bandage_button = self._button(bandage_layout,
+            "Install plant fiber bandage · disabled initially…", self.install_bandage)
+        self.bandage_button.setMaximumWidth(520)
+        box.addWidget(bandage_box)
+
         self.summary = QLabel("Playable status: unverified. Import a pack to inspect every indexed mod.")
         self.summary.setWordWrap(True)
         box.addWidget(self.summary)
@@ -269,6 +283,9 @@ class ModpacksPage(QWidget):
             self.woodcutting_consent.blockSignals(True)
             self.woodcutting_consent.setChecked(False)
             self.woodcutting_consent.blockSignals(False)
+            self.bandage_consent.blockSignals(True)
+            self.bandage_consent.setChecked(False)
+            self.bandage_consent.blockSignals(False)
             self.summary.setText("Playable status: unverified. No pack analysis is selected for this profile.")
             self.status.setText(f"Profile: {profile}. Import a pack or load its retained local evidence.")
         self.binary_path.setText(self.launcher.config.get("port_pack_binary", ""))
@@ -351,6 +368,28 @@ class ModpacksPage(QWidget):
         available = not busy and valid and not installed and self.launcher.config["profile"] != "default"
         self.woodcutting_consent.setEnabled(available)
         self.woodcutting_button.setEnabled(available and self.woodcutting_consent.isChecked())
+        # No verified runtime/content validation backend exists. A static Works
+        # verdict or a carried folder can never unlock Play here.
+        self.play_button.setEnabled(False)
+        if self._dirty and self._active() and not busy and not self._scheduled:
+            self._scheduled = True
+            QTimer.singleShot(0, self._load_if_idle)
+
+        installed, valid = False, True
+        try:
+            state = bandage.status(self.launcher)
+            installed = state["installed"]
+            description = ("Installed · " + ("enabled" if state["enabled"] else "disabled; enable after the starter on Mods")) if installed else "Not installed"
+            self.bandage_status.setText(f"Profile: {self.launcher.config['profile']} · {description}. "
+                "Three Plant Fibers + string craft one bandage. Hold use for two seconds for five seconds of Regeneration I. "
+                "No food or limb healing; usable at full hunger/health and may be wasted. Vanilla paper artwork. "
+                "Requires enabled Flint Starter and the pinned installation. Physical gameplay is NOT RUN. Keep enabled once saves exist.")
+        except (OSError, ValueError) as error:
+            valid = False
+            self.bandage_status.setText(f"Preserve this profile and review bandage content: {error}")
+        available = not busy and valid and not installed and self.launcher.config["profile"] != "default"
+        self.bandage_consent.setEnabled(available)
+        self.bandage_button.setEnabled(available and self.bandage_consent.isChecked())
         # No verified runtime/content validation backend exists. A static Works
         # verdict or a carried folder can never unlock Play here.
         self.play_button.setEnabled(False)
@@ -450,6 +489,29 @@ class ModpacksPage(QWidget):
 
         self._run("Installing the native woodcutting add-on into the selected disposable profile…",
             lambda emit: woodcutting.install(self.launcher, profile, disposable_confirmed=True, games_closed=True), completed)
+
+    def install_bandage(self):
+        self.window.require_idle()
+        profile = self.launcher.config["profile"]
+        if not self.bandage_consent.isChecked() or profile == "default":
+            raise ValueError("Select and explicitly confirm a fresh named disposable profile first")
+        answer = QMessageBox.warning(self, "Install native survival stage 4?",
+            f"Install Plant Fiber Bandage only into '{profile}'? Close all games and servers. "
+            "Install Flint Survival Starter first. Use a disposable profile with no worlds. It starts OFF: enable on Mods before creating a world. "
+            "Keep it enabled after saves exist. This is an experimental starter, not the complete RLCraft pack.",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel,
+            QMessageBox.StandardButton.Cancel)
+        if answer != QMessageBox.StandardButton.Yes:
+            return
+
+        def completed(result):
+            self.details.setPlainText(json.dumps(result, indent=2))
+            self.status.setText(f"Installed disabled in {profile}. Open Mods, enable Flint Starter, then Plant Fiber Bandage before creating a world.")
+            self.bandage_consent.setChecked(False)
+            self.window.refresh()
+
+        self._run("Installing the native bandage package into the selected disposable profile…",
+            lambda emit: bandage.install(self.launcher, profile, disposable_confirmed=True, games_closed=True), completed)
 
     def _run(self, label, function, done):
         self.window.require_idle()

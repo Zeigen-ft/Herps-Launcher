@@ -1,0 +1,8 @@
+id = "herspers_rl_bandage"
+name = "Plant Fiber Bandage (experimental)"
+version = "0.1.0"
+description = "Native survival stage 4: craft a plant-fiber bandage and hold use for two seconds to gain five seconds of ordinary Regeneration I. Not First Aid or full RLCraft compatibility."
+authors = ["Herspers contributors"]
+api = "0.2"
+side = "both"
+capabilities = ["registries"]
