@@ -1,0 +1,21 @@
+Herps Better Leaves 9.6 — Minecraft 26.3 resource-pack adaptation
+
+Based on the user-provided Better-Leaves-9.6.zip by Motschen.
+Source archive SHA-256:
+cbeeccd774f910ed270dbe9651d789a8f785d055499f846e466d86f9cae91e90
+
+Upstream assets are provided under the accompanying MIT LICENSE:
+Copyright (c) 2024 Motschen.
+Adaptation metadata/documentation Copyright (c) 2026 Herps contributors, MIT.
+Launcher and build tools retain their separate project licences.
+
+The adaptation pins pack metadata to Herps' Minecraft 26.3 resource format 97.1.
+It retains the 14 supplied minecraft leaf blockstate definitions and their exact
+reachable models/textures. Included source asset bytes are unchanged. Unused
+models and overrides for unsupported Java mods are omitted. Such overrides do
+not implement those mods or register their blocks in Herps.
+
+This is an optional visual resource pack, not a shader, .hmod or Java mod.
+No game engine, block IDs, drops, collisions, profiles or saves are changed.
+Visual rendering, performance and native interactive acceptance need real tests.
+Minecraft and third-party trademarks retain their owners' rights. Unofficial.

@@ -1,0 +1,6 @@
+pack.mcmeta text eol=lf
+NOTICE.txt text eol=lf
+README-HERPS.txt text eol=lf
+upstream.json text eol=lf
+source/** -text
+provenance/** -text
