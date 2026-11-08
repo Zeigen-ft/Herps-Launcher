@@ -71,6 +71,8 @@ def read_archive(path, expected_sha=SOURCE_SHA256):
             raise ValueError("Archive entry/expansion limit exceeded")
         seen = set()
         for item in entries:
+            if item.orig_filename != item.filename:
+                raise ValueError("Archive path was normalized/truncated by the ZIP reader")
             name = item.filename.rstrip("/") if item.is_dir() else item.filename
             path_name(name)
             key = name.casefold()

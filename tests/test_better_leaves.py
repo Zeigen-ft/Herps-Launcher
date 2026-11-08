@@ -18,7 +18,12 @@ class BetterLeavesTests(unittest.TestCase):
     def archive(self, names):
         path = self.root / "input.zip"
         with zipfile.ZipFile(path, "w") as z:
-            for name, raw in names: z.writestr(name, raw)
+            for name, raw in names:
+                info = zipfile.ZipInfo(name)
+                # Keep the malicious bytes: Windows' ZipInfo constructor
+                # otherwise turns a backslash into a legal forward slash.
+                info.filename = name
+                z.writestr(info, raw)
         return path
 
     def test_curated_assets_have_complete_closed_dependencies_and_upstream_pins(self):
@@ -51,7 +56,7 @@ class BetterLeavesTests(unittest.TestCase):
         self.assertFalse((self.root / "out").exists())
 
     def test_archive_traversal_absolute_and_windows_paths_are_refused(self):
-        for name in ["../outside", "/outside", "assets/../../outside", "C:/outside", "assets\\outside", "./hidden"]:
+        for name in ["../outside", "/outside", "assets/../../outside", "C:/outside", "assets\\outside", "./hidden", "assets/good\x00bad"]:
             with self.subTest(name=name):
                 path = self.archive([(name, b"owned")])
                 with self.assertRaises(ValueError): leaves.read_archive(path, expected_sha=None)
