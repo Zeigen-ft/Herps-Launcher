@@ -1,0 +1,80 @@
+{
+  "schema": 1,
+  "recorded_date": "2026-11-08",
+  "recorded_timezone": "Etc/UTC",
+  "evidence_type": "user_reported_overall_stage2_feedback",
+  "tester": "User",
+  "raw_user_report": "ALL GOOD",
+  "overall_outcome": "USER-REPORTED POSITIVE",
+  "observed_by_codex": false,
+  "screenshots_or_logs_supplied_with_report": false,
+  "test_execution_date": null,
+  "feature": "Flint Gathering",
+  "version": "0.1.0",
+  "context": "Reply to the Stage 2 Windows candidate, native action descriptions and linked installation/Survival checklist.",
+  "scope": "Recorded as overall positive feedback for Stage 2. The reply does not enumerate performed tests; no individual checklist result, measurement or persistence result is inferred.",
+  "platform_context": "Windows x64 candidate; the user previously identified a Windows 11 x64 PC.",
+  "platform_explicitly_reconfirmed_in_this_message": false,
+  "game_mode_context": "Survival was required by the provided feature instructions.",
+  "game_mode_explicitly_reconfirmed_in_this_message": false,
+  "exact_os_build_cpu_gpu": null,
+  "reference_candidate": {
+    "workflow_run_id": 42445241045,
+    "source_commit": "b75897fdf84b06caad2d8c230759483a4e40a0e1",
+    "windows_artifact_id": 13603683988,
+    "gathering_artifact_id": 13603419525,
+    "package": "herspers_rl_gathering-0.1.0.hmod",
+    "package_sha256": "177c3f4eefedd4f0e4eda4e54634efeee555e4b22dd13e0ec022733328fb87fd",
+    "installer_sha256": "e4c3d3584a743e0482d8f69dd447e1d0a9b599b9946657c82139e1d9f0fd887c",
+    "basis": "The immediately preceding supplied candidate. The user did not independently reconfirm the run, installer/portable member or file hashes."
+  },
+  "workflow_run_explicitly_reconfirmed_by_user": null,
+  "candidate_member_actually_used": null,
+  "case_results": [
+    {
+      "case": "Survival launch, main/off-hand stone/cobblestone knapping and exact input/output counts",
+      "status": "NOT INDIVIDUALLY CONFIRMED"
+    },
+    {
+      "case": "Invalid surfaces/inputs, modified flint and ordinary chest interaction",
+      "status": "NOT INDIVIDUALLY CONFIRMED"
+    },
+    {
+      "case": "Short-grass/fern knife cutting, one fiber, plant removal, wear and repeated-click accounting",
+      "status": "NOT INDIVIDUALLY CONFIRMED"
+    },
+    {
+      "case": "Full inventory and partial output space without consumption, removal, loss or wear",
+      "status": "NOT INDIVIDUALLY CONFIRMED"
+    },
+    {
+      "case": "Prior recipes/tools, inventory/chest and removed-plant persistence after full game/launcher restart, knife damage/breakage",
+      "status": "NOT INDIVIDUALLY CONFIRMED"
+    },
+    {
+      "case": "Starter-only profile isolation and combined-mod/preservation cases",
+      "status": "NOT INDIVIDUALLY CONFIRMED"
+    }
+  ],
+  "not_confirmed_by_this_reply": [
+    "Which checklist steps were actually performed and their separate results",
+    "Exact candidate/member hashes, profile, mode, hardware, OS build and test date",
+    "Detailed main/off-hand, invalid-input, full-inventory and repeated-use edge cases",
+    "Exact wear/breakage, enchantments, repair paths and full-restart persistence",
+    "Physical installation/update/uninstall, backup restore and cross-profile hashes",
+    "Combined Chainmail/Flint/Gathering gameplay and failure recovery",
+    "Physical developer-tools-absent setup, graphics/audio/performance and multiplayer"
+  ],
+  "macos_intel_gameplay": "NOT RUN",
+  "macos_apple_silicon_gameplay": "NOT RUN",
+  "earlier_observations_not_resolved": [
+    "Earlier chainmail loading-logo stall",
+    "Earlier initially empty chainmail recipe output"
+  ],
+  "full_native_acceptance": false,
+  "gameplay_feature_stage_fully_accepted": false,
+  "full_rlcraft_compatibility": false,
+  "full_funcraft_compatibility": false,
+  "full_no_tree_punching_compatibility": false,
+  "public_release_approved": false
+}

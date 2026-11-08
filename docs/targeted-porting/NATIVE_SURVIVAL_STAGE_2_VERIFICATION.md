@@ -1,8 +1,9 @@
 # Flint Gathering 0.1.0 — verification
 
-**Windows internal candidate: CI verified and independently audited. New physical
-Windows gameplay and all Stage 2 macOS acceptance remain NOT RUN. This stage is
-not fully accepted and the launcher is not certified for a stable public release.**
+**Windows internal candidate: CI verified and independently audited. The user
+reported ALL GOOD for Stage 2 overall; individual physical test results were not
+itemized. All Stage 2 macOS acceptance remains NOT RUN. This stage is not fully
+accepted and the launcher is not certified for a stable public release.**
 
 Branch: `feature/rlcraft-native-stages`. Build source: `b75897fdf84b06caad2d8c230759483a4e40a0e1`.
 [Successful Windows run 42445241045](https://github.com/Zeigen-ft/Herps-Launcher/actions/runs/42445241045), job `128622672042`, Windows Server 2025 x64.
@@ -126,11 +127,25 @@ Old prepared caches remain intact. Compiler input pins and Cargo.lock are unchan
    `native/rlcraft_gathering/LICENSE`. The exact license text was verified there;
    no package change was needed.
 
+## User report — separate from CI
+
+On 8 November 2026 the user replied **ALL GOOD** to the supplied Windows candidate
+and linked Survival guide. [The exact report and scope](GATHERING_WINDOWS_USER_REPORT.json)
+record overall positive feedback, without promoting it to individual checklist
+passes. Codex did not observe the testing; no screenshots, logs, counts, test date,
+OS build, explicit game mode or exact downloaded member/hash were supplied.
+Windows x64, Survival and run 42445241045 are the preceding instructions/context,
+not independently reconfirmed details. In particular, full-restart persistence,
+main/off-hand, full-inventory and other edge-case results remain individually
+unconfirmed. Existing automated receipts retain their original false gameplay
+and interactive flags. No new code or package was built for this report update.
+
 ## Remaining acceptance and release limits
 
-All new real Survival actions, main/off-hand counts, invalid/full-inventory
-cases, repeated use, breakage/enchantments, chest/inventory persistence and plant
-persistence after full restart require physical Windows testing. Combined
+The overall positive reply does not separately confirm real Survival actions,
+main/off-hand counts, invalid/full-inventory cases, repeated use,
+breakage/enchantments, chest/inventory persistence or plant persistence after full
+restart. Those detailed results still need explicit confirmation. Combined
 Chainmail/Flint/Gathering gameplay, physical install/update/uninstall,
 backup restore, cross-profile hashes, crashes/disk-full recovery and multiplayer
 remain unverified. No Stage 2 Mac binaries were built; all physical macOS cases
@@ -142,6 +157,7 @@ original Java/Forge execution, world conversion, thirst, temperature, skills,
 limb health, new creatures and world generation remain unsupported/unimplemented.
 Java Mods Build/Test and whole-Modpack Play remain disabled.
 
-The candidate is ready for **the user's Windows manual test**, not full native
-acceptance or stable public publication. No next gameplay port has begun.
+The candidate now has **overall user-reported positive feedback**; detailed
+Windows acceptance, full native acceptance and stable public publication remain
+open. No next gameplay port has begun.
 Main, tags and existing releases were not modified; no public release was created.

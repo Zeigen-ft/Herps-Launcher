@@ -1,8 +1,11 @@
 # Native survival stage 2 — Flint Gathering 0.1.0
 
-Experimental, optional native gathering. **New physical Windows and macOS
-gameplay: NOT RUN.** Stage 1's earlier user-reported passes remain evidence for
-that earlier candidate. This is not original No Tree Punching or full RLCraft.
+Experimental, optional native gathering. The user replied **ALL GOOD** after
+receiving this Windows candidate and guide. This is overall user-reported positive
+feedback; individual test cases were not itemized. See [the report](GATHERING_WINDOWS_USER_REPORT.json).
+**macOS gameplay remains NOT RUN; full native acceptance remains open.**
+Stage 1 results remain evidence for that earlier candidate. This is not original
+No Tree Punching or full RLCraft.
 
 ## New actions
 
@@ -45,7 +48,7 @@ Expected installer SHA-256:
 `e4c3d3584a743e0482d8f69dd447e1d0a9b599b9946657c82139e1d9f0fd887c`.
 [All checksums](NATIVE_SURVIVAL_STAGE_2_SHA256SUMS.txt) and
 [the automated report](NATIVE_SURVIVAL_STAGE_2_VERIFICATION.md) are separate from
-this unperformed physical test.
+the user report and the detailed physical checklist below.
 
 1. Close all games/servers and externally back up the stopped support folder.
    Keep tested Stage 1/Chainmail profiles and valuable worlds untouched.
@@ -79,10 +82,12 @@ missing/tampered/disabled content or a missing starter blocks launch. This is no
 a missing-item recovery tool. Leave both enabled in the in-game Mods screen too;
 restart after content changes. Never overwrite an existing save for a test.
 
-## Real Windows checklist — all currently NOT RUN
+## Real Windows checklist — individual results still to confirm
 
-Record PASS / FAIL / BLOCKED / NOT RUN, candidate run/source commit, installer
-hash, Windows build, profile name and mode. No programming tools are required.
+The overall reply **ALL GOOD** does not identify which of these steps were run.
+No separate case is marked PASS from that reply. For detailed evidence, record
+PASS / FAIL / BLOCKED / NOT RUN, candidate run/source commit, installer hash,
+Windows build, profile name and mode. No programming tools are required.
 
 1. Launch a new Survival world with both packages enabled. Obtain flint normally.
    Record counts. Right-click a stone **top** once: exactly one fewer flint,
@@ -115,4 +120,4 @@ addresses. Do not upload copyrighted resources or valuable saves.
 All physical macOS gameplay, multiplayer and dedicated-server distribution are
 NOT RUN. Native builds/owned fixtures are not gameplay. Earlier loading-logo
 stalls and initially empty chainmail output remain unresolved observations.
-Public release approval is not inferred from development or Stage 1's ALL PASS.
+Public release approval is not inferred from development or either stage's user feedback.

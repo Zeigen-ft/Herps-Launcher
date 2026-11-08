@@ -8,7 +8,9 @@ Official home: https://github.com/Zeigen-ft/Herps-Launcher
 stone-top flint knapping and knife-cut short-grass/fern fiber in Survival. Install
 the unchanged starter first, then the add-on, in a fresh disposable profile.
 Both start disabled. This candidate carries a small original native extension;
-normal use needs no Rust tools. New physical gameplay remains **NOT RUN**.
+normal use needs no Rust tools. The user replied **ALL GOOD** after receiving
+this candidate and guide: [overall feedback and scope](docs/targeted-porting/GATHERING_WINDOWS_USER_REPORT.json).
+Individual physical cases remain unconfirmed; macOS gameplay remains **NOT RUN**.
 See [verification](docs/targeted-porting/NATIVE_SURVIVAL_STAGE_2_VERIFICATION.md).
 Windows native CI run [42445241045](https://github.com/Zeigen-ft/Herps-Launcher/actions/runs/42445241045) passed;
 [installer/portable download](https://github.com/Zeigen-ft/Herps-Launcher/actions/runs/42445241045/artifacts/13603683988) and

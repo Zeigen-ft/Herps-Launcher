@@ -34,7 +34,9 @@ migration does not change visibility, create a release or create a tag.
 - The inspected FunCraft hotfix's bounded manual world-backup utility.
 - **[Flint Gathering — native remake stage 2](docs/targeted-porting/NATIVE_SURVIVAL_STAGE_2.md)**:
   a separate opt-in add-on for stone knapping and knife-cut grass fiber using
-  unchanged starter items. New physical gameplay acceptance is NOT RUN.
+  unchanged starter items. The user reports **ALL GOOD** overall;
+  [individual-case scope and remaining acceptance](docs/targeted-porting/GATHERING_WINDOWS_USER_REPORT.json)
+  are recorded separately from CI. macOS gameplay remains NOT RUN.
 - A standalone, passive local RLCraft 2.9.3 archive inspector.
 
 ## Supported testing scope

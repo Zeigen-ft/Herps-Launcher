@@ -309,7 +309,7 @@
     }
   },
   "physical_gameplay": {
-    "windows": "NOT RUN for Stage 2",
+    "windows": "USER-REPORTED POSITIVE: ALL GOOD; individual cases not confirmed",
     "macos_arm64": "NOT RUN",
     "macos_intel": "NOT RUN"
   },
@@ -1306,7 +1306,7 @@
       "skipped_cases_same_as_job": 128608625887
     }
   ],
-  "status": "implemented_and_windows_ci_verified_physical_acceptance_pending",
+  "status": "implemented_and_windows_ci_verified_user_reported_positive_detailed_acceptance_pending",
   "independently_verified_artifacts": [
     {
       "id": 13604012423,
@@ -1575,5 +1575,13 @@
     "New macOS builds and all physical macOS cases",
     "Multiplayer and dedicated-server delivery",
     "Crash, disk-full, missing-receipt and other failure recovery"
-  ]
+  ],
+  "user_report": {
+    "file": "GATHERING_WINDOWS_USER_REPORT.json",
+    "raw_user_report": "ALL GOOD",
+    "overall_outcome": "USER-REPORTED POSITIVE",
+    "observed_by_codex": false,
+    "individual_checklist_cases_confirmed": false
+  },
+  "remaining_tests_scope_note": "The user supplied overall positive feedback. Remaining Windows cases are individually unconfirmed; this does not assert that the user did not execute them. CI snapshots retain their original false gameplay/interactive flags."
 }
