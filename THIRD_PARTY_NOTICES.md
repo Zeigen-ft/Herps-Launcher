@@ -34,6 +34,12 @@ notice. It includes no original JAR/texture or Forge execution; artwork is a
 reference to the user's prepared vanilla resources. See
 [content notices](content/rlcraft_chainmail/NOTICE.txt).
 
+Plant Fiber Bandage is an independently authored GPLv3 content definition and
+recipe using the existing native consumable/Regeneration API. Its artwork is a
+reference to the user's prepared vanilla paper texture; no original First Aid,
+RLCraft, Forge, Java or game assets are bundled. It does not implement limb health
+or claim First Aid compatibility. See [bandage notice](content/rlcraft_bandage/NOTICE.txt).
+
 Minecraft resources, trademarks and third-party modpacks retain their respective
 rights. They are not bundled or relicensed. The project is unofficial and not
 endorsed by Mojang/Microsoft or original mod authors.

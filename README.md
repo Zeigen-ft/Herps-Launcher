@@ -41,6 +41,11 @@ migration does not change visibility, create a release or create a tag.
 - **[Woodcutting Progression — native remake stage 3](docs/targeted-porting/NATIVE_SURVIVAL_STAGE_3.md)**:
   an optional main-hand axe/hatchet requirement for Survival logs. It starts OFF
   in a fresh disposable profile; all new physical gameplay remains NOT RUN.
+- [Stage 4: Plant Fiber Bandage](docs/targeted-porting/NATIVE_SURVIVAL_STAGE_4.md)
+  adds one optional recipe and a native Regeneration consumable using the existing
+  API. It starts OFF and requires Flint Starter in a fresh disposable profile.
+  [Verification](docs/targeted-porting/NATIVE_SURVIVAL_STAGE_4_VERIFICATION.md)
+  keeps physical gameplay and earlier Stage 3 acceptance open.
 
 ## Supported testing scope
 

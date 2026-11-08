@@ -138,7 +138,8 @@ def verify(setup, output):
                                ('--native-acceptance', 'installed-workflows.json'),
                                ('--flint-acceptance', 'installed-flint.json'),
                                ('--gathering-acceptance', 'installed-gathering.json'),
-                               ('--woodcutting-acceptance', 'installed-woodcutting.json')]:
+                               ('--woodcutting-acceptance', 'installed-woodcutting.json'),
+                               ('--bandage-acceptance', 'installed-bandage.json')]:
                 receipt = output / name
                 receipt.unlink(missing_ok=True)
                 command([launcher, mode, '--require-installation', '--require-port-pack',
@@ -151,9 +152,12 @@ def verify(setup, output):
                     raise ValueError('Delivered candidate did not verify the three FunCraft backup cases')
                 if mode == '--native-acceptance' and len(data.get('chainmail_cases_verified', [])) != 3:
                     raise ValueError('Delivered candidate did not verify the three chainmail installation cases')
-                if mode in ('--flint-acceptance', '--gathering-acceptance', '--woodcutting-acceptance'):
+                if mode in ('--flint-acceptance', '--gathering-acceptance', '--woodcutting-acceptance', '--bandage-acceptance'):
                     expected_cases = 7
-                    if mode == '--woodcutting-acceptance':
+                    if mode == '--bandage-acceptance':
+                        from herps_launcher.modpacks.bandage import PACKAGE_SHA256
+                        expected_cases = 8
+                    elif mode == '--woodcutting-acceptance':
                         from herps_launcher.modpacks.woodcutting import PACKAGE_SHA256
                         expected_cases = 8
                     elif mode == '--gathering-acceptance':

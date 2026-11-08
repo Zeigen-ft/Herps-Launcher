@@ -100,15 +100,18 @@ def pyinstaller_command(output: Path, build: Path, helper: Path, port_pack: Path
     from tools.build_rlcraft_flint import build as build_flint
     from tools.build_rlcraft_gathering import build as build_gathering
     from tools.build_rlcraft_woodcutting import build as build_woodcutting
+    from tools.build_rlcraft_bandage import build as build_bandage
     from herps_launcher.modpacks.chainmail import PACKAGE_NAME
     from herps_launcher.modpacks.flint import PACKAGE_NAME as FLINT_PACKAGE
     from herps_launcher.modpacks.gathering import PACKAGE_NAME as GATHERING_PACKAGE
     from herps_launcher.modpacks.woodcutting import PACKAGE_NAME as WOODCUTTING_PACKAGE
+    from herps_launcher.modpacks.bandage import PACKAGE_NAME as BANDAGE_PACKAGE
     content = ROOT / ".cache/targeted-content"
     build_chainmail(content)
     build_flint(content)
     build_gathering(content)
     build_woodcutting(content)
+    build_bandage(content)
     command = [sys.executable, "-m", "PyInstaller", "--noconfirm", "--clean", "--windowed", "--onedir",
         "--name", "Herps Launcher", "--paths", ROOT, "--distpath", output, "--workpath", build / "work", "--specpath", build,
         "--add-binary", f"{helper}{os.pathsep}.", "--add-binary", f"{port_pack}{os.pathsep}.",
@@ -117,12 +120,14 @@ def pyinstaller_command(output: Path, build: Path, helper: Path, port_pack: Path
         "--add-data", f"{content / FLINT_PACKAGE}{os.pathsep}targeted-content",
         "--add-data", f"{content / GATHERING_PACKAGE}{os.pathsep}targeted-content",
         "--add-data", f"{content / WOODCUTTING_PACKAGE}{os.pathsep}targeted-content",
+        "--add-data", f"{content / BANDAGE_PACKAGE}{os.pathsep}targeted-content",
         "--hidden-import", "PySide6.QtTest", "--copy-metadata", "PySide6-Essentials", "--copy-metadata", "shiboken6"]
     # Opt-in delivered workflow verification on every supported target.
     command += ["--paths", ROOT / "packaging", "--hidden-import", "phase5c_acceptance",
                 "--hidden-import", "flint_acceptance",
                 "--hidden-import", "gathering_acceptance",
                 "--hidden-import", "woodcutting_acceptance",
+                "--hidden-import", "bandage_acceptance",
                 "--hidden-import", "herps_entry", "--hidden-import", "unittest.mock",
                 "--hidden-import", "tools.make_javamods_fixtures",
                 "--hidden-import", "tools.make_modpack_fixtures"]
@@ -135,6 +140,8 @@ def pyinstaller_command(output: Path, build: Path, helper: Path, port_pack: Path
         command += ["--add-data", f"{ROOT / 'tests' / name}{os.pathsep}gathering-tests"]
     for name in ("test_rlcraft_woodcutting.py", "test_rlcraft_woodcutting_ui.py"):
         command += ["--add-data", f"{ROOT / 'tests' / name}{os.pathsep}woodcutting-tests"]
+    for name in ("test_rlcraft_bandage.py", "test_rlcraft_bandage_ui.py"):
+        command += ["--add-data", f"{ROOT / 'tests' / name}{os.pathsep}bandage-tests"]
     if host_target.endswith("apple-darwin"):
         command += ["--osx-bundle-identifier", "io.herspers.herps-launcher", "--target-architecture", "arm64" if host_target.startswith("aarch64") else "x86_64"]
         if os.environ.get("HERPS_CODESIGN_IDENTITY"):
@@ -174,6 +181,7 @@ def copy_documentation(output: Path):
     shutil.copytree(ROOT / "native/rlcraft_gathering", output / "native/rlcraft_gathering")
     shutil.copytree(ROOT / "content/rlcraft_woodcutting", output / "content/rlcraft_woodcutting")
     shutil.copytree(ROOT / "native/rlcraft_woodcutting", output / "native/rlcraft_woodcutting")
+    shutil.copytree(ROOT / "content/rlcraft_bandage", output / "content/rlcraft_bandage")
     shutil.copy2(ROOT / "LICENSE", output / "LICENSE")
     shutil.copy2(ROOT / "LICENSE", output / "LICENSE-HERPS.txt")
     for source, destination in (("HERPS-LAUNCHER.md", "START-HERE.txt"),

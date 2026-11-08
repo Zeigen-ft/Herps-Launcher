@@ -2,6 +2,19 @@
 
 Official home: https://github.com/Zeigen-ft/Herps-Launcher
 
+## Development candidate — native survival stage 4
+
+[Plant Fiber Bandage 0.1.0](docs/targeted-porting/NATIVE_SURVIVAL_STAGE_4.md)
+adds an independently authored recipe: three Plant Fibers plus one string make
+one bandage. Hold use for two seconds for five seconds of ordinary Regeneration I.
+It supplies no food and uses vanilla effect refreshing; it is not First Aid's
+limb model or full RLCraft compatibility. A fresh disposable profile and unchanged
+Flint Starter are required. The new package starts OFF. No engine changes or
+earlier package changes are introduced. Native Windows verification is pending;
+physical Windows/macOS gameplay and new Mac builds remain **NOT RUN**.
+See [verification](docs/targeted-porting/NATIVE_SURVIVAL_STAGE_4_VERIFICATION.md).
+No public release is created, and Stage 3 physical acceptance remains open.
+
 ## Development candidate — native survival stage 3
 
 [Woodcutting Progression 0.1.0](docs/targeted-porting/NATIVE_SURVIVAL_STAGE_3.md)

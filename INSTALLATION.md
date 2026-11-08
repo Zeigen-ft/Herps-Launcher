@@ -336,12 +336,13 @@ For another trusted `.hmod` supported by this exact engine:
 A `.hmod` may contain code; do not assume every package is data-only. The bundled
 Chainmail package has the reviewed scope described below. For the optional
 native survival stages, follow the [Flint Starter](docs/targeted-porting/NATIVE_SURVIVAL_STAGE_1.md),
-[Flint Gathering](docs/targeted-porting/NATIVE_SURVIVAL_STAGE_2.md) and
-[Woodcutting Progression](docs/targeted-porting/NATIVE_SURVIVAL_STAGE_3.md) guides
+[Flint Gathering](docs/targeted-porting/NATIVE_SURVIVAL_STAGE_2.md),
+[Woodcutting Progression](docs/targeted-porting/NATIVE_SURVIVAL_STAGE_3.md) and
+[Plant Fiber Bandage](docs/targeted-porting/NATIVE_SURVIVAL_STAGE_4.md) guides
 and their separate verification reports. Install these only into a fresh
 disposable profile, before making worlds. They start OFF; later stages require
-the earlier stages and the matching internal Windows candidate. New Stage 3
-physical gameplay is **NOT RUN**, and earlier Mac installers do not provide it.
+their listed dependencies and the matching internal Windows candidate. New Stage 3
+and Stage 4 physical gameplay is **NOT RUN**; earlier Mac installers do not provide them.
 `.hnmod`
 packages are **trusted native source code**, need the exact pinned engine/mixin
 revision and developer Rust/platform tools, and may execute with your permissions.

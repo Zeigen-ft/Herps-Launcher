@@ -88,6 +88,10 @@ It requires a matching Windows internal candidate and all three stages in a
 **new disposable profile before world creation**. Stage 3 physical gameplay is
 NOT RUN; existing release installers do not include it.
 
+For the separate optional [Plant Fiber Bandage trial](docs/targeted-porting/NATIVE_SURVIVAL_STAGE_4.md),
+use its matching Windows candidate and a fresh profile with Flint Starter.
+It starts OFF, uses ordinary Regeneration, and has no physical gameplay pass yet.
+
 ## If something goes wrong
 
 Use Home → **Open launcher and game logs**. Read
