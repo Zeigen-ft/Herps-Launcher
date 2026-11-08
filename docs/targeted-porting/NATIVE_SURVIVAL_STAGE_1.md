@@ -157,6 +157,10 @@ personal paths; do not upload copyrighted game resources or valuable worlds.
 
 ## Following stages
 
+The separate [Stage 2: Flint Gathering](NATIVE_SURVIVAL_STAGE_2.md) now has a
+Windows CI-verified internal candidate. Its real gameplay acceptance is pending;
+Stage 1 package bytes and the historical results above remain unchanged.
+
 1. Retain the reported basic starter-loop passes; finish remaining physical edge
    cases, adjust verified defects and preserve installed content identity.
 2. Evaluate grass-fiber harvesting and stone knapping against the existing

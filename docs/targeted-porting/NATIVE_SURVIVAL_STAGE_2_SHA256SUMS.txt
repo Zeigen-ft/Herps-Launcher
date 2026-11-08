@@ -1,0 +1,14 @@
+# Windows native stage 2; run 42445241045; source b75897fdf84b06caad2d8c230759483a4e40a0e1
+# Actual inner files after extracting the Actions download ZIP:
+e4c3d3584a743e0482d8f69dd447e1d0a9b599b9946657c82139e1d9f0fd887c  Herps-Launcher-0.1.0-Windows-x64-Setup.exe
+edefc6a331cd008a8ab7670f2032b6f99510835e3fd273aa4fd1cc2a70457013  Herps-Launcher-0.1.0-x86_64-pc-windows-msvc-2pipvzot.zip
+015c3d553a6a2bcfed4412559b9b83bc3ef65599d539a7686e65577ec4c5c346  herspers_rl_chainmail-0.1.0.hmod
+919745713d5233bcd4cfee4f3da04328d3808eb06b24df966f26b054a69b81cc  herspers_rl_flint-0.1.0.hmod
+177c3f4eefedd4f0e4eda4e54634efeee555e4b22dd13e0ec022733328fb87fd  herspers_rl_gathering-0.1.0.hmod
+# Outer GitHub Actions ZIP downloads (verified independently):
+6e7b83d5dbc4f9b0d12cb0e3ce95b8cf8266c81ad5a97d14711d84d4170122a9  RLCraft-2.9.3-Local-Inspector.zip
+ba183677b77344916f8f43a45d3a894608e061817fd587cabc9f387f3684137f  Herps-Launcher-0.1.0-Windows-x86_64.zip
+6f1cf2cdaf82fd3b3734d29423889620be5b2c7c53b7798d98ea9619e1bb2c0c  RLCraft-Native-Stage2-Gathering-0.1.0-Windows-x86_64.zip
+b6e025aea1e6c33c7659f8bd1e0f9a8f62ca8eb7627c265da8c8762b5f185aae  RLCraft-Native-Stage1-Flint-0.1.0-Windows-x86_64.zip
+dc9912359ead1f57c44ad7065f1ff59119f6c1171bdcee84117ea8e911601dbe  RLCraft-Chainmail-0.1.0-Windows-x86_64.zip
+54ad3109eb606f987bbe7f49a2df451e68412197b56ca003d6d568722c075f5d  Herps-Launcher-evidence-Windows-x86_64.zip

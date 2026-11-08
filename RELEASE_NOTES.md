@@ -10,6 +10,10 @@ the unchanged starter first, then the add-on, in a fresh disposable profile.
 Both start disabled. This candidate carries a small original native extension;
 normal use needs no Rust tools. New physical gameplay remains **NOT RUN**.
 See [verification](docs/targeted-porting/NATIVE_SURVIVAL_STAGE_2_VERIFICATION.md).
+Windows native CI run [42445241045](https://github.com/Zeigen-ft/Herps-Launcher/actions/runs/42445241045) passed;
+[installer/portable download](https://github.com/Zeigen-ft/Herps-Launcher/actions/runs/42445241045/artifacts/13603683988) and
+[SHA-256 checksums](docs/targeted-porting/NATIVE_SURVIVAL_STAGE_2_SHA256SUMS.txt)
+are available for internal testing. Native Mac Stage 2 builds remain NOT RUN.
 This development candidate does not replace or alter owner-published releases.
 
 ## Earlier migration release preparation

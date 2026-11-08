@@ -28,9 +28,24 @@ Java/Forge execution, bridge, new network dependency or save format is added.
 
 ## Install in a new test profile
 
-Use the Stage 2 Windows candidate linked in the verification report after its
-native build and installer checks pass. An old Stage 1 installer cannot supply
-these interactions. Normal use needs no Rust/Cargo or Visual Studio installation.
+Use [successful Windows run 42445241045](https://github.com/Zeigen-ft/Herps-Launcher/actions/runs/42445241045), built from
+`b75897fdf84b06caad2d8c230759483a4e40a0e1`. Download the [Windows artifact](https://github.com/Zeigen-ft/Herps-Launcher/actions/runs/42445241045/artifacts/13603683988).
+Extract the outer ZIP. Use `Herps-Launcher-0.1.0-Windows-x64-Setup.exe`, or fully extract
+its inner portable ZIP before starting it. GitHub may require sign-in.
+An old Stage 1 installer cannot supply these interactions. Normal use needs no
+Rust/Cargo or Visual Studio installation.
+
+In PowerShell opened in the extracted download folder:
+
+```powershell
+Get-FileHash -Algorithm SHA256 -LiteralPath '.\Herps-Launcher-0.1.0-Windows-x64-Setup.exe'
+```
+
+Expected installer SHA-256:
+`e4c3d3584a743e0482d8f69dd447e1d0a9b599b9946657c82139e1d9f0fd887c`.
+[All checksums](NATIVE_SURVIVAL_STAGE_2_SHA256SUMS.txt) and
+[the automated report](NATIVE_SURVIVAL_STAGE_2_VERIFICATION.md) are separate from
+this unperformed physical test.
 
 1. Close all games/servers and externally back up the stopped support folder.
    Keep tested Stage 1/Chainmail profiles and valuable worlds untouched.
@@ -44,6 +59,13 @@ these interactions. Normal use needs no Rust/Cargo or Visual Studio installation
 5. On Mods enable **Flint Survival Starter first**, then **Flint Gathering**.
 6. Use Home → ordinary **PLAY** and create a new Survival world. Clean startup
    uses a separate diagnostic folder, not this selected modded profile.
+
+A short new Survival route is **two flint + two sticks + three short-grass/fern
+plants**. Knap the flint into four shards, craft one knife, cut three plants,
+craft their three fibers into string, then craft the hatchet. Expect one knife,
+one hatchet and two spare shards, with normal knife wear from cutting. Wheat is
+still a supported alternate recipe, but this route does not require it. This
+route is a manual test instruction, not a claim that it has passed.
 
 The add-on `herspers_rl_gathering-0.1.0.hmod` is 37,136 bytes; SHA-256:
 `177c3f4eefedd4f0e4eda4e54634efeee555e4b22dd13e0ec022733328fb87fd`.
