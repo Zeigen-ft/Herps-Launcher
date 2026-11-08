@@ -1,8 +1,9 @@
 # Woodcutting Progression 0.1.0 — verification
 
-**Implemented; Windows CI and delivery audit PASS, 8 November 2026. Physical
-Stage 3 Windows/macOS gameplay: NOT RUN.** Natural progression, real drops/wear
-and save/reload remain open. No Stage 3 Mac candidate was built.
+**Implemented; Windows CI and delivery audit PASS. On 8 November 2026 the user
+reported all required Stage 3 Windows checklist tests PASS.** This is human
+user-reported evidence, not Codex observation. Optional edge cases remain open;
+every Stage 3 Mac build/gameplay case remains NOT RUN.
 
 ## Candidate and source
 
@@ -119,13 +120,19 @@ by existing conditions. Mac packaging/DMG and failure-cache steps were skipped
 in this successful Windows-only dispatch. No signing, notarization or bit-for-bit
 reproducibility is claimed: the pinned recipe and delivered checksums are recorded.
 
-**NOT RUN:** physical Windows Stage 3 gameplay; natural early sticks/flint with
-legitimate resources; knapping/fiber/crafting; log rejection/harvesting/main/off-hand;
-real drops/wear/breakage/repair/enchantments; full-restart inventory/chest/block
-persistence; actual-user profile preservation; combined Chainmail gameplay;
-Stage 3 backup restore, crash/disk-full recovery, multiplayer; and every Stage 3
-Mac build/interactive/gameplay case. Earlier user feedback remains scoped to the
-earlier candidates and does not accept this one.
+The user answered **All Stage 3 checklist tests passed** to the question naming
+run `42472666400`. This confirms the required numbered Windows checklist
+collectively as user reported, including the natural progression/log rule,
+harvesting, full restart and earlier-profile comparisons described there.
+[Verbatim report and limitations](WOODCUTTING_WINDOWS_USER_REPORT.json) retain
+that scope. No screenshots/logs, individual measurements, exact installer hash,
+OS build or session details were supplied. Automated receipts retain their false
+gameplay/interactive flags; the human report is separate evidence.
+
+Optional/unconfirmed cases include chest persistence, exact breakage/repair and
+enchantments, other modes, combined Chainmail gameplay, backup restore,
+crash/disk-full recovery and multiplayer. Every Stage 3 Mac build/interactive/
+gameplay case remains NOT RUN. This report does not accept Stage 4 or full modpacks.
 
 Earlier logo stalls and initially empty Chainmail output remain unresolved
 observations. Full RLCraft/FunCraft/No Tree Punching, Forge/Fabric JAR execution,
@@ -134,5 +141,6 @@ unsupported/unimplemented. Java Mods Build/Test and whole-Modpack Play stay disa
 
 Only the development branch is pushed. `main` remains
 `b292a48c279c2b718a5395fe5558f2ff83dcea30`; no tag/release was created or existing
-release altered. Work stops at this candidate, evidence and manual checklist.
-No next gameplay feature has begun.
+release altered. The original Stage 3 handoff stopped at its candidate and manual
+checklist; subsequent [Stage 4](NATIVE_SURVIVAL_STAGE_4.md) is tracked separately
+and has no physical gameplay pass from this reply.

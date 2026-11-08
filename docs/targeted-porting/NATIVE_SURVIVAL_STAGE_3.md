@@ -1,9 +1,10 @@
 # Native survival stage 3 — Woodcutting Progression 0.1.0
 
-Optional native RLCraft-style progression. **All new physical gameplay tests:
-NOT RUN.** Earlier Stage 1 passes and Stage 2's overall ALL GOOD report do not
-accept this new behavior. No original Java mod, bridge or full No Tree Punching
-implementation is included.
+Optional native RLCraft-style progression. On 8 November 2026 the user confirmed
+**all required Stage 3 Windows checklist tests passed** for run `42472666400`.
+This is [user-reported evidence](WOODCUTTING_WINDOWS_USER_REPORT.json), not
+Codex-observed gameplay. Optional edge cases and all Mac acceptance remain open.
+No original Java mod, bridge or full No Tree Punching implementation is included.
 
 ## What changes
 
@@ -78,10 +79,13 @@ missing/tampered/disabled dependencies block launch. These are preservation guar
 not recovery tools. Leave them enabled in the game's Mods screen too. Do not
 overwrite a save or add this restriction to a previously tested world.
 
-## Real Windows acceptance — all NOT RUN
+## Real Windows acceptance — required checklist PASS, user reported
 
-Record PASS / FAIL / BLOCKED / NOT RUN, candidate run/source, installer hash,
-Windows build, profile and mode. These instructions are not evidence of success.
+The user reports all required numbered checks below passed. No per-case logs,
+measurements, exact OS build or profile details were supplied. The instructions
+alone are not evidence; the separately retained user reply is the evidence.
+For future trials record candidate run/source, installer hash, Windows build,
+profile, mode and PASS / FAIL / BLOCKED / NOT RUN. Optional cases stay unconfirmed.
 
 1. In the new Survival world, try an ordinary log with an empty main hand.
    Expect the log to remain, no drops and the axe message. Once tools are
