@@ -40,7 +40,7 @@
     {
       "path": "crates/horizon-client/src/game.rs",
       "before_sha256": "de63b396454bbd394d4f3ca72fe0a54b83e3c0171cab6aca73b94bcd9c0de1bf",
-      "after_sha256": "524d5e2a909fe705fa1fba23fe95838f4af2e8b2aa8bee28dbc84ad91f80eba3",
+      "after_sha256": "20aa94dbcc182aa400a65a57dd1701a44e07e0640b4c0f6e499c7f18282557a5",
       "patch": "engine/crates-horizon-client-src-game.rs.patch"
     },
     {
@@ -124,7 +124,7 @@
     {
       "path": "crates/horizon-client/src/game/native_hooks.rs",
       "before_sha256": "450cdab5824771a2dd8886ba05bd0994e8b019379aa1cc5a3af7190a5924873a",
-      "after_sha256": "e0b69a8b6923c0aff80d66a4ea37e4b2ca9105f460a4e39ef6798a24af6c783c",
+      "after_sha256": "16566820ed06d8cccb8590329fa0cf1019e328fad1f06314e87aa545c70b0014",
       "patch": "engine/crates-horizon-client-src-game-native_hooks.rs.patch"
     },
     {
@@ -138,6 +138,18 @@
       "before_sha256": null,
       "after_sha256": "c6168a4e35f34454a5015534d5937e5d26042020d5cedfa7278eb7ef0e3012fb",
       "patch": "engine/crates-horizon-client-src-game-herspers_gathering.rs.patch"
+    },
+    {
+      "path": "crates/horizon-client/src/game/herspers_woodcutting.rs",
+      "before_sha256": null,
+      "after_sha256": "5b942c28fe216469331b57effc946a9c1894aa8a0e15a99419699c0e78a7c7fb",
+      "patch": "engine/crates-horizon-client-src-game-herspers_woodcutting.rs.patch"
+    },
+    {
+      "path": "crates/horizon-client/src/game/herspers_woodcutting_rules.rs",
+      "before_sha256": null,
+      "after_sha256": "c1c1c15ac231531d0ef0119e85df64a48925455ab04242973228d5b40894f186",
+      "patch": "engine/crates-horizon-client-src-game-herspers_woodcutting_rules.rs.patch"
     }
   ]
 }

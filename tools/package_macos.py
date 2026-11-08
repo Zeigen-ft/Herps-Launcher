@@ -172,6 +172,10 @@ def engine_patch_provenance(source, project):
     if {gathering + ".rs", gathering + "_rules.rs", "crates/horizon-client/src/game.rs",
             "crates/horizon-client/src/game/native_hooks.rs"} <= seen:
         summary["native_features"] = ["rlcraft-gathering-1"]
+    woodcutting = "crates/horizon-client/src/game/herspers_woodcutting"
+    if {woodcutting + ".rs", woodcutting + "_rules.rs", "crates/horizon-client/src/game.rs",
+            "crates/horizon-client/src/game/native_hooks.rs"} <= seen:
+        summary.setdefault("native_features", []).append("rlcraft-woodcutting-1")
     return summary, {"schema": 1, "preparation": stamp, "patches": manifest}
 
 

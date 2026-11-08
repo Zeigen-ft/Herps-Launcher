@@ -1,0 +1,15 @@
+Woodcutting Progression 0.1.0 is independently authored native RLCraft-style content.
+It is not the original No Tree Punching mod or a complete RLCraft/FunCraft port.
+No original Java mod code, Minecraft artwork, Forge execution or bridge is included.
+
+This GPLv3 tag-only package opts in to the original MIT native engine extension
+in native/rlcraft_woodcutting/. Its source and license are included in this
+candidate. The Horizon MIT license is retained in licenses/Horizon-LICENSE.txt.
+An older client cannot provide these interactions. The unchanged Flint Survival
+Starter 0.1.0 supplies the existing hatchet; Flint Gathering supplies the next
+starter route. Vanilla leaves/dead bushes remain available for sticks; this
+stage does not rewrite their drops, axe wear, recipes or world serialization.
+
+Install only through its dedicated card, OFF initially, before creating worlds
+in an explicitly selected fresh disposable profile. Enable the starter and
+gathering first. Real Survival progression and physical gameplay remain NOT RUN.

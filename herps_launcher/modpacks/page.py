@@ -15,6 +15,7 @@ from .targeted_backup import create_backup, eligibility, verify_backup
 from . import chainmail
 from . import flint
 from . import gathering
+from . import woodcutting
 
 
 UNSUPPORTED = "Unsupported"
@@ -142,6 +143,20 @@ class ModpacksPage(QWidget):
         self.gathering_button.setMaximumWidth(520)
         box.addWidget(gathering_box)
 
+        woodcutting_box = QGroupBox("Native survival remake · Stage 3: Woodcutting Progression")
+        woodcutting_layout = QVBoxLayout(woodcutting_box)
+        self.woodcutting_status = QLabel()
+        self.woodcutting_status.setWordWrap(True)
+        woodcutting_layout.addWidget(self.woodcutting_status)
+        self.woodcutting_consent = QCheckBox("Confirm disposable profile and closed games/servers")
+        self.woodcutting_consent.setMaximumWidth(520)
+        self.woodcutting_consent.toggled.connect(lambda _: self.busy_changed())
+        woodcutting_layout.addWidget(self.woodcutting_consent)
+        self.woodcutting_button = self._button(woodcutting_layout,
+            "Install woodcutting progression · disabled initially…", self.install_woodcutting)
+        self.woodcutting_button.setMaximumWidth(520)
+        box.addWidget(woodcutting_box)
+
         self.summary = QLabel("Playable status: unverified. Import a pack to inspect every indexed mod.")
         self.summary.setWordWrap(True)
         box.addWidget(self.summary)
@@ -251,6 +266,9 @@ class ModpacksPage(QWidget):
             self.gathering_consent.blockSignals(True)
             self.gathering_consent.setChecked(False)
             self.gathering_consent.blockSignals(False)
+            self.woodcutting_consent.blockSignals(True)
+            self.woodcutting_consent.setChecked(False)
+            self.woodcutting_consent.blockSignals(False)
             self.summary.setText("Playable status: unverified. No pack analysis is selected for this profile.")
             self.status.setText(f"Profile: {profile}. Import a pack or load its retained local evidence.")
         self.binary_path.setText(self.launcher.config.get("port_pack_binary", ""))
@@ -317,6 +335,22 @@ class ModpacksPage(QWidget):
         available = not busy and valid and not installed and self.launcher.config["profile"] != "default"
         self.gathering_consent.setEnabled(available)
         self.gathering_button.setEnabled(available and self.gathering_consent.isChecked())
+        installed, valid = False, True
+        try:
+            state = woodcutting.status(self.launcher)
+            installed = state["installed"]
+            description = ("Installed · " + ("enabled" if state["enabled"] else "disabled; enable after the starter on Mods")) if installed else "Not installed"
+            self.woodcutting_status.setText(f"Profile: {self.launcher.config['profile']} · {description}. "
+                "Survival logs require a usable Flint Hatchet or an axe in the main hand. "
+                "Requires the starter, gathering and a Stage 3 candidate. Install all three before creating a disposable world. "
+                "Leaves and dead bushes remain available for sticks. Other modes and non-logs keep vanilla behavior. "
+                "Physical progression/gameplay NOT RUN.")
+        except (OSError, ValueError) as error:
+            valid = False
+            self.woodcutting_status.setText(f"Preserve this profile and review woodcutting content: {error}")
+        available = not busy and valid and not installed and self.launcher.config["profile"] != "default"
+        self.woodcutting_consent.setEnabled(available)
+        self.woodcutting_button.setEnabled(available and self.woodcutting_consent.isChecked())
         # No verified runtime/content validation backend exists. A static Works
         # verdict or a carried folder can never unlock Play here.
         self.play_button.setEnabled(False)
@@ -393,6 +427,29 @@ class ModpacksPage(QWidget):
 
         self._run("Installing the native gathering add-on into the selected disposable profile…",
             lambda emit: gathering.install(self.launcher, profile, disposable_confirmed=True, games_closed=True), completed)
+
+    def install_woodcutting(self):
+        self.window.require_idle()
+        profile = self.launcher.config["profile"]
+        if not self.woodcutting_consent.isChecked() or profile == "default":
+            raise ValueError("Select and explicitly confirm a fresh named disposable profile first")
+        answer = QMessageBox.warning(self, "Install native survival stage 3?",
+            f"Install Woodcutting Progression only into '{profile}'? Close all games and servers. "
+            "Install Stages 1 and 2 first. Use a disposable profile with no worlds. It starts OFF: enable on Mods before creating a world. "
+            "Keep it enabled after saves exist. This is an experimental starter, not the complete RLCraft pack.",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel,
+            QMessageBox.StandardButton.Cancel)
+        if answer != QMessageBox.StandardButton.Yes:
+            return
+
+        def completed(result):
+            self.details.setPlainText(json.dumps(result, indent=2))
+            self.status.setText(f"Installed disabled in {profile}. Open Mods, enable the starter, gathering, then Woodcutting Progression before creating a world.")
+            self.woodcutting_consent.setChecked(False)
+            self.window.refresh()
+
+        self._run("Installing the native woodcutting add-on into the selected disposable profile…",
+            lambda emit: woodcutting.install(self.launcher, profile, disposable_confirmed=True, games_closed=True), completed)
 
     def _run(self, label, function, done):
         self.window.require_idle()

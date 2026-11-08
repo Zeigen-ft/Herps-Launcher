@@ -1,0 +1,8 @@
+id = "herspers_rl_woodcutting"
+name = "Woodcutting Progression (experimental)"
+version = "0.1.0"
+description = "Native survival stage 3: logs require a usable Flint Hatchet or axe in the main hand. Other modes and non-log blocks keep vanilla behavior. Requires the starter, gathering and a Stage 3 Herps client."
+authors = ["Herps Launcher contributors"]
+api = "0.2"
+side = "both"
+capabilities = ["registries"]
