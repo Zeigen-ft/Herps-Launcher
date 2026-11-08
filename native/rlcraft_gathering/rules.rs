@@ -1,0 +1,179 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 Herps Launcher contributors
+// Original native remake rules; no Java mod source or assets.
+
+pub const SHARD: &str = "herspers_rl_flint:flint_shard";
+pub const FIBER: &str = "herspers_rl_flint:plant_fiber";
+pub const KNIFE: &str = "herspers_rl_flint:flint_knife";
+pub const ENABLED_TAG: &str = "herspers_rl_gathering:enabled";
+
+pub struct Input<'a> {
+    pub enabled: bool,
+    pub survival: bool,
+    pub item: &'a str,
+    pub plain: bool,
+    pub block: &'a str,
+    pub top_face: bool,
+}
+
+/// The adapter operates only on the acting player's inventory and one plant.
+/// A snapshot is restored if an insertion or block write cannot finish.
+pub trait World {
+    type Inventory;
+    fn snapshot(&self) -> Self::Inventory;
+    fn restore(&mut self, snapshot: Self::Inventory);
+    fn room(&mut self, item: &str) -> u32;
+    fn consume_flint_in_acting_hand(&mut self) -> bool;
+    fn give(&mut self, item: &str, count: u32) -> u32;
+    fn remove_target_plant(&mut self) -> bool;
+    fn wear_knife(&mut self);
+}
+
+/// True claims this use, including a recognized action refused for lack of room.
+/// No output is dropped on the ground, and failures consume nothing.
+pub fn use_on(world: &mut impl World, input: Input<'_>) -> bool {
+    if !input.enabled || !input.survival {
+        return false;
+    }
+    let knap = input.item == "minecraft:flint"
+        && input.plain
+        && input.top_face
+        && matches!(input.block, "minecraft:stone" | "minecraft:cobblestone");
+    let cut = input.item == KNIFE
+        && matches!(input.block, "minecraft:short_grass" | "minecraft:fern");
+    if !knap && !cut {
+        return false;
+    }
+    let (item, count) = if knap { (SHARD, 2) } else { (FIBER, 1) };
+    // Deliberately require space before consuming. A full inventory is refused
+    // even if the last flint would otherwise free a slot.
+    if world.room(item) < count {
+        return true;
+    }
+    let before = world.snapshot();
+    let completed = if knap {
+        world.consume_flint_in_acting_hand() && world.give(item, count) == count
+    } else {
+        // Insert first: a rejected/unchanged block write restores the inventory.
+        // No plant has been removed if the insertion fails.
+        world.give(item, count) == count && world.remove_target_plant()
+    };
+    if !completed {
+        world.restore(before);
+    } else if cut {
+        world.wear_knife();
+    }
+    true
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[derive(Clone, Debug, PartialEq)]
+    struct Inventory { flint: u32, shards: u32, fibers: u32, wear: u32 }
+    struct Fixture {
+        inventory: Inventory, room: u32, plant: bool,
+        take_ok: bool, insert_limit: u32, write_ok: bool,
+    }
+    impl Default for Fixture {
+        fn default() -> Self {
+            Self { inventory: Inventory { flint: 2, shards: 0, fibers: 0, wear: 7 },
+                room: 64, plant: true, take_ok: true, insert_limit: 64, write_ok: true }
+        }
+    }
+    impl World for Fixture {
+        type Inventory = Inventory;
+        fn snapshot(&self) -> Inventory { self.inventory.clone() }
+        fn restore(&mut self, before: Inventory) { self.inventory = before; }
+        fn room(&mut self, _: &str) -> u32 { self.room }
+        fn consume_flint_in_acting_hand(&mut self) -> bool {
+            if !self.take_ok || self.inventory.flint == 0 { return false; }
+            self.inventory.flint -= 1; true
+        }
+        fn give(&mut self, item: &str, count: u32) -> u32 {
+            let n = count.min(self.insert_limit);
+            if item == SHARD { self.inventory.shards += n; }
+            else if item == FIBER { self.inventory.fibers += n; }
+            n
+        }
+        fn remove_target_plant(&mut self) -> bool {
+            if !self.write_ok || !self.plant { return false; }
+            self.plant = false; true
+        }
+        fn wear_knife(&mut self) { self.inventory.wear += 1; }
+    }
+    fn knap() -> Input<'static> {
+        Input { enabled: true, survival: true, item: "minecraft:flint", plain: true,
+            block: "minecraft:stone", top_face: true }
+    }
+    fn cut() -> Input<'static> {
+        Input { item: KNIFE, block: "minecraft:short_grass", plain: false, ..knap() }
+    }
+    #[test] fn one_flint_makes_two_shards() {
+        let mut w = Fixture::default(); assert!(use_on(&mut w, knap()));
+        assert_eq!((w.inventory.flint, w.inventory.shards), (1, 2));
+        assert!(w.plant); assert_eq!(w.inventory.wear, 7);
+    }
+    #[test] fn cobblestone_is_supported() {
+        let mut w = Fixture::default();
+        assert!(use_on(&mut w, Input { block: "minecraft:cobblestone", ..knap() }));
+        assert_eq!(w.inventory.shards, 2);
+    }
+    #[test] fn disabled_and_non_survival_do_nothing() {
+        for i in [Input { enabled: false, ..knap() }, Input { survival: false, ..knap() }] {
+            let mut w = Fixture::default(); let before = w.snapshot();
+            assert!(!use_on(&mut w, i)); assert_eq!(w.snapshot(), before); assert!(w.plant);
+        }
+    }
+    #[test] fn wrong_surface_face_item_and_named_flint_do_nothing() {
+        for i in [Input { block: "minecraft:dirt", ..knap() },
+            Input { top_face: false, ..knap() }, Input { item: "minecraft:stick", ..knap() },
+            Input { plain: false, ..knap() }, Input { block: "minecraft:tall_grass", ..cut() }] {
+            let mut w = Fixture::default(); let before = w.snapshot();
+            assert!(!use_on(&mut w, i)); assert_eq!(w.snapshot(), before); assert!(w.plant);
+        }
+    }
+    #[test] fn full_inventory_consumes_nothing_and_preserves_plant() {
+        for i in [knap(), cut()] {
+            let mut w = Fixture { room: 0, ..Fixture::default() }; let before = w.snapshot();
+            assert!(use_on(&mut w, i)); assert_eq!(w.snapshot(), before); assert!(w.plant);
+        }
+    }
+    #[test] fn only_one_free_shard_space_is_refused() {
+        let mut w = Fixture { room: 1, ..Fixture::default() }; let before = w.snapshot();
+        assert!(use_on(&mut w, knap())); assert_eq!(w.snapshot(), before);
+    }
+    #[test] fn failed_consume_cannot_mint_shards() {
+        let mut w = Fixture { take_ok: false, ..Fixture::default() }; let before = w.snapshot();
+        assert!(use_on(&mut w, knap())); assert_eq!(w.snapshot(), before);
+    }
+    #[test] fn partial_insert_rolls_back_both_counts() {
+        let mut w = Fixture { insert_limit: 1, ..Fixture::default() }; let before = w.snapshot();
+        assert!(use_on(&mut w, knap())); assert_eq!(w.snapshot(), before);
+    }
+    #[test] fn cutting_grass_and_fern_removes_once_and_wears_once() {
+        for block in ["minecraft:short_grass", "minecraft:fern"] {
+            let mut w = Fixture::default();
+            assert!(use_on(&mut w, Input { block, ..cut() }));
+            assert_eq!((w.inventory.fibers, w.inventory.wear), (1, 8)); assert!(!w.plant);
+            let before = w.snapshot();
+            // A stale second invocation cannot award a second fiber.
+            assert!(use_on(&mut w, Input { block, ..cut() }));
+            assert_eq!(w.snapshot(), before);
+        }
+    }
+    #[test] fn rejected_block_write_keeps_fiber_plant_and_tool_unchanged() {
+        let mut w = Fixture { write_ok: false, ..Fixture::default() }; let before = w.snapshot();
+        assert!(use_on(&mut w, cut())); assert_eq!(w.snapshot(), before); assert!(w.plant);
+    }
+    #[test] fn failed_fiber_insertion_keeps_plant_and_tool() {
+        let mut w = Fixture { insert_limit: 0, ..Fixture::default() }; let before = w.snapshot();
+        assert!(use_on(&mut w, cut())); assert_eq!(w.snapshot(), before); assert!(w.plant);
+    }
+    #[test] fn repeated_knapping_has_exact_accounting_without_duplication() {
+        let mut w = Fixture::default();
+        for _ in 0..12 { assert!(use_on(&mut w, knap())); }
+        assert_eq!((w.inventory.flint, w.inventory.shards), (0, 4));
+    }
+}

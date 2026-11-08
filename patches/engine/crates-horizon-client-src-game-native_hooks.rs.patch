@@ -1,0 +1,11 @@
+--- a/crates/horizon-client/src/game/native_hooks.rs
++++ b/crates/horizon-client/src/game/native_hooks.rs
+@@ -1012,7 +1012,7 @@
+         face: [i32; 3],
+         claimed: &mut bool,
+     ) {
+-        let _ = (stack, pos, face, claimed);
++        self.herspers_gathering_use_on(stack, pos, face, claimed);
+     }
+     /// A player uses `stack` (right click) with `self.hand`: in the air, or
+     /// on a block once `native_use_item_on` let it through, where `Item.use`

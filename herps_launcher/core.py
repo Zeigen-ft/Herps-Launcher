@@ -335,6 +335,9 @@ class Launcher:
         return pairs(self.game / "horizon-mods.txt").get("mod." + mod.id) == "true"
 
     def set_enabled(self, mod, enabled):
+        if mod.id == "herspers_rl_gathering":
+            from .modpacks.gathering import set_enabled
+            return set_enabled(self, mod, enabled)
         if mod.id == "herspers_rl_flint":
             from .modpacks.flint import set_enabled
             return set_enabled(self, mod, enabled)
@@ -345,6 +348,8 @@ class Launcher:
 
     def install_mod(self, path):
         mod = inspect_mod(path)
+        if mod.id == "herspers_rl_gathering":
+            raise ValueError("Use Modpacks → Flint Gathering in a fresh disposable profile")
         if mod.id == "herspers_rl_flint":
             raise ValueError("Use Modpacks → Flint Survival Starter in a fresh disposable profile")
         if mod.id == "herspers_rl_chainmail":
@@ -358,6 +363,9 @@ class Launcher:
         return mod
 
     def remove_mod(self, mod):
+        if mod.id == "herspers_rl_gathering":
+            from .modpacks.gathering import remove
+            return remove(self, mod)
         if mod.id == "herspers_rl_flint":
             from .modpacks.flint import remove
             return remove(self, mod)
@@ -408,6 +416,8 @@ class Launcher:
         protect_launch(self)
         from .modpacks.flint import protect_launch as protect_flint
         protect_flint(self)
+        from .modpacks.gathering import protect_launch as protect_gathering
+        protect_gathering(self)
         installation = self.installation()
         executable = installation.binary("horizon-client") if clean else self.native_binary() or installation.binary("horizon-client")
         args = [str(executable), "--resources", str(self.support / "resources" / GAME), "--game-dir", str(self.game), "--home", str(self.support)]

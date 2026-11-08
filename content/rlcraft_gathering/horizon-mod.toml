@@ -1,0 +1,8 @@
+id = "herspers_rl_gathering"
+name = "Flint Gathering (experimental)"
+version = "0.1.0"
+description = "Native survival stage 2: right-click stone tops with flint for shards; cut short grass or ferns with the flint knife for fiber. Requires Flint Survival Starter and a stage-2 Herps client."
+authors = ["Herps Launcher contributors"]
+api = "0.2"
+side = "both"
+capabilities = ["registries"]

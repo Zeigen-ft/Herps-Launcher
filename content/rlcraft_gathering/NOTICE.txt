@@ -1,0 +1,14 @@
+Flint Gathering 0.1.0 is independently authored native RLCraft-style content.
+It is not the original No Tree Punching mod or a complete RLCraft/FunCraft port.
+No original Java mod code, Minecraft artwork, Forge execution or Java bridge is included.
+
+This GPLv3 content package supplies an opt-in item tag, not executable code.
+Gameplay is implemented by the small MIT-licensed native engine extension in
+native/rlcraft_gathering/ and the checksum-locked patches shipped with this
+candidate's engine source. An older client cannot provide these interactions.
+The original Horizon MIT license is retained in licenses/Horizon-LICENSE.txt.
+
+Requires the unchanged Flint Survival Starter 0.1.0 package for all item IDs.
+Install only through the dedicated card into a fresh explicitly selected
+disposable profile, before creating a world. It starts disabled.
+Real gameplay acceptance for this stage remains NOT RUN until reported separately.

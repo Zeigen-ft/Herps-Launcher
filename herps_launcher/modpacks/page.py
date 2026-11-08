@@ -14,6 +14,7 @@ from .service import ModpackLibrary
 from .targeted_backup import create_backup, eligibility, verify_backup
 from . import chainmail
 from . import flint
+from . import gathering
 
 
 UNSUPPORTED = "Unsupported"
@@ -127,6 +128,20 @@ class ModpacksPage(QWidget):
         self.flint_button.setMaximumWidth(520)
         box.addWidget(flint_box)
 
+        gathering_box = QGroupBox("Native survival remake · Stage 2: Flint Gathering")
+        gathering_layout = QVBoxLayout(gathering_box)
+        self.gathering_status = QLabel()
+        self.gathering_status.setWordWrap(True)
+        gathering_layout.addWidget(self.gathering_status)
+        self.gathering_consent = QCheckBox("Confirm disposable profile and closed games/servers")
+        self.gathering_consent.setMaximumWidth(520)
+        self.gathering_consent.toggled.connect(lambda _: self.busy_changed())
+        gathering_layout.addWidget(self.gathering_consent)
+        self.gathering_button = self._button(gathering_layout,
+            "Install flint gathering · disabled initially…", self.install_gathering)
+        self.gathering_button.setMaximumWidth(520)
+        box.addWidget(gathering_box)
+
         self.summary = QLabel("Playable status: unverified. Import a pack to inspect every indexed mod.")
         self.summary.setWordWrap(True)
         box.addWidget(self.summary)
@@ -233,6 +248,9 @@ class ModpacksPage(QWidget):
             self.flint_consent.blockSignals(True)
             self.flint_consent.setChecked(False)
             self.flint_consent.blockSignals(False)
+            self.gathering_consent.blockSignals(True)
+            self.gathering_consent.setChecked(False)
+            self.gathering_consent.blockSignals(False)
             self.summary.setText("Playable status: unverified. No pack analysis is selected for this profile.")
             self.status.setText(f"Profile: {profile}. Import a pack or load its retained local evidence.")
         self.binary_path.setText(self.launcher.config.get("port_pack_binary", ""))
@@ -276,7 +294,7 @@ class ModpacksPage(QWidget):
             description = ("Installed · " + ("enabled" if state["enabled"] else "disabled; enable on Mods")) if installed else "Not installed"
             self.flint_status.setText(f"Profile: {self.launcher.config['profile']} · {description}. "
                 "Flint shards, plant fiber, a knife and a hatchet; five additive recipes. "
-                "Experimental; physical gameplay NOT RUN. Keep enabled once saves exist. "
+                "Basic Windows checks were user-reported PASS for the earlier stage-1 candidate. Keep enabled once saves exist. "
                 "This stage uses crafting-grid shards and wheat fiber; full RLCraft is unsupported.")
         except (OSError, ValueError) as error:
             valid = False
@@ -284,6 +302,21 @@ class ModpacksPage(QWidget):
         available = not busy and valid and not installed and self.launcher.config["profile"] != "default"
         self.flint_consent.setEnabled(available)
         self.flint_button.setEnabled(available and self.flint_consent.isChecked())
+        installed, valid = False, True
+        try:
+            state = gathering.status(self.launcher)
+            installed = state["installed"]
+            description = ("Installed · " + ("enabled" if state["enabled"] else "disabled; enable after the starter on Mods")) if installed else "Not installed"
+            self.gathering_status.setText(f"Profile: {self.launcher.config['profile']} · {description}. "
+                "Requires Stage 1 and a Stage 2 candidate. In Survival, right-click stone/cobblestone tops with flint for shards; "
+                "right-click short grass or ferns with the knife for fiber and tool wear. Needs inventory space. "
+                "Install both in an empty disposable profile. New interactions: physical gameplay NOT RUN.")
+        except (OSError, ValueError) as error:
+            valid = False
+            self.gathering_status.setText(f"Preserve this profile and review gathering content: {error}")
+        available = not busy and valid and not installed and self.launcher.config["profile"] != "default"
+        self.gathering_consent.setEnabled(available)
+        self.gathering_button.setEnabled(available and self.gathering_consent.isChecked())
         # No verified runtime/content validation backend exists. A static Works
         # verdict or a carried folder can never unlock Play here.
         self.play_button.setEnabled(False)
@@ -337,6 +370,29 @@ class ModpacksPage(QWidget):
 
         self._run("Installing the native flint starter into the selected disposable profile…",
             lambda emit: flint.install(self.launcher, profile, disposable_confirmed=True, games_closed=True), completed)
+
+    def install_gathering(self):
+        self.window.require_idle()
+        profile = self.launcher.config["profile"]
+        if not self.gathering_consent.isChecked() or profile == "default":
+            raise ValueError("Select and explicitly confirm a fresh named disposable profile first")
+        answer = QMessageBox.warning(self, "Install native survival stage 2?",
+            f"Install Flint Gathering only into '{profile}'? Close all games and servers. "
+            "Install Stage 1 first. Use a disposable profile with no worlds. It starts OFF: enable on Mods before creating a world. "
+            "Keep it enabled after saves exist. This is an experimental starter, not the complete RLCraft pack.",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel,
+            QMessageBox.StandardButton.Cancel)
+        if answer != QMessageBox.StandardButton.Yes:
+            return
+
+        def completed(result):
+            self.details.setPlainText(json.dumps(result, indent=2))
+            self.status.setText(f"Installed disabled in {profile}. Open Mods, enable Flint Survival Starter first, then Flint Gathering before creating a world.")
+            self.gathering_consent.setChecked(False)
+            self.window.refresh()
+
+        self._run("Installing the native gathering add-on into the selected disposable profile…",
+            lambda emit: gathering.install(self.launcher, profile, disposable_confirmed=True, games_closed=True), completed)
 
     def _run(self, label, function, done):
         self.window.require_idle()
