@@ -6,7 +6,8 @@ from herps_launcher.modpacks import flint, gathering
 import unittest
 
 
-QApplication, QMessageBox, QTest, Qt, QPoint = base.QApplication, base.QMessageBox, base.QTest, base.Qt, base.QPoint
+QApplication = base.QApplication
+QMessageBox, QTest, Qt, QPoint = (getattr(base, name, None) for name in ("QMessageBox", "QTest", "Qt", "QPoint"))
 
 @unittest.skipIf(QApplication is None, "Install pinned Qt requirements")
 class GatheringPageTests(base.FlintPageTests):
