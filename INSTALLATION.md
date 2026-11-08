@@ -341,8 +341,9 @@ native survival stages, follow the [Flint Starter](docs/targeted-porting/NATIVE_
 [Plant Fiber Bandage](docs/targeted-porting/NATIVE_SURVIVAL_STAGE_4.md) guides
 and their separate verification reports. Install these only into a fresh
 disposable profile, before making worlds. They start OFF; later stages require
-their listed dependencies and the matching internal Windows candidate. New Stage 3
-and Stage 4 physical gameplay is **NOT RUN**; earlier Mac installers do not provide them.
+their listed dependencies and the matching internal Windows candidate. Stage 3's
+required Windows checklist has a separate user-reported PASS; Stage 4 physical
+gameplay is **NOT RUN**. Earlier Mac installers do not provide these new stages.
 `.hnmod`
 packages are **trusted native source code**, need the exact pinned engine/mixin
 revision and developer Rust/platform tools, and may execute with your permissions.

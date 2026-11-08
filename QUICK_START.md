@@ -85,8 +85,9 @@ The package starts OFF and must be enabled on Mods. Keep it enabled once saves e
 For the optional native survival remake, use the separate
 [Stage 3 installation and Survival checklist](docs/targeted-porting/NATIVE_SURVIVAL_STAGE_3.md).
 It requires a matching Windows internal candidate and all three stages in a
-**new disposable profile before world creation**. Stage 3 physical gameplay is
-NOT RUN; existing release installers do not include it.
+**new disposable profile before world creation**. The user reports the required
+Stage 3 Windows checklist PASS; optional and Mac cases remain open. Existing
+release installers do not include it.
 
 For the separate optional [Plant Fiber Bandage trial](docs/targeted-porting/NATIVE_SURVIVAL_STAGE_4.md),
 use its matching Windows candidate and a fresh profile with Flint Starter.

@@ -10,10 +10,18 @@ one bandage. Hold use for two seconds for five seconds of ordinary Regeneration 
 It supplies no food and uses vanilla effect refreshing; it is not First Aid's
 limb model or full RLCraft compatibility. A fresh disposable profile and unchanged
 Flint Starter are required. The new package starts OFF. No engine changes or
-earlier package changes are introduced. Native Windows verification is pending;
-physical Windows/macOS gameplay and new Mac builds remain **NOT RUN**.
-See [verification](docs/targeted-porting/NATIVE_SURVIVAL_STAGE_4_VERIFICATION.md).
-No public release is created, and Stage 3 physical acceptance remains open.
+earlier package changes are introduced. Corrected Windows native run
+[42478785820](https://github.com/Zeigen-ft/Herps-Launcher/actions/runs/42478785820)
+passed at `2ae01f44bdbee7847a1446db20ea1e336fb6a2c3`: 485 source tests passed
+with 15 recorded skips, all 98 frozen workflow tests passed, and all native content,
+installer and SDK checks passed. Eight artifact hashes and delivered contents
+were independently audited. The first native run caught a stack-size schema
+error; it was corrected without changing the engine or previous packages.
+[Download](https://github.com/Zeigen-ft/Herps-Launcher/actions/runs/42478785820/artifacts/13617293283),
+[checksums](docs/targeted-porting/BANDAGE_WINDOWS_SHA256SUMS.txt) and
+[complete verification/failure report](docs/targeted-porting/NATIVE_SURVIVAL_STAGE_4_VERIFICATION.md).
+Physical Windows/macOS Stage 4 gameplay and new Mac builds remain **NOT RUN**.
+No public release is created. The separate Stage 3 user report does not accept Stage 4.
 
 ## Development candidate — native survival stage 3
 
@@ -30,7 +38,10 @@ delivered package/source hashes were independently checked.
 [Installer/portable download](https://github.com/Zeigen-ft/Herps-Launcher/actions/runs/42472666400/artifacts/13615181805),
 [checksums](docs/targeted-porting/WOODCUTTING_WINDOWS_SHA256SUMS.txt) and
 [verification](docs/targeted-porting/NATIVE_SURVIVAL_STAGE_3_VERIFICATION.md) are available.
-Physical progression/gameplay and all new macOS builds/gameplay remain **NOT RUN**.
+The user now reports **all required Stage 3 Windows checklist tests passed**;
+[verbatim reply and scope](docs/targeted-porting/WOODCUTTING_WINDOWS_USER_REPORT.json).
+Codex did not observe the testing; optional edge cases and all Stage 3 macOS
+builds/gameplay remain open/NOT RUN. Automated false gameplay flags are unchanged.
 This is not full RLCraft/FunCraft or No Tree Punching, and does not publish a release.
 
 ## Development candidate — native survival stage 2

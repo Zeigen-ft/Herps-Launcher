@@ -1,14 +1,32 @@
 # Native survival stage 4 — Plant Fiber Bandage 0.1.0
 
 An optional, independently authored native survival feature. **All physical
-Stage 4 gameplay is NOT RUN.** Stage 3's gameplay acceptance is still open too.
+Stage 4 gameplay is NOT RUN.** The user reports Stage 3's required Windows
+checklist PASS; optional cases and Mac acceptance remain open.
 This does not implement First Aid's limb health, wounds or body-part selection.
 No original Java mod code/assets are included or executed.
 
 ## What to install
 
-Use the Windows candidate linked by [the verification report](NATIVE_SURVIVAL_STAGE_4_VERIFICATION.md)
-after its required native checks pass. Close games/servers and back up existing
+Use the [verified Windows test download](https://github.com/Zeigen-ft/Herps-Launcher/actions/runs/42478785820/artifacts/13617293283)
+from run **42478785820**, source **`2ae01f44bdbee7847a1446db20ea1e336fb6a2c3`**.
+Sign in to GitHub, download `Herps-Launcher-0.1.0-Windows-x86_64`, then right-click
+the downloaded ZIP → **Extract All**. Find `Herps-Launcher-0.1.0-Windows-x64-Setup.exe`
+in the extracted folder. Open PowerShell in that folder and verify it before running:
+
+```powershell
+Get-FileHash '.\Herps-Launcher-0.1.0-Windows-x64-Setup.exe' -Algorithm SHA256
+```
+
+The hash must be exactly:
+
+```text
+90e052befc716e74084c429a3b066a7624674a90a9efa81d9b73146b172572be
+```
+
+Stop if it differs. [The verification report](NATIVE_SURVIVAL_STAGE_4_VERIFICATION.md)
+has the portable ZIP hash, CI results and remaining limits.
+Close games/servers and back up existing
 data. Keep earlier tested profiles untouched. See [INSTALLATION.md](../../INSTALLATION.md)
 for legitimate matching Minecraft 26.3 resources and JDK 25 preparation.
 

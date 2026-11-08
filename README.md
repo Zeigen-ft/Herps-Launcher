@@ -40,20 +40,22 @@ migration does not change visibility, create a release or create a tag.
 - A standalone, passive local RLCraft 2.9.3 archive inspector.
 - **[Woodcutting Progression — native remake stage 3](docs/targeted-porting/NATIVE_SURVIVAL_STAGE_3.md)**:
   an optional main-hand axe/hatchet requirement for Survival logs. It starts OFF
-  in a fresh disposable profile; all new physical gameplay remains NOT RUN.
+  in a fresh disposable profile. The user reports all required Windows checklist
+  tests PASS; [report and scope](docs/targeted-porting/WOODCUTTING_WINDOWS_USER_REPORT.json).
+  Optional edge cases and every Stage 3 Mac case remain open.
 - [Stage 4: Plant Fiber Bandage](docs/targeted-porting/NATIVE_SURVIVAL_STAGE_4.md)
   adds one optional recipe and a native Regeneration consumable using the existing
   API. It starts OFF and requires Flint Starter in a fresh disposable profile.
   [Verification](docs/targeted-porting/NATIVE_SURVIVAL_STAGE_4_VERIFICATION.md)
-  keeps physical gameplay and earlier Stage 3 acceptance open.
+  keeps Stage 4 physical gameplay open; Stage 3's user report does not accept Stage 4.
 
 ## Supported testing scope
 
 | Target | Current evidence | Remaining acceptance |
 | --- | --- | --- |
-| Windows x64 | Destination native CI: 415 source tests passed, 14 platform/input skips; 68/68 installed cases. Earlier user-reported launch, both recipes, +1 Armor and inventory persistence; crafting/persistence in Survival and Creative | Rebuilt candidate and remaining physical installation, preservation, failure and gameplay edge cases |
-| macOS Intel | Destination native DMG/architecture/helper checks; 426 source tests passed, 3 platform/input skips; 68/68 delivered cases | **All physical gameplay NOT RUN** |
-| macOS Apple Silicon | Destination native DMG/architecture/helper checks; 426 source tests passed, 3 platform/input skips; 68/68 delivered cases | **All physical gameplay NOT RUN** |
+| Windows x64 | Stage 4 development CI: 485 source tests passed, 15 skips; 98/98 delivered cases. Earlier user reports cover Chainmail and the required Stage 3 checklist on their respective candidates | **Stage 4 physical gameplay NOT RUN**; optional cases and physical installation/preservation/failure acceptance remain open |
+| macOS Intel | Earlier destination DMG/architecture/helper checks: 426 source tests passed, 3 skips; 68/68 delivered cases. No Stage 4 build | **All physical gameplay NOT RUN** |
+| macOS Apple Silicon | Earlier destination DMG/architecture/helper checks: 426 source tests passed, 3 skips; 68/68 delivered cases. No Stage 4 build | **All physical gameplay NOT RUN** |
 
 Destination run [42144749724](https://github.com/Zeigen-ft/Herps-Launcher/actions/runs/42144749724)
 passed all three targets and release-file assembly. Download the
