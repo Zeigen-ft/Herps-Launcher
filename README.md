@@ -10,6 +10,11 @@ It is not the official Minecraft launcher or a universal Forge/Fabric launcher.
 
 **Start here:** [Quick start](QUICK_START.md) · [Complete installation guide](INSTALLATION.md)
 
+**Current work:** RLCraft-style development is [paused at four implemented stages](docs/targeted-porting/NATIVE_SURVIVAL_STATUS.md).
+[Better Leaves 9.6 for Herps](docs/BETTER-LEAVES.md) is a separate optional
+Minecraft 26.3 resource pack using the existing launcher and in-game pack menu.
+Native data/model validation is separate from visual acceptance, which remains NOT RUN.
+
 [Downloads and release notes](https://github.com/Zeigen-ft/Herps-Launcher/releases) ·
 [CI builds](https://github.com/Zeigen-ft/Herps-Launcher/actions/workflows/herps-launcher.yml) ·
 [Prepared release notes](RELEASE_NOTES.md) · [Known limits](docs/HERPS-SUPPORT.md)

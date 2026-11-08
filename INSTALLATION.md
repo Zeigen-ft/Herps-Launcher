@@ -357,6 +357,11 @@ case-specific testing and backup; this guide cannot certify arbitrary packages.
 
 ## Test Chainmail Plate and Boots
 
+For the separate optional Better Leaves visual pack, follow the
+[resource-pack installation and undo guide](docs/BETTER-LEAVES.md). It uses the
+game's Resource Packs screen and the selected profile's `resourcepacks` folder;
+the existing launcher can be used. Visual acceptance remains NOT RUN.
+
 **This is a small native replacement, not complete RLCraft.** Installation uses
 the bundled package and needs no RLCraft JAR or archive import.
 

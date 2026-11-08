@@ -1,0 +1,54 @@
+name: Verify Herps Better Leaves
+on:
+  push:
+    branches: [feature/better-leaves-resource-pack]
+    paths: ['content/better_leaves/**', 'tools/build_better_leaves.py', 'tools/verify_better_leaves.py', 'packaging/better_leaves_probe.rs', 'tests/test_better_leaves.py', '.github/workflows/better-leaves.yml']
+  pull_request:
+    paths: ['content/better_leaves/**', 'tools/build_better_leaves.py', 'tools/verify_better_leaves.py', 'packaging/better_leaves_probe.rs', 'tests/test_better_leaves.py', '.github/workflows/better-leaves.yml']
+permissions:
+  contents: read
+jobs:
+  resource-pack:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    env:
+      PYTHONUTF8: '1'
+      RUSTUP_TOOLCHAIN: '1.95.0'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install pinned Rust for asset validation only
+        run: rustup toolchain install 1.95.0 --profile minimal
+      - name: Cache pinned asset verification dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            .cache/better-leaves-target
+            .cache/upstream
+            ~/.cargo/registry
+          key: better-leaves-assets-${{ runner.os }}-rust1.95-${{ hashFiles('upstream.lock.json', 'patches/**') }}
+      - name: Archive safety, dependency closure and preservation checks
+        run: python -m unittest discover -s tests -p test_better_leaves.py -v
+      - name: Rebuild and validate native models, metadata and cutout textures
+        run: python tools/ci_run.py better-leaves-native.log python tools/verify_better_leaves.py --fetch
+      - name: Upload verified resource pack and evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: Herps-Better-Leaves-9.6-MC26.3-${{ runner.os }}
+          path: dist/better-leaves/
+          if-no-files-found: error
+      - name: Retain verification log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Herps-Better-Leaves-log-${{ runner.os }}
+          path: better-leaves-native.log
+          if-no-files-found: warn

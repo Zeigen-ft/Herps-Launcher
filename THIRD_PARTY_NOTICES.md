@@ -1,5 +1,14 @@
 # Licences and third-party notices
 
+The user-provided Better Leaves 9.6 pack is by Motschen, under its supplied MIT
+license (Copyright (c) 2024 Motschen). The focused resource-pack adaptation retains
+the exact selected upstream assets and permission notice in
+[content/better_leaves/source/LICENSE](content/better_leaves/source/LICENSE).
+See [adaptation attribution](content/better_leaves/NOTICE.txt) and
+[source provenance](content/better_leaves/upstream.json). Its adapted metadata and
+documentation are MIT; the launcher and build tools retain their project GPLv3
+license. Unused Java-mod overrides are omitted; this does not implement those mods.
+
 The original Woodcutting Progression engine extension in
 `native/rlcraft_woodcutting/` uses the MIT license retained beside its sources.
 Its tag-only `.hmod`, launcher integration and tools use the repository's GPLv3

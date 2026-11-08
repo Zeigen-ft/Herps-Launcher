@@ -2,6 +2,16 @@
 
 Official home: https://github.com/Zeigen-ft/Herps-Launcher
 
+## Development resource pack — Better Leaves 9.6
+
+RLCraft-style development is paused at Stage 4, with existing functionality and
+data retained. [Better Leaves for Herps](docs/BETTER-LEAVES.md) adapts the supplied
+MIT-licensed Motschen pack to Minecraft 26.3 resource format 97.1. It retains 14
+vanilla leaf definitions and their required models/textures; unused Java-mod
+overrides are omitted. This is an optional resource pack for the existing game,
+with no launcher reinstall, engine change, Java bridge or public release.
+Visual results, performance and Windows/macOS interactive acceptance remain NOT RUN.
+
 ## Development candidate — native survival stage 4
 
 [Plant Fiber Bandage 0.1.0](docs/targeted-porting/NATIVE_SURVIVAL_STAGE_4.md)
