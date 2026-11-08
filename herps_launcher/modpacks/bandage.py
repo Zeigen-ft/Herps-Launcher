@@ -23,7 +23,7 @@ from ..javamods.library import JavaModLibrary
 MOD_ID = "herspers_rl_bandage"
 VERSION = "0.1.0"
 PACKAGE_NAME = f"{MOD_ID}-{VERSION}.hmod"
-PACKAGE_SHA256 = "e54492c274559deadf83746d1160644d1d180a3ca4ddf1ca35539df947a9035c"
+PACKAGE_SHA256 = "dad328e28bc8d7d79d2002d5651af29dc77997bd3f00910c6e4021182b217ee1"
 
 
 def require_engine(launcher):

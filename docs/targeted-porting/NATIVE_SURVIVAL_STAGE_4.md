@@ -23,8 +23,8 @@ for legitimate matching Minecraft 26.3 resources and JDK 25 preparation.
 5. Use ordinary Home → **PLAY**, then create a new Survival world. Clean startup
    uses a separate diagnostic folder and does not test enabled profile content.
 
-The package is `herspers_rl_bandage-0.1.0.hmod`, 39,289 bytes, SHA-256
-`e54492c274559deadf83746d1160644d1d180a3ca4ddf1ca35539df947a9035c`.
+The package is `herspers_rl_bandage-0.1.0.hmod`, 39,277 bytes, SHA-256
+`dad328e28bc8d7d79d2002d5651af29dc77997bd3f00910c6e4021182b217ee1`.
 The paper artwork is a vanilla identifier reference: inspect the tooltip for
 **Plant Fiber Bandage** instead of assuming ordinary paper is the new item.
 Generic importing is refused; use the dedicated Modpacks card.
