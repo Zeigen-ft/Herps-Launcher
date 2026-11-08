@@ -15,8 +15,28 @@ The original MIT copyright/permission notice is retained.
 
 ## Download and install
 
-The verified ZIP/download and CI evidence will be recorded below after cross-OS
-verification. **Visual/FPS acceptance remains NOT RUN.**
+[Download the verified Windows artifact](https://github.com/Zeigen-ft/Herps-Launcher/actions/runs/42486330922/artifacts/13619507718)
+from successful run **42486330922**, source **`555b71997dc402241aa3136454087dc132dba4fd`**.
+Sign in to GitHub if needed. The actual pack inside is
+`Herps-Better-Leaves-9.6-MC26.3.zip`, **84,532 bytes**. The Linux build contains
+the identical platform-independent pack. Current artifact expiry is 6 February 2027.
+**Visual/FPS acceptance remains NOT RUN.**
+
+After extracting the outer artifact ZIP, open PowerShell in the extracted folder:
+
+```powershell
+Get-FileHash '.\Herps-Better-Leaves-9.6-MC26.3.zip' -Algorithm SHA256
+```
+
+Expect exactly:
+
+```text
+2743be9a74c34051db28ac3ccbdfc7c991fa729f2c7ca6386b1ac97fa48e2400
+```
+
+Stop if the hash differs. [Checksums](BETTER-LEAVES-SHA256SUMS.txt) and
+[verification/failure report](BETTER-LEAVES-VERIFICATION.md) include the outer
+artifact hashes too. The outer GitHub ZIP has a different hash from the inner pack.
 
 1. Back up valued worlds and begin with a disposable named test profile.
 2. Select that profile in Herps Launcher. On **Settings** choose **Open game data

@@ -10,6 +10,11 @@ MIT-licensed Motschen pack to Minecraft 26.3 resource format 97.1. It retains 14
 vanilla leaf definitions and their required models/textures; unused Java-mod
 overrides are omitted. This is an optional resource pack for the existing game,
 with no launcher reinstall, engine change, Java bridge or public release.
+Final Windows/Linux run [42486330922](https://github.com/Zeigen-ft/Herps-Launcher/actions/runs/42486330922)
+passed at `555b71997dc402241aa3136454087dc132dba4fd`, including 13 safety tests
+and nine native asset cases per OS. Windows and Linux pack ZIPs are identical;
+[download/installation](docs/BETTER-LEAVES.md), [checksums](docs/BETTER-LEAVES-SHA256SUMS.txt)
+and [failure/verification report](docs/BETTER-LEAVES-VERIFICATION.md) are recorded.
 Visual results, performance and Windows/macOS interactive acceptance remain NOT RUN.
 
 ## Development candidate — native survival stage 4

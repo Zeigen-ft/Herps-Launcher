@@ -1,0 +1,2307 @@
+{
+  "schema": 1,
+  "feature": "Herps Better Leaves 9.6 for Minecraft 26.3",
+  "branch": "feature/better-leaves-resource-pack",
+  "source_commit": "555b71997dc402241aa3136454087dc132dba4fd",
+  "baseline": "fcd5f96637f9e93601ab7c1bd199993737257235",
+  "run": 42486330922,
+  "native_ci": {
+    "conclusion": "success",
+    "headSha": "555b71997dc402241aa3136454087dc132dba4fd",
+    "jobs": [
+      {
+        "completedAt": "2026-11-08T13:44:13Z",
+        "conclusion": "success",
+        "databaseId": 128748899415,
+        "name": "resource-pack (ubuntu-latest)",
+        "startedAt": "2026-11-08T13:43:49Z",
+        "status": "completed",
+        "steps": [
+          {
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run actions/checkout@v4",
+            "number": 2,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run actions/setup-python@v5",
+            "number": 3,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Install pinned Rust for asset validation only",
+            "number": 4,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Cache pinned asset verification dependencies",
+            "number": 5,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Archive safety, dependency closure and preservation checks",
+            "number": 6,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Rebuild and validate native models, metadata and cutout textures",
+            "number": 7,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Upload verified resource pack and evidence",
+            "number": 8,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Retain verification log",
+            "number": 9,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Post Cache pinned asset verification dependencies",
+            "number": 16,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Post Run actions/setup-python@v5",
+            "number": 17,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@v4",
+            "number": 18,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 19,
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/Zeigen-ft/Herps-Launcher/actions/runs/42486330922/job/128748899415"
+      },
+      {
+        "completedAt": "2026-11-08T13:44:48Z",
+        "conclusion": "success",
+        "databaseId": 128748899568,
+        "name": "resource-pack (windows-latest)",
+        "startedAt": "2026-11-08T13:43:49Z",
+        "status": "completed",
+        "steps": [
+          {
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run actions/checkout@v4",
+            "number": 2,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run actions/setup-python@v5",
+            "number": 3,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Install pinned Rust for asset validation only",
+            "number": 4,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Cache pinned asset verification dependencies",
+            "number": 5,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Archive safety, dependency closure and preservation checks",
+            "number": 6,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Rebuild and validate native models, metadata and cutout textures",
+            "number": 7,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Upload verified resource pack and evidence",
+            "number": 8,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Retain verification log",
+            "number": 9,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Post Cache pinned asset verification dependencies",
+            "number": 16,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Post Run actions/setup-python@v5",
+            "number": 17,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@v4",
+            "number": 18,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 19,
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/Zeigen-ft/Herps-Launcher/actions/runs/42486330922/job/128748899568"
+      }
+    ],
+    "status": "completed",
+    "url": "https://github.com/Zeigen-ft/Herps-Launcher/actions/runs/42486330922"
+  },
+  "portable_ci": {
+    "conclusion": "success",
+    "headSha": "555b71997dc402241aa3136454087dc132dba4fd",
+    "jobs": [
+      {
+        "completedAt": "2026-11-08T13:45:03Z",
+        "conclusion": "success",
+        "databaseId": 128748899043,
+        "name": "windows-tooling",
+        "startedAt": "2026-11-08T13:43:49Z",
+        "status": "completed",
+        "steps": [
+          {
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run actions/checkout@v4",
+            "number": 2,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run actions/setup-python@v5",
+            "number": 3,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Install pinned launcher test dependencies",
+            "number": 4,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Install pinned Rust for native launcher tests",
+            "number": 5,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Stage reviewed native chainmail content",
+            "number": 6,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Stage native flint survival content",
+            "number": 7,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Stage opt-in native gathering content",
+            "number": 8,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Stage opt-in woodcutting progression content",
+            "number": 9,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Stage opt-in plant fiber bandage content",
+            "number": 10,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Windows tooling tests",
+            "number": 11,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Post Run actions/setup-python@v5",
+            "number": 21,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@v4",
+            "number": 22,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 23,
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/Zeigen-ft/Herps-Launcher/actions/runs/42486330791/job/128748899043"
+      },
+      {
+        "completedAt": "2026-11-08T13:44:58Z",
+        "conclusion": "success",
+        "databaseId": 128748899336,
+        "name": "tooling",
+        "startedAt": "2026-11-08T13:43:49Z",
+        "status": "completed",
+        "steps": [
+          {
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run actions/checkout@v4",
+            "number": 2,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run actions/setup-python@v5",
+            "number": 3,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Install pinned launcher test dependencies",
+            "number": 4,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Install pinned launcher Rust",
+            "number": 5,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Stage reviewed native chainmail content",
+            "number": 6,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Stage native flint survival content",
+            "number": 7,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Stage opt-in native gathering content",
+            "number": 8,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Stage opt-in woodcutting progression content",
+            "number": 9,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Stage opt-in plant fiber bandage content",
+            "number": 10,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Portable tooling tests",
+            "number": 11,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Run for script in scripts/*.sh packaging/*.command; do bash -n \"$script\"; done",
+            "number": 12,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Post Run actions/setup-python@v5",
+            "number": 23,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@v4",
+            "number": 24,
+            "status": "completed"
+          },
+          {
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 25,
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/Zeigen-ft/Herps-Launcher/actions/runs/42486330791/job/128748899336"
+      }
+    ],
+    "status": "completed",
+    "url": "https://github.com/Zeigen-ft/Herps-Launcher/actions/runs/42486330791"
+  },
+  "ci_cohorts": [
+    {
+      "id": 128748899043,
+      "name": "windows-tooling",
+      "kind": "portable",
+      "collected": 513,
+      "passed": 408,
+      "failed": 0,
+      "skipped": [
+        {
+          "test": "test_herps_entry.BundledEntrySmokeTests.test_external_override_cannot_satisfy_bundled_smoke",
+          "reason": "Set HERPS_TEST_PORT_PACK to the pinned executable"
+        },
+        {
+          "test": "test_herps_entry.BundledEntrySmokeTests.test_real_bundled_helper_checks_data_and_rejects_false_positive_works",
+          "reason": "Set HERPS_TEST_PORT_PACK to the pinned executable"
+        },
+        {
+          "test": "test_herps_launcher.LauncherTests.test_clean_launch_uses_separate_game_folder_and_original_binary",
+          "reason": "Owned POSIX process fixture"
+        },
+        {
+          "test": "test_herps_launcher.LauncherTests.test_failed_resource_check_does_not_start_game_and_releases_lock",
+          "reason": "Owned POSIX process fixture"
+        },
+        {
+          "test": "test_herps_launcher.LauncherTests.test_play_real_child_logs_exit_and_relaunch_without_touching_saves",
+          "reason": "Owned POSIX child fixture; Windows CI covers native tests separately"
+        },
+        {
+          "test": "test_inspect_apk.ApkTests.test_supplied_apk",
+          "reason": "Set HORIZON_TEST_APK to run supplied-APK integration"
+        },
+        {
+          "test": "test_javamods_adapter.PortPackIntegrationTests.test_actual_works_with_access_widener_stays_unsupported",
+          "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+        },
+        {
+          "test": "test_javamods_adapter.PortPackIntegrationTests.test_actual_works_with_minecraft_version_mismatch_stays_unsupported",
+          "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+        },
+        {
+          "test": "test_javamods_adapter.PortPackIntegrationTests.test_actual_works_with_missing_dependency_stays_unsupported",
+          "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+        },
+        {
+          "test": "test_javamods_adapter.PortPackIntegrationTests.test_actual_works_with_required_mixins_stays_unsupported",
+          "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+        },
+        {
+          "test": "test_javamods_adapter.PortPackIntegrationTests.test_actual_works_with_unreadable_class_stays_unsupported",
+          "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+        },
+        {
+          "test": "test_javamods_adapter.PortPackIntegrationTests.test_duplicate_dependency_ids_are_ambiguous_not_silently_selected",
+          "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+        },
+        {
+          "test": "test_javamods_adapter.PortPackIntegrationTests.test_fully_local_pack_port_uses_real_carry_without_claiming_playability",
+          "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+        },
+        {
+          "test": "test_javamods_adapter.PortPackIntegrationTests.test_instance_analysis_preserves_every_mod_and_missing_dependencies",
+          "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+        },
+        {
+          "test": "test_javamods_adapter.PortPackIntegrationTests.test_local_port_retains_data_carry_without_successful_gameplay_claim",
+          "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+        },
+        {
+          "test": "test_javamods_adapter.PortPackIntegrationTests.test_missing_pack_jar_remains_an_unsupported_record_without_download",
+          "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+        },
+        {
+          "test": "test_javamods_adapter.PortPackIntegrationTests.test_missing_transitive_dependency_blocks_apparently_successful_parent",
+          "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+        },
+        {
+          "test": "test_javamods_adapter.PortPackIntegrationTests.test_mrpack_resolves_user_file_by_declared_hash_with_different_filename",
+          "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+        },
+        {
+          "test": "test_javamods_adapter.PortPackIntegrationTests.test_mrpack_same_filename_with_wrong_hash_is_not_accepted",
+          "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+        },
+        {
+          "test": "test_javamods_adapter.PortPackIntegrationTests.test_pack_archive_path_traversal_is_refused_before_backend",
+          "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+        },
+        {
+          "test": "test_javamods_adapter.PortPackIntegrationTests.test_profile_and_each_run_have_separate_workspaces",
+          "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+        },
+        {
+          "test": "test_javamods_adapter.PortPackIntegrationTests.test_pure_content_requires_porting_but_never_claims_native_or_tested",
+          "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+        },
+        {
+          "test": "test_javamods_adapter.PortPackIntegrationTests.test_readable_java_class_in_dependency_is_not_treated_as_data_only",
+          "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+        },
+        {
+          "test": "test_javamods_adapter.PortPackIntegrationTests.test_required_mixins_in_dependency_block_apparently_successful_parent",
+          "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+        },
+        {
+          "test": "test_javamods_adapter.PortPackIntegrationTests.test_standalone_port_cannot_prove_carry_of_satisfied_dependency_ensemble",
+          "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+        },
+        {
+          "test": "test_javamods_adapter.PortPackIntegrationTests.test_symlinked_profile_ancestor_cannot_escape_profile",
+          "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+        },
+        {
+          "test": "test_javamods_adapter.PortPackIntegrationTests.test_symlinked_profile_workspace_cannot_escape_profile",
+          "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+        },
+        {
+          "test": "test_javamods_adapter.PortPackIntegrationTests.test_unknown_inventory_class_or_confidence_cannot_hide_behind_works",
+          "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+        },
+        {
+          "test": "test_javamods_adapter.PortPackIntegrationTests.test_unreadable_dependency_blocks_apparently_successful_parent",
+          "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+        },
+        {
+          "test": "test_javamods_adapter.PortPackIntegrationTests.test_uppercase_declared_sha1_matches_the_same_local_file",
+          "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+        },
+        {
+          "test": "test_javamods_adapter.PortPackIntegrationTests.test_user_dependency_wrong_version_is_not_accepted_by_id_alone",
+          "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+        },
+        {
+          "test": "test_javamods_adapter.PortPackIntegrationTests.test_works_cannot_hide_kept_custom_recipes_or_unreadable_carry_files",
+          "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+        },
+        {
+          "test": "test_javamods_cli.RealCliTests.test_actual_analyze_pack_and_local_jar_port_commands",
+          "reason": "Set HERPS_TEST_PORT_PACK to the pinned executable for command integration"
+        },
+        {
+          "test": "test_javamods_cli.RealCliTests.test_actual_check_and_both_report_export_formats",
+          "reason": "Set HERPS_TEST_PORT_PACK to the pinned executable for command integration"
+        },
+        {
+          "test": "test_javamods_cli.RealCliTests.test_actual_false_positive_works_cli_retains_raw_but_returns_unsupported",
+          "reason": "Set HERPS_TEST_PORT_PACK to the pinned executable for command integration"
+        },
+        {
+          "test": "test_javamods_cli.RealCliTests.test_actual_package_module_executes_a_headless_check",
+          "reason": "Set HERPS_TEST_PORT_PACK to the pinned executable for command integration"
+        },
+        {
+          "test": "test_javamods_cli.RealCliTests.test_export_demotes_forged_native_tested_and_missing_check_claims",
+          "reason": "Set HERPS_TEST_PORT_PACK to the pinned executable for command integration"
+        },
+        {
+          "test": "test_javamods_cli.RealCliTests.test_export_rejects_changed_or_missing_input_snapshot_as_insufficient",
+          "reason": "Set HERPS_TEST_PORT_PACK to the pinned executable for command integration"
+        },
+        {
+          "test": "test_javamods_cli.RealCliTests.test_export_revalidates_dependencies_after_diagnostics_and_status_are_forged",
+          "reason": "Set HERPS_TEST_PORT_PACK to the pinned executable for command integration"
+        },
+        {
+          "test": "test_javamods_library.LibraryPortTests.test_changed_generated_data_is_refused_after_report_receipt",
+          "reason": "Set HERPS_TEST_PORT_PACK for real data-port tests"
+        },
+        {
+          "test": "test_javamods_library.LibraryPortTests.test_changed_saved_report_cannot_install",
+          "reason": "Set HERPS_TEST_PORT_PACK for real data-port tests"
+        },
+        {
+          "test": "test_javamods_library.LibraryPortTests.test_cross_profile_port_selection_cannot_affect_original",
+          "reason": "Set HERPS_TEST_PORT_PACK for real data-port tests"
+        },
+        {
+          "test": "test_javamods_library.LibraryPortTests.test_existing_folder_id_is_never_overwritten",
+          "reason": "Set HERPS_TEST_PORT_PACK for real data-port tests"
+        },
+        {
+          "test": "test_javamods_library.LibraryPortTests.test_false_positive_works_cannot_install_an_unsupported_port",
+          "reason": "Set HERPS_TEST_PORT_PACK for real data-port tests"
+        },
+        {
+          "test": "test_javamods_library.LibraryPortTests.test_installed_data_edits_are_preserved_and_not_managed_blindly",
+          "reason": "Set HERPS_TEST_PORT_PACK for real data-port tests"
+        },
+        {
+          "test": "test_javamods_library.LibraryPortTests.test_real_data_folder_uses_engine_setting_starts_disabled_and_backs_up",
+          "reason": "Set HERPS_TEST_PORT_PACK for real data-port tests"
+        },
+        {
+          "test": "test_javamods_library.LibraryPortTests.test_receipt_write_failure_rolls_back_only_new_installation",
+          "reason": "Set HERPS_TEST_PORT_PACK for real data-port tests"
+        },
+        {
+          "test": "test_javamods_ui.JavaModsPageBackendTests.test_actual_false_positive_works_is_rendered_as_unsupported_with_full_evidence",
+          "reason": "Set HERPS_TEST_PORT_PACK to the actual pinned executable for Java Mods UI regressions"
+        },
+        {
+          "test": "test_javamods_ui.JavaModsPageBackendTests.test_background_analysis_keeps_event_loop_live_and_blocks_profile_mutations",
+          "reason": "Set HERPS_TEST_PORT_PACK to the actual pinned executable for Java Mods UI regressions"
+        },
+        {
+          "test": "test_javamods_ui.JavaModsPageBackendTests.test_cancel_is_unavailable_once_result_recording_begins",
+          "reason": "Set HERPS_TEST_PORT_PACK to the actual pinned executable for Java Mods UI regressions"
+        },
+        {
+          "test": "test_javamods_ui.JavaModsPageBackendTests.test_cancelled_analysis_discards_new_report_after_passive_worker_finishes",
+          "reason": "Set HERPS_TEST_PORT_PACK to the actual pinned executable for Java Mods UI regressions"
+        },
+        {
+          "test": "test_javamods_ui.JavaModsPageBackendTests.test_json_and_readable_exports_preserve_actual_backend_evidence",
+          "reason": "Set HERPS_TEST_PORT_PACK to the actual pinned executable for Java Mods UI regressions"
+        },
+        {
+          "test": "test_javamods_ui.JavaModsPageBackendTests.test_port_enable_disable_and_backup_preserve_saves_and_original_import",
+          "reason": "Set HERPS_TEST_PORT_PACK to the actual pinned executable for Java Mods UI regressions"
+        },
+        {
+          "test": "test_javamods_ui.JavaModsPageBackendTests.test_resolve_dependencies_uses_user_directory_and_retains_hash_evidence",
+          "reason": "Set HERPS_TEST_PORT_PACK to the actual pinned executable for Java Mods UI regressions"
+        },
+        {
+          "test": "test_javamods_ui.JavaModsPageBackendTests.test_saved_report_is_revalidated_before_rendering_after_profile_reload",
+          "reason": "Set HERPS_TEST_PORT_PACK to the actual pinned executable for Java Mods UI regressions"
+        },
+        {
+          "test": "test_macos_launcher.MacLauncherTests.test_actual_dialog_scripts_compile_on_mac",
+          "reason": "Mac Bash behavior tests need Unix paths and executable scripts"
+        },
+        {
+          "test": "test_macos_launcher.MacLauncherTests.test_dialog_cancellation_preserves_original_preparer_failure",
+          "reason": "Mac Bash behavior tests need Unix paths and executable scripts"
+        },
+        {
+          "test": "test_macos_launcher.MacLauncherTests.test_failed_resource_check_prints_error_and_opens_preparation",
+          "reason": "Mac Bash behavior tests need Unix paths and executable scripts"
+        },
+        {
+          "test": "test_macos_launcher.MacLauncherTests.test_game_failure_surfaces_log_and_preserves_client_status",
+          "reason": "Mac Bash behavior tests need Unix paths and executable scripts"
+        },
+        {
+          "test": "test_macos_launcher.MacLauncherTests.test_non_mac_host_is_rejected_before_creating_player_data",
+          "reason": "Mac Bash behavior tests need Unix paths and executable scripts"
+        },
+        {
+          "test": "test_macos_launcher.MacLauncherTests.test_open_failure_preserves_preparer_error_and_prints_manual_path",
+          "reason": "Mac Bash behavior tests need Unix paths and executable scripts"
+        },
+        {
+          "test": "test_macos_launcher.MacLauncherTests.test_prepared_resources_launch_client_with_literal_arguments_and_profile",
+          "reason": "Mac Bash behavior tests need Unix paths and executable scripts"
+        },
+        {
+          "test": "test_macos_launcher.MacLauncherTests.test_show_resource_log_uses_exact_path_without_starting_game",
+          "reason": "Mac Bash behavior tests need Unix paths and executable scripts"
+        },
+        {
+          "test": "test_modpacks_service.ModpackServiceTests.test_analysis_and_port_only_invoke_allowlisted_passive_rust_commands",
+          "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+        },
+        {
+          "test": "test_modpacks_service.ModpackServiceTests.test_changed_generated_port_tree_is_demoted_on_load_and_export",
+          "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+        },
+        {
+          "test": "test_modpacks_service.ModpackServiceTests.test_correct_sha1_cannot_hide_a_conflicting_known_sha512",
+          "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+        },
+        {
+          "test": "test_modpacks_service.ModpackServiceTests.test_curseforge_manifest_ids_resolve_from_user_instance_without_api_key",
+          "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+        },
+        {
+          "test": "test_modpacks_service.ModpackServiceTests.test_curseforge_modlist_cannot_silently_remove_manifest_only_entries",
+          "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+        },
+        {
+          "test": "test_modpacks_service.ModpackServiceTests.test_declared_hash_mismatch_does_not_accept_same_filename",
+          "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+        },
+        {
+          "test": "test_modpacks_service.ModpackServiceTests.test_embedded_modrinth_mod_is_inspected_without_network_or_user_folder",
+          "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+        },
+        {
+          "test": "test_modpacks_service.ModpackServiceTests.test_export_json_and_text_preserve_original_evidence_and_unplayable_summary",
+          "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+        },
+        {
+          "test": "test_modpacks_service.ModpackServiceTests.test_imported_pack_snapshot_survives_original_removal_and_detects_snapshot_edits",
+          "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+        },
+        {
+          "test": "test_modpacks_service.ModpackServiceTests.test_missing_modrinth_files_remain_visible_as_unsupported_rows",
+          "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+        },
+        {
+          "test": "test_modpacks_service.ModpackServiceTests.test_modrinth_import_resolves_owned_files_and_retains_every_coverage_column",
+          "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+        },
+        {
+          "test": "test_modpacks_service.ModpackServiceTests.test_original_works_false_positive_retains_missing_dependency_and_unsupported_features",
+          "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+        },
+        {
+          "test": "test_modpacks_service.ModpackServiceTests.test_pack_storage_is_profile_isolated_and_existing_game_files_are_untouched",
+          "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+        },
+        {
+          "test": "test_modpacks_service.ModpackServiceTests.test_packwiz_is_explicitly_unsupported_without_inventing_a_parser",
+          "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+        },
+        {
+          "test": "test_modpacks_service.ModpackServiceTests.test_partial_data_carry_preserves_unsupported_rows_and_never_becomes_playable",
+          "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+        },
+        {
+          "test": "test_modpacks_service.ModpackServiceTests.test_partial_port_prunes_mod_whose_dependency_is_only_an_external_file",
+          "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+        },
+        {
+          "test": "test_modpacks_service.ModpackServiceTests.test_prism_multimc_instance_uses_real_backend_import",
+          "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+        },
+        {
+          "test": "test_modpacks_service.ModpackServiceTests.test_renaming_an_unrelated_jar_to_a_curseforge_placeholder_cannot_prove_identity",
+          "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+        },
+        {
+          "test": "test_modpacks_service.ModpackServiceTests.test_saved_pack_report_cannot_forge_playable_or_tested_success",
+          "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+        },
+        {
+          "test": "test_modpacks_service.ModpackServiceTests.test_sha512_mismatch_does_not_accept_same_filename",
+          "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+        },
+        {
+          "test": "test_modpacks_service.ModpackServiceTests.test_sha512_only_index_resolves_renamed_local_file_without_losing_hash_evidence",
+          "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+        },
+        {
+          "test": "test_modpacks_service.ModpackServiceTests.test_symlinked_profile_parent_cannot_redirect_pack_import",
+          "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+        },
+        {
+          "test": "test_modpacks_ui.ModpacksPageTests.test_backup_and_existing_controls_remain_reachable_at_small_window_sizes",
+          "reason": "Set HERPS_TEST_PORT_PACK for actual modpack UI integration"
+        },
+        {
+          "test": "test_modpacks_ui.ModpacksPageTests.test_chainmail_cancel_profile_switch_and_existing_save_fail_closed",
+          "reason": "Set HERPS_TEST_PORT_PACK for actual modpack UI integration"
+        },
+        {
+          "test": "test_modpacks_ui.ModpacksPageTests.test_chainmail_controls_reachable_and_busy_install_is_blocked",
+          "reason": "Set HERPS_TEST_PORT_PACK for actual modpack UI integration"
+        },
+        {
+          "test": "test_modpacks_ui.ModpacksPageTests.test_chainmail_explicit_profile_install_starts_off_and_preserves_play_guards",
+          "reason": "Set HERPS_TEST_PORT_PACK for actual modpack UI integration"
+        },
+        {
+          "test": "test_modpacks_ui.ModpacksPageTests.test_curseforge_user_instance_resolution_needs_no_api_key_or_download",
+          "reason": "Set HERPS_TEST_PORT_PACK for actual modpack UI integration"
+        },
+        {
+          "test": "test_modpacks_ui.ModpacksPageTests.test_failed_backend_retains_real_exit_stdout_stderr_in_view_errors",
+          "reason": "Set HERPS_TEST_PORT_PACK for actual modpack UI integration"
+        },
+        {
+          "test": "test_modpacks_ui.ModpacksPageTests.test_false_positive_works_stays_unsupported_in_coverage_and_errors",
+          "reason": "Set HERPS_TEST_PORT_PACK for actual modpack UI integration"
+        },
+        {
+          "test": "test_modpacks_ui.ModpacksPageTests.test_hash_mismatch_is_visible_and_does_not_enable_play",
+          "reason": "Set HERPS_TEST_PORT_PACK for actual modpack UI integration"
+        },
+        {
+          "test": "test_modpacks_ui.ModpacksPageTests.test_import_analyze_and_resolve_keep_all_mod_rows_and_required_columns",
+          "reason": "Set HERPS_TEST_PORT_PACK for actual modpack UI integration"
+        },
+        {
+          "test": "test_modpacks_ui.ModpacksPageTests.test_json_and_text_exports_retain_pack_coverage_and_backend_evidence",
+          "reason": "Set HERPS_TEST_PORT_PACK for actual modpack UI integration"
+        },
+        {
+          "test": "test_modpacks_ui.ModpacksPageTests.test_pack_analysis_stays_off_gui_thread_and_busy_guard_preserves_profile",
+          "reason": "Set HERPS_TEST_PORT_PACK for actual modpack UI integration"
+        },
+        {
+          "test": "test_modpacks_ui.ModpacksPageTests.test_packwiz_explains_backend_limitation_and_never_offers_play",
+          "reason": "Set HERPS_TEST_PORT_PACK for actual modpack UI integration"
+        },
+        {
+          "test": "test_modpacks_ui.ModpacksPageTests.test_partial_port_has_data_outputs_but_play_remains_disabled",
+          "reason": "Set HERPS_TEST_PORT_PACK for actual modpack UI integration"
+        },
+        {
+          "test": "test_modpacks_ui.ModpacksPageTests.test_profiles_isolate_pack_snapshots_and_report_selection",
+          "reason": "Set HERPS_TEST_PORT_PACK for actual modpack UI integration"
+        },
+        {
+          "test": "test_modpacks_ui.ModpacksPageTests.test_seventh_page_registration_preserves_all_existing_pages",
+          "reason": "Set HERPS_TEST_PORT_PACK for actual modpack UI integration"
+        },
+        {
+          "test": "test_modpacks_ui.ModpacksPageTests.test_targeted_backup_cancellation_unknown_pack_and_profile_switch_fail_closed",
+          "reason": "Set HERPS_TEST_PORT_PACK for actual modpack UI integration"
+        },
+        {
+          "test": "test_modpacks_ui.ModpacksPageTests.test_targeted_world_backup_and_verification_do_not_unlock_java_or_pack_play",
+          "reason": "Set HERPS_TEST_PORT_PACK for actual modpack UI integration"
+        },
+        {
+          "test": "test_package_bedrock_windows.BedrockPackagingTests.test_case_collision_is_rejected",
+          "reason": "Filesystem cannot construct distinct case-colliding files"
+        },
+        {
+          "test": "test_rlcraft_chainmail.ChainmailTests.test_linked_profile_and_settings_preserve_external_files",
+          "reason": "Windows link guards are exercised with junctions separately"
+        },
+        {
+          "test": "test_rlcraft_flint.FlintTests.test_linked_mod_folder_and_receipt_cannot_redirect_install",
+          "reason": "POSIX symlink fixture; Windows junction case is separate"
+        }
+      ],
+      "log_source": "job-specific GitHub connector logs"
+    },
+    {
+      "id": 128748899336,
+      "name": "tooling",
+      "kind": "portable",
+      "collected": 513,
+      "passed": 395,
+      "failed": 0,
+      "skipped": [
+        {
+          "test": "test_herps_entry.BundledEntrySmokeTests.test_external_override_cannot_satisfy_bundled_smoke",
+          "reason": "Set HERPS_TEST_PORT_PACK to the pinned executable"
+        },
+        {
+          "test": "test_herps_entry.BundledEntrySmokeTests.test_real_bundled_helper_checks_data_and_rejects_false_positive_works",
+          "reason": "Set HERPS_TEST_PORT_PACK to the pinned executable"
+        },
+        {
+          "test": "test_herps_ui.DesktopTests.test_all_seven_sidebar_buttons_navigate_actual_pages",
+          "reason": "Install herps_launcher/requirements.txt for desktop integration tests"
+        },
+        {
+          "test": "test_herps_ui.DesktopTests.test_favorite_server_is_saved_and_selected_through_widgets",
+          "reason": "Install herps_launcher/requirements.txt for desktop integration tests"
+        },
+        {
+          "test": "test_herps_ui.DesktopTests.test_play_button_runs_worker_and_reenables_after_exit",
+          "reason": "Install herps_launcher/requirements.txt for desktop integration tests"
+        },
+        {
+          "test": "test_herps_ui.DesktopTests.test_profile_selection_changes_game_directory_and_persists",
+          "reason": "Install herps_launcher/requirements.txt for desktop integration tests"
+        },
+        {
+          "test": "test_herps_ui.DesktopTests.test_tailscale_result_is_visible_on_home_and_multiplayer",
+          "reason": "Install herps_launcher/requirements.txt for desktop integration tests"
+        },
+        {
+          "test": "test_inspect_apk.ApkTests.test_supplied_apk",
+          "reason": "Set HORIZON_TEST_APK to run supplied-APK integration"
+        },
+        {
+          "test": "test_javamods_adapter.PortPackIntegrationTests.test_actual_works_with_access_widener_stays_unsupported",
+          "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+        },
+        {
+          "test": "test_javamods_adapter.PortPackIntegrationTests.test_actual_works_with_minecraft_version_mismatch_stays_unsupported",
+          "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+        },
+        {
+          "test": "test_javamods_adapter.PortPackIntegrationTests.test_actual_works_with_missing_dependency_stays_unsupported",
+          "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+        },
+        {
+          "test": "test_javamods_adapter.PortPackIntegrationTests.test_actual_works_with_required_mixins_stays_unsupported",
+          "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+        },
+        {
+          "test": "test_javamods_adapter.PortPackIntegrationTests.test_actual_works_with_unreadable_class_stays_unsupported",
+          "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+        },
+        {
+          "test": "test_javamods_adapter.PortPackIntegrationTests.test_duplicate_dependency_ids_are_ambiguous_not_silently_selected",
+          "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+        },
+        {
+          "test": "test_javamods_adapter.PortPackIntegrationTests.test_fully_local_pack_port_uses_real_carry_without_claiming_playability",
+          "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+        },
+        {
+          "test": "test_javamods_adapter.PortPackIntegrationTests.test_instance_analysis_preserves_every_mod_and_missing_dependencies",
+          "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+        },
+        {
+          "test": "test_javamods_adapter.PortPackIntegrationTests.test_local_port_retains_data_carry_without_successful_gameplay_claim",
+          "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+        },
+        {
+          "test": "test_javamods_adapter.PortPackIntegrationTests.test_missing_pack_jar_remains_an_unsupported_record_without_download",
+          "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+        },
+        {
+          "test": "test_javamods_adapter.PortPackIntegrationTests.test_missing_transitive_dependency_blocks_apparently_successful_parent",
+          "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+        },
+        {
+          "test": "test_javamods_adapter.PortPackIntegrationTests.test_mrpack_resolves_user_file_by_declared_hash_with_different_filename",
+          "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+        },
+        {
+          "test": "test_javamods_adapter.PortPackIntegrationTests.test_mrpack_same_filename_with_wrong_hash_is_not_accepted",
+          "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+        },
+        {
+          "test": "test_javamods_adapter.PortPackIntegrationTests.test_pack_archive_path_traversal_is_refused_before_backend",
+          "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+        },
+        {
+          "test": "test_javamods_adapter.PortPackIntegrationTests.test_profile_and_each_run_have_separate_workspaces",
+          "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+        },
+        {
+          "test": "test_javamods_adapter.PortPackIntegrationTests.test_pure_content_requires_porting_but_never_claims_native_or_tested",
+          "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+        },
+        {
+          "test": "test_javamods_adapter.PortPackIntegrationTests.test_readable_java_class_in_dependency_is_not_treated_as_data_only",
+          "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+        },
+        {
+          "test": "test_javamods_adapter.PortPackIntegrationTests.test_required_mixins_in_dependency_block_apparently_successful_parent",
+          "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+        },
+        {
+          "test": "test_javamods_adapter.PortPackIntegrationTests.test_standalone_port_cannot_prove_carry_of_satisfied_dependency_ensemble",
+          "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+        },
+        {
+          "test": "test_javamods_adapter.PortPackIntegrationTests.test_symlinked_profile_ancestor_cannot_escape_profile",
+          "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+        },
+        {
+          "test": "test_javamods_adapter.PortPackIntegrationTests.test_symlinked_profile_workspace_cannot_escape_profile",
+          "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+        },
+        {
+          "test": "test_javamods_adapter.PortPackIntegrationTests.test_unknown_inventory_class_or_confidence_cannot_hide_behind_works",
+          "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+        },
+        {
+          "test": "test_javamods_adapter.PortPackIntegrationTests.test_unreadable_dependency_blocks_apparently_successful_parent",
+          "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+        },
+        {
+          "test": "test_javamods_adapter.PortPackIntegrationTests.test_uppercase_declared_sha1_matches_the_same_local_file",
+          "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+        },
+        {
+          "test": "test_javamods_adapter.PortPackIntegrationTests.test_user_dependency_wrong_version_is_not_accepted_by_id_alone",
+          "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+        },
+        {
+          "test": "test_javamods_adapter.PortPackIntegrationTests.test_works_cannot_hide_kept_custom_recipes_or_unreadable_carry_files",
+          "reason": "Set HERPS_TEST_PORT_PACK to the built pinned executable for real CLI regressions"
+        },
+        {
+          "test": "test_javamods_cli.RealCliTests.test_actual_analyze_pack_and_local_jar_port_commands",
+          "reason": "Set HERPS_TEST_PORT_PACK to the pinned executable for command integration"
+        },
+        {
+          "test": "test_javamods_cli.RealCliTests.test_actual_check_and_both_report_export_formats",
+          "reason": "Set HERPS_TEST_PORT_PACK to the pinned executable for command integration"
+        },
+        {
+          "test": "test_javamods_cli.RealCliTests.test_actual_false_positive_works_cli_retains_raw_but_returns_unsupported",
+          "reason": "Set HERPS_TEST_PORT_PACK to the pinned executable for command integration"
+        },
+        {
+          "test": "test_javamods_cli.RealCliTests.test_actual_package_module_executes_a_headless_check",
+          "reason": "Set HERPS_TEST_PORT_PACK to the pinned executable for command integration"
+        },
+        {
+          "test": "test_javamods_cli.RealCliTests.test_export_demotes_forged_native_tested_and_missing_check_claims",
+          "reason": "Set HERPS_TEST_PORT_PACK to the pinned executable for command integration"
+        },
+        {
+          "test": "test_javamods_cli.RealCliTests.test_export_rejects_changed_or_missing_input_snapshot_as_insufficient",
+          "reason": "Set HERPS_TEST_PORT_PACK to the pinned executable for command integration"
+        },
+        {
+          "test": "test_javamods_cli.RealCliTests.test_export_revalidates_dependencies_after_diagnostics_and_status_are_forged",
+          "reason": "Set HERPS_TEST_PORT_PACK to the pinned executable for command integration"
+        },
+        {
+          "test": "test_javamods_library.LibraryPortTests.test_changed_generated_data_is_refused_after_report_receipt",
+          "reason": "Set HERPS_TEST_PORT_PACK for real data-port tests"
+        },
+        {
+          "test": "test_javamods_library.LibraryPortTests.test_changed_saved_report_cannot_install",
+          "reason": "Set HERPS_TEST_PORT_PACK for real data-port tests"
+        },
+        {
+          "test": "test_javamods_library.LibraryPortTests.test_cross_profile_port_selection_cannot_affect_original",
+          "reason": "Set HERPS_TEST_PORT_PACK for real data-port tests"
+        },
+        {
+          "test": "test_javamods_library.LibraryPortTests.test_existing_folder_id_is_never_overwritten",
+          "reason": "Set HERPS_TEST_PORT_PACK for real data-port tests"
+        },
+        {
+          "test": "test_javamods_library.LibraryPortTests.test_false_positive_works_cannot_install_an_unsupported_port",
+          "reason": "Set HERPS_TEST_PORT_PACK for real data-port tests"
+        },
+        {
+          "test": "test_javamods_library.LibraryPortTests.test_installed_data_edits_are_preserved_and_not_managed_blindly",
+          "reason": "Set HERPS_TEST_PORT_PACK for real data-port tests"
+        },
+        {
+          "test": "test_javamods_library.LibraryPortTests.test_real_data_folder_uses_engine_setting_starts_disabled_and_backs_up",
+          "reason": "Set HERPS_TEST_PORT_PACK for real data-port tests"
+        },
+        {
+          "test": "test_javamods_library.LibraryPortTests.test_receipt_write_failure_rolls_back_only_new_installation",
+          "reason": "Set HERPS_TEST_PORT_PACK for real data-port tests"
+        },
+        {
+          "test": "test_javamods_ui.JavaModsPageBackendTests.test_actual_false_positive_works_is_rendered_as_unsupported_with_full_evidence",
+          "reason": "Install pinned launcher requirements for Qt integration"
+        },
+        {
+          "test": "test_javamods_ui.JavaModsPageBackendTests.test_background_analysis_keeps_event_loop_live_and_blocks_profile_mutations",
+          "reason": "Install pinned launcher requirements for Qt integration"
+        },
+        {
+          "test": "test_javamods_ui.JavaModsPageBackendTests.test_cancel_is_unavailable_once_result_recording_begins",
+          "reason": "Install pinned launcher requirements for Qt integration"
+        },
+        {
+          "test": "test_javamods_ui.JavaModsPageBackendTests.test_cancelled_analysis_discards_new_report_after_passive_worker_finishes",
+          "reason": "Install pinned launcher requirements for Qt integration"
+        },
+        {
+          "test": "test_javamods_ui.JavaModsPageBackendTests.test_json_and_readable_exports_preserve_actual_backend_evidence",
+          "reason": "Install pinned launcher requirements for Qt integration"
+        },
+        {
+          "test": "test_javamods_ui.JavaModsPageBackendTests.test_port_enable_disable_and_backup_preserve_saves_and_original_import",
+          "reason": "Install pinned launcher requirements for Qt integration"
+        },
+        {
+          "test": "test_javamods_ui.JavaModsPageBackendTests.test_resolve_dependencies_uses_user_directory_and_retains_hash_evidence",
+          "reason": "Install pinned launcher requirements for Qt integration"
+        },
+        {
+          "test": "test_javamods_ui.JavaModsPageBackendTests.test_saved_report_is_revalidated_before_rendering_after_profile_reload",
+          "reason": "Install pinned launcher requirements for Qt integration"
+        },
+        {
+          "test": "test_javamods_ui.JavaModsPageTests.test_fabric_forge_neoforge_imports_retain_local_copies_without_execution",
+          "reason": "Install pinned launcher requirements for Qt integration"
+        },
+        {
+          "test": "test_javamods_ui.JavaModsPageTests.test_failed_library_load_stops_retrying_and_keeps_actionable_error",
+          "reason": "Install pinned launcher requirements for Qt integration"
+        },
+        {
+          "test": "test_javamods_ui.JavaModsPageTests.test_failed_subprocess_shows_exit_stdout_stderr_and_raw_diagnostics",
+          "reason": "Install pinned launcher requirements for Qt integration"
+        },
+        {
+          "test": "test_javamods_ui.JavaModsPageTests.test_imports_and_selection_are_isolated_per_profile",
+          "reason": "Install pinned launcher requirements for Qt integration"
+        },
+        {
+          "test": "test_javamods_ui.JavaModsPageTests.test_java_mods_registration_preserves_all_existing_pages",
+          "reason": "Install pinned launcher requirements for Qt integration"
+        },
+        {
+          "test": "test_javamods_ui.JavaModsPageTests.test_missing_binary_failure_is_visible_without_a_success_claim",
+          "reason": "Install pinned launcher requirements for Qt integration"
+        },
+        {
+          "test": "test_javamods_ui.JavaModsPageTests.test_ui_never_promotes_forged_saved_success_statuses",
+          "reason": "Install pinned launcher requirements for Qt integration"
+        },
+        {
+          "test": "test_macos_launcher.MacLauncherTests.test_actual_dialog_scripts_compile_on_mac",
+          "reason": "AppleScript compilation requires macOS"
+        },
+        {
+          "test": "test_modpacks_service.ModpackServiceTests.test_analysis_and_port_only_invoke_allowlisted_passive_rust_commands",
+          "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+        },
+        {
+          "test": "test_modpacks_service.ModpackServiceTests.test_changed_generated_port_tree_is_demoted_on_load_and_export",
+          "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+        },
+        {
+          "test": "test_modpacks_service.ModpackServiceTests.test_correct_sha1_cannot_hide_a_conflicting_known_sha512",
+          "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+        },
+        {
+          "test": "test_modpacks_service.ModpackServiceTests.test_curseforge_manifest_ids_resolve_from_user_instance_without_api_key",
+          "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+        },
+        {
+          "test": "test_modpacks_service.ModpackServiceTests.test_curseforge_modlist_cannot_silently_remove_manifest_only_entries",
+          "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+        },
+        {
+          "test": "test_modpacks_service.ModpackServiceTests.test_declared_hash_mismatch_does_not_accept_same_filename",
+          "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+        },
+        {
+          "test": "test_modpacks_service.ModpackServiceTests.test_embedded_modrinth_mod_is_inspected_without_network_or_user_folder",
+          "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+        },
+        {
+          "test": "test_modpacks_service.ModpackServiceTests.test_export_json_and_text_preserve_original_evidence_and_unplayable_summary",
+          "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+        },
+        {
+          "test": "test_modpacks_service.ModpackServiceTests.test_imported_pack_snapshot_survives_original_removal_and_detects_snapshot_edits",
+          "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+        },
+        {
+          "test": "test_modpacks_service.ModpackServiceTests.test_missing_modrinth_files_remain_visible_as_unsupported_rows",
+          "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+        },
+        {
+          "test": "test_modpacks_service.ModpackServiceTests.test_modrinth_import_resolves_owned_files_and_retains_every_coverage_column",
+          "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+        },
+        {
+          "test": "test_modpacks_service.ModpackServiceTests.test_original_works_false_positive_retains_missing_dependency_and_unsupported_features",
+          "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+        },
+        {
+          "test": "test_modpacks_service.ModpackServiceTests.test_pack_storage_is_profile_isolated_and_existing_game_files_are_untouched",
+          "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+        },
+        {
+          "test": "test_modpacks_service.ModpackServiceTests.test_packwiz_is_explicitly_unsupported_without_inventing_a_parser",
+          "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+        },
+        {
+          "test": "test_modpacks_service.ModpackServiceTests.test_partial_data_carry_preserves_unsupported_rows_and_never_becomes_playable",
+          "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+        },
+        {
+          "test": "test_modpacks_service.ModpackServiceTests.test_partial_port_prunes_mod_whose_dependency_is_only_an_external_file",
+          "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+        },
+        {
+          "test": "test_modpacks_service.ModpackServiceTests.test_prism_multimc_instance_uses_real_backend_import",
+          "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+        },
+        {
+          "test": "test_modpacks_service.ModpackServiceTests.test_renaming_an_unrelated_jar_to_a_curseforge_placeholder_cannot_prove_identity",
+          "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+        },
+        {
+          "test": "test_modpacks_service.ModpackServiceTests.test_saved_pack_report_cannot_forge_playable_or_tested_success",
+          "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+        },
+        {
+          "test": "test_modpacks_service.ModpackServiceTests.test_sha512_mismatch_does_not_accept_same_filename",
+          "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+        },
+        {
+          "test": "test_modpacks_service.ModpackServiceTests.test_sha512_only_index_resolves_renamed_local_file_without_losing_hash_evidence",
+          "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+        },
+        {
+          "test": "test_modpacks_service.ModpackServiceTests.test_symlinked_profile_parent_cannot_redirect_pack_import",
+          "reason": "Set HERPS_TEST_PORT_PACK for real modpack integration"
+        },
+        {
+          "test": "test_modpacks_ui.ModpacksPageTests.test_backup_and_existing_controls_remain_reachable_at_small_window_sizes",
+          "reason": "Install pinned launcher requirements for Qt integration"
+        },
+        {
+          "test": "test_modpacks_ui.ModpacksPageTests.test_chainmail_cancel_profile_switch_and_existing_save_fail_closed",
+          "reason": "Install pinned launcher requirements for Qt integration"
+        },
+        {
+          "test": "test_modpacks_ui.ModpacksPageTests.test_chainmail_controls_reachable_and_busy_install_is_blocked",
+          "reason": "Install pinned launcher requirements for Qt integration"
+        },
+        {
+          "test": "test_modpacks_ui.ModpacksPageTests.test_chainmail_explicit_profile_install_starts_off_and_preserves_play_guards",
+          "reason": "Install pinned launcher requirements for Qt integration"
+        },
+        {
+          "test": "test_modpacks_ui.ModpacksPageTests.test_curseforge_user_instance_resolution_needs_no_api_key_or_download",
+          "reason": "Install pinned launcher requirements for Qt integration"
+        },
+        {
+          "test": "test_modpacks_ui.ModpacksPageTests.test_failed_backend_retains_real_exit_stdout_stderr_in_view_errors",
+          "reason": "Install pinned launcher requirements for Qt integration"
+        },
+        {
+          "test": "test_modpacks_ui.ModpacksPageTests.test_false_positive_works_stays_unsupported_in_coverage_and_errors",
+          "reason": "Install pinned launcher requirements for Qt integration"
+        },
+        {
+          "test": "test_modpacks_ui.ModpacksPageTests.test_hash_mismatch_is_visible_and_does_not_enable_play",
+          "reason": "Install pinned launcher requirements for Qt integration"
+        },
+        {
+          "test": "test_modpacks_ui.ModpacksPageTests.test_import_analyze_and_resolve_keep_all_mod_rows_and_required_columns",
+          "reason": "Install pinned launcher requirements for Qt integration"
+        },
+        {
+          "test": "test_modpacks_ui.ModpacksPageTests.test_json_and_text_exports_retain_pack_coverage_and_backend_evidence",
+          "reason": "Install pinned launcher requirements for Qt integration"
+        },
+        {
+          "test": "test_modpacks_ui.ModpacksPageTests.test_pack_analysis_stays_off_gui_thread_and_busy_guard_preserves_profile",
+          "reason": "Install pinned launcher requirements for Qt integration"
+        },
+        {
+          "test": "test_modpacks_ui.ModpacksPageTests.test_packwiz_explains_backend_limitation_and_never_offers_play",
+          "reason": "Install pinned launcher requirements for Qt integration"
+        },
+        {
+          "test": "test_modpacks_ui.ModpacksPageTests.test_partial_port_has_data_outputs_but_play_remains_disabled",
+          "reason": "Install pinned launcher requirements for Qt integration"
+        },
+        {
+          "test": "test_modpacks_ui.ModpacksPageTests.test_profiles_isolate_pack_snapshots_and_report_selection",
+          "reason": "Install pinned launcher requirements for Qt integration"
+        },
+        {
+          "test": "test_modpacks_ui.ModpacksPageTests.test_seventh_page_registration_preserves_all_existing_pages",
+          "reason": "Install pinned launcher requirements for Qt integration"
+        },
+        {
+          "test": "test_modpacks_ui.ModpacksPageTests.test_targeted_backup_cancellation_unknown_pack_and_profile_switch_fail_closed",
+          "reason": "Install pinned launcher requirements for Qt integration"
+        },
+        {
+          "test": "test_modpacks_ui.ModpacksPageTests.test_targeted_world_backup_and_verification_do_not_unlock_java_or_pack_play",
+          "reason": "Install pinned launcher requirements for Qt integration"
+        },
+        {
+          "test": "test_rlcraft_bandage.BandageTests.test_windows_junction_cannot_redirect_addon_install",
+          "reason": "Windows junction behavior requires Windows"
+        },
+        {
+          "test": "test_rlcraft_bandage_ui.BandagePageTests.test_stage4_consent_resets_and_controls_remain_reachable",
+          "reason": "Install pinned Qt requirements"
+        },
+        {
+          "test": "test_rlcraft_bandage_ui.BandagePageTests.test_stage4_install_off_explicit_enable_and_unsupported_workflows_stay_disabled",
+          "reason": "Install pinned Qt requirements"
+        },
+        {
+          "test": "test_rlcraft_chainmail.ChainmailTests.test_windows_junction_cannot_redirect_installation",
+          "reason": "Windows junction behavior requires Windows"
+        },
+        {
+          "test": "test_rlcraft_flint.FlintTests.test_windows_junction_cannot_redirect_flint_install",
+          "reason": "Windows junction behavior requires Windows"
+        },
+        {
+          "test": "test_rlcraft_flint_ui.FlintPageTests.test_cancel_profile_switch_busy_and_existing_world_preserve_data",
+          "reason": "Install pinned Qt requirements"
+        },
+        {
+          "test": "test_rlcraft_flint_ui.FlintPageTests.test_explicit_profile_install_starts_off_and_keeps_unsupported_play_disabled",
+          "reason": "Install pinned Qt requirements"
+        },
+        {
+          "test": "test_rlcraft_flint_ui.FlintPageTests.test_flint_controls_remain_reachable_in_supported_small_windows",
+          "reason": "Install pinned Qt requirements"
+        },
+        {
+          "test": "test_rlcraft_gathering.GatheringTests.test_windows_junction_cannot_redirect_addon_install",
+          "reason": "Windows junction behavior requires Windows"
+        },
+        {
+          "test": "test_rlcraft_gathering_ui.GatheringPageTests.test_stage2_consent_resets_and_controls_remain_reachable",
+          "reason": "Install pinned Qt requirements"
+        },
+        {
+          "test": "test_rlcraft_gathering_ui.GatheringPageTests.test_stage2_install_off_explicit_enable_and_unsupported_workflows_stay_disabled",
+          "reason": "Install pinned Qt requirements"
+        },
+        {
+          "test": "test_rlcraft_woodcutting.WoodcuttingTests.test_windows_junction_cannot_redirect_addon_install",
+          "reason": "Windows junction behavior requires Windows"
+        },
+        {
+          "test": "test_rlcraft_woodcutting_ui.WoodcuttingPageTests.test_stage3_consent_resets_and_controls_remain_reachable",
+          "reason": "Install pinned Qt requirements"
+        },
+        {
+          "test": "test_rlcraft_woodcutting_ui.WoodcuttingPageTests.test_stage3_install_off_explicit_enable_and_unsupported_workflows_stay_disabled",
+          "reason": "Install pinned Qt requirements"
+        }
+      ],
+      "log_source": "job-specific GitHub connector logs"
+    },
+    {
+      "id": 128748899415,
+      "name": "resource-pack (ubuntu-latest)",
+      "kind": "resource-pack",
+      "collected": 13,
+      "passed": 13,
+      "failed": 0,
+      "skipped": [],
+      "log_source": "job-specific GitHub connector logs"
+    },
+    {
+      "id": 128748899568,
+      "name": "resource-pack (windows-latest)",
+      "kind": "resource-pack",
+      "collected": 13,
+      "passed": 13,
+      "failed": 0,
+      "skipped": [],
+      "log_source": "job-specific GitHub connector logs"
+    }
+  ],
+  "artifact_metadata": {
+    "artifacts": [
+      {
+        "id": 13620085468,
+        "name": "Herps-Better-Leaves-9.6-MC26.3-Linux",
+        "size_in_bytes": 46354,
+        "url": "https://api.github.com/repos/Zeigen-ft/Herps-Launcher/actions/artifacts/13620085468",
+        "archive_download_url": "https://api.github.com/repos/Zeigen-ft/Herps-Launcher/actions/artifacts/13620085468/zip",
+        "expired": false,
+        "created_at": "2026-11-08T13:44:09Z",
+        "expires_at": "2027-02-06T13:43:46Z",
+        "updated_at": "2026-11-08T13:44:09Z",
+        "digest": "sha256:936e4abd1b6d5fc44dfa844a857f1c3cecfb9aa7559bf1be8c507b5ad0138cbc",
+        "workflow_run": {
+          "id": 42486330922,
+          "repository_id": 1444001642,
+          "head_repository_id": 1444001642,
+          "head_branch": "feature/better-leaves-resource-pack",
+          "head_sha": "555b71997dc402241aa3136454087dc132dba4fd"
+        }
+      },
+      {
+        "id": 13619911244,
+        "name": "Herps-Better-Leaves-log-Windows",
+        "size_in_bytes": 1349,
+        "url": "https://api.github.com/repos/Zeigen-ft/Herps-Launcher/actions/artifacts/13619911244",
+        "archive_download_url": "https://api.github.com/repos/Zeigen-ft/Herps-Launcher/actions/artifacts/13619911244/zip",
+        "expired": false,
+        "created_at": "2026-11-08T13:44:44Z",
+        "expires_at": "2027-02-06T13:43:46Z",
+        "updated_at": "2026-11-08T13:44:44Z",
+        "digest": "sha256:78d236d81f674213a7cf5a292359ccbc10b91c8e17fb2d250f19bdc409501e6c",
+        "workflow_run": {
+          "id": 42486330922,
+          "repository_id": 1444001642,
+          "head_repository_id": 1444001642,
+          "head_branch": "feature/better-leaves-resource-pack",
+          "head_sha": "555b71997dc402241aa3136454087dc132dba4fd"
+        }
+      },
+      {
+        "id": 13619507718,
+        "name": "Herps-Better-Leaves-9.6-MC26.3-Windows",
+        "size_in_bytes": 46375,
+        "url": "https://api.github.com/repos/Zeigen-ft/Herps-Launcher/actions/artifacts/13619507718",
+        "archive_download_url": "https://api.github.com/repos/Zeigen-ft/Herps-Launcher/actions/artifacts/13619507718/zip",
+        "expired": false,
+        "created_at": "2026-11-08T13:44:43Z",
+        "expires_at": "2027-02-06T13:43:46Z",
+        "updated_at": "2026-11-08T13:44:43Z",
+        "digest": "sha256:fa343651b9f0673dc7215e59ce149d176f0c8f2cd3c6ad0ab6a1033dc0017712",
+        "workflow_run": {
+          "id": 42486330922,
+          "repository_id": 1444001642,
+          "head_repository_id": 1444001642,
+          "head_branch": "feature/better-leaves-resource-pack",
+          "head_sha": "555b71997dc402241aa3136454087dc132dba4fd"
+        }
+      },
+      {
+        "id": 13619493164,
+        "name": "Herps-Better-Leaves-log-Linux",
+        "size_in_bytes": 1356,
+        "url": "https://api.github.com/repos/Zeigen-ft/Herps-Launcher/actions/artifacts/13619493164",
+        "archive_download_url": "https://api.github.com/repos/Zeigen-ft/Herps-Launcher/actions/artifacts/13619493164/zip",
+        "expired": false,
+        "created_at": "2026-11-08T13:44:10Z",
+        "expires_at": "2027-02-06T13:43:46Z",
+        "updated_at": "2026-11-08T13:44:10Z",
+        "digest": "sha256:f2cf6162ec83dc0a5363a7a7d3c7bdec7665e8400249880d359c6a774de8f248",
+        "workflow_run": {
+          "id": 42486330922,
+          "repository_id": 1444001642,
+          "head_repository_id": 1444001642,
+          "head_branch": "feature/better-leaves-resource-pack",
+          "head_sha": "555b71997dc402241aa3136454087dc132dba4fd"
+        }
+      }
+    ]
+  },
+  "independent_audit": {
+    "status": "passed",
+    "identical_windows_linux_and_original_rebuild": true,
+    "all_payload_files_and_source_pins_match": true,
+    "zip_crc_verified": true,
+    "platforms": [
+      {
+        "platform": "win32",
+        "build": {
+          "schema": 1,
+          "package": "Herps-Better-Leaves-9.6-MC26.3.zip",
+          "bytes": 84532,
+          "sha256": "2743be9a74c34051db28ac3ccbdfc7c991fa729f2c7ca6386b1ac97fa48e2400",
+          "source_commit": "555b71997dc402241aa3136454087dc132dba4fd",
+          "input_archive_sha256": "cbeeccd774f910ed270dbe9651d789a8f785d055499f846e466d86f9cae91e90",
+          "target_game": "26.3",
+          "resource_format": [
+            97,
+            1
+          ],
+          "targets": [
+            "acacia_leaves",
+            "azalea_leaves",
+            "birch_leaves",
+            "cherry_leaves",
+            "dark_oak_leaves",
+            "flowering_azalea_leaves",
+            "jungle_leaves",
+            "mangrove_leaves",
+            "oak_leaves",
+            "orange_poplar_leaves",
+            "pale_oak_leaves",
+            "red_poplar_leaves",
+            "spruce_leaves",
+            "yellow_poplar_leaves"
+          ],
+          "files": 113,
+          "native_graph": {
+            "blocks": 14,
+            "models": 80,
+            "textures": 14,
+            "inventory_models": 14,
+            "blockstate_variants": 224,
+            "external_parent": "minecraft:block/block"
+          },
+          "original_source_asset_bytes_unchanged": true,
+          "license": "MIT",
+          "contains_code": false,
+          "requires_launcher_reinstall": false,
+          "default_enabled": false,
+          "visual_verified": false,
+          "gameplay_verified": false,
+          "performance_verified": false,
+          "unsupported_java_mod_overrides_omitted": true,
+          "files_sha256": {
+            "LICENSE": "e9066842a3606b3f3af056f5db1dae1a35d170710b2ec20838d0f51048e59369",
+            "NOTICE.txt": "5e586b30e5bd661c756a4569ce40672a97acccadc5589ac8537a7b2337d529f8",
+            "README-HERPS.txt": "ffd9dd28178d7659486bd31add05c6da10fc36894fc6b41f98ae19f5598373f8",
+            "assets/betterleaves/models/block/leaves.json": "b6d5c8191b5ba5ab3b5536145528177f90dd5ffb0abce2252e0b2adcf1555586",
+            "assets/betterleaves/models/block/leaves1.json": "259e21ed8850b9c8184c8b4803b823c502af265289e8d36bf06da25759066cb9",
+            "assets/betterleaves/models/block/leaves2.json": "9126219c15b079a291b94b1b86bd37a677d9f633c917f0ad42805acba128fb17",
+            "assets/betterleaves/models/block/leaves3.json": "5d390841bf8a4e5e843359f9538347d8fc21b8f0271fa4f2c5c6d5d614b9e0a3",
+            "assets/betterleaves/models/block/leaves4.json": "07b7872d5d0d76124046bda31870cb5c84bfbd0aed20a57f038fd7f9ad9b3907",
+            "assets/betterleaves/models/block/leaves_notint.json": "95615a1eb231fc99acec9f11e5cdfe8bfdf1f903fc8fe9e0ee7a8b795b26f87c",
+            "assets/betterleaves/models/block/leaves_notint1.json": "268547bff47aa0c4e9124b24e82c273876b764f7c65010655b64c34484a099e3",
+            "assets/betterleaves/models/block/leaves_notint2.json": "32fa6838a140b5f1ce761eb135d2259d6b9906c53021758890feeefd6ec997ae",
+            "assets/betterleaves/models/block/leaves_notint3.json": "363e476a69da87418494b788cfba1ffa8a9f866829569094210d4361bf9023ff",
+            "assets/betterleaves/models/block/leaves_notint4.json": "a69733e71bc814369406ea075e057bfd9c27c974b52e65fb0495bcf878dbcbac",
+            "assets/minecraft/blockstates/acacia_leaves.json": "4f6c6692da63404eda601434632a1591d7a5851362308db08d6da3acabb70ee1",
+            "assets/minecraft/blockstates/azalea_leaves.json": "8c656a0d69ae89aa5444204e7df74a4976f6cfb4716f557c9d301c623dabe63f",
+            "assets/minecraft/blockstates/birch_leaves.json": "aee5b977a44bf807155efe21a1692e77f9bb3451b5d764d22eb7cf028a5962c8",
+            "assets/minecraft/blockstates/cherry_leaves.json": "0e7e51c85b3a15a121a6f667f2fc2230fbd142b75235f2d13cc8184f8b39b2ae",
+            "assets/minecraft/blockstates/dark_oak_leaves.json": "e0ad02337ee8ff36c476e102bebd431051cee7f2b888ee6793ebd4c5a45ae833",
+            "assets/minecraft/blockstates/flowering_azalea_leaves.json": "e8edcc305acc12f263442c656015a5a31bc5c35e7fc90f69e8f7a28da0b4eb0e",
+            "assets/minecraft/blockstates/jungle_leaves.json": "0364a077d815a84d77be35e2872fa8b0a8e3432269fdf776ee91bb4821151194",
+            "assets/minecraft/blockstates/mangrove_leaves.json": "2b5e451c36fed620cc3b0c40d5775bfdccb43155acdcaca8edc1f788deeca88c",
+            "assets/minecraft/blockstates/oak_leaves.json": "39575847e10871dc1c7ed69921a60dee04c63b6ef9f39e40a7c84b11c0e3a70b",
+            "assets/minecraft/blockstates/orange_poplar_leaves.json": "f029a4261f51fa97f3a41289a34854b1aeb5b693e4c84d1eb25841f501a6cb32",
+            "assets/minecraft/blockstates/pale_oak_leaves.json": "27ed3491b82cf81a51e301eab4dbbb0f59b236adf29d869bf0cd9387e67490d5",
+            "assets/minecraft/blockstates/red_poplar_leaves.json": "a7fb266569cf94b86f66f299face0e7c3525689c4d04c8c2e8f7696e2f78adf7",
+            "assets/minecraft/blockstates/spruce_leaves.json": "5e5c2d4cf3e8e39539b2624b3859bfa98614f4ca70a84327a7e2c44470f41a52",
+            "assets/minecraft/blockstates/yellow_poplar_leaves.json": "022238ac1837e9e330b109318c36dcaaa01ad8423e00ff2bee2a4066e13da846",
+            "assets/minecraft/models/block/acacia_leaves.json": "5be3853cecce526b9be07108e7b714a9f16ac36b4a1fe712a76107b62830f60d",
+            "assets/minecraft/models/block/acacia_leaves1.json": "f600e560ba8a8b7931e18b59d17090cce8a22020e8be7def9a44a549ef57f7da",
+            "assets/minecraft/models/block/acacia_leaves2.json": "3872cc1673f99b745884a87476c6f09a17a9652ef0665a72df212c435414aedf",
+            "assets/minecraft/models/block/acacia_leaves3.json": "e32f9781f9587f3e62215ba2a61e4c27522a8966f169c9ced67c994bb161391f",
+            "assets/minecraft/models/block/acacia_leaves4.json": "1d88647936c39604c0a3b64ee23e596d885c3d9f09c50a7e4e625c4fb91ccc5e",
+            "assets/minecraft/models/block/azalea_leaves.json": "2184f622d186c90dcdc6e8eef7d9029c71930fe671bc07639cfee134e2f8a564",
+            "assets/minecraft/models/block/azalea_leaves1.json": "989278fa0bdabb21cc2c6f02195611f8a2064c9e80a039df43fcf5289392b19c",
+            "assets/minecraft/models/block/azalea_leaves2.json": "cfd30013659577d2719e30e5e774af698e92439f4ad55925c5809900ad0f36c1",
+            "assets/minecraft/models/block/azalea_leaves3.json": "6f33babe57a24fdb424f2218d9a83ec855dfd30bf62b8316d8bc280ae342e171",
+            "assets/minecraft/models/block/azalea_leaves4.json": "dfc4ea9153de3c4a561bf0357aa645ced4373297fe8b7917d16eb1b547cf7d98",
+            "assets/minecraft/models/block/birch_leaves.json": "1b1d021241bc3d90a7ba825c076277b18a72f807905b8cd5f46c407910fdca02",
+            "assets/minecraft/models/block/birch_leaves1.json": "fe9c3b9790e49aae5801d3e01d859063c46db310e6ff578352ed85832b3f9212",
+            "assets/minecraft/models/block/birch_leaves2.json": "d2afc688d1d37386a70cb611b45c2a45916eb4f9337bb22ccc57cd6cc694fb0f",
+            "assets/minecraft/models/block/birch_leaves3.json": "4b748f11382be00ec0633ad7ac0097310e8dbbccfaa31fda8218458e37ed0714",
+            "assets/minecraft/models/block/birch_leaves4.json": "7b4b9ce5cc8eb21b0d099cdba3a65dd654d0ea709aff1dd54529aa26077a0855",
+            "assets/minecraft/models/block/cherry_leaves.json": "b75d077a17abb7c20ac55890a0e65ed5bb01fe818c7b53f422b53caf176e12b5",
+            "assets/minecraft/models/block/cherry_leaves1.json": "814863431199f6105ac77a44773cbce5cbf1cb6719abdbcbccf612ec24b94876",
+            "assets/minecraft/models/block/cherry_leaves2.json": "a1a6d022b231c22ed89cece675e7423279b342a408422a8f743fb66a55f37fa0",
+            "assets/minecraft/models/block/cherry_leaves3.json": "b506d37c41efd75e66984fa077fd92f94c19471d77a49dc82a14da1545ce4c2d",
+            "assets/minecraft/models/block/cherry_leaves4.json": "62c4189c8014d4a8f014d433240038a8320e85cdcb1cc09efdb26f4d40d8fffe",
+            "assets/minecraft/models/block/dark_oak_leaves.json": "bfdd5c03d98cbcf21f61bb1cb8cb82fd0facf8ae159916cdc6f0afddf264b368",
+            "assets/minecraft/models/block/dark_oak_leaves1.json": "7c2827449d55dd816f18a9966bae1655a6bc5f32cf29e92b8865600fd9b0a7e5",
+            "assets/minecraft/models/block/dark_oak_leaves2.json": "82a85346884ba8cf5ad868366b0ec2011107d56cedb5ff67c4dbad7fa5db7ff2",
+            "assets/minecraft/models/block/dark_oak_leaves3.json": "e670befef660bef01a57773e3bd02b0efd098a7fb55ec948368c0fa5ade656f7",
+            "assets/minecraft/models/block/dark_oak_leaves4.json": "f154e9640ba14871f0ea843f9da489beef6a4041fcd14ab21e2861fa2b108012",
+            "assets/minecraft/models/block/flowering_azalea_leaves.json": "2ae11f6099a76b00118cb5f0f96a1b04edf4aaee16be20f53f9be859f2712be0",
+            "assets/minecraft/models/block/flowering_azalea_leaves1.json": "87cb23e0c8370baa427fb14e1b25df86a7d6e28d299c134607aeaecdbb469f02",
+            "assets/minecraft/models/block/flowering_azalea_leaves2.json": "d817c970abe269ccf8660f59af1b870d39ffb79dfe2383efb934e799946f481b",
+            "assets/minecraft/models/block/flowering_azalea_leaves3.json": "b50c98f6487c603a0ae73bdd4872add27cbe96af42ea5807e70c77f1f3a96407",
+            "assets/minecraft/models/block/flowering_azalea_leaves4.json": "aaf8405fcd2a64474e8bb1f9622dd291cf3e058beaaf8f4e775ac92a261ff03e",
+            "assets/minecraft/models/block/jungle_leaves.json": "707a092c670795fcc38898abe0cfc285862d22ad6ae8e554397ad1c1e7ac5fae",
+            "assets/minecraft/models/block/jungle_leaves1.json": "dca3f6d1073d3e871ff711cd15846ea3da4d83cc137349c28b9f297183f48c1a",
+            "assets/minecraft/models/block/jungle_leaves2.json": "5e67c4a2681d4194069563bd1d7956d80a9b7686e1eac0e3afaeec8b52474142",
+            "assets/minecraft/models/block/jungle_leaves3.json": "f024df40821c88fb49205fa6f5788bfb80f5b937626849c0498b70f738993b89",
+            "assets/minecraft/models/block/jungle_leaves4.json": "0340507766a313ffe01f92e4860376775d8bd0f518a85487f35b356d877721c3",
+            "assets/minecraft/models/block/mangrove_leaves.json": "3eb961a7e2b569c63ac16916276303e0efb0765e08babefc0f5a856a3b22c618",
+            "assets/minecraft/models/block/mangrove_leaves1.json": "f78258a267ce16526bc0939839996a200e0861192ed8e0c79dabbf5a002925aa",
+            "assets/minecraft/models/block/mangrove_leaves2.json": "be206a9fe6083f2a9aa660e1a55b439625d84d74e1bc3cd4edf474551161531f",
+            "assets/minecraft/models/block/mangrove_leaves3.json": "4e5d81a9736887bec6e972290d3aca1fbf6212b8fc0746258d5f1c8011a090e9",
+            "assets/minecraft/models/block/mangrove_leaves4.json": "a9311d44fa262c401329a5ea16c5fb5570ad2a982f67f16e739393efd307759a",
+            "assets/minecraft/models/block/oak_leaves.json": "6b2bca13c0f0bab81d2aa596cae59f445b290ae8959822ddc3293e22537283bd",
+            "assets/minecraft/models/block/oak_leaves1.json": "6976bd4049ad3df22df097f55377f8e370b20323b69f7d4270cc7ea9190a07ff",
+            "assets/minecraft/models/block/oak_leaves2.json": "c3466ade4bf0b39f57e0565adf2963984b9829f781666552d50473c8876b5677",
+            "assets/minecraft/models/block/oak_leaves3.json": "dd063b9a6b7c263584456d0fe6636208383c2fb73118599449ee0b36a8aa8ecc",
+            "assets/minecraft/models/block/oak_leaves4.json": "2f5c8e5968cbc2bba3136187251731308e176f8081211e3385fd934ecb09e254",
+            "assets/minecraft/models/block/orange_poplar_leaves.json": "d73c0ad5ec5d173683b7b3fa843abecbfba89929e712531c11a291a1db82e16c",
+            "assets/minecraft/models/block/orange_poplar_leaves1.json": "775e07e9acc8d0393875d5998c04658c8c52bf86bfe1881eed57c4822b5db97d",
+            "assets/minecraft/models/block/orange_poplar_leaves2.json": "9e5c3bb79ef90a08b0690bf2c7103d6964afdb4d4f8a737ac9d06fc227859ca2",
+            "assets/minecraft/models/block/orange_poplar_leaves3.json": "c2c9e343208c6391781b1676b39bd0f9ac0218728be92b8daf560b45b8196ca2",
+            "assets/minecraft/models/block/orange_poplar_leaves4.json": "66770aae6a9bad2b62a4874f5daa3b97df9a06a9026cbafc75857265ba7cc18f",
+            "assets/minecraft/models/block/pale_oak_leaves.json": "3e46009a104d32b8da5ba8487f9a8c73715afb2f28858bf552251fb19ab7e8d7",
+            "assets/minecraft/models/block/pale_oak_leaves1.json": "efdccfc8f8ca22b27b91ee90724c3afcd5ab49ec33309617fe3b2706b4088e85",
+            "assets/minecraft/models/block/pale_oak_leaves2.json": "2603ef7989b967d7ed31605d798c2754fd90ac3201e6e262d06a1f6d20a8c98e",
+            "assets/minecraft/models/block/pale_oak_leaves3.json": "3362e3704ce0f3de7c1b3ef2f8d26060923051df5d74e8d2a8b42b8eb205223f",
+            "assets/minecraft/models/block/pale_oak_leaves4.json": "4eef4a613840ad7986efcb99945333ea539f4d680b363ef225f4cee8bc6b3590",
+            "assets/minecraft/models/block/red_poplar_leaves.json": "23f4a8bac0ca101f54b1649b9447b9d3d09af33519737bb120f504f5a08b7782",
+            "assets/minecraft/models/block/red_poplar_leaves1.json": "2c905447ee6d48ccb3eb0be3ea2602925757f2894429fd61d799ac70e2c52e62",
+            "assets/minecraft/models/block/red_poplar_leaves2.json": "b48b78c628399f4de590985bf58ad46f2d6d5c655715144be9bf568eb0b2e8ae",
+            "assets/minecraft/models/block/red_poplar_leaves3.json": "4ad752b66c2210d20f31c78cbe3e8603cd16bbf67fd9a22446499c080482571b",
+            "assets/minecraft/models/block/red_poplar_leaves4.json": "26b56303402f07dab0f71770a831c22a71d532d837d8f0e5036fd72b7ff83ea6",
+            "assets/minecraft/models/block/spruce_leaves.json": "a639724dcecf2d2f0636268b183ae1ce7d48fcbe17c0c51aa966ac6df2fb3960",
+            "assets/minecraft/models/block/spruce_leaves1.json": "bd8042bc33918f6d533f73198013fc5dffcc1645abeecf695f8db77cd0ea7e89",
+            "assets/minecraft/models/block/spruce_leaves2.json": "3092858ba2c7e692dab4b750125e17ec67812cf924435dfdaab822fbb7fd039d",
+            "assets/minecraft/models/block/spruce_leaves3.json": "7af18e11eea87d8df6ce4f06083392057052ab58a7ff030b09a771feadb085ed",
+            "assets/minecraft/models/block/spruce_leaves4.json": "c16f3158126ad4d2c9bc9d9473e618403496be5d3070ad83525f83bebdfbfa27",
+            "assets/minecraft/models/block/yellow_poplar_leaves.json": "d9dbc4a5e3b52c48f8dee014e947aff4a3e80443c2c213ae1e93a5379b147112",
+            "assets/minecraft/models/block/yellow_poplar_leaves1.json": "68f260553eedc5847c0aa2f16d5abc43b80201d036f4965094619eb846e88f87",
+            "assets/minecraft/models/block/yellow_poplar_leaves2.json": "9fb69736e602c949e11080ba2a4af3bf2b3ce5e4bea11a2cf928b9679ee46609",
+            "assets/minecraft/models/block/yellow_poplar_leaves3.json": "f23472751f32781f46c8e8255ca731c161a9dcf3b2b04381bbf3bb8aa6311215",
+            "assets/minecraft/models/block/yellow_poplar_leaves4.json": "f92846234147cdd93cdbb19fbd1856d8090501face82a5202b8f2685a669c5d8",
+            "assets/minecraft/textures/block/acacia_leaves.png": "307a4d8727c97070e26cc88777817a2062b4c554c6e24cf5226df9e98d25dea5",
+            "assets/minecraft/textures/block/azalea_leaves.png": "36a78808995282420ffb2d63f6bc6fbbccbd5a3101e870c97e9a6ca6910c6e3b",
+            "assets/minecraft/textures/block/birch_leaves.png": "42bc092da61549bf1498c42534b377a16be8cfdd974951610ed5b4c75e5700db",
+            "assets/minecraft/textures/block/cherry_leaves.png": "a2000aa742c0fa2d64fb9e6b91eb9fb60f067186fff4867d1be7c56dd58e2555",
+            "assets/minecraft/textures/block/dark_oak_leaves.png": "5bac8685a29bcf05e970048cfcf640207c846219e1b8789ae9128ca24cd15ed5",
+            "assets/minecraft/textures/block/flowering_azalea_leaves.png": "a38bc8af6f958175d1ce9aa543772e98ddacfee7eb21148fa3248ad4939209e1",
+            "assets/minecraft/textures/block/jungle_leaves.png": "63bf626a84da7b2bdafbe64cff40005763c9bcb4bc16ee9cbc743271a6c000b4",
+            "assets/minecraft/textures/block/mangrove_leaves.png": "9c31cbca73bfa51f6ec51ff88188c5b158fe0bd9670ce36ec1e52a6a84789b58",
+            "assets/minecraft/textures/block/oak_leaves.png": "13081f9ef01c9bacc7e902a4a842eae896bcfd5b5b2df753259c128df79cce80",
+            "assets/minecraft/textures/block/orange_poplar_leaves.png": "26622d34268eb582b670fbb002ed29b7552ec185e24589cd34f7a92b7ea0775b",
+            "assets/minecraft/textures/block/pale_oak_leaves.png": "f329eeeab4be9eb3a349a35b91c182b21a282071e45dc7ee2054c4c50fbd26d7",
+            "assets/minecraft/textures/block/red_poplar_leaves.png": "6680120696d1360e44cba48bf30ced652ba15ab5f5b3818b82af2cb90c1303a6",
+            "assets/minecraft/textures/block/spruce_leaves.png": "b3b57868fb7b995c35ef0e16433bb34cd3128eb3142d22b5eae61dfb3b8a03c9",
+            "assets/minecraft/textures/block/yellow_poplar_leaves.png": "2aa4c652a70fb38e2d10569d069b94720857c744b6106d0c49daf61e9302caa7",
+            "pack.mcmeta": "0af7a112ea421b4b0472198c8d8eec6a396ac8f676c3789d64623aebcc857503",
+            "pack.png": "b77ae1379149771869659b6195cf8352a43683289e0a5a4cb42d4dd7b9762972"
+          }
+        },
+        "native": {
+          "cases": [
+            "actual_native_pack_format_validator_97_1",
+            "native_80_models_parent_and_texture_resolution",
+            "native_14_weighted_blockstates",
+            "native_224_rotated_variants_2240_quads",
+            "four_unculled_bush_fringe_faces_per_variant",
+            "finite_geometry_and_normalized_uv",
+            "native_tint_indices_preserved",
+            "native_png_decoder_14_rgba_cutout_textures",
+            "native_14_inventory_models_crop_32px_textures"
+          ],
+          "full_game_renderer_executed": false,
+          "game_pack_selection_ui_verified": false,
+          "gameplay_verified": false,
+          "inventory_quads": 84,
+          "leaf_definitions": 14,
+          "metadata_parser": "unmodified production packs.rs format helpers extracted by the verifier",
+          "models": 80,
+          "owned_vanilla_parent_fixture": true,
+          "performance_verified": false,
+          "quads": 2240,
+          "status": "passed",
+          "texture_alpha": {
+            "minecraft:block/acacia_leaves": {
+              "height": 32,
+              "opaque_pixels": 376,
+              "transparent_pixels": 648,
+              "width": 32
+            },
+            "minecraft:block/azalea_leaves": {
+              "height": 32,
+              "opaque_pixels": 487,
+              "transparent_pixels": 537,
+              "width": 32
+            },
+            "minecraft:block/birch_leaves": {
+              "height": 32,
+              "opaque_pixels": 361,
+              "transparent_pixels": 663,
+              "width": 32
+            },
+            "minecraft:block/cherry_leaves": {
+              "height": 32,
+              "opaque_pixels": 594,
+              "transparent_pixels": 430,
+              "width": 32
+            },
+            "minecraft:block/dark_oak_leaves": {
+              "height": 32,
+              "opaque_pixels": 494,
+              "transparent_pixels": 530,
+              "width": 32
+            },
+            "minecraft:block/flowering_azalea_leaves": {
+              "height": 32,
+              "opaque_pixels": 572,
+              "transparent_pixels": 452,
+              "width": 32
+            },
+            "minecraft:block/jungle_leaves": {
+              "height": 32,
+              "opaque_pixels": 490,
+              "transparent_pixels": 534,
+              "width": 32
+            },
+            "minecraft:block/mangrove_leaves": {
+              "height": 32,
+              "opaque_pixels": 526,
+              "transparent_pixels": 498,
+              "width": 32
+            },
+            "minecraft:block/oak_leaves": {
+              "height": 32,
+              "opaque_pixels": 464,
+              "transparent_pixels": 560,
+              "width": 32
+            },
+            "minecraft:block/orange_poplar_leaves": {
+              "height": 32,
+              "opaque_pixels": 501,
+              "transparent_pixels": 523,
+              "width": 32
+            },
+            "minecraft:block/pale_oak_leaves": {
+              "height": 32,
+              "opaque_pixels": 509,
+              "transparent_pixels": 515,
+              "width": 32
+            },
+            "minecraft:block/red_poplar_leaves": {
+              "height": 32,
+              "opaque_pixels": 511,
+              "transparent_pixels": 513,
+              "width": 32
+            },
+            "minecraft:block/spruce_leaves": {
+              "height": 32,
+              "opaque_pixels": 458,
+              "transparent_pixels": 566,
+              "width": 32
+            },
+            "minecraft:block/yellow_poplar_leaves": {
+              "height": 32,
+              "opaque_pixels": 501,
+              "transparent_pixels": 523,
+              "width": 32
+            }
+          },
+          "tint_counts": {
+            "-1": 320,
+            "0": 1920
+          },
+          "variants": 224,
+          "visual_verified": false,
+          "source_commit": "555b71997dc402241aa3136454087dc132dba4fd",
+          "engine_revision": "7301f6fdd7f470b11317276e7a11b4dc615c137a",
+          "rust_toolchain": "1.95.0",
+          "package_sha256": "2743be9a74c34051db28ac3ccbdfc7c991fa729f2c7ca6386b1ac97fa48e2400",
+          "platform": "win32",
+          "metadata_helpers_sha256": "207675f4d2272c3be74503449fc16869958d237af3065fc3721de42ff07cb517",
+          "registry_dependencies_subset_of_pinned_lock": true
+        }
+      },
+      {
+        "platform": "linux",
+        "build": {
+          "schema": 1,
+          "package": "Herps-Better-Leaves-9.6-MC26.3.zip",
+          "bytes": 84532,
+          "sha256": "2743be9a74c34051db28ac3ccbdfc7c991fa729f2c7ca6386b1ac97fa48e2400",
+          "source_commit": "555b71997dc402241aa3136454087dc132dba4fd",
+          "input_archive_sha256": "cbeeccd774f910ed270dbe9651d789a8f785d055499f846e466d86f9cae91e90",
+          "target_game": "26.3",
+          "resource_format": [
+            97,
+            1
+          ],
+          "targets": [
+            "acacia_leaves",
+            "azalea_leaves",
+            "birch_leaves",
+            "cherry_leaves",
+            "dark_oak_leaves",
+            "flowering_azalea_leaves",
+            "jungle_leaves",
+            "mangrove_leaves",
+            "oak_leaves",
+            "orange_poplar_leaves",
+            "pale_oak_leaves",
+            "red_poplar_leaves",
+            "spruce_leaves",
+            "yellow_poplar_leaves"
+          ],
+          "files": 113,
+          "native_graph": {
+            "blocks": 14,
+            "models": 80,
+            "textures": 14,
+            "inventory_models": 14,
+            "blockstate_variants": 224,
+            "external_parent": "minecraft:block/block"
+          },
+          "original_source_asset_bytes_unchanged": true,
+          "license": "MIT",
+          "contains_code": false,
+          "requires_launcher_reinstall": false,
+          "default_enabled": false,
+          "visual_verified": false,
+          "gameplay_verified": false,
+          "performance_verified": false,
+          "unsupported_java_mod_overrides_omitted": true,
+          "files_sha256": {
+            "LICENSE": "e9066842a3606b3f3af056f5db1dae1a35d170710b2ec20838d0f51048e59369",
+            "NOTICE.txt": "5e586b30e5bd661c756a4569ce40672a97acccadc5589ac8537a7b2337d529f8",
+            "README-HERPS.txt": "ffd9dd28178d7659486bd31add05c6da10fc36894fc6b41f98ae19f5598373f8",
+            "assets/betterleaves/models/block/leaves.json": "b6d5c8191b5ba5ab3b5536145528177f90dd5ffb0abce2252e0b2adcf1555586",
+            "assets/betterleaves/models/block/leaves1.json": "259e21ed8850b9c8184c8b4803b823c502af265289e8d36bf06da25759066cb9",
+            "assets/betterleaves/models/block/leaves2.json": "9126219c15b079a291b94b1b86bd37a677d9f633c917f0ad42805acba128fb17",
+            "assets/betterleaves/models/block/leaves3.json": "5d390841bf8a4e5e843359f9538347d8fc21b8f0271fa4f2c5c6d5d614b9e0a3",
+            "assets/betterleaves/models/block/leaves4.json": "07b7872d5d0d76124046bda31870cb5c84bfbd0aed20a57f038fd7f9ad9b3907",
+            "assets/betterleaves/models/block/leaves_notint.json": "95615a1eb231fc99acec9f11e5cdfe8bfdf1f903fc8fe9e0ee7a8b795b26f87c",
+            "assets/betterleaves/models/block/leaves_notint1.json": "268547bff47aa0c4e9124b24e82c273876b764f7c65010655b64c34484a099e3",
+            "assets/betterleaves/models/block/leaves_notint2.json": "32fa6838a140b5f1ce761eb135d2259d6b9906c53021758890feeefd6ec997ae",
+            "assets/betterleaves/models/block/leaves_notint3.json": "363e476a69da87418494b788cfba1ffa8a9f866829569094210d4361bf9023ff",
+            "assets/betterleaves/models/block/leaves_notint4.json": "a69733e71bc814369406ea075e057bfd9c27c974b52e65fb0495bcf878dbcbac",
+            "assets/minecraft/blockstates/acacia_leaves.json": "4f6c6692da63404eda601434632a1591d7a5851362308db08d6da3acabb70ee1",
+            "assets/minecraft/blockstates/azalea_leaves.json": "8c656a0d69ae89aa5444204e7df74a4976f6cfb4716f557c9d301c623dabe63f",
+            "assets/minecraft/blockstates/birch_leaves.json": "aee5b977a44bf807155efe21a1692e77f9bb3451b5d764d22eb7cf028a5962c8",
+            "assets/minecraft/blockstates/cherry_leaves.json": "0e7e51c85b3a15a121a6f667f2fc2230fbd142b75235f2d13cc8184f8b39b2ae",
+            "assets/minecraft/blockstates/dark_oak_leaves.json": "e0ad02337ee8ff36c476e102bebd431051cee7f2b888ee6793ebd4c5a45ae833",
+            "assets/minecraft/blockstates/flowering_azalea_leaves.json": "e8edcc305acc12f263442c656015a5a31bc5c35e7fc90f69e8f7a28da0b4eb0e",
+            "assets/minecraft/blockstates/jungle_leaves.json": "0364a077d815a84d77be35e2872fa8b0a8e3432269fdf776ee91bb4821151194",
+            "assets/minecraft/blockstates/mangrove_leaves.json": "2b5e451c36fed620cc3b0c40d5775bfdccb43155acdcaca8edc1f788deeca88c",
+            "assets/minecraft/blockstates/oak_leaves.json": "39575847e10871dc1c7ed69921a60dee04c63b6ef9f39e40a7c84b11c0e3a70b",
+            "assets/minecraft/blockstates/orange_poplar_leaves.json": "f029a4261f51fa97f3a41289a34854b1aeb5b693e4c84d1eb25841f501a6cb32",
+            "assets/minecraft/blockstates/pale_oak_leaves.json": "27ed3491b82cf81a51e301eab4dbbb0f59b236adf29d869bf0cd9387e67490d5",
+            "assets/minecraft/blockstates/red_poplar_leaves.json": "a7fb266569cf94b86f66f299face0e7c3525689c4d04c8c2e8f7696e2f78adf7",
+            "assets/minecraft/blockstates/spruce_leaves.json": "5e5c2d4cf3e8e39539b2624b3859bfa98614f4ca70a84327a7e2c44470f41a52",
+            "assets/minecraft/blockstates/yellow_poplar_leaves.json": "022238ac1837e9e330b109318c36dcaaa01ad8423e00ff2bee2a4066e13da846",
+            "assets/minecraft/models/block/acacia_leaves.json": "5be3853cecce526b9be07108e7b714a9f16ac36b4a1fe712a76107b62830f60d",
+            "assets/minecraft/models/block/acacia_leaves1.json": "f600e560ba8a8b7931e18b59d17090cce8a22020e8be7def9a44a549ef57f7da",
+            "assets/minecraft/models/block/acacia_leaves2.json": "3872cc1673f99b745884a87476c6f09a17a9652ef0665a72df212c435414aedf",
+            "assets/minecraft/models/block/acacia_leaves3.json": "e32f9781f9587f3e62215ba2a61e4c27522a8966f169c9ced67c994bb161391f",
+            "assets/minecraft/models/block/acacia_leaves4.json": "1d88647936c39604c0a3b64ee23e596d885c3d9f09c50a7e4e625c4fb91ccc5e",
+            "assets/minecraft/models/block/azalea_leaves.json": "2184f622d186c90dcdc6e8eef7d9029c71930fe671bc07639cfee134e2f8a564",
+            "assets/minecraft/models/block/azalea_leaves1.json": "989278fa0bdabb21cc2c6f02195611f8a2064c9e80a039df43fcf5289392b19c",
+            "assets/minecraft/models/block/azalea_leaves2.json": "cfd30013659577d2719e30e5e774af698e92439f4ad55925c5809900ad0f36c1",
+            "assets/minecraft/models/block/azalea_leaves3.json": "6f33babe57a24fdb424f2218d9a83ec855dfd30bf62b8316d8bc280ae342e171",
+            "assets/minecraft/models/block/azalea_leaves4.json": "dfc4ea9153de3c4a561bf0357aa645ced4373297fe8b7917d16eb1b547cf7d98",
+            "assets/minecraft/models/block/birch_leaves.json": "1b1d021241bc3d90a7ba825c076277b18a72f807905b8cd5f46c407910fdca02",
+            "assets/minecraft/models/block/birch_leaves1.json": "fe9c3b9790e49aae5801d3e01d859063c46db310e6ff578352ed85832b3f9212",
+            "assets/minecraft/models/block/birch_leaves2.json": "d2afc688d1d37386a70cb611b45c2a45916eb4f9337bb22ccc57cd6cc694fb0f",
+            "assets/minecraft/models/block/birch_leaves3.json": "4b748f11382be00ec0633ad7ac0097310e8dbbccfaa31fda8218458e37ed0714",
+            "assets/minecraft/models/block/birch_leaves4.json": "7b4b9ce5cc8eb21b0d099cdba3a65dd654d0ea709aff1dd54529aa26077a0855",
+            "assets/minecraft/models/block/cherry_leaves.json": "b75d077a17abb7c20ac55890a0e65ed5bb01fe818c7b53f422b53caf176e12b5",
+            "assets/minecraft/models/block/cherry_leaves1.json": "814863431199f6105ac77a44773cbce5cbf1cb6719abdbcbccf612ec24b94876",
+            "assets/minecraft/models/block/cherry_leaves2.json": "a1a6d022b231c22ed89cece675e7423279b342a408422a8f743fb66a55f37fa0",
+            "assets/minecraft/models/block/cherry_leaves3.json": "b506d37c41efd75e66984fa077fd92f94c19471d77a49dc82a14da1545ce4c2d",
+            "assets/minecraft/models/block/cherry_leaves4.json": "62c4189c8014d4a8f014d433240038a8320e85cdcb1cc09efdb26f4d40d8fffe",
+            "assets/minecraft/models/block/dark_oak_leaves.json": "bfdd5c03d98cbcf21f61bb1cb8cb82fd0facf8ae159916cdc6f0afddf264b368",
+            "assets/minecraft/models/block/dark_oak_leaves1.json": "7c2827449d55dd816f18a9966bae1655a6bc5f32cf29e92b8865600fd9b0a7e5",
+            "assets/minecraft/models/block/dark_oak_leaves2.json": "82a85346884ba8cf5ad868366b0ec2011107d56cedb5ff67c4dbad7fa5db7ff2",
+            "assets/minecraft/models/block/dark_oak_leaves3.json": "e670befef660bef01a57773e3bd02b0efd098a7fb55ec948368c0fa5ade656f7",
+            "assets/minecraft/models/block/dark_oak_leaves4.json": "f154e9640ba14871f0ea843f9da489beef6a4041fcd14ab21e2861fa2b108012",
+            "assets/minecraft/models/block/flowering_azalea_leaves.json": "2ae11f6099a76b00118cb5f0f96a1b04edf4aaee16be20f53f9be859f2712be0",
+            "assets/minecraft/models/block/flowering_azalea_leaves1.json": "87cb23e0c8370baa427fb14e1b25df86a7d6e28d299c134607aeaecdbb469f02",
+            "assets/minecraft/models/block/flowering_azalea_leaves2.json": "d817c970abe269ccf8660f59af1b870d39ffb79dfe2383efb934e799946f481b",
+            "assets/minecraft/models/block/flowering_azalea_leaves3.json": "b50c98f6487c603a0ae73bdd4872add27cbe96af42ea5807e70c77f1f3a96407",
+            "assets/minecraft/models/block/flowering_azalea_leaves4.json": "aaf8405fcd2a64474e8bb1f9622dd291cf3e058beaaf8f4e775ac92a261ff03e",
+            "assets/minecraft/models/block/jungle_leaves.json": "707a092c670795fcc38898abe0cfc285862d22ad6ae8e554397ad1c1e7ac5fae",
+            "assets/minecraft/models/block/jungle_leaves1.json": "dca3f6d1073d3e871ff711cd15846ea3da4d83cc137349c28b9f297183f48c1a",
+            "assets/minecraft/models/block/jungle_leaves2.json": "5e67c4a2681d4194069563bd1d7956d80a9b7686e1eac0e3afaeec8b52474142",
+            "assets/minecraft/models/block/jungle_leaves3.json": "f024df40821c88fb49205fa6f5788bfb80f5b937626849c0498b70f738993b89",
+            "assets/minecraft/models/block/jungle_leaves4.json": "0340507766a313ffe01f92e4860376775d8bd0f518a85487f35b356d877721c3",
+            "assets/minecraft/models/block/mangrove_leaves.json": "3eb961a7e2b569c63ac16916276303e0efb0765e08babefc0f5a856a3b22c618",
+            "assets/minecraft/models/block/mangrove_leaves1.json": "f78258a267ce16526bc0939839996a200e0861192ed8e0c79dabbf5a002925aa",
+            "assets/minecraft/models/block/mangrove_leaves2.json": "be206a9fe6083f2a9aa660e1a55b439625d84d74e1bc3cd4edf474551161531f",
+            "assets/minecraft/models/block/mangrove_leaves3.json": "4e5d81a9736887bec6e972290d3aca1fbf6212b8fc0746258d5f1c8011a090e9",
+            "assets/minecraft/models/block/mangrove_leaves4.json": "a9311d44fa262c401329a5ea16c5fb5570ad2a982f67f16e739393efd307759a",
+            "assets/minecraft/models/block/oak_leaves.json": "6b2bca13c0f0bab81d2aa596cae59f445b290ae8959822ddc3293e22537283bd",
+            "assets/minecraft/models/block/oak_leaves1.json": "6976bd4049ad3df22df097f55377f8e370b20323b69f7d4270cc7ea9190a07ff",
+            "assets/minecraft/models/block/oak_leaves2.json": "c3466ade4bf0b39f57e0565adf2963984b9829f781666552d50473c8876b5677",
+            "assets/minecraft/models/block/oak_leaves3.json": "dd063b9a6b7c263584456d0fe6636208383c2fb73118599449ee0b36a8aa8ecc",
+            "assets/minecraft/models/block/oak_leaves4.json": "2f5c8e5968cbc2bba3136187251731308e176f8081211e3385fd934ecb09e254",
+            "assets/minecraft/models/block/orange_poplar_leaves.json": "d73c0ad5ec5d173683b7b3fa843abecbfba89929e712531c11a291a1db82e16c",
+            "assets/minecraft/models/block/orange_poplar_leaves1.json": "775e07e9acc8d0393875d5998c04658c8c52bf86bfe1881eed57c4822b5db97d",
+            "assets/minecraft/models/block/orange_poplar_leaves2.json": "9e5c3bb79ef90a08b0690bf2c7103d6964afdb4d4f8a737ac9d06fc227859ca2",
+            "assets/minecraft/models/block/orange_poplar_leaves3.json": "c2c9e343208c6391781b1676b39bd0f9ac0218728be92b8daf560b45b8196ca2",
+            "assets/minecraft/models/block/orange_poplar_leaves4.json": "66770aae6a9bad2b62a4874f5daa3b97df9a06a9026cbafc75857265ba7cc18f",
+            "assets/minecraft/models/block/pale_oak_leaves.json": "3e46009a104d32b8da5ba8487f9a8c73715afb2f28858bf552251fb19ab7e8d7",
+            "assets/minecraft/models/block/pale_oak_leaves1.json": "efdccfc8f8ca22b27b91ee90724c3afcd5ab49ec33309617fe3b2706b4088e85",
+            "assets/minecraft/models/block/pale_oak_leaves2.json": "2603ef7989b967d7ed31605d798c2754fd90ac3201e6e262d06a1f6d20a8c98e",
+            "assets/minecraft/models/block/pale_oak_leaves3.json": "3362e3704ce0f3de7c1b3ef2f8d26060923051df5d74e8d2a8b42b8eb205223f",
+            "assets/minecraft/models/block/pale_oak_leaves4.json": "4eef4a613840ad7986efcb99945333ea539f4d680b363ef225f4cee8bc6b3590",
+            "assets/minecraft/models/block/red_poplar_leaves.json": "23f4a8bac0ca101f54b1649b9447b9d3d09af33519737bb120f504f5a08b7782",
+            "assets/minecraft/models/block/red_poplar_leaves1.json": "2c905447ee6d48ccb3eb0be3ea2602925757f2894429fd61d799ac70e2c52e62",
+            "assets/minecraft/models/block/red_poplar_leaves2.json": "b48b78c628399f4de590985bf58ad46f2d6d5c655715144be9bf568eb0b2e8ae",
+            "assets/minecraft/models/block/red_poplar_leaves3.json": "4ad752b66c2210d20f31c78cbe3e8603cd16bbf67fd9a22446499c080482571b",
+            "assets/minecraft/models/block/red_poplar_leaves4.json": "26b56303402f07dab0f71770a831c22a71d532d837d8f0e5036fd72b7ff83ea6",
+            "assets/minecraft/models/block/spruce_leaves.json": "a639724dcecf2d2f0636268b183ae1ce7d48fcbe17c0c51aa966ac6df2fb3960",
+            "assets/minecraft/models/block/spruce_leaves1.json": "bd8042bc33918f6d533f73198013fc5dffcc1645abeecf695f8db77cd0ea7e89",
+            "assets/minecraft/models/block/spruce_leaves2.json": "3092858ba2c7e692dab4b750125e17ec67812cf924435dfdaab822fbb7fd039d",
+            "assets/minecraft/models/block/spruce_leaves3.json": "7af18e11eea87d8df6ce4f06083392057052ab58a7ff030b09a771feadb085ed",
+            "assets/minecraft/models/block/spruce_leaves4.json": "c16f3158126ad4d2c9bc9d9473e618403496be5d3070ad83525f83bebdfbfa27",
+            "assets/minecraft/models/block/yellow_poplar_leaves.json": "d9dbc4a5e3b52c48f8dee014e947aff4a3e80443c2c213ae1e93a5379b147112",
+            "assets/minecraft/models/block/yellow_poplar_leaves1.json": "68f260553eedc5847c0aa2f16d5abc43b80201d036f4965094619eb846e88f87",
+            "assets/minecraft/models/block/yellow_poplar_leaves2.json": "9fb69736e602c949e11080ba2a4af3bf2b3ce5e4bea11a2cf928b9679ee46609",
+            "assets/minecraft/models/block/yellow_poplar_leaves3.json": "f23472751f32781f46c8e8255ca731c161a9dcf3b2b04381bbf3bb8aa6311215",
+            "assets/minecraft/models/block/yellow_poplar_leaves4.json": "f92846234147cdd93cdbb19fbd1856d8090501face82a5202b8f2685a669c5d8",
+            "assets/minecraft/textures/block/acacia_leaves.png": "307a4d8727c97070e26cc88777817a2062b4c554c6e24cf5226df9e98d25dea5",
+            "assets/minecraft/textures/block/azalea_leaves.png": "36a78808995282420ffb2d63f6bc6fbbccbd5a3101e870c97e9a6ca6910c6e3b",
+            "assets/minecraft/textures/block/birch_leaves.png": "42bc092da61549bf1498c42534b377a16be8cfdd974951610ed5b4c75e5700db",
+            "assets/minecraft/textures/block/cherry_leaves.png": "a2000aa742c0fa2d64fb9e6b91eb9fb60f067186fff4867d1be7c56dd58e2555",
+            "assets/minecraft/textures/block/dark_oak_leaves.png": "5bac8685a29bcf05e970048cfcf640207c846219e1b8789ae9128ca24cd15ed5",
+            "assets/minecraft/textures/block/flowering_azalea_leaves.png": "a38bc8af6f958175d1ce9aa543772e98ddacfee7eb21148fa3248ad4939209e1",
+            "assets/minecraft/textures/block/jungle_leaves.png": "63bf626a84da7b2bdafbe64cff40005763c9bcb4bc16ee9cbc743271a6c000b4",
+            "assets/minecraft/textures/block/mangrove_leaves.png": "9c31cbca73bfa51f6ec51ff88188c5b158fe0bd9670ce36ec1e52a6a84789b58",
+            "assets/minecraft/textures/block/oak_leaves.png": "13081f9ef01c9bacc7e902a4a842eae896bcfd5b5b2df753259c128df79cce80",
+            "assets/minecraft/textures/block/orange_poplar_leaves.png": "26622d34268eb582b670fbb002ed29b7552ec185e24589cd34f7a92b7ea0775b",
+            "assets/minecraft/textures/block/pale_oak_leaves.png": "f329eeeab4be9eb3a349a35b91c182b21a282071e45dc7ee2054c4c50fbd26d7",
+            "assets/minecraft/textures/block/red_poplar_leaves.png": "6680120696d1360e44cba48bf30ced652ba15ab5f5b3818b82af2cb90c1303a6",
+            "assets/minecraft/textures/block/spruce_leaves.png": "b3b57868fb7b995c35ef0e16433bb34cd3128eb3142d22b5eae61dfb3b8a03c9",
+            "assets/minecraft/textures/block/yellow_poplar_leaves.png": "2aa4c652a70fb38e2d10569d069b94720857c744b6106d0c49daf61e9302caa7",
+            "pack.mcmeta": "0af7a112ea421b4b0472198c8d8eec6a396ac8f676c3789d64623aebcc857503",
+            "pack.png": "b77ae1379149771869659b6195cf8352a43683289e0a5a4cb42d4dd7b9762972"
+          }
+        },
+        "native": {
+          "cases": [
+            "actual_native_pack_format_validator_97_1",
+            "native_80_models_parent_and_texture_resolution",
+            "native_14_weighted_blockstates",
+            "native_224_rotated_variants_2240_quads",
+            "four_unculled_bush_fringe_faces_per_variant",
+            "finite_geometry_and_normalized_uv",
+            "native_tint_indices_preserved",
+            "native_png_decoder_14_rgba_cutout_textures",
+            "native_14_inventory_models_crop_32px_textures"
+          ],
+          "full_game_renderer_executed": false,
+          "game_pack_selection_ui_verified": false,
+          "gameplay_verified": false,
+          "inventory_quads": 84,
+          "leaf_definitions": 14,
+          "metadata_parser": "unmodified production packs.rs format helpers extracted by the verifier",
+          "models": 80,
+          "owned_vanilla_parent_fixture": true,
+          "performance_verified": false,
+          "quads": 2240,
+          "status": "passed",
+          "texture_alpha": {
+            "minecraft:block/acacia_leaves": {
+              "height": 32,
+              "opaque_pixels": 376,
+              "transparent_pixels": 648,
+              "width": 32
+            },
+            "minecraft:block/azalea_leaves": {
+              "height": 32,
+              "opaque_pixels": 487,
+              "transparent_pixels": 537,
+              "width": 32
+            },
+            "minecraft:block/birch_leaves": {
+              "height": 32,
+              "opaque_pixels": 361,
+              "transparent_pixels": 663,
+              "width": 32
+            },
+            "minecraft:block/cherry_leaves": {
+              "height": 32,
+              "opaque_pixels": 594,
+              "transparent_pixels": 430,
+              "width": 32
+            },
+            "minecraft:block/dark_oak_leaves": {
+              "height": 32,
+              "opaque_pixels": 494,
+              "transparent_pixels": 530,
+              "width": 32
+            },
+            "minecraft:block/flowering_azalea_leaves": {
+              "height": 32,
+              "opaque_pixels": 572,
+              "transparent_pixels": 452,
+              "width": 32
+            },
+            "minecraft:block/jungle_leaves": {
+              "height": 32,
+              "opaque_pixels": 490,
+              "transparent_pixels": 534,
+              "width": 32
+            },
+            "minecraft:block/mangrove_leaves": {
+              "height": 32,
+              "opaque_pixels": 526,
+              "transparent_pixels": 498,
+              "width": 32
+            },
+            "minecraft:block/oak_leaves": {
+              "height": 32,
+              "opaque_pixels": 464,
+              "transparent_pixels": 560,
+              "width": 32
+            },
+            "minecraft:block/orange_poplar_leaves": {
+              "height": 32,
+              "opaque_pixels": 501,
+              "transparent_pixels": 523,
+              "width": 32
+            },
+            "minecraft:block/pale_oak_leaves": {
+              "height": 32,
+              "opaque_pixels": 509,
+              "transparent_pixels": 515,
+              "width": 32
+            },
+            "minecraft:block/red_poplar_leaves": {
+              "height": 32,
+              "opaque_pixels": 511,
+              "transparent_pixels": 513,
+              "width": 32
+            },
+            "minecraft:block/spruce_leaves": {
+              "height": 32,
+              "opaque_pixels": 458,
+              "transparent_pixels": 566,
+              "width": 32
+            },
+            "minecraft:block/yellow_poplar_leaves": {
+              "height": 32,
+              "opaque_pixels": 501,
+              "transparent_pixels": 523,
+              "width": 32
+            }
+          },
+          "tint_counts": {
+            "-1": 320,
+            "0": 1920
+          },
+          "variants": 224,
+          "visual_verified": false,
+          "source_commit": "555b71997dc402241aa3136454087dc132dba4fd",
+          "engine_revision": "7301f6fdd7f470b11317276e7a11b4dc615c137a",
+          "rust_toolchain": "1.95.0",
+          "package_sha256": "2743be9a74c34051db28ac3ccbdfc7c991fa729f2c7ca6386b1ac97fa48e2400",
+          "platform": "linux",
+          "metadata_helpers_sha256": "207675f4d2272c3be74503449fc16869958d237af3065fc3721de42ff07cb517",
+          "registry_dependencies_subset_of_pinned_lock": true
+        }
+      }
+    ]
+  },
+  "local_full_regressions": {
+    "collected": 513,
+    "passed": 494,
+    "failed": 0,
+    "skipped": [
+      {
+        "test": "test_inspect_apk.ApkTests.test_supplied_apk",
+        "reason": "Set HORIZON_TEST_APK to run supplied-APK integration"
+      },
+      {
+        "test": "test_macos_launcher.MacLauncherTests.test_actual_dialog_scripts_compile_on_mac",
+        "reason": "AppleScript compilation requires macOS"
+      },
+      {
+        "test": "test_rlcraft_bandage.BandageTests.test_windows_junction_cannot_redirect_addon_install",
+        "reason": "Windows junction behavior requires Windows"
+      },
+      {
+        "test": "test_rlcraft_chainmail.ChainmailTests.test_windows_junction_cannot_redirect_installation",
+        "reason": "Windows junction behavior requires Windows"
+      },
+      {
+        "test": "test_rlcraft_flint.FlintTests.test_windows_junction_cannot_redirect_flint_install",
+        "reason": "Windows junction behavior requires Windows"
+      },
+      {
+        "test": "test_rlcraft_gathering.GatheringTests.test_windows_junction_cannot_redirect_addon_install",
+        "reason": "Windows junction behavior requires Windows"
+      },
+      {
+        "test": "test_rlcraft_woodcutting.WoodcuttingTests.test_windows_junction_cannot_redirect_addon_install",
+        "reason": "Windows junction behavior requires Windows"
+      },
+      {
+        "test": "test_windows_stack_repair.StackRepairTests.test_existing_backup_is_never_overwritten",
+        "reason": "PowerShell is required to exercise Windows stack repair"
+      },
+      {
+        "test": "test_windows_stack_repair.StackRepairTests.test_invalid_header_offsets_and_directory_counts_are_refused",
+        "reason": "PowerShell is required to exercise Windows stack repair"
+      },
+      {
+        "test": "test_windows_stack_repair.StackRepairTests.test_invalid_stack_values_are_refused",
+        "reason": "PowerShell is required to exercise Windows stack repair"
+      },
+      {
+        "test": "test_windows_stack_repair.StackRepairTests.test_larger_existing_reserve_is_not_lowered",
+        "reason": "PowerShell is required to exercise Windows stack repair"
+      },
+      {
+        "test": "test_windows_stack_repair.StackRepairTests.test_linked_executable_is_refused",
+        "reason": "PowerShell is required to exercise Windows stack repair"
+      },
+      {
+        "test": "test_windows_stack_repair.StackRepairTests.test_modified_executable_is_refused_without_changing_expected_checksum",
+        "reason": "PowerShell is required to exercise Windows stack repair"
+      },
+      {
+        "test": "test_windows_stack_repair.StackRepairTests.test_only_stack_reserve_changes_and_original_is_backed_up",
+        "reason": "PowerShell is required to exercise Windows stack repair"
+      },
+      {
+        "test": "test_windows_stack_repair.StackRepairTests.test_original_package_metadata_is_required",
+        "reason": "PowerShell is required to exercise Windows stack repair"
+      },
+      {
+        "test": "test_windows_stack_repair.StackRepairTests.test_repair_is_idempotent",
+        "reason": "PowerShell is required to exercise Windows stack repair"
+      },
+      {
+        "test": "test_windows_stack_repair.StackRepairTests.test_signed_executable_is_refused",
+        "reason": "PowerShell is required to exercise Windows stack repair"
+      },
+      {
+        "test": "test_windows_stack_repair.StackRepairTests.test_truncated_and_non_pe_files_are_refused",
+        "reason": "PowerShell is required to exercise Windows stack repair"
+      },
+      {
+        "test": "test_windows_stack_repair.StackRepairTests.test_wrong_architecture_or_dll_is_refused",
+        "reason": "PowerShell is required to exercise Windows stack repair"
+      }
+    ],
+    "real_pinned_helper": true,
+    "Qt_offscreen_automated": true
+  },
+  "original_archive": {
+    "schema": 1,
+    "upstream": "Motschen Better Leaves 9.6 (user-provided Vanilla Edition archive; README names Lite)",
+    "archive_name": "Better-Leaves-9.6.zip",
+    "archive_bytes": 1977146,
+    "archive_sha256": "cbeeccd774f910ed270dbe9651d789a8f785d055499f846e466d86f9cae91e90",
+    "archive_entries": 4717,
+    "archive_expanded_bytes": 1962373,
+    "license": "MIT",
+    "license_copyright": "Copyright (c) 2024 Motschen",
+    "original_metadata": {
+      "pack": {
+        "pack_format": 15,
+        "supported_formats": [
+          15,
+          255
+        ],
+        "min_format": 15,
+        "max_format": 255,
+        "description": "\u00a72Version 9.6 \u00a7aVanilla Edition\n\u00a7e\u00a9Motschen 2026 | MIT Licence"
+      }
+    },
+    "target_game": "26.3",
+    "target_resource_format": [
+      97,
+      1
+    ],
+    "target_blocks": [
+      "acacia_leaves",
+      "azalea_leaves",
+      "birch_leaves",
+      "cherry_leaves",
+      "dark_oak_leaves",
+      "flowering_azalea_leaves",
+      "jungle_leaves",
+      "mangrove_leaves",
+      "oak_leaves",
+      "orange_poplar_leaves",
+      "pale_oak_leaves",
+      "red_poplar_leaves",
+      "spruce_leaves",
+      "yellow_poplar_leaves"
+    ],
+    "external_model_parents": [
+      "minecraft:block/block"
+    ],
+    "source_files": {
+      "LICENSE": "e9066842a3606b3f3af056f5db1dae1a35d170710b2ec20838d0f51048e59369",
+      "assets/betterleaves/models/block/leaves.json": "b6d5c8191b5ba5ab3b5536145528177f90dd5ffb0abce2252e0b2adcf1555586",
+      "assets/betterleaves/models/block/leaves1.json": "259e21ed8850b9c8184c8b4803b823c502af265289e8d36bf06da25759066cb9",
+      "assets/betterleaves/models/block/leaves2.json": "9126219c15b079a291b94b1b86bd37a677d9f633c917f0ad42805acba128fb17",
+      "assets/betterleaves/models/block/leaves3.json": "5d390841bf8a4e5e843359f9538347d8fc21b8f0271fa4f2c5c6d5d614b9e0a3",
+      "assets/betterleaves/models/block/leaves4.json": "07b7872d5d0d76124046bda31870cb5c84bfbd0aed20a57f038fd7f9ad9b3907",
+      "assets/betterleaves/models/block/leaves_notint.json": "95615a1eb231fc99acec9f11e5cdfe8bfdf1f903fc8fe9e0ee7a8b795b26f87c",
+      "assets/betterleaves/models/block/leaves_notint1.json": "268547bff47aa0c4e9124b24e82c273876b764f7c65010655b64c34484a099e3",
+      "assets/betterleaves/models/block/leaves_notint2.json": "32fa6838a140b5f1ce761eb135d2259d6b9906c53021758890feeefd6ec997ae",
+      "assets/betterleaves/models/block/leaves_notint3.json": "363e476a69da87418494b788cfba1ffa8a9f866829569094210d4361bf9023ff",
+      "assets/betterleaves/models/block/leaves_notint4.json": "a69733e71bc814369406ea075e057bfd9c27c974b52e65fb0495bcf878dbcbac",
+      "assets/minecraft/blockstates/acacia_leaves.json": "4f6c6692da63404eda601434632a1591d7a5851362308db08d6da3acabb70ee1",
+      "assets/minecraft/blockstates/azalea_leaves.json": "8c656a0d69ae89aa5444204e7df74a4976f6cfb4716f557c9d301c623dabe63f",
+      "assets/minecraft/blockstates/birch_leaves.json": "aee5b977a44bf807155efe21a1692e77f9bb3451b5d764d22eb7cf028a5962c8",
+      "assets/minecraft/blockstates/cherry_leaves.json": "0e7e51c85b3a15a121a6f667f2fc2230fbd142b75235f2d13cc8184f8b39b2ae",
+      "assets/minecraft/blockstates/dark_oak_leaves.json": "e0ad02337ee8ff36c476e102bebd431051cee7f2b888ee6793ebd4c5a45ae833",
+      "assets/minecraft/blockstates/flowering_azalea_leaves.json": "e8edcc305acc12f263442c656015a5a31bc5c35e7fc90f69e8f7a28da0b4eb0e",
+      "assets/minecraft/blockstates/jungle_leaves.json": "0364a077d815a84d77be35e2872fa8b0a8e3432269fdf776ee91bb4821151194",
+      "assets/minecraft/blockstates/mangrove_leaves.json": "2b5e451c36fed620cc3b0c40d5775bfdccb43155acdcaca8edc1f788deeca88c",
+      "assets/minecraft/blockstates/oak_leaves.json": "39575847e10871dc1c7ed69921a60dee04c63b6ef9f39e40a7c84b11c0e3a70b",
+      "assets/minecraft/blockstates/orange_poplar_leaves.json": "f029a4261f51fa97f3a41289a34854b1aeb5b693e4c84d1eb25841f501a6cb32",
+      "assets/minecraft/blockstates/pale_oak_leaves.json": "27ed3491b82cf81a51e301eab4dbbb0f59b236adf29d869bf0cd9387e67490d5",
+      "assets/minecraft/blockstates/red_poplar_leaves.json": "a7fb266569cf94b86f66f299face0e7c3525689c4d04c8c2e8f7696e2f78adf7",
+      "assets/minecraft/blockstates/spruce_leaves.json": "5e5c2d4cf3e8e39539b2624b3859bfa98614f4ca70a84327a7e2c44470f41a52",
+      "assets/minecraft/blockstates/yellow_poplar_leaves.json": "022238ac1837e9e330b109318c36dcaaa01ad8423e00ff2bee2a4066e13da846",
+      "assets/minecraft/models/block/acacia_leaves.json": "5be3853cecce526b9be07108e7b714a9f16ac36b4a1fe712a76107b62830f60d",
+      "assets/minecraft/models/block/acacia_leaves1.json": "f600e560ba8a8b7931e18b59d17090cce8a22020e8be7def9a44a549ef57f7da",
+      "assets/minecraft/models/block/acacia_leaves2.json": "3872cc1673f99b745884a87476c6f09a17a9652ef0665a72df212c435414aedf",
+      "assets/minecraft/models/block/acacia_leaves3.json": "e32f9781f9587f3e62215ba2a61e4c27522a8966f169c9ced67c994bb161391f",
+      "assets/minecraft/models/block/acacia_leaves4.json": "1d88647936c39604c0a3b64ee23e596d885c3d9f09c50a7e4e625c4fb91ccc5e",
+      "assets/minecraft/models/block/azalea_leaves.json": "2184f622d186c90dcdc6e8eef7d9029c71930fe671bc07639cfee134e2f8a564",
+      "assets/minecraft/models/block/azalea_leaves1.json": "989278fa0bdabb21cc2c6f02195611f8a2064c9e80a039df43fcf5289392b19c",
+      "assets/minecraft/models/block/azalea_leaves2.json": "cfd30013659577d2719e30e5e774af698e92439f4ad55925c5809900ad0f36c1",
+      "assets/minecraft/models/block/azalea_leaves3.json": "6f33babe57a24fdb424f2218d9a83ec855dfd30bf62b8316d8bc280ae342e171",
+      "assets/minecraft/models/block/azalea_leaves4.json": "dfc4ea9153de3c4a561bf0357aa645ced4373297fe8b7917d16eb1b547cf7d98",
+      "assets/minecraft/models/block/birch_leaves.json": "1b1d021241bc3d90a7ba825c076277b18a72f807905b8cd5f46c407910fdca02",
+      "assets/minecraft/models/block/birch_leaves1.json": "fe9c3b9790e49aae5801d3e01d859063c46db310e6ff578352ed85832b3f9212",
+      "assets/minecraft/models/block/birch_leaves2.json": "d2afc688d1d37386a70cb611b45c2a45916eb4f9337bb22ccc57cd6cc694fb0f",
+      "assets/minecraft/models/block/birch_leaves3.json": "4b748f11382be00ec0633ad7ac0097310e8dbbccfaa31fda8218458e37ed0714",
+      "assets/minecraft/models/block/birch_leaves4.json": "7b4b9ce5cc8eb21b0d099cdba3a65dd654d0ea709aff1dd54529aa26077a0855",
+      "assets/minecraft/models/block/cherry_leaves.json": "b75d077a17abb7c20ac55890a0e65ed5bb01fe818c7b53f422b53caf176e12b5",
+      "assets/minecraft/models/block/cherry_leaves1.json": "814863431199f6105ac77a44773cbce5cbf1cb6719abdbcbccf612ec24b94876",
+      "assets/minecraft/models/block/cherry_leaves2.json": "a1a6d022b231c22ed89cece675e7423279b342a408422a8f743fb66a55f37fa0",
+      "assets/minecraft/models/block/cherry_leaves3.json": "b506d37c41efd75e66984fa077fd92f94c19471d77a49dc82a14da1545ce4c2d",
+      "assets/minecraft/models/block/cherry_leaves4.json": "62c4189c8014d4a8f014d433240038a8320e85cdcb1cc09efdb26f4d40d8fffe",
+      "assets/minecraft/models/block/dark_oak_leaves.json": "bfdd5c03d98cbcf21f61bb1cb8cb82fd0facf8ae159916cdc6f0afddf264b368",
+      "assets/minecraft/models/block/dark_oak_leaves1.json": "7c2827449d55dd816f18a9966bae1655a6bc5f32cf29e92b8865600fd9b0a7e5",
+      "assets/minecraft/models/block/dark_oak_leaves2.json": "82a85346884ba8cf5ad868366b0ec2011107d56cedb5ff67c4dbad7fa5db7ff2",
+      "assets/minecraft/models/block/dark_oak_leaves3.json": "e670befef660bef01a57773e3bd02b0efd098a7fb55ec948368c0fa5ade656f7",
+      "assets/minecraft/models/block/dark_oak_leaves4.json": "f154e9640ba14871f0ea843f9da489beef6a4041fcd14ab21e2861fa2b108012",
+      "assets/minecraft/models/block/flowering_azalea_leaves.json": "2ae11f6099a76b00118cb5f0f96a1b04edf4aaee16be20f53f9be859f2712be0",
+      "assets/minecraft/models/block/flowering_azalea_leaves1.json": "87cb23e0c8370baa427fb14e1b25df86a7d6e28d299c134607aeaecdbb469f02",
+      "assets/minecraft/models/block/flowering_azalea_leaves2.json": "d817c970abe269ccf8660f59af1b870d39ffb79dfe2383efb934e799946f481b",
+      "assets/minecraft/models/block/flowering_azalea_leaves3.json": "b50c98f6487c603a0ae73bdd4872add27cbe96af42ea5807e70c77f1f3a96407",
+      "assets/minecraft/models/block/flowering_azalea_leaves4.json": "aaf8405fcd2a64474e8bb1f9622dd291cf3e058beaaf8f4e775ac92a261ff03e",
+      "assets/minecraft/models/block/jungle_leaves.json": "707a092c670795fcc38898abe0cfc285862d22ad6ae8e554397ad1c1e7ac5fae",
+      "assets/minecraft/models/block/jungle_leaves1.json": "dca3f6d1073d3e871ff711cd15846ea3da4d83cc137349c28b9f297183f48c1a",
+      "assets/minecraft/models/block/jungle_leaves2.json": "5e67c4a2681d4194069563bd1d7956d80a9b7686e1eac0e3afaeec8b52474142",
+      "assets/minecraft/models/block/jungle_leaves3.json": "f024df40821c88fb49205fa6f5788bfb80f5b937626849c0498b70f738993b89",
+      "assets/minecraft/models/block/jungle_leaves4.json": "0340507766a313ffe01f92e4860376775d8bd0f518a85487f35b356d877721c3",
+      "assets/minecraft/models/block/mangrove_leaves.json": "3eb961a7e2b569c63ac16916276303e0efb0765e08babefc0f5a856a3b22c618",
+      "assets/minecraft/models/block/mangrove_leaves1.json": "f78258a267ce16526bc0939839996a200e0861192ed8e0c79dabbf5a002925aa",
+      "assets/minecraft/models/block/mangrove_leaves2.json": "be206a9fe6083f2a9aa660e1a55b439625d84d74e1bc3cd4edf474551161531f",
+      "assets/minecraft/models/block/mangrove_leaves3.json": "4e5d81a9736887bec6e972290d3aca1fbf6212b8fc0746258d5f1c8011a090e9",
+      "assets/minecraft/models/block/mangrove_leaves4.json": "a9311d44fa262c401329a5ea16c5fb5570ad2a982f67f16e739393efd307759a",
+      "assets/minecraft/models/block/oak_leaves.json": "6b2bca13c0f0bab81d2aa596cae59f445b290ae8959822ddc3293e22537283bd",
+      "assets/minecraft/models/block/oak_leaves1.json": "6976bd4049ad3df22df097f55377f8e370b20323b69f7d4270cc7ea9190a07ff",
+      "assets/minecraft/models/block/oak_leaves2.json": "c3466ade4bf0b39f57e0565adf2963984b9829f781666552d50473c8876b5677",
+      "assets/minecraft/models/block/oak_leaves3.json": "dd063b9a6b7c263584456d0fe6636208383c2fb73118599449ee0b36a8aa8ecc",
+      "assets/minecraft/models/block/oak_leaves4.json": "2f5c8e5968cbc2bba3136187251731308e176f8081211e3385fd934ecb09e254",
+      "assets/minecraft/models/block/orange_poplar_leaves.json": "d73c0ad5ec5d173683b7b3fa843abecbfba89929e712531c11a291a1db82e16c",
+      "assets/minecraft/models/block/orange_poplar_leaves1.json": "775e07e9acc8d0393875d5998c04658c8c52bf86bfe1881eed57c4822b5db97d",
+      "assets/minecraft/models/block/orange_poplar_leaves2.json": "9e5c3bb79ef90a08b0690bf2c7103d6964afdb4d4f8a737ac9d06fc227859ca2",
+      "assets/minecraft/models/block/orange_poplar_leaves3.json": "c2c9e343208c6391781b1676b39bd0f9ac0218728be92b8daf560b45b8196ca2",
+      "assets/minecraft/models/block/orange_poplar_leaves4.json": "66770aae6a9bad2b62a4874f5daa3b97df9a06a9026cbafc75857265ba7cc18f",
+      "assets/minecraft/models/block/pale_oak_leaves.json": "3e46009a104d32b8da5ba8487f9a8c73715afb2f28858bf552251fb19ab7e8d7",
+      "assets/minecraft/models/block/pale_oak_leaves1.json": "efdccfc8f8ca22b27b91ee90724c3afcd5ab49ec33309617fe3b2706b4088e85",
+      "assets/minecraft/models/block/pale_oak_leaves2.json": "2603ef7989b967d7ed31605d798c2754fd90ac3201e6e262d06a1f6d20a8c98e",
+      "assets/minecraft/models/block/pale_oak_leaves3.json": "3362e3704ce0f3de7c1b3ef2f8d26060923051df5d74e8d2a8b42b8eb205223f",
+      "assets/minecraft/models/block/pale_oak_leaves4.json": "4eef4a613840ad7986efcb99945333ea539f4d680b363ef225f4cee8bc6b3590",
+      "assets/minecraft/models/block/red_poplar_leaves.json": "23f4a8bac0ca101f54b1649b9447b9d3d09af33519737bb120f504f5a08b7782",
+      "assets/minecraft/models/block/red_poplar_leaves1.json": "2c905447ee6d48ccb3eb0be3ea2602925757f2894429fd61d799ac70e2c52e62",
+      "assets/minecraft/models/block/red_poplar_leaves2.json": "b48b78c628399f4de590985bf58ad46f2d6d5c655715144be9bf568eb0b2e8ae",
+      "assets/minecraft/models/block/red_poplar_leaves3.json": "4ad752b66c2210d20f31c78cbe3e8603cd16bbf67fd9a22446499c080482571b",
+      "assets/minecraft/models/block/red_poplar_leaves4.json": "26b56303402f07dab0f71770a831c22a71d532d837d8f0e5036fd72b7ff83ea6",
+      "assets/minecraft/models/block/spruce_leaves.json": "a639724dcecf2d2f0636268b183ae1ce7d48fcbe17c0c51aa966ac6df2fb3960",
+      "assets/minecraft/models/block/spruce_leaves1.json": "bd8042bc33918f6d533f73198013fc5dffcc1645abeecf695f8db77cd0ea7e89",
+      "assets/minecraft/models/block/spruce_leaves2.json": "3092858ba2c7e692dab4b750125e17ec67812cf924435dfdaab822fbb7fd039d",
+      "assets/minecraft/models/block/spruce_leaves3.json": "7af18e11eea87d8df6ce4f06083392057052ab58a7ff030b09a771feadb085ed",
+      "assets/minecraft/models/block/spruce_leaves4.json": "c16f3158126ad4d2c9bc9d9473e618403496be5d3070ad83525f83bebdfbfa27",
+      "assets/minecraft/models/block/yellow_poplar_leaves.json": "d9dbc4a5e3b52c48f8dee014e947aff4a3e80443c2c213ae1e93a5379b147112",
+      "assets/minecraft/models/block/yellow_poplar_leaves1.json": "68f260553eedc5847c0aa2f16d5abc43b80201d036f4965094619eb846e88f87",
+      "assets/minecraft/models/block/yellow_poplar_leaves2.json": "9fb69736e602c949e11080ba2a4af3bf2b3ce5e4bea11a2cf928b9679ee46609",
+      "assets/minecraft/models/block/yellow_poplar_leaves3.json": "f23472751f32781f46c8e8255ca731c161a9dcf3b2b04381bbf3bb8aa6311215",
+      "assets/minecraft/models/block/yellow_poplar_leaves4.json": "f92846234147cdd93cdbb19fbd1856d8090501face82a5202b8f2685a669c5d8",
+      "assets/minecraft/textures/block/acacia_leaves.png": "307a4d8727c97070e26cc88777817a2062b4c554c6e24cf5226df9e98d25dea5",
+      "assets/minecraft/textures/block/azalea_leaves.png": "36a78808995282420ffb2d63f6bc6fbbccbd5a3101e870c97e9a6ca6910c6e3b",
+      "assets/minecraft/textures/block/birch_leaves.png": "42bc092da61549bf1498c42534b377a16be8cfdd974951610ed5b4c75e5700db",
+      "assets/minecraft/textures/block/cherry_leaves.png": "a2000aa742c0fa2d64fb9e6b91eb9fb60f067186fff4867d1be7c56dd58e2555",
+      "assets/minecraft/textures/block/dark_oak_leaves.png": "5bac8685a29bcf05e970048cfcf640207c846219e1b8789ae9128ca24cd15ed5",
+      "assets/minecraft/textures/block/flowering_azalea_leaves.png": "a38bc8af6f958175d1ce9aa543772e98ddacfee7eb21148fa3248ad4939209e1",
+      "assets/minecraft/textures/block/jungle_leaves.png": "63bf626a84da7b2bdafbe64cff40005763c9bcb4bc16ee9cbc743271a6c000b4",
+      "assets/minecraft/textures/block/mangrove_leaves.png": "9c31cbca73bfa51f6ec51ff88188c5b158fe0bd9670ce36ec1e52a6a84789b58",
+      "assets/minecraft/textures/block/oak_leaves.png": "13081f9ef01c9bacc7e902a4a842eae896bcfd5b5b2df753259c128df79cce80",
+      "assets/minecraft/textures/block/orange_poplar_leaves.png": "26622d34268eb582b670fbb002ed29b7552ec185e24589cd34f7a92b7ea0775b",
+      "assets/minecraft/textures/block/pale_oak_leaves.png": "f329eeeab4be9eb3a349a35b91c182b21a282071e45dc7ee2054c4c50fbd26d7",
+      "assets/minecraft/textures/block/red_poplar_leaves.png": "6680120696d1360e44cba48bf30ced652ba15ab5f5b3818b82af2cb90c1303a6",
+      "assets/minecraft/textures/block/spruce_leaves.png": "b3b57868fb7b995c35ef0e16433bb34cd3128eb3142d22b5eae61dfb3b8a03c9",
+      "assets/minecraft/textures/block/yellow_poplar_leaves.png": "2aa4c652a70fb38e2d10569d069b94720857c744b6106d0c49daf61e9302caa7",
+      "pack.png": "b77ae1379149771869659b6195cf8352a43683289e0a5a4cb42d4dd7b9762972"
+    },
+    "included_asset_count": 108,
+    "omitted_entries": 4607,
+    "modified_source_assets": false,
+    "unsupported_mod_namespaces_omitted": true,
+    "canonical_inventory_models_preserved": true
+  },
+  "failures_and_corrections": [
+    {
+      "scope": "pre-CI local graph validator",
+      "issue": "Parent texture aliases were initially checked before merging the child texture override.",
+      "correction": "Resolve inherited geometry and final child slots before checking faces. Source assets unchanged."
+    },
+    {
+      "scope": "pre-CI local native probe compilation",
+      "issue": "Metadata helper extraction included a UI compatibility wrapper without its UI dependencies (E0433/E0425).",
+      "correction": "Compile the unmodified pure production format helpers only; Game/renderer code is not stubbed or claimed executed."
+    },
+    {
+      "scope": "first native/portable CI",
+      "native_run": 42485250468,
+      "portable_run": 42485250378,
+      "source_commit": "9eb346287c46538f389ab0e7f33b06f4908cf623",
+      "failed_job": 128745607922,
+      "issue": "Windows ZipInfo normalized the malicious backslash fixture into a legal name before testing.",
+      "failed_test": "test_archive_traversal_absolute_and_windows_paths_are_refused",
+      "correction_commit": "9dc7997a89fee42158aa0ffd16f99daae5104e48",
+      "correction": "Preserve raw malicious names in fixtures and reject orig_filename/filename mismatches, including NUL truncation, in the archive reader. No weakened assertions; resource-pack bytes unchanged by this correction.",
+      "first_windows_native_checks": "NOT RUN because safety tests failed",
+      "second_native_run": 42485658480,
+      "second_portable_run": 42485658486,
+      "second_runs": "PASS"
+    },
+    {
+      "scope": "final dependency audit",
+      "issue": "World-model closure initially omitted canonical models referenced by leaf items.",
+      "correction_commit": "555b71997dc402241aa3136454087dc132dba4fd",
+      "correction": "Retain 14 supplied canonical models and two supplied shared cropped-texture parents. Add native item baking/UV checks and rerun both platforms.",
+      "superseded_package_sha256": "ac2d2160458673e15350fc47df1767c8e8a523ea1d54b6da6d6cecb9c1924de9",
+      "final_package_sha256": "2743be9a74c34051db28ac3ccbdfc7c991fa729f2c7ca6386b1ac97fa48e2400"
+    }
+  ],
+  "physical_visual_acceptance": {
+    "Windows 11 gameplay/rendering": "NOT RUN",
+    "macOS Intel gameplay/rendering": "NOT RUN",
+    "macOS Apple Silicon gameplay/rendering": "NOT RUN",
+    "in-game pack selection and reload": "NOT RUN",
+    "FPS/performance and graphics-driver behavior": "NOT RUN",
+    "world save/reload with pack selection": "NOT RUN",
+    "other visual pack combinations": "NOT RUN"
+  },
+  "pause": {
+    "rlcraft_development": "PAUSED by user request",
+    "rlcraft_branch_unchanged": "fcd5f96637f9e93601ab7c1bd199993737257235",
+    "main_unchanged": "b292a48c279c2b718a5395fe5558f2ff83dcea30",
+    "no_new_rlcraft_stage": true,
+    "no_runtime_packages_disabled_or_removed": true
+  },
+  "limits": {
+    "launcher_code_changed": false,
+    "engine_patches_changed": false,
+    "launcher_reinstall_required": false,
+    "java_or_archive_code_executed": false,
+    "new_gameplay_or_block_registry_changes": false,
+    "public_release_created": false,
+    "worlds_or_profiles_modified": false
+  }
+}

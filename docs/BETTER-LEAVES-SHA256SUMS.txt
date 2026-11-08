@@ -1,0 +1,5 @@
+2743be9a74c34051db28ac3ccbdfc7c991fa729f2c7ca6386b1ac97fa48e2400  Herps-Better-Leaves-9.6-MC26.3.zip
+936e4abd1b6d5fc44dfa844a857f1c3cecfb9aa7559bf1be8c507b5ad0138cbc  Herps-Better-Leaves-9.6-MC26.3-Linux.zip
+78d236d81f674213a7cf5a292359ccbc10b91c8e17fb2d250f19bdc409501e6c  Herps-Better-Leaves-log-Windows.zip
+fa343651b9f0673dc7215e59ce149d176f0c8f2cd3c6ad0ab6a1033dc0017712  Herps-Better-Leaves-9.6-MC26.3-Windows.zip
+f2cf6162ec83dc0a5363a7a7d3c7bdec7665e8400249880d359c6a774de8f248  Herps-Better-Leaves-log-Linux.zip
