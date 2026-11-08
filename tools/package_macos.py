@@ -166,6 +166,12 @@ def engine_patch_provenance(source, project):
     summary = {"modified": True, "upstream_commit": lock["commit"],
                "patches_sha256": patch_hash, "prepared_tree_sha256": stamp["tree_sha256"],
                "provenance_file": "engine-patches.json"}
+    # Advertise this opt-in interaction only for an engine carrying both parts
+    # of the verified implementation, never just a content/launcher update.
+    gathering = "crates/horizon-client/src/game/herspers_gathering"
+    if {gathering + ".rs", gathering + "_rules.rs", "crates/horizon-client/src/game.rs",
+            "crates/horizon-client/src/game/native_hooks.rs"} <= seen:
+        summary["native_features"] = ["rlcraft-gathering-1"]
     return summary, {"schema": 1, "preparation": stamp, "patches": manifest}
 
 

@@ -96,7 +96,8 @@ def verify(setup, output):
                 raise ValueError('Installed launcher or shortcuts missing')
             for mode, name in [('--smoke-test', 'installed-smoke.json'),
                                ('--native-acceptance', 'installed-workflows.json'),
-                               ('--flint-acceptance', 'installed-flint.json')]:
+                               ('--flint-acceptance', 'installed-flint.json'),
+                               ('--gathering-acceptance', 'installed-gathering.json')]:
                 receipt = output / name
                 receipt.unlink(missing_ok=True)
                 command([launcher, mode, '--require-installation', '--require-port-pack',
@@ -109,15 +110,18 @@ def verify(setup, output):
                     raise ValueError('Delivered candidate did not verify the three FunCraft backup cases')
                 if mode == '--native-acceptance' and len(data.get('chainmail_cases_verified', [])) != 3:
                     raise ValueError('Delivered candidate did not verify the three chainmail installation cases')
-                if mode == '--flint-acceptance':
-                    from herps_launcher.modpacks.flint import PACKAGE_SHA256
+                if mode in ('--flint-acceptance', '--gathering-acceptance'):
+                    if mode == '--gathering-acceptance':
+                        from herps_launcher.modpacks.gathering import PACKAGE_SHA256
+                    else:
+                        from herps_launcher.modpacks.flint import PACKAGE_SHA256
                     if (data.get('tests_run') != 7 or data.get('failures') or data.get('errors')
                             or data.get('skipped') or any(data.get('tools_on_path', {}).values())
                             or set(data.get('tools_on_path', {})) != {'cargo', 'rustc', 'rustup'}
                             or data.get('package_sha256') != PACKAGE_SHA256
                             or data.get('gameplay_verified') is not False
                             or data.get('interactive_verified') is not False):
-                        raise ValueError('Delivered flint tests, package or claim boundaries differ')
+                        raise ValueError('Delivered survival tests, package or claim boundaries differ')
                 report[name] = data
             if any(snapshot(support).get(name) != value for name, value in original.items()
                    if name != str(settings.relative_to(support))):

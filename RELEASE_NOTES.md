@@ -2,10 +2,22 @@
 
 Official home: https://github.com/Zeigen-ft/Herps-Launcher
 
+## Development candidate — native survival stage 2
+
+[Flint Gathering 0.1.0](docs/targeted-porting/NATIVE_SURVIVAL_STAGE_2.md) adds opt-in
+stone-top flint knapping and knife-cut short-grass/fern fiber in Survival. Install
+the unchanged starter first, then the add-on, in a fresh disposable profile.
+Both start disabled. This candidate carries a small original native extension;
+normal use needs no Rust tools. New physical gameplay remains **NOT RUN**.
+See [verification](docs/targeted-porting/NATIVE_SURVIVAL_STAGE_2_VERIFICATION.md).
+This development candidate does not replace or alter owner-published releases.
+
+## Earlier migration release preparation
+
 **Prepared for the repository owner to publish manually. This file does not
 create a GitHub Release or a tag.** Suggested tag: `v0.1.0`; mark the release
-**prerelease**, not stable. The destination is private unless its owner changes
-visibility separately; private releases are not public downloads.
+**prerelease**, not stable. The owner has since made the repository public and
+published releases; the earlier instructions below do not republish those assets.
 
 ## Install and play
 

@@ -32,6 +32,9 @@ migration does not change visibility, create a release or create a tag.
   checklist PASS; [scope and remaining tests](docs/targeted-porting/FLINT_WINDOWS_PHYSICAL_EVIDENCE.json)
   are recorded separately from CI. Broader native acceptance remains open.
 - The inspected FunCraft hotfix's bounded manual world-backup utility.
+- **[Flint Gathering — native remake stage 2](docs/targeted-porting/NATIVE_SURVIVAL_STAGE_2.md)**:
+  a separate opt-in add-on for stone knapping and knife-cut grass fiber using
+  unchanged starter items. New physical gameplay acceptance is NOT RUN.
 - A standalone, passive local RLCraft 2.9.3 archive inspector.
 
 ## Supported testing scope

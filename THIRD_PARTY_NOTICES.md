@@ -1,5 +1,10 @@
 # Licences and third-party notices
 
+The original Flint Gathering engine extension in `native/rlcraft_gathering/`
+uses the MIT license retained beside its sources. Its tag-only `.hmod`, launcher
+integration and tools use this repository's GPLv3 license. No original Java mod
+source, Minecraft artwork or Forge implementation is included in this extension.
+
 The launcher and independent packaging/tools are GPLv3; see [LICENSE](LICENSE).
 Do not describe the imported launcher as MIT merely because the initial empty
 Herps-Launcher repository used MIT. That notice remains at
