@@ -5,6 +5,7 @@ import json
 import os
 from pathlib import Path
 import platform
+import re
 import subprocess
 import tempfile
 
@@ -24,15 +25,36 @@ def verify_early_rejection(log):
         raise ValueError('Installer did not prove early path rejection before file copying')
 
 
+def installed_uninstaller(installed, log):
+    """Use this install's actual Inno name; a reinstall may choose unins001."""
+    names = set()
+    for line in Path(log).read_text(encoding='utf-8-sig').splitlines():
+        match = re.search(r'Dest filename: (.+[\\/]unins[0-9]{3}\.exe)\s*$', line)
+        if match:
+            names.add(match[1])
+    if len(names) != 1:
+        raise ValueError('Installer log must identify exactly one uninstaller')
+    path = Path(names.pop())
+    if (path.parent.resolve() != Path(installed).resolve() or path.is_symlink()
+            or not path.is_file()):
+        raise ValueError('Uninstaller is missing or outside the owned installation')
+    return path
+
+
 def verify(setup, output):
     output.mkdir(parents=True, exist_ok=True)
     output = output.resolve()
     report = {'status': 'failed', 'interactive_verified': False, 'gameplay_verified': False,
               'commands': [], 'platform': platform.platform()}
     def command(args, env=None, allow_failure=False):
-        result = subprocess.run(list(map(str, args)), env=env, capture_output=True, text=True, timeout=600)
-        report['commands'].append({'argv': list(map(str, args)), 'exit_code': result.returncode,
-                                   'stdout': result.stdout, 'stderr': result.stderr})
+        entry = {'argv': list(map(str, args)), 'exit_code': None, 'stdout': '', 'stderr': ''}
+        report['commands'].append(entry)
+        try:
+            result = subprocess.run(entry['argv'], env=env, capture_output=True, text=True, timeout=600)
+        except OSError as error:
+            entry['stderr'] = str(error)
+            raise
+        entry.update(exit_code=result.returncode, stdout=result.stdout, stderr=result.stderr)
         if result.returncode and not allow_failure:
             raise ValueError(f'Command failed: {args[0]} ({result.returncode}): {result.stderr}')
         return result.returncode if allow_failure else result.stdout.strip()
@@ -82,11 +104,29 @@ def verify(setup, output):
                 '\'/SUPPRESSMSGBOXES\', \'/NORESTART\', \'/TASKS=desktopicon\', '
                 '"/DIR=`\"$destination`\"", "/LOG=`\"$log`\"") -PassThru -Wait\n'
                 'exit $p.ExitCode\n', encoding='utf-8')
+            uninstaller_helper = root / 'uninstall.ps1'
+            # Inno relaunches its uninstaller from a temporary copy. Waiting for
+            # only the original process races reinstall against its child.
+            # Windows Start-Process -Wait waits for the whole process tree.
+            uninstaller_helper.write_text('param($exe, $log)\n'
+                '$ErrorActionPreference = \'Stop\'\n'
+                '$p = Start-Process -FilePath $exe -ArgumentList @(\'/VERYSILENT\', '
+                '\'/SUPPRESSMSGBOXES\', \'/NORESTART\', "/LOG=`\"$log`\"") -PassThru -Wait\n'
+                'exit $p.ExitCode\n', encoding='utf-8')
             def install(stage, destination=installed, reject=False):
                 code = command([powershell, '-NoProfile', '-File', helper, setup, destination,
                          output / f'installer-{stage}.log'], allow_failure=reject)
                 if reject and (code == 0 or destination.exists()):
                     raise ValueError('Overlong destination was not rejected before copying')
+            def uninstall(stage, installation_stage):
+                actual = installed_uninstaller(installed, output / f'installer-{installation_stage}.log')
+                report.setdefault('uninstallers', []).append({'stage': stage, 'path': str(actual),
+                    'sha256': sha256(actual), 'waits_for_process_tree': True})
+                command([powershell, '-NoProfile', '-File', uninstaller_helper, actual,
+                         output / f'uninstall-{stage}.log'])
+                text = (output / f'uninstall-{stage}.log').read_text(encoding='utf-8-sig')
+                if 'Uninstallation process succeeded.' not in text:
+                    raise ValueError('Uninstaller did not record successful completion')
             install('long-path', root / ('Long destination ' + 'x' * 140), reject=True)
             verify_early_rejection(output / 'installer-long-path.log')
             if snapshot(support) != original: raise ValueError('Rejected installation changed existing data')
@@ -134,7 +174,7 @@ def verify(setup, output):
             # Same-version replacement, then uninstall and reinstall, all against existing data.
             install('replacement')
             if snapshot(support) != before: raise ValueError('Replacement changed user data')
-            command([installed / 'unins000.exe', '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', f'/LOG={output / "uninstall.log"}'])
+            uninstall('first', 'replacement')
             if launcher.exists() or any(p.exists() for p in shortcuts):
                 raise ValueError('Uninstaller left launcher or shortcuts behind')
             if snapshot(support) != before: raise ValueError('Uninstall changed user data')
@@ -142,7 +182,9 @@ def verify(setup, output):
             command([launcher, '--smoke-test', '--require-installation', '--require-port-pack',
                      '--smoke-report', output / 'reinstalled-smoke.json'], env)
             if snapshot(support) != before: raise ValueError('Reinstall changed user data')
-            command([installed / 'unins000.exe', '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', f'/LOG={output / "uninstall.log"}'])
+            uninstall('final', 'reinstall')
+            if launcher.exists() or any(p.exists() for p in shortcuts):
+                raise ValueError('Final uninstaller left launcher or shortcuts behind')
             if snapshot(support) != before: raise ValueError('Final uninstall changed user data')
             report['preserved_files'] = before
             report['existing_data_before_install'] = original
