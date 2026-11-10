@@ -88,6 +88,10 @@ class GitSourceTests(unittest.TestCase):
         self.source = self.root / "source"
         self.source.mkdir()
         self.git("init", "-q")
+        # Exact-byte verification needs the same LF checkout policy as native CI,
+        # independently of Git for Windows' global autocrlf setting.
+        self.git("config", "core.autocrlf", "false")
+        self.git("config", "core.eol", "lf")
         (self.source / "src").mkdir()
         (self.source / "src/main.rs").write_bytes(b"original source\n")
         (self.source / "Cargo.lock").write_bytes(b"locked\n")

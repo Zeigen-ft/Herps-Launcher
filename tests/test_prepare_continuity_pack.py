@@ -20,7 +20,7 @@ class ContinuityPackTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
-        self.root = Path(self.temp.name)
+        self.root = Path(self.temp.name).resolve()
         self.source = self.root / "continuity.jar"
         self.output = self.root / "packs/continuity.zip"
 
