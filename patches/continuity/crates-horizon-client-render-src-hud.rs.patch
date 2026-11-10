@@ -1,0 +1,179 @@
+--- a/crates/horizon-client-render/src/hud.rs
++++ b/crates/horizon-client-render/src/hud.rs
+@@ -216,10 +216,11 @@
+ /// files already packed: generated ones (`paletted_permutations` such as the
+ /// armour trim sprites, `unstitch` regions) and files listed under another id,
+ /// such as other namespaces' item textures; and the animated ones' names.
+-fn atlas_sprites(root: &Path, packed: &[PackedImage]) -> (Vec<PackedImage>, Vec<String>) {
++fn atlas_sprites(root: &Path, packed: &[PackedImage]) -> (Vec<PackedImage>, Vec<(String, String)>) {
+     use crate::atlas_sources::{self, SpriteOrigin};
+     let have: std::collections::HashSet<&str> = packed.iter().map(|i| i.0.as_str()).collect();
+     let textures = atlas_sources::list_textures(root);
++    let emissive = crate::emissive::EmissiveTextures::load(root);
+     // Each new name with its origins in the atlases' order: the first that
+     // loads is the sprite. They load at once (a content pack's atlases list
+     // tens of thousands of files), and come out in the order a load of one
+@@ -258,9 +259,10 @@
+     let load = |texture: &str, directory: &str| {
+         decode(&atlas_sources::texture_path(root, texture, directory)).ok()
+     };
++    let defined: HashSet<&str> = names.iter().map(|(name, _)| name.as_str()).collect();
+     let first = |(name, origins): &(String, Vec<(usize, SpriteOrigin)>)| {
+         origins.iter().find_map(|(order, origin)| {
+-            let mut animated = false;
++            let mut animation_source = None;
+             let image = match origin {
+                 SpriteOrigin::File(texture) => {
+                     // Its path under `textures/` in any namespace (a server
+@@ -273,7 +275,7 @@
+                         if path.starts_with("block/") || path.starts_with("item/") {
+                             let mcmeta = fs::read_to_string(file.with_extension("png.mcmeta")).ok();
+                             let animation = animation_of(mcmeta.as_deref());
+-                            animated = animation.is_some();
++                            animation_source = animation.is_some().then(|| texture.clone());
+                             first_frame(image, animation.as_ref())
+                         } else {
+                             image
+@@ -282,18 +284,47 @@
+                 }
+                 generated => atlas_sources::generate(generated, &load),
+             };
+-            image.map(|(w, h, pixels)| (*order, (name.clone(), w, h, pixels), animated))
++            let (w, h, pixels) = image?;
++            let mut images = vec![(*order, (name.clone(), w, h, pixels), animation_source)];
++            // Atlas aliases keep their logical sprite id, but the companion's
++            // pixels and animation come from the chosen physical source texture.
++            if let SpriteOrigin::File(texture) = origin
++                && let Some(companion) = emissive.sibling(texture)
++                && let Some(alias) = emissive.sibling(name)
++            {
++                let alias = alias.strip_prefix("minecraft:").unwrap_or(&alias);
++                if !have.contains(alias) && !defined.contains(alias) {
++                    let path = atlas_sources::texture_path(root, &companion, "textures");
++                    if let Ok(image) = decode(&path) {
++                        let mcmeta = fs::read_to_string(path.with_extension("png.mcmeta")).ok();
++                        let animation = animation_of(mcmeta.as_deref());
++                        let texture_path = companion
++                            .split_once(':')
++                            .map_or(companion.as_str(), |(_, p)| p);
++                        let frames =
++                            texture_path.starts_with("block/") || texture_path.starts_with("item/");
++                        let source = (frames && animation.is_some()).then(|| companion.clone());
++                        let (w, h, pixels) = if frames {
++                            first_frame(image, animation.as_ref())
++                        } else {
++                            image
++                        };
++                        images.push((*order, (alias.to_owned(), w, h, pixels), source));
++                    }
++                }
++            }
++            Some(images)
+         })
+     };
+     let mut out: Vec<_> = crate::par::par_map(&names, first)
+         .into_iter()
+         .flatten()
++        .flatten()
+         .collect();
+     out.sort_unstable_by_key(|(order, ..)| *order);
+     let animated = out
+         .iter()
+-        .filter(|(.., animated)| *animated)
+-        .map(|(_, image, _)| image.0.clone())
++        .filter_map(|(_, image, source)| source.as_ref().map(|id| (image.0.clone(), id.clone())))
+         .collect();
+     (
+         out.into_iter().map(|(_, image, _)| image).collect(),
+@@ -726,7 +757,7 @@
+         });
+         let mut flags = HashMap::new();
+         let mut gui_sizes = HashMap::new();
+-        let mut animated: Vec<String> = Vec::new();
++        let mut animated: Vec<(String, String)> = Vec::new();
+         let mut images: Vec<PackedImage> = Vec::with_capacity(decoded.len());
+         for (image, image_flags, gui_size, is_animated) in decoded {
+             if let Some(f) = image_flags {
+@@ -736,7 +767,12 @@
+                 gui_sizes.insert(image.0.clone(), size);
+             }
+             if is_animated {
+-                animated.push(image.0.clone());
++                let id = if image.0.contains(':') {
++                    image.0.clone()
++                } else {
++                    format!("minecraft:{}", image.0)
++                };
++                animated.push((image.0.clone(), id));
+             }
+             images.push(image);
+         }
+@@ -819,15 +855,10 @@
+         let mut loaded = crate::sprites::Sprites::default();
+         let mut sprite_animations = Vec::new();
+         animated.sort();
+-        for name in animated {
++        animated.dedup();
++        for (name, id) in animated {
+             let Some(rect) = sprites.get(&name).copied() else {
+                 continue;
+-            };
+-            // Another namespace's sprite is named with it (`lobby:item/...`).
+-            let id = if name.contains(':') {
+-                name.clone()
+-            } else {
+-                format!("minecraft:{name}")
+             };
+             let Ok(layer) = loaded.insert(root, &id) else {
+                 continue;
+@@ -2422,6 +2453,50 @@
+             .expect("the namespaced sprite animates");
+         assert_eq!(animation.frame_count(), 2);
+     }
++    #[test]
++    fn emissive_item_atlas_alias_keeps_physical_texture_animation_and_reloads() {
++        let root =
++            std::env::temp_dir().join(format!("herps-atlas-emissive-alias-{}", std::process::id()));
++        let atlases = root.join("assets/minecraft/atlases");
++        let optifine = root.join("assets/minecraft/optifine");
++        let item = root.join("assets/gems/textures/item");
++        fs::create_dir_all(&atlases).unwrap();
++        fs::create_dir_all(&optifine).unwrap();
++        fs::create_dir_all(&item).unwrap();
++        fs::write(optifine.join("emissive.properties"), "suffix.emissive=_e\n").unwrap();
++        fs::write(atlases.join("items.json"), r#"{"sources":[{"type":"single","resource":"gems:item/physical","sprite":"gems:item/alias"}]}"#).unwrap();
++        write_strip(
++            &item.join("physical.png"),
++            16,
++            16,
++            &[[64, 64, 64, 255]],
++            None,
++        );
++        write_strip(
++            &item.join("physical_e.png"),
++            16,
++            32,
++            &[[255, 0, 0, 128], [0, 0, 255, 128]],
++            Some(r#"{"animation":{"frames":[1,0],"frametime":2}}"#),
++        );
++        let atlas = HudAtlas::build(&root).unwrap();
++        assert!(atlas.sprites.contains_key("gems:item/alias"));
++        let rect = atlas.sprites["gems:item/alias_e"];
++        assert_eq!(texel_at(&atlas, rect, 0, 0), [0, 0, 255, 128]);
++        assert!(atlas.translucent.contains("gems:item/alias_e"));
++        let (_, animation) = atlas
++            .sprite_animations
++            .iter()
++            .find(|(r, _)| r.u0 == rect.u0 && r.v0 == rect.v0)
++            .expect("the emissive alias uses its physical source animation");
++        assert_eq!(animation.frame(0), 1);
++        assert_eq!(animation.frame_count(), 2);
++        fs::remove_file(optifine.join("emissive.properties")).unwrap();
++        let reloaded = HudAtlas::build(&root).unwrap();
++        assert!(reloaded.sprites.contains_key("gems:item/alias"));
++        assert!(!reloaded.sprites.contains_key("gems:item/alias_e"));
++        fs::remove_dir_all(&root).unwrap();
++    }
+     /// `count` images of `w x h`; layout reads only their sizes.
+     fn sized(count: usize, w: u32, h: u32) -> Vec<PackedImage> {
+         (0..count)

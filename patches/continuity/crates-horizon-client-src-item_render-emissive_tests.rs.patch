@@ -1,0 +1,205 @@
+--- /dev/null
++++ b/crates/horizon-client/src/item_render/emissive_tests.rs
+@@ -0,0 +1,202 @@
++use super::*;
++use horizon_assets::{bake::ModelQuad, model::Material};
++use std::sync::atomic::{AtomicU64, Ordering};
++
++struct Fixture {
++    root: PathBuf,
++    renderer: ItemRenderer,
++    baked: BakedItemModel,
++    layer: LayerRender,
++    atlas: HashMap<String, Rect>,
++}
++impl Fixture {
++    fn new(enabled: bool) -> Self {
++        static NEXT: AtomicU64 = AtomicU64::new(0);
++        let root = std::env::temp_dir().join(format!(
++            "herps-item-emissive-{}-{}",
++            std::process::id(),
++            NEXT.fetch_add(1, Ordering::Relaxed)
++        ));
++        fs::create_dir_all(root.join("assets/minecraft/optifine")).unwrap();
++        fs::write(root.join("items.json"), "{}").unwrap();
++        if enabled {
++            fs::write(
++                root.join("assets/minecraft/optifine/emissive.properties"),
++                "suffix.emissive=_e\n",
++            )
++            .unwrap();
++        }
++        let renderer = Self::renderer(&root);
++        let material = Material {
++            sprite: "gems:item/test".into(),
++            force_translucent: false,
++        };
++        let baked = BakedItemModel {
++            quads: vec![ModelQuad {
++                positions: [
++                    [0.0, 0.0, 0.0],
++                    [0.0, 1.0, 0.0],
++                    [1.0, 1.0, 0.0],
++                    [1.0, 0.0, 0.0],
++                ],
++                uv: [[0.0, 0.0], [0.0, 1.0], [1.0, 1.0], [1.0, 0.0]],
++                facing: Direction::North,
++                cull: None,
++                material: material.clone(),
++                tint_index: 0,
++                shade_direction_override: None,
++                light_emission: 0,
++            }],
++            uses_block_light: true,
++            particle: material,
++            transforms: std::array::from_fn(|_| None),
++        };
++        let layer = LayerRender {
++            geometry: LayerGeometry::Quads(Arc::new(baked.clone())),
++            tints: vec![0x804080c0_u32 as i32],
++            foil: FoilType::Standard,
++            matrix: Mat4::IDENTITY,
++            particle: "gems:item/test".into(),
++            uses_block_light: true,
++            extents: Arc::new(Vec::new()),
++        };
++        let rect = |u0| Rect {
++            u0,
++            v0: 0.0,
++            u1: u0 + 0.25,
++            v1: 0.25,
++            w: 16,
++            h: 16,
++        };
++        let atlas = HashMap::from([
++            ("gems:item/test".into(), rect(0.0)),
++            ("gems:item/test_e".into(), rect(0.5)),
++        ]);
++        Self {
++            root,
++            renderer,
++            baked,
++            layer,
++            atlas,
++        }
++    }
++    fn renderer(root: &Path) -> ItemRenderer {
++        ItemRenderer::load_with_library(
++            root,
++            Ok(Arc::new(ModelLibrary::new(BTreeMap::new()).unwrap())),
++        )
++        .unwrap()
++    }
++    fn quads(&self, renderer: &ItemRenderer) -> Vec<ItemQuad> {
++        let mut out = Vec::new();
++        submit_quads(
++            renderer,
++            &self.baked,
++            &self.layer,
++            DisplayContext::Gui,
++            Mat4::IDENTITY,
++            &self.atlas,
++            &mut out,
++        );
++        out
++    }
++}
++impl Drop for Fixture {
++    fn drop(&mut self) {
++        let _ = fs::remove_dir_all(&self.root);
++    }
++}
++
++#[test]
++fn emissive_item_overlay_keeps_tint_geometry_alpha_and_does_not_duplicate_foil() {
++    let fixture = Fixture::new(true);
++    let quads = fixture.quads(&fixture.renderer);
++    assert_eq!(quads.len(), 2);
++    let (base, glow) = (quads[0], quads[1]);
++    assert!(!base.emissive);
++    assert!(glow.emissive);
++    assert_eq!(base.color, 0x804080c0);
++    assert_eq!(glow.color, base.color);
++    assert_eq!(glow.pos, base.pos);
++    assert_eq!(glow.normal, base.normal);
++    assert_eq!(base.foil, Foil::Standard);
++    assert_eq!(glow.foil, Foil::None);
++    assert_eq!(glow.uv[0], [0.5, 0.0]);
++    assert_eq!(glow.uv[2], [0.75, 0.25]);
++    assert_eq!(glow.foil_uv, base.foil_uv);
++}
++
++#[test]
++fn missing_companion_or_config_leaves_base_quad_unchanged() {
++    let mut fixture = Fixture::new(true);
++    assert!(fixture.renderer.emissive_textures_enabled());
++    let base = fixture.quads(&fixture.renderer)[0];
++    fixture.atlas.remove("gems:item/test_e");
++    assert_eq!(fixture.quads(&fixture.renderer), [base]);
++    fs::remove_file(
++        fixture
++            .root
++            .join("assets/minecraft/optifine/emissive.properties"),
++    )
++    .unwrap();
++    let reloaded = Fixture::renderer(&fixture.root);
++    assert!(!reloaded.emissive_textures_enabled());
++    fixture
++        .atlas
++        .insert("gems:item/test_e".into(), fixture.atlas["gems:item/test"]);
++    assert_eq!(fixture.quads(&reloaded), [base]);
++    // Reloading replaces the immutable configuration; an old instance is unchanged.
++    assert_eq!(fixture.quads(&fixture.renderer).len(), 2);
++    assert!(fixture.renderer.emissive_textures_enabled());
++}
++
++#[test]
++fn world_emissive_items_ignore_darkness_and_diffuse_but_keep_tint_and_material() {
++    let mut fixture = Fixture::new(true);
++    fixture.baked.quads[0].material.force_translucent = true;
++    let quads = fixture.quads(&fixture.renderer);
++    let mut vertices = Vec::new();
++    let mut sink = WorldSink {
++        out: &mut vertices,
++        light: 0,
++        lights: Some((Vec3::Y, Vec3::Y)),
++        glint: Some(Glint {
++            speed: 0.5,
++            alpha: 1.0,
++            millis: 100.0,
++            scale: 0.5,
++        }),
++    };
++    sink.quad(quads[0]);
++    sink.quad(quads[1]);
++    assert_eq!(vertices.len(), 8);
++    assert_eq!(
++        vertices[0].layer,
++        crate::gfx::TRANSLUCENT_GLINT_ITEM_OVERLAY
++    );
++    assert_eq!(
++        vertices[4].layer,
++        crate::gfx::TRANSLUCENT_EMISSIVE_ITEM_OVERLAY
++    );
++    assert_eq!(vertices[4].color, 0x80c08040);
++    assert_ne!(vertices[0].color, vertices[4].color);
++    assert_eq!(vertices[0].light, 0);
++    assert_eq!(vertices[4].light, 240 | 240 << 8);
++    assert_eq!(vertices[4].normal, CULL_BACK);
++    assert_eq!(vertices[4].glint_uv, [0.0; 2]);
++}
++
++#[test]
++fn gui_emissive_items_ignore_diffuse_and_preserve_alpha_tint() {
++    let fixture = Fixture::new(true);
++    let quads = fixture.quads(&fixture.renderer);
++    let lights = (Vec3::Y, Vec3::Y);
++    assert_eq!(
++        gui::lit_color(&quads[1], lights),
++        crate::hud::rgba(0x40, 0x80, 0xc0, 0x80)
++    );
++    assert_ne!(
++        gui::lit_color(&quads[0], lights),
++        gui::lit_color(&quads[1], lights)
++    );
++}

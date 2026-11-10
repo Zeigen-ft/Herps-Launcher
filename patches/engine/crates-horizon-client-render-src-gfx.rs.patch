@@ -1,6 +1,26 @@
 --- a/crates/horizon-client-render/src/gfx.rs
 +++ b/crates/horizon-client-render/src/gfx.rs
-@@ -107,6 +107,7 @@
+@@ -60,14 +60,16 @@
+ 
+ #[cfg(test)]
+ mod crumbling_tests;
++#[cfg(test)]
++mod emissive_tests;
+ mod entity_batch;
+ mod entity_outline;
+ mod weather;
+ use entity_batch::EntityBatch;
+ pub use entity_batch::{
+-    ENERGY_SWIRL_OVERLAY, OIT_ENTITY, SHADOW_OVERLAY, TEXT_POLYGON_OFFSET_OVERLAY,
+-    TRANSLUCENT_GLINT_ITEM_OVERLAY, TRANSLUCENT_ITEM_OVERLAY, TRANSLUCENT_PARTICLE_OVERLAY,
+-    WATER_MASK_OVERLAY, mark_oit,
++    EMISSIVE_ITEM_OVERLAY, ENERGY_SWIRL_OVERLAY, OIT_ENTITY, SHADOW_OVERLAY,
++    TEXT_POLYGON_OFFSET_OVERLAY, TRANSLUCENT_EMISSIVE_ITEM_OVERLAY, TRANSLUCENT_GLINT_ITEM_OVERLAY,
++    TRANSLUCENT_ITEM_OVERLAY, TRANSLUCENT_PARTICLE_OVERLAY, WATER_MASK_OVERLAY, mark_oit,
+ };
+ pub use view::{View, ViewSet};
+ 
+@@ -107,6 +109,7 @@
  mod frame_gen;
  mod hdr;
  pub use hdr::Calibration as HdrCalibration;
@@ -8,7 +28,7 @@
  pub mod lightning;
  mod lod;
  mod native_material;
-@@ -396,6 +397,8 @@
+@@ -396,6 +399,8 @@
      pub stars: Option<(Mat4, f32)>,
      /// First-person hand and held item, drawn after clearing depth.
      pub hand: &'a [Vertex],
@@ -17,7 +37,7 @@
      /// `CameraRenderState.hudFov`: the hand's own field of view
      /// (`GameRenderer.render3dHud`).
      pub hand_fov_degrees: f32,
-@@ -735,6 +738,8 @@
+@@ -735,8 +740,13 @@
      pub gamma: f32,
      /// Optional full-light lightmap (Horizon Extras).
      pub fullbright: bool,
@@ -25,16 +45,24 @@
 +    pub resource_pack_fullbright: bool,
      /// The Improved transparency option (`GameRenderer.useImprovedTransparency`).
      pub improved_transparency: bool,
++    /// Pack emissive overlays need ordered compositing with their coplanar base.
++    /// Rebuilt with the resource pack; the player's transparency option is retained.
++    pub emissive_texture_overlays: bool,
      /// Its passes and targets, made when first drawn with.
-@@ -3195,6 +3200,7 @@
+     oit: Option<oit::Oit>,
+     /// Advance animated block textures (Horizon setting; vanilla always does).
+@@ -3193,8 +3203,10 @@
+             screenshot_result: None,
+             gamma: 0.5,
              improved_transparency: false,
++            emissive_texture_overlays: false,
              oit: None,
              fullbright: false,
 +            resource_pack_fullbright: false,
              animated_textures: true,
              present_modes,
          })
-@@ -4318,41 +4324,15 @@
+@@ -4318,41 +4330,15 @@
          flicker: f32,
          boss_darken: f32,
      ) {
@@ -85,3 +113,11 @@
          // The lightmap changes with the time of day, flicker and effects,
          // not every frame: upload only what differs from the texture.
          if pixels == self.lightmap_pixels && self.lightmap_uploaded {
+@@ -5191,6 +5177,7 @@
+         // GameRenderer.useImprovedTransparency. A shader pack keeps its own
+         // path.
+         let oit_on = self.improved_transparency
++            && !self.emissive_texture_overlays
+             && !frame.title
+             && self.pack_post.as_ref().is_none_or(|p| p.1.is_none())
+             && self.native.is_none()

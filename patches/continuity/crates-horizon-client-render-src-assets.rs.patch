@@ -1,16 +1,18 @@
 --- a/crates/horizon-client-render/src/assets.rs
 +++ b/crates/horizon-client-render/src/assets.rs
-@@ -94,6 +94,9 @@
+@@ -94,6 +94,11 @@
      pub animations: Vec<crate::sprites::SpriteAnimation>,
      pub sprite_layers: std::collections::BTreeMap<String, u32>,
      pub translucent_layers: Vec<bool>,
 +    pub opaque_layers: Vec<bool>,
++    /// Optional full-bright overlay for each base sprite, including CTM tiles.
++    pub emissive_layers: std::collections::BTreeMap<u32, u32>,
 +    /// Opt-in pack rules, rebuilt together with models and sprites on reload.
 +    pub connected_textures: crate::connected_textures::ConnectedTextures,
      /// Each layer's `MipmapGenerator` settings.
      pub sprite_mips: Vec<crate::mipmap::Settings>,
  }
-@@ -235,6 +238,16 @@
+@@ -235,6 +240,16 @@
          for stage in 0..10 {
              sprites.insert(root, &format!("minecraft:block/destroy_stage_{stage}"))?;
          }
@@ -27,11 +29,12 @@
          sprites.save_disk_cache();
          if draws {
              sprites.finish();
-@@ -255,6 +268,8 @@
+@@ -255,6 +270,9 @@
              animations: sprites.animations,
              sprite_layers: sprites.layers,
              translucent_layers: sprites.translucent,
 +            opaque_layers: sprites.opaque,
++            emissive_layers: sprites.emissive_layers,
 +            connected_textures,
              sprite_mips: sprites.mips,
          })

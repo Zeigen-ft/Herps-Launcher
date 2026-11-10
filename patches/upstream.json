@@ -40,7 +40,7 @@
     {
       "path": "crates/horizon-client/src/game.rs",
       "before_sha256": "de63b396454bbd394d4f3ca72fe0a54b83e3c0171cab6aca73b94bcd9c0de1bf",
-      "after_sha256": "9d63b877ee732d75a22e317b516aa69f4869e0f28585254ecb44269b4b9eb17e",
+      "after_sha256": "2ba0d40210da440cae383bb48a0e7620e2106dc0adb205e7bf0c8356c769479a",
       "patch": "engine/crates-horizon-client-src-game.rs.patch"
     },
     {
@@ -88,7 +88,7 @@
     {
       "path": "crates/horizon-client-render/src/gfx.rs",
       "before_sha256": "6a2d38794c062121bd81a71231ac9388741396e0ecb4f5fadcff2696c0dad33a",
-      "after_sha256": "f3ea4ee9222c56121cee179f1b66eccea063473300d07e9733726e11efa4e7f1",
+      "after_sha256": "19028293431429b0f374e3e481ecc8c890f2ead36fcd1b135b980a0aa41e1c57",
       "patch": "engine/crates-horizon-client-render-src-gfx.rs.patch"
     },
     {
@@ -124,25 +124,25 @@
     {
       "path": "crates/horizon-client-render/src/assets.rs",
       "before_sha256": "b74dc37b7b8f96c367b337b7acf5dac40dfd561ecd185e479817e536df6601c0",
-      "after_sha256": "637e7fef438e3494e254039d393125e19ed1f450f825bb9dbf82c3dd2ad088ac",
+      "after_sha256": "79ce73e18a1694bf5937844c01a36321d2dc606e43fc37bee23774e9120db99a",
       "patch": "continuity/crates-horizon-client-render-src-assets.rs.patch"
     },
     {
       "path": "crates/horizon-client-render/src/lib.rs",
       "before_sha256": "8ec225beadc21a50294e27792ef96425c10eae1f58509a3160d6038e8999daed",
-      "after_sha256": "d3a74a48b3e020d152a88556543affa8b601987db6dbe62117891683b6b83f39",
+      "after_sha256": "8292ef5d83f26a52777199c37ce96ee6913ad5ea32556f0a306a8c1ebfaf13c7",
       "patch": "continuity/crates-horizon-client-render-src-lib.rs.patch"
     },
     {
       "path": "crates/horizon-client-render/src/mesher.rs",
       "before_sha256": "a9b468148da238ac20dc3a471703e49dc0878a860b73ae5a903a3986d07e1d49",
-      "after_sha256": "059514a951569f9a8c279fb8cb3f189d8692c3433f7354282548d176e70d0f88",
+      "after_sha256": "f2d174a5e0ea8e0875fa282cef61ec74ae876e3a56c90100488c8d2caca4bcd3",
       "patch": "continuity/crates-horizon-client-render-src-mesher.rs.patch"
     },
     {
       "path": "crates/horizon-client-render/src/sprites.rs",
       "before_sha256": "ec14164a23d002cbf23ce3fb59c837705d1b7a4620df209ce1fea84b3be2474d",
-      "after_sha256": "f47674f2cf39948cc0f0a40e5e08b9e149fc7df0df496200789f80a6e024d2fa",
+      "after_sha256": "e48063a13b060efbe2c8f4aec39bba7f2df9cfeea6229f868d04d92b874cd84d",
       "patch": "continuity/crates-horizon-client-render-src-sprites.rs.patch"
     },
     {
@@ -154,8 +154,68 @@
     {
       "path": "crates/horizon-client-render/src/mesher/continuity_tests.rs",
       "before_sha256": null,
-      "after_sha256": "3a633e4e6c75073134bc961e4e98ed22d4b2d19b1b701fb36b4474f678daa2e4",
+      "after_sha256": "84dd464e8d9b7c310cc0211d8c5bd5d6c998c953030a5058a511f2030b3ed88b",
       "patch": "continuity/crates-horizon-client-render-src-mesher-continuity_tests.rs.patch"
+    },
+    {
+      "path": "crates/horizon-client-render/src/emissive.rs",
+      "before_sha256": null,
+      "after_sha256": "2a3094ce0839c04fb22e5963cf1d4c7f7278d2185a1f261d38e315c7fbe559d3",
+      "patch": "continuity/crates-horizon-client-render-src-emissive.rs.patch"
+    },
+    {
+      "path": "crates/horizon-client-render/src/entity.wgsl",
+      "before_sha256": "b43eaec9144ed8adb524be93a8aec1702a0553f555e3ae65733b85c6d6df6619",
+      "after_sha256": "1dd3250772ed3761d2fafc518b073a3b8d9d7d13d43ad5a67d741f4e58e84adc",
+      "patch": "continuity/crates-horizon-client-render-src-entity.wgsl.patch"
+    },
+    {
+      "path": "crates/horizon-client-render/src/terrain.wgsl",
+      "before_sha256": "09609e2ea00e43bb1fc886141ad31a1eaacda50607dde4e65827a7b45ca1eebd",
+      "after_sha256": "3759ad946b8afe2a2a503ae2e0db660ba48a29c1285fda9e961f16615c5bfa92",
+      "patch": "continuity/crates-horizon-client-render-src-terrain.wgsl.patch"
+    },
+    {
+      "path": "crates/horizon-client-render/src/gfx/entity_batch.rs",
+      "before_sha256": "1ad1f5dfcd9df85d67838e4a8e3a0251985033642dc1bd40228b63ac6580ba79",
+      "after_sha256": "01db0ecc4aaf67cf415c3a75f7ce0d300e900c61eb888eac3cb42ce6188059f4",
+      "patch": "continuity/crates-horizon-client-render-src-gfx-entity_batch.rs.patch"
+    },
+    {
+      "path": "crates/horizon-client-render/src/gfx/emissive_tests.rs",
+      "before_sha256": null,
+      "after_sha256": "d430455097e2145afca889d5ce1869b412194dfbc45d1969bce8e384f16833b4",
+      "patch": "continuity/crates-horizon-client-render-src-gfx-emissive_tests.rs.patch"
+    },
+    {
+      "path": "crates/horizon-client-render/src/hud.rs",
+      "before_sha256": "a59c99eb9e199495fa55e49d41a3bd3899d5b9ef0e34ba23f94ac53c3d4f581d",
+      "after_sha256": "4ce568c43f15a30463fb55197085fd7c26ecf04d55dd741d5294e236beb196fc",
+      "patch": "continuity/crates-horizon-client-render-src-hud.rs.patch"
+    },
+    {
+      "path": "crates/horizon-client/src/item_render.rs",
+      "before_sha256": "eceab33775cb10e91f172580a00f947816d22cea240eadda0ec596e532fbf0ee",
+      "after_sha256": "9b4598c8c02ef53629b1f1de83f26f055a7680cacf468ec68fb8e62dc2ce8fad",
+      "patch": "continuity/crates-horizon-client-src-item_render.rs.patch"
+    },
+    {
+      "path": "crates/horizon-client/src/item_render/gui.rs",
+      "before_sha256": "d8b5e9b44a0705f0873ff37e0388e74ab509b7accf4587c99d600ceb96175e91",
+      "after_sha256": "6491ccf1abf93b15d8ead5981b89839362dfaf5908005ee1ddada8cffe48b9b3",
+      "patch": "continuity/crates-horizon-client-src-item_render-gui.rs.patch"
+    },
+    {
+      "path": "crates/horizon-client/src/item_render/special.rs",
+      "before_sha256": "d16d55b95b4ff9bfc00960e39c0b12d7225f9348cf61f4f411e3d736991ae132",
+      "after_sha256": "a5b51977d923f79443daa09b33e35328ce4fd63b32995c94ce9db259bc5a0883",
+      "patch": "continuity/crates-horizon-client-src-item_render-special.rs.patch"
+    },
+    {
+      "path": "crates/horizon-client/src/item_render/emissive_tests.rs",
+      "before_sha256": null,
+      "after_sha256": "88e27a85608c5ef1475da126305323b98ec9d53c6ceb7dadefe9d0fb67347e86",
+      "patch": "continuity/crates-horizon-client-src-item_render-emissive_tests.rs.patch"
     }
   ]
 }

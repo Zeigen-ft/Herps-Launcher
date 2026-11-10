@@ -1,6 +1,6 @@
 --- /dev/null
 +++ b/crates/horizon-client-render/src/mesher/continuity_tests.rs
-@@ -0,0 +1,378 @@
+@@ -0,0 +1,556 @@
 +//! Generated geometry fixtures: no prepared game resources or third-party code.
 +use super::*;
 +use crate::{
@@ -132,6 +132,7 @@
 +            sprite_layers: sprites.layers,
 +            translucent_layers: sprites.translucent,
 +            opaque_layers: sprites.opaque,
++            emissive_layers: sprites.emissive_layers,
 +            connected_textures,
 +            sprite_mips: sprites.mips,
 +        }
@@ -143,6 +144,29 @@
 +        center: &Chunk,
 +        east: Option<&Chunk>,
 +        sy: i32,
++    ) -> SectionMesh {
++        self.mesh_lighting(assets, render, center, east, sy, false)
++    }
++    fn mesh_lighting(
++        &self,
++        assets: &Assets,
++        render: &RenderAssets,
++        center: &Chunk,
++        east: Option<&Chunk>,
++        sy: i32,
++        smooth_lighting: bool,
++    ) -> SectionMesh {
++        self.mesh_configure(assets, render, center, east, sy, smooth_lighting, |_| {})
++    }
++    fn mesh_configure(
++        &self,
++        assets: &Assets,
++        render: &RenderAssets,
++        center: &Chunk,
++        east: Option<&Chunk>,
++        sy: i32,
++        smooth_lighting: bool,
++        configure: impl FnOnce(&mut Info),
 +    ) -> SectionMesh {
 +        let air = Info {
 +            solid: false,
@@ -169,6 +193,7 @@
 +        };
 +        let mut glass = air;
 +        glass.model = true;
++        configure(&mut glass);
 +        let visibility = FaceVisibility::empty();
 +        let tables = MeshTables {
 +            info: vec![air, glass],
@@ -189,8 +214,8 @@
 +            visibility,
 +            zoom: BiomeZoom::new(7),
 +            blend_radius: 0,
-+            smooth_lighting: false,
-+            cutout_leaves: true,
++            smooth_lighting,
++            cutout_leaves: !glass.leaves,
 +        };
 +        let mut region = [[None; 3]; 3];
 +        region[1][1] = Some(center);
@@ -225,6 +250,159 @@
 +        c.set(x, MIN_Y + y, z, 1);
 +    }
 +    c
++}
++
++#[test]
++fn emissive_overlay_preserves_base_geometry_and_reloads_cleanly() {
++    for (alpha, forced) in [(255, false), (128, false), (255, true)] {
++        let f = Fixture::new(alpha, forced);
++        let assets = f.assets();
++        let chunk = center(&[[4, 2, 3]]);
++        let before = f.mesh(&assets, &f.render(&assets), &chunk, None, 0);
++        f.write(
++            "assets/minecraft/optifine/emissive.properties",
++            "suffix.emissive=_e\n",
++        );
++        f.png(
++            "assets/minecraft/textures/block/glass_e.png",
++            [200, 100, 20, 128],
++        );
++        let render = f.render(&assets);
++        let mut after = f.mesh(&assets, &render, &chunk, None, 0);
++        let (base, glowing) = if forced || alpha != 255 {
++            assert!(after.solid.is_empty());
++            (&before.translucent, &after.translucent)
++        } else {
++            assert!(after.translucent.is_empty());
++            (&before.solid, &after.solid)
++        };
++        assert_eq!(base.len(), 4);
++        assert_eq!(glowing.len(), 8);
++        assert_eq!(
++            bytemuck::cast_slice::<_, u8>(base),
++            bytemuck::cast_slice::<_, u8>(&glowing[..4])
++        );
++        let selected = u32::from(glowing[0].layer & !OPAQUE_LAYER);
++        for (b, e) in glowing[..4].iter().zip(&glowing[4..]) {
++            assert_eq!(b.pos, e.pos);
++            assert_eq!(b.uv, e.uv);
++            assert_eq!(e.layer as u32, render.emissive_layers[&selected]);
++            assert_eq!(
++                e.layer & OPAQUE_LAYER,
++                0,
++                "transparent overlay stays cutout even on an opaque base"
++            );
++            assert_eq!(e.color, 0xAFFF_FFFF);
++            assert_eq!(e.light, pack_coords(lighting::FULL_BRIGHT));
++            assert_ne!(
++                b.color & 0x00FF_FFFF,
++                e.color & 0x00FF_FFFF,
++                "south-face shading applies only to base"
++            );
++        }
++        // Sorting the solid mesh keeps coplanar overlays after their bases.
++        after.sort_solid();
++        if !after.solid.is_empty() {
++            assert_eq!(after.solid[4].color & 0xF000_0000, EMISSIVE_COLOR);
++        }
++        fs::remove_file(f.0.join("assets/minecraft/optifine/emissive.properties")).unwrap();
++        let restored = f.mesh(&assets, &f.render(&assets), &chunk, None, 0);
++        assert_eq!(
++            bytemuck::cast_slice::<_, u8>(&before.solid),
++            bytemuck::cast_slice::<_, u8>(&restored.solid)
++        );
++        assert_eq!(
++            bytemuck::cast_slice::<_, u8>(&before.translucent),
++            bytemuck::cast_slice::<_, u8>(&restored.translucent)
++        );
++    }
++}
++
++#[test]
++fn emissive_overlay_uses_selected_connected_texture_not_original_sprite() {
++    let f = Fixture::new(255, false);
++    f.rules(255);
++    f.write(
++        "assets/minecraft/optifine/emissive.properties",
++        "suffix.emissive=_e\n",
++    );
++    f.png(
++        "assets/minecraft/textures/block/glass_e.png",
++        [255, 1, 2, 255],
++    );
++    let assets = f.assets();
++    let chunk = center(&[[4, 2, 3]]);
++    let render = f.render(&assets);
++    let before = f.mesh(&assets, &render, &chunk, None, 0);
++    assert_eq!(
++        before.solid.len(),
++        4,
++        "unmatched original emissive texture must not bleed into a CTM tile"
++    );
++    let tile = u32::from(layer_at(&before, [4, 2, 3]));
++    let name = render
++        .sprite_layers
++        .iter()
++        .find_map(|(name, &l)| {
++            (l == tile && name.starts_with("@resource:")).then_some(name.clone())
++        })
++        .unwrap();
++    let path = name.strip_prefix("@resource:minecraft:").unwrap();
++    f.png(&format!("assets/minecraft/{path}_e.png"), [1, 255, 2, 255]);
++    let render = f.render(&assets);
++    let after = f.mesh_lighting(&assets, &render, &chunk, None, 0, true);
++    assert_eq!(after.solid.len(), 8);
++    assert_eq!(
++        after.solid[4].layer as u32,
++        render.emissive_layers[&u32::from(layer_at(&after, [4, 2, 3]))]
++    );
++    assert_eq!(after.solid[4].color, 0xAFFF_FFFF);
++}
++
++#[test]
++fn emissive_tinted_leaf_overlay_bypasses_ao_and_keeps_cutouts() {
++    let f = Fixture::new(255, false);
++    f.write(
++        "assets/minecraft/models/block/glass.json",
++        &json!({
++            "ambientocclusion":true,
++            "textures":{"all":"minecraft:block/glass"},
++            "elements":[{"from":[0,0,0],"to":[16,16,16],"faces":{
++                "south":{"texture":"#all","tintindex":0,"uv":[0,0,16,16]}
++            }}]
++        })
++        .to_string(),
++    );
++    f.write(
++        "assets/minecraft/optifine/emissive.properties",
++        "suffix.emissive=_e\n",
++    );
++    f.png(
++        "assets/minecraft/textures/block/glass_e.png",
++        [255, 255, 255, 128],
++    );
++    let assets = f.assets();
++    let render = f.render(&assets);
++    let chunk = center(&[[4, 2, 3], [5, 2, 4]]);
++    let mesh = f.mesh_configure(&assets, &render, &chunk, None, 0, true, |glass| {
++        glass.tints = [Tint::Constant(0x4080c0), Tint::None];
++        glass.tint_count = 1;
++        glass.full = true;
++        glass.permeable = false;
++        glass.shade = 0.2;
++        glass.leaves = true;
++    });
++    assert!(mesh.translucent.is_empty());
++    let base = &mesh.solid[..4];
++    let overlay = &mesh.solid[4..8];
++    assert!(base.iter().all(|v| v.layer & OPAQUE_LAYER != 0));
++    assert!(overlay.iter().all(|v| v.layer & OPAQUE_LAYER == 0));
++    assert!(overlay.iter().all(|v| v.color == 0xAFC0_8040));
++    assert!(base.iter().all(|v| v.color & 0xFF < 0x40));
++    assert!(
++        base.windows(2).any(|v| v[0].color != v[1].color),
++        "occluding neighbor must exercise ambient occlusion"
++    );
 +}
 +
 +#[test]

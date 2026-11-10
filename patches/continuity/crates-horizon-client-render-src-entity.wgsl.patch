@@ -1,0 +1,15 @@
+--- a/crates/horizon-client-render/src/entity.wgsl
++++ b/crates/horizon-client-render/src/entity.wgsl
+@@ -99,9 +99,10 @@
+     let l = vec2(max(f32(light.y), dynamic_block_light(position)), f32(light.x));
+     let lm = textureSampleLevel(lightmap, lightmap_sampler,
+         clamp(l / 256.0 + 0.5 / 16.0, vec2(0.5 / 16.0), vec2(15.5 / 16.0)), 0.0);
+-    // Celestial bodies, clouds, beacon beams, End portals and breaking cracks are unlit.
++    // Celestial bodies, clouds, beacon beams, End portals, breaking cracks and
++    // resource-pack emissive item overlays are unlit.
+     let unlit = overlay == 2u || overlay == 4u || overlay == 6u || overlay == 9u || overlay == 10u
+-        || overlay == 11u || overlay == 12u;
++        || overlay == 11u || overlay == 12u || overlay == 37u || overlay == 38u;
+     out.light_color = select(lm, vec4(1.0), unlit);
+     // Overlay 6 (beacon beams): the light bytes carry the sprite's v range; 11 and 12
+     // (cracks): the destroy stage sprite's origin.

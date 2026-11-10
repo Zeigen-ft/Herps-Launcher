@@ -128,30 +128,84 @@ jobs:
           Path("herps-port-pack-build.json").write_text(json.dumps(evidence, indent=2) + "\n", encoding="utf-8")
           with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as environment:
               environment.write(f"HERPS_TEST_PORT_PACK={binary}\n")
-      - name: Test native connected textures and mesh integration
+      - name: Test native connected textures, emissive resources and rendering
         shell: python
         run: |
+          import json
           import os
+          import re
           import subprocess
           import sys
           from pathlib import Path
           source = Path(os.environ["HERPS_PREPARED_SOURCE"])
           target = Path(".cache/target").resolve()
-          base = ["cargo", "+1.95.0", "test", "--locked", "--manifest-path", str(source / "Cargo.toml"),
-                  "--target-dir", str(target), "-p", "horizon-client-render", "--lib"]
-          listed = subprocess.run(base + ["--", "--list"], text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-          Path("herps-native-render-test-list.log").write_text(listed.stdout, encoding="utf-8")
-          if listed.returncode:
-              print(listed.stdout)
-              raise SystemExit(listed.returncode)
-          for name, log in (("connected_textures::tests", "herps-native-connected-textures.log"),
-                            ("sprites::ctm_resource_tests", "herps-native-continuity-sprites.log"),
-                            ("mesher::continuity_tests", "herps-native-continuity-mesher.log")):
-              count = sum(line.startswith(name + "::") and line.endswith(": test") for line in listed.stdout.splitlines())
-              if count == 0:
-                  raise RuntimeError(f"Required native suite {name} selected zero tests")
-              print(f"Running {count} native tests in {name}", flush=True)
-              subprocess.run([sys.executable, "tools/ci_run.py", log, *base, name], check=True)
+          stamp = json.loads((source / ".herspers-prepared.json").read_text(encoding="utf-8"))
+          receipt_path = Path("herps-native-engine-tests.json")
+          receipt_path.unlink(missing_ok=True)
+          receipt = {"status": "running", "upstream_commit": stamp["upstream"]["commit"],
+                     "patches_sha256": stamp["patches_sha256"], "prepared_tree_sha256": stamp["tree_sha256"],
+                     "suites": [], "physical_gameplay_verified": False}
+          cases = [
+              ("horizon-client-render", (), "connected_textures::tests", "herps-native-connected-textures.log"),
+              ("horizon-client-render", (), "emissive::tests", "herps-native-emissive-config.log"),
+              ("horizon-client-render", (), "sprites::ctm_resource_tests", "herps-native-continuity-sprites.log"),
+              ("horizon-client-render", (), "mesher::continuity_tests", "herps-native-continuity-mesher.log"),
+              ("horizon-client-render", (), "hud::tests::emissive_item_atlas_alias_keeps_physical_texture_animation_and_reloads", "herps-native-emissive-item-atlas.log"),
+              ("horizon-client-render", (), "gfx::entity_batch::tests::emissive_item_overlays_follow_their_base_in_the_same_material", "herps-native-emissive-material-order.log"),
+              ("horizon-client-render", (), "gfx::emissive_tests", "herps-native-emissive-gpu.log"),
+              ("horizon-client", ("--no-default-features",), "item_render::emissive_tests", "herps-native-emissive-items.log"),
+          ]
+          listed_suites = {}
+          def plain(text):
+              return re.sub(r"\x1b\[[0-9;]*m", "", text)
+          try:
+              for crate, features, name, log in cases:
+                  base = ["cargo", "+1.95.0", "test", "--locked", "--manifest-path", str(source / "Cargo.toml"),
+                          "--target-dir", str(target), "-p", crate, "--lib", *features]
+                  key = (crate, features)
+                  if key not in listed_suites:
+                      listed = subprocess.run(base + ["--", "--list"], text=True, stdout=subprocess.PIPE,
+                                              stderr=subprocess.STDOUT)
+                      Path(f"herps-native-{crate}-test-list.log").write_text(listed.stdout, encoding="utf-8")
+                      if listed.returncode:
+                          print(listed.stdout)
+                          listed.check_returncode()
+                      listed_suites[key] = [line.removesuffix(": test") for line in plain(listed.stdout).splitlines()
+                                            if line.endswith(": test")]
+                  selected = [test for test in listed_suites[key] if test == name or test.startswith(name + "::")]
+                  if not selected:
+                      raise RuntimeError(f"Required native suite {name} selected zero tests")
+                  if name == "sprites::ctm_resource_tests" and not any("::emissive_" in test for test in selected):
+                      raise RuntimeError("Required emissive sprite regressions are missing")
+                  print(f"Running {len(selected)} native tests in {crate}::{name}", flush=True)
+                  subprocess.run([sys.executable, "tools/ci_run.py", log, *base, name, "--", "--nocapture"], check=True)
+                  output = plain(Path(log).read_text(encoding="utf-8"))
+                  summaries = re.findall(r"(?m)^test result: ok\. (\d+) passed; (\d+) failed; (\d+) ignored;", output)
+                  if not summaries or int(summaries[-1][0]) == 0:
+                      raise RuntimeError(f"Required native suite {name} executed zero passing tests")
+                  passed, failed, ignored = map(int, summaries[-1])
+                  receipt["suites"].append({"crate": crate, "filter": name, "listed": len(selected),
+                                            "passed": passed, "failed": failed, "ignored": ignored, "log": log})
+              gpu_log = plain(Path("herps-native-emissive-gpu.log").read_text(encoding="utf-8"))
+              markers = re.findall(r"HERPS_EMISSIVE_GPU: (exercised|unavailable) kind=(Terrain|Item) translucent=(false|true)", gpu_log)
+              expected = {(kind, alpha) for kind in ("Terrain", "Item") for alpha in ("false", "true")}
+              if len(markers) != len(expected) or {(kind, alpha) for state, kind, alpha in markers} != expected:
+                  raise RuntimeError("Emissive GPU tests did not report all four exercised/unavailable cases")
+              exercised = sum(state == "exercised" for state, kind, alpha in markers)
+              receipt["emissive_gpu"] = {
+                  "status": "exercised" if exercised == 4 else "unavailable" if exercised == 0 else "partially_exercised",
+                  "cases": [{"kind": kind, "translucent": alpha == "true", "status": state}
+                            for state, kind, alpha in markers],
+                  "adapter_diagnostics": [line for line in gpu_log.splitlines() if "emissive sampling adapter:" in line],
+                  "scope": "Headless shader regression; an unavailable GPU is recorded, not claimed as rendered gameplay",
+              }
+              receipt["status"] = "passed"
+          except Exception as error:
+              receipt["status"] = "failed"
+              receipt["error"] = str(error)
+              raise
+          finally:
+              receipt_path.write_text(json.dumps(receipt, indent=2) + "\n", encoding="utf-8")
       - name: Stage reviewed native chainmail content
         run: python tools/build_rlcraft_chainmail.py
       - name: Portable and desktop integration tests with the real backend
@@ -269,6 +323,7 @@ jobs:
             herps-*.log
             herps-port-pack-build.json
             herps-engine-source.json
+            herps-native-engine-tests.json
             dist/targeted-content/**
             dist/rlcraft-inspector/inspector.json
             dist/rlcraft-inspector/SHA256SUMS

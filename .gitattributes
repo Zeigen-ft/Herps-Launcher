@@ -1,2 +1,3 @@
 # Engine patches apply byte-for-byte to the verified upstream archive.
-patches/** text eol=lf
+# A blank context line in a unified diff consists of its required space marker.
+patches/** text eol=lf whitespace=-blank-at-eol

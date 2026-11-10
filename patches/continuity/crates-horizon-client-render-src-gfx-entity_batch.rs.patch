@@ -1,0 +1,72 @@
+--- a/crates/horizon-client-render/src/gfx/entity_batch.rs
++++ b/crates/horizon-client-render/src/gfx/entity_batch.rs
+@@ -42,6 +42,10 @@
+ pub const TRANSLUCENT_ITEM_OVERLAY: u32 = 32;
+ /// A translucent item with an enchantment glint.
+ pub const TRANSLUCENT_GLINT_ITEM_OVERLAY: u32 = 33;
++/// A resource-pack emissive item overlay, with lightmap-independent colour.
++pub const EMISSIVE_ITEM_OVERLAY: u32 = 37;
++/// An emissive overlay of an item on the translucent sheet.
++pub const TRANSLUCENT_EMISSIVE_ITEM_OVERLAY: u32 = 38;
+ /// The overlay of text in `Font.DisplayMode.POLYGON_OFFSET` (text displays):
+ /// drawn like an ordinary entity, pulled toward the camera.
+ pub const TEXT_POLYGON_OFFSET_OVERLAY: u32 = 35;
+@@ -59,7 +63,9 @@
+         ENERGY_SWIRL_OVERLAY => 5,
+         SHADOW_OVERLAY => 6,
+         TRANSLUCENT_PARTICLE_OVERLAY => 7,
+-        TRANSLUCENT_ITEM_OVERLAY | TRANSLUCENT_GLINT_ITEM_OVERLAY => 8,
++        TRANSLUCENT_ITEM_OVERLAY
++        | TRANSLUCENT_GLINT_ITEM_OVERLAY
++        | TRANSLUCENT_EMISSIVE_ITEM_OVERLAY => 8,
+         _ => 0,
+     }
+ }
+@@ -148,6 +154,47 @@
+ mod tests {
+     use super::*;
+     use std::{hint::black_box, time::Instant};
++
++    #[test]
++    fn emissive_item_overlays_follow_their_base_in_the_same_material() {
++        let vertices: Vec<_> = [
++            0,
++            EMISSIVE_ITEM_OVERLAY,
++            TRANSLUCENT_ITEM_OVERLAY,
++            TRANSLUCENT_EMISSIVE_ITEM_OVERLAY,
++            0,
++            EMISSIVE_ITEM_OVERLAY,
++        ]
++        .into_iter()
++        .enumerate()
++        .flat_map(|(id, layer)| {
++            [Vertex {
++                pos: [id as f32, 0.0, 0.0],
++                uv: [0.0; 2],
++                layer,
++                color: 0xffff_ffff,
++                light: 0,
++                normal: [0; 4],
++                glint_uv: [0.0; 2],
++            }; 4]
++        })
++        .collect();
++        let mut batch = EntityBatch::default();
++        for oit in [false, true] {
++            assert_eq!(
++                batch.update(&vertices, &[], &[], &[], oit),
++                [4, 0, 0, 0, 0, 0, 0, 0, 2, 0]
++            );
++            let order: Vec<_> = batch
++                .combined
++                .as_chunks::<4>()
++                .0
++                .iter()
++                .map(|q| q[0].pos[0] as u32)
++                .collect();
++            assert_eq!(order, [0, 1, 4, 5, 2, 3]);
++        }
++    }
+ 
+     // Retain the original implementation as the equivalence/benchmark oracle.
+     fn baseline(

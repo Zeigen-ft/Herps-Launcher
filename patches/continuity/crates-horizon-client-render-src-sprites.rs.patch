@@ -1,6 +1,31 @@
 --- a/crates/horizon-client-render/src/sprites.rs
 +++ b/crates/horizon-client-render/src/sprites.rs
-@@ -230,6 +230,34 @@
+@@ -80,6 +80,8 @@
+     pub animations: Vec<SpriteAnimation>,
+     pub opaque: Vec<bool>,
+     pub translucent: Vec<bool>,
++    /// Optional full-bright overlay of a base sprite, rebuilt on pack reload.
++    pub emissive_layers: BTreeMap<u32, u32>,
+     /// Each layer's `MipmapGenerator` settings.
+     pub mips: Vec<crate::mipmap::Settings>,
+     /// Each layer's frames at the texture's own resolution (square), and the
+@@ -91,6 +93,7 @@
+     still: std::collections::HashMap<(Vec<u8>, u32, [u32; 2], [bool; 4]), u32>,
+     /// Decoded textures kept on disk between launches ([`Sprites::with_disk_cache`]).
+     disk: Option<crate::sprite_cache::SpriteCache>,
++    emissive: Option<crate::emissive::EmissiveTextures>,
+ }
+ /// Edge length of vanilla's block textures: the smallest array layer.
+ pub const SPRITE_SIZE: u32 = 16;
+@@ -118,6 +121,7 @@
+     pub fn with_disk_cache(root: &Path) -> Self {
+         Self {
+             disk: crate::sprite_cache::SpriteCache::open(root),
++            emissive: Some(crate::emissive::EmissiveTextures::load(root)),
+             ..Self::default()
+         }
+     }
+@@ -230,6 +234,34 @@
              }
          }
      }
@@ -30,12 +55,74 @@
 +        }
 +        let path = root.join(format!("assets/{namespace}/{relative}.png"));
 +        let decoded = Self::decode_path(&path, name)?;
-+        self.register(&key, decoded)
++        self.register_with_emissive(root, name, &key, decoded, true)
 +    }
      fn load(&mut self, root: &Path, name: &str) -> Result<u32> {
          let cached = self.disk.as_ref().and_then(|d| d.get(name)).cloned();
          let decoded = match cached {
-@@ -248,6 +276,9 @@
+@@ -242,12 +274,70 @@
+                 decoded
+             }
+         };
+-        self.register(name, decoded)
++        self.register_with_emissive(root, name, name, decoded, false)
++    }
++    fn register_with_emissive(
++        &mut self,
++        root: &Path,
++        name: &str,
++        key: &str,
++        decoded: crate::sprite_cache::Decoded,
++        resource: bool,
++    ) -> Result<u32> {
++        let sibling = self
++            .emissive
++            .get_or_insert_with(|| crate::emissive::EmissiveTextures::load(root))
++            .sibling(name);
++        let overlay = sibling.and_then(|sibling| {
++            let (namespace, relative) = sibling.split_once(':')?;
++            let path = if resource {
++                root.join(format!("assets/{namespace}/{relative}.png"))
++            } else {
++                root.join(format!("assets/{namespace}/textures/{relative}.png"))
++            };
++            if !path.exists() {
++                return None;
++            }
++            let result = Self::decode_path(&path, &sibling).and_then(|decoded| {
++                // Validate animation clips before registering either texture:
++                // a broken optional overlay must not replace a valid base.
++                if let Some(text) = &decoded.animation {
++                    AnimationMetadata::from_json(text)?.clip(decoded.frames.len() as u32)?;
++                }
++                Ok(decoded)
++            });
++            match result {
++                Ok(decoded) => Some((sibling, decoded)),
++                Err(error) => {
++                    log::warn!("Ignoring emissive texture {}: {error}", path.display());
++                    None
++                }
++            }
++        });
++        // Layer identity also identifies an emissive sibling. Equal base
++        // pixels must remain distinct when only one (or each) has an overlay.
++        let layer = self.register_with_dedup(key, decoded, overlay.is_none())?;
++        if let Some((sibling, decoded)) = overlay {
++            let key = if resource {
++                format!("@resource:{sibling}")
++            } else {
++                sibling
++            };
++            let overlay = match self.layers.get(&key) {
++                Some(&layer) => layer,
++                None => self.register(&key, decoded)?,
++            };
++            self.emissive_layers.insert(layer, overlay);
++        }
++        Ok(layer)
+     }
+     /// Read and decode one texture and its `.mcmeta`.
      fn decode(root: &Path, name: &str) -> Result<crate::sprite_cache::Decoded> {
          let (namespace, path) = name.split_once(':').ok_or("invalid sprite identifier")?;
          let path = root.join(format!("assets/{namespace}/textures/{path}.png"));
@@ -45,7 +132,31 @@
          let metadata = match fs::read_to_string(path.with_extension("png.mcmeta")) {
              Ok(text) => Some(serde_json::from_str::<
                  BTreeMap<String, Box<serde_json::value::RawValue>>,
-@@ -662,3 +693,118 @@
+@@ -340,6 +430,14 @@
+     }
+     /// Give a decoded texture its layer (or the one an identical still has).
+     fn register(&mut self, name: &str, decoded: crate::sprite_cache::Decoded) -> Result<u32> {
++        self.register_with_dedup(name, decoded, true)
++    }
++    fn register_with_dedup(
++        &mut self,
++        name: &str,
++        decoded: crate::sprite_cache::Decoded,
++        dedup: bool,
++    ) -> Result<u32> {
+         let crate::sprite_cache::Decoded {
+             side,
+             frames,
+@@ -365,7 +463,7 @@
+                 .split_once(':')
+                 .is_some_and(|(_, p)| p.starts_with("item/")),
+         };
+-        let still = (animation.is_none() && frames.len() == 1).then(|| {
++        let still = (dedup && animation.is_none() && frames.len() == 1).then(|| {
+             (
+                 frames[0].clone(),
+                 side,
+@@ -662,3 +760,312 @@
          assert_eq!(stepped.blend(5), blend(1, 1, 0));
      }
  }
@@ -88,6 +199,17 @@
 +                .unwrap()
 +                .write_image_data(&color.repeat(256))
 +                .unwrap();
++        }
++        fn text(&self, relative: &str, text: &str) {
++            let path = self.0.join(relative);
++            fs::create_dir_all(path.parent().unwrap()).unwrap();
++            fs::write(path, text).unwrap();
++        }
++        fn emissive(&self) {
++            self.text(
++                "assets/minecraft/optifine/emissive.properties",
++                "suffix.emissive=_e\n",
++            );
 +        }
 +    }
 +    impl Drop for Fixture {
@@ -161,6 +283,189 @@
 +            after
 +                .insert_resource(&root.0, "test:optifine/ctm/a/missing")
 +                .is_err()
++        );
++    }
++
++    #[test]
++    fn emissive_siblings_do_not_alias_equal_base_images() {
++        let root = Fixture::new();
++        root.emissive();
++        for name in ["a", "b", "plain", "plain2"] {
++            root.png(
++                &format!("assets/test/textures/block/{name}.png"),
++                [20, 30, 40, 255],
++            );
++        }
++        root.png("assets/test/textures/block/a_e.png", [255, 0, 0, 255]);
++        root.png("assets/test/textures/block/a_e_e.png", [0, 0, 255, 255]);
++        root.png("assets/test/textures/block/b_e.png", [0, 255, 0, 128]);
++        let mut sprites = Sprites::default();
++        let a = sprites.insert(&root.0, "test:block/a").unwrap();
++        let b = sprites.insert(&root.0, "test:block/b").unwrap();
++        let plain = sprites.insert(&root.0, "test:block/plain").unwrap();
++        let plain2 = sprites.insert(&root.0, "test:block/plain2").unwrap();
++        assert_ne!(a, b);
++        assert_ne!(a, plain);
++        assert_ne!(b, plain);
++        assert_eq!(plain, plain2);
++        assert_eq!(sprites.emissive_layers.len(), 2);
++        let ae = sprites.emissive_layers[&a];
++        let be = sprites.emissive_layers[&b];
++        assert_ne!(ae, be);
++        assert!(!sprites.translucent[ae as usize]);
++        assert!(sprites.translucent[be as usize]);
++        assert_eq!(sprites.insert(&root.0, "test:block/a_e").unwrap(), ae);
++        assert!(!sprites.emissive_layers.contains_key(&ae));
++        sprites.finish();
++        let pixel = |layer| &sprites.pixels[layer as usize * 1024..][..4];
++        assert_eq!(pixel(a), &[20, 30, 40, 255]);
++        assert_eq!(pixel(ae), &[255, 0, 0, 255]);
++        assert_eq!(pixel(be), &[0, 255, 0, 128]);
++    }
++
++    #[test]
++    fn emissive_invalid_or_missing_overlay_keeps_base_and_missing_config_disables_it() {
++        let root = Fixture::new();
++        root.emissive();
++        for name in ["missing", "broken"] {
++            root.png(
++                &format!("assets/test/textures/block/{name}.png"),
++                [90, 80, 70, 255],
++            );
++        }
++        root.text("assets/test/textures/block/broken_e.png", "not a PNG");
++        let mut sprites = Sprites::default();
++        let base = sprites.insert(&root.0, "test:block/missing").unwrap();
++        assert_eq!(sprites.insert(&root.0, "test:block/broken").unwrap(), base);
++        assert!(sprites.emissive_layers.is_empty());
++        root.png("assets/test/textures/block/missing_e.png", [5, 6, 7, 255]);
++        fs::remove_file(root.0.join("assets/minecraft/optifine/emissive.properties")).unwrap();
++        let mut after = Sprites::default();
++        after.insert(&root.0, "test:block/missing").unwrap();
++        assert!(after.emissive_layers.is_empty());
++        after.finish();
++        assert_eq!(&after.pixels[..4], &[90, 80, 70, 255]);
++    }
++
++    #[test]
++    fn emissive_ctm_reload_rebuilds_overlay_pixels_and_config() {
++        let root = Fixture::new();
++        root.emissive();
++        root.png("assets/test/optifine/ctm/a/0.png", [10, 20, 30, 255]);
++        root.png("assets/test/optifine/ctm/a/0_e.png", [200, 0, 0, 255]);
++        let mut before = Sprites::with_disk_cache(&root.0);
++        let base = before
++            .insert_resource(&root.0, "test:optifine/ctm/a/0")
++            .unwrap();
++        assert_eq!(before.emissive_layers.len(), 1);
++        assert!(before.emissive_layers.contains_key(&base));
++        before.save_disk_cache();
++        root.png("assets/test/optifine/ctm/a/0_e.png", [0, 200, 0, 255]);
++        let mut after = Sprites::with_disk_cache(&root.0);
++        let base = after
++            .insert_resource(&root.0, "test:optifine/ctm/a/0")
++            .unwrap();
++        let overlay = after.emissive_layers[&base];
++        after.finish();
++        assert_eq!(
++            &after.pixels[overlay as usize * 1024..][..4],
++            &[0, 200, 0, 255]
++        );
++        root.text(
++            "assets/minecraft/optifine/emissive.properties",
++            "suffix.emissive=../unsafe",
++        );
++        let mut disabled = Sprites::with_disk_cache(&root.0);
++        disabled
++            .insert_resource(&root.0, "test:optifine/ctm/a/0")
++            .unwrap();
++        assert!(disabled.emissive_layers.is_empty());
++    }
++
++    #[test]
++    fn emissive_oversized_configuration_is_ignored() {
++        let root = Fixture::new();
++        root.text(
++            "assets/minecraft/optifine/emissive.properties",
++            &format!("suffix.emissive=_e\n{}", "#".repeat(8192)),
++        );
++        assert!(
++            crate::emissive::EmissiveTextures::load(&root.0)
++                .sibling("minecraft:block/a")
++                .is_none()
++        );
++    }
++
++    #[test]
++    fn emissive_overlay_animation_is_registered_independently_of_the_base() {
++        let root = Fixture::new();
++        root.emissive();
++        root.png("assets/test/textures/block/a.png", [50, 60, 70, 255]);
++        let path = root.0.join("assets/test/textures/block/a_e.png");
++        let mut encoder = png::Encoder::new(File::create(&path).unwrap(), 16, 32);
++        encoder.set_color(png::ColorType::Rgba);
++        encoder.set_depth(png::BitDepth::Eight);
++        encoder
++            .write_header()
++            .unwrap()
++            .write_image_data(
++                &[[200, 0, 0, 255].repeat(256), [0, 200, 0, 255].repeat(256)].concat(),
++            )
++            .unwrap();
++        root.text(
++            "assets/test/textures/block/a_e.png.mcmeta",
++            r#"{"animation":{"frametime":2,"frames":[1,0]}}"#,
++        );
++        let mut sprites = Sprites::default();
++        let base = sprites.insert(&root.0, "test:block/a").unwrap();
++        let overlay = sprites.emissive_layers[&base];
++        assert_eq!(sprites.animations.len(), 1);
++        assert_eq!(sprites.animations[0].layer, overlay);
++        assert_eq!(sprites.animations[0].frame(0), 1);
++        assert_eq!(sprites.animations[0].frame(2), 0);
++        sprites.finish();
++        assert_eq!(
++            &sprites.pixels[base as usize * 1024..][..4],
++            &[50, 60, 70, 255]
++        );
++        assert_eq!(
++            &sprites.pixels[overlay as usize * 1024..][..4],
++            &[0, 200, 0, 255]
++        );
++        root.text("assets/test/textures/block/a_e.png.mcmeta", "invalid JSON");
++        let mut invalid = Sprites::default();
++        let layer = invalid.insert(&root.0, "test:block/a").unwrap();
++        assert!(invalid.emissive_layers.is_empty());
++        invalid.finish();
++        assert_eq!(
++            &invalid.pixels[layer as usize * 1024..][..4],
++            &[50, 60, 70, 255]
++        );
++    }
++
++    #[cfg(unix)]
++    #[test]
++    fn emissive_overlay_and_properties_follow_pack_overlay_file_links() {
++        use std::os::unix::fs::symlink;
++        let root = Fixture::new();
++        root.emissive();
++        root.png("assets/test/textures/block/a.png", [20, 30, 40, 255]);
++        root.png("source.png", [255, 200, 100, 255]);
++        let config = root.0.join("assets/minecraft/optifine/emissive.properties");
++        fs::rename(&config, root.0.join("source.properties")).unwrap();
++        symlink(root.0.join("source.properties"), config).unwrap();
++        symlink(
++            root.0.join("source.png"),
++            root.0.join("assets/test/textures/block/a_e.png"),
++        )
++        .unwrap();
++        let mut sprites = Sprites::default();
++        let base = sprites.insert(&root.0, "test:block/a").unwrap();
++        let overlay = sprites.emissive_layers[&base];
++        sprites.finish();
++        assert_eq!(
++            &sprites.pixels[overlay as usize * 1024..][..4],
++            &[255, 200, 100, 255]
 +        );
 +    }
 +}

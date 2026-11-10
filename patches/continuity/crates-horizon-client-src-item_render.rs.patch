@@ -1,0 +1,139 @@
+--- a/crates/horizon-client/src/item_render.rs
++++ b/crates/horizon-client/src/item_render.rs
+@@ -6,6 +6,8 @@
+ //! and the special model renderers submit, in pose space. A sink then draws
+ //! them: [`gui`] into the HUD batch with the GUI item lighting, [`WorldSink`]
+ //! into entity vertices with the level's lighting.
++#[cfg(test)]
++mod emissive_tests;
+ pub mod gui;
+ mod special;
+ 
+@@ -26,6 +28,7 @@
+     palette::PalettedPermutations,
+     resolve::{MISSING_MODEL, ModelLibrary},
+ };
++use horizon_client_render::emissive::EmissiveTextures;
+ use horizon_world::nbt::Tag;
+ use serde_json::Value;
+ use std::{
+@@ -49,6 +52,8 @@
+     pub foil: Foil,
+     /// `MaterialInfo.lightEmission` (block light floor).
+     pub light_emission: u8,
++    /// A resource pack's emissive companion: unshaded and independent of the lightmap.
++    pub emissive: bool,
+     /// The render type culls back faces (`entitySolid`): world drawing discards them.
+     pub cull_back: bool,
+     /// The quad's sprite has translucent pixels (`MaterialInfo.itemRenderType`
+@@ -339,7 +344,7 @@
+         // their partial alpha and look opaque (#4508). Glass is fine either way:
+         // most of its texels discard at alpha 0.
+         let translucent = translucent || q.material.force_translucent;
+-        sink.quad(ItemQuad {
++        let base = ItemQuad {
+             pos,
+             uv,
+             foil_uv: q.uv,
+@@ -347,10 +352,27 @@
+             color: argb(color),
+             foil,
+             light_emission: q.light_emission,
++            emissive: false,
+             cull_back: translucent,
+             translucent,
+             oit: false,
+-        });
++        };
++        sink.quad(base);
++        if let Some(companion) = renderer.emissive.sibling(&q.material.sprite)
++            && let Some(rect) = sprites.get(sprite_name(&companion))
++        {
++            sink.quad(ItemQuad {
++                uv: q.uv.map(|[u, v]| {
++                    [
++                        rect.u0 + (rect.u1 - rect.u0) * u,
++                        rect.v0 + (rect.v1 - rect.v0) * v,
++                    ]
++                }),
++                foil: Foil::None,
++                emissive: true,
++                ..base
++            });
++        }
+     }
+ }
+ 
+@@ -479,6 +501,7 @@
+     pub models: ItemModels,
+     library: Arc<ModelLibrary>,
+     sprites: FileSprites,
++    emissive: EmissiveTextures,
+     baked: Mutex<HashMap<String, Arc<BakedItemModel>>>,
+     extents: Mutex<HashMap<String, Arc<Vec<Vec3>>>>,
+     /// GUI items already drawn: the HUD vertices of a static item at a GUI position
+@@ -531,6 +554,12 @@
+ }
+ 
+ impl ItemRenderer {
++    /// A configured suffix can add emissive item quads even when no block uses it.
++    /// The renderer keeps these draws on its classic transparency path.
++    pub fn emissive_textures_enabled(&self) -> bool {
++        self.emissive.is_enabled()
++    }
++
+     /// Load item definitions, item prototypes (`items.json`), every model,
+     /// the special renderers' entity models and the grass colormap.
+     pub fn load(root: &Path) -> crate::Result<Self> {
+@@ -582,6 +611,7 @@
+                 cache: Mutex::default(),
+                 translucent: Mutex::default(),
+             },
++            emissive: EmissiveTextures::load(root),
+             baked: Mutex::default(),
+             extents: Mutex::default(),
+             gui_drawn: Mutex::default(),
+@@ -814,27 +844,35 @@
+ }
+ impl ItemSink for WorldSink<'_> {
+     fn quad(&mut self, q: ItemQuad) {
+-        let brightness = self.lights.map_or(1.0, |l| diffuse(q.normal, l));
++        let brightness = if q.emissive {
++            1.0
++        } else {
++            self.lights.map_or(1.0, |l| diffuse(q.normal, l))
++        };
+         let [a, r, g, b] = q.color.to_be_bytes();
+         let c = |v: u8| (f32::from(v) * brightness) as u32;
+         let color = u32::from(a) << 24 | c(b) << 16 | c(g) << 8 | c(r);
+         // `LightCoordsUtil.lightCoordsWithEmission`: block light at least the emission.
+         let emission = u32::from(q.light_emission) * 16;
+-        let light = if (self.light >> 8 & 0xFF) < emission {
++        let light = if q.emissive {
++            240 | 240 << 8
++        } else if (self.light >> 8 & 0xFF) < emission {
+             (self.light & 0xFF) | emission << 8
+         } else {
+             self.light
+         };
+-        let glint = if q.foil == Foil::None {
++        let glint = if q.emissive || q.foil == Foil::None {
+             None
+         } else {
+             self.glint
+         };
+-        let overlay = match (glint.is_some(), q.translucent) {
+-            (false, true) => crate::gfx::TRANSLUCENT_ITEM_OVERLAY,
+-            (false, false) => 0,
+-            (true, true) => crate::gfx::TRANSLUCENT_GLINT_ITEM_OVERLAY,
+-            (true, false) => 7,
++        let overlay = match (q.emissive, glint.is_some(), q.translucent) {
++            (true, _, true) => crate::gfx::TRANSLUCENT_EMISSIVE_ITEM_OVERLAY,
++            (true, _, false) => crate::gfx::EMISSIVE_ITEM_OVERLAY,
++            (false, false, true) => crate::gfx::TRANSLUCENT_ITEM_OVERLAY,
++            (false, false, false) => 0,
++            (false, true, true) => crate::gfx::TRANSLUCENT_GLINT_ITEM_OVERLAY,
++            (false, true, false) => 7,
+         };
+         // Only plain and foil quads: the translucent sheet's overlays are their own material.
+         let oit = if q.oit && matches!(overlay, 0 | 7) {

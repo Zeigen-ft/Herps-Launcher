@@ -115,15 +115,20 @@
              hand_fov_degrees: self.hud_fov_degrees(camera_alpha as f32, camera.to_array()),
              screen: &screen,
              pack: pack_inputs,
-@@ -18061,6 +18089,7 @@
+@@ -18061,6 +18089,12 @@
          previous,
          api,
      ))?;
 +    renderer.resource_pack_fullbright = pack.resource_pack_fullbright;
++    // Coplanar base/overlay ordering is defined by classic transparency. OIT
++    // treats them as independent surfaces and would dim the emissive overlay.
++    // Rebuilding on pack reload also restores OIT when overlays are removed.
++    renderer.emissive_texture_overlays = !assets.emissive_layers.is_empty()
++        || pack.item_renderer.emissive_textures_enabled();
      renderer.hud.sprite_animations = atlas
          .sprite_animations
          .iter()
-@@ -18193,6 +18222,7 @@
+@@ -18193,6 +18227,7 @@
          celestial: &[],
          stars: None,
          hand: &[],

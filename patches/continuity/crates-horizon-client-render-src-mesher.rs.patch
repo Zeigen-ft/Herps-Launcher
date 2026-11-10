@@ -1,6 +1,16 @@
 --- a/crates/horizon-client-render/src/mesher.rs
 +++ b/crates/horizon-client-render/src/mesher.rs
-@@ -1077,6 +1077,25 @@
+@@ -796,6 +796,9 @@
+ /// in HDR output (`gfx/hdr.rs`): 15 minus the tier, so the usual 0xFF means none. The
+ /// byte's other four bits stay set.
+ pub const EMISSION_BITS: u32 = 0x0F00_0000;
++/// Opt-in emissive texture overlays bypass the lightmap. The high alpha nibble
++/// is otherwise unused by terrain; its low nibble still carries the HDR tier.
++pub const EMISSIVE_COLOR: u32 = 0xA000_0000;
+ /// HDR tiers, by the kind of light rather than its level: a candle's flame is as bright as
+ /// a torch's, it only lights less around it. 0 stays as in SDR.
+ pub const LOW: u8 = 1;
+@@ -1077,6 +1080,25 @@
                              if face.quad.cull.is_some_and(|d| !visible[d as usize]) {
                                  continue;
                              }
@@ -26,7 +36,7 @@
                              self.face(
                                  pad,
                                  &mut tints,
-@@ -1084,6 +1103,7 @@
+@@ -1084,6 +1106,7 @@
                                  [x, y, z],
                                  origin,
                                  face,
@@ -34,7 +44,7 @@
                                  ao,
                                  state,
                              );
-@@ -1121,6 +1141,7 @@
+@@ -1121,6 +1144,7 @@
          pos: [i32; 3],
          origin: [f32; 3],
          face: &BakedFace,
@@ -42,7 +52,7 @@
          ao: bool,
          state: &Info,
      ) {
-@@ -1143,7 +1164,16 @@
+@@ -1143,7 +1167,16 @@
              ([lighting::gray(directional); 4], [coords; 4])
          };
          let tint = Self::tint(state, q.tint_index, tints, pos);
@@ -60,7 +70,7 @@
              &mut out.translucent
          } else {
              &mut out.solid
-@@ -1160,10 +1190,10 @@
+@@ -1160,15 +1193,32 @@
                  q.uv[i],
                  // Opaque leaves (forceOpaque) and quads over opaque texels draw in the
                  // solid layer: no alpha cutout (a dirt path's side skips its clear top row).
@@ -74,7 +84,29 @@
                  },
                  emitting(pack_rgb(rgb), tier),
                  pack_coords(lighting::with_emission(coords[i], q.light_emission)),
-@@ -1176,3 +1206,6 @@
+             ));
+         }
++        if let Some(&overlay) = self.render.emissive_layers.get(&layer) {
++            // Preserve the selected CTM tile, geometry, UVs and biome tint. An
++            // overlay has neither directional shading nor ambient occlusion,
++            // and a solid base's overlay must retain its transparent cutouts.
++            let rgb = tint.map_or([255; 3], |t| [16, 8, 0].map(|s| t >> s & 255));
++            let color = (emitting(pack_rgb(rgb), tier) & 0x0FFF_FFFF) | EMISSIVE_COLOR;
++            for i in 0..4 {
++                let p = q.positions[i];
++                target.push(TerrainVertex::new(
++                    [p[0] + origin[0], p[1] + origin[1], p[2] + origin[2]],
++                    q.uv[i],
++                    overlay as u16,
++                    color,
++                    pack_coords(lighting::FULL_BRIGHT),
++                ));
++            }
++        }
+     }
+ }
+ /// Snapshot of the 3x3 chunk neighbourhood used by a worker job.
+@@ -1176,3 +1226,6 @@
  pub fn borrow(region: &Region) -> [[Option<&Chunk>; 3]; 3] {
      std::array::from_fn(|z| std::array::from_fn(|x| region[z][x].as_deref()))
  }

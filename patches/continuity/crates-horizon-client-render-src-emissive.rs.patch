@@ -1,0 +1,151 @@
+--- /dev/null
++++ b/crates/horizon-client-render/src/emissive.rs
+@@ -0,0 +1,148 @@
++//! Opt-in emissive sibling names, described by the public `emissive.properties`
++//! resource-pack format. This holds pack-local configuration, never pixels or
++//! state shared across resource reloads.
++use std::{fs::File, io::Read, path::Path};
++
++#[derive(Clone, Debug, Default)]
++pub struct EmissiveTextures {
++    suffix: Option<String>,
++}
++impl EmissiveTextures {
++    /// Whether this pack opted in with a valid suffix.
++    pub fn is_enabled(&self) -> bool {
++        self.suffix.is_some()
++    }
++    /// Missing or malformed configuration leaves ordinary textures unchanged.
++    pub fn load(root: &Path) -> Self {
++        let path = root.join("assets/minecraft/optifine/emissive.properties");
++        let result = (|| -> std::io::Result<String> {
++            let file = File::open(&path)?;
++            let mut text = String::new();
++            file.take(8193).read_to_string(&mut text)?;
++            Ok(text)
++        })();
++        match result {
++            Ok(text) if text.len() <= 8192 => Self::parse(&text),
++            Ok(_) => {
++                log::warn!(
++                    "Ignoring oversized emissive configuration {}",
++                    path.display()
++                );
++                Self::default()
++            }
++            Err(error) => {
++                if error.kind() != std::io::ErrorKind::NotFound {
++                    log::warn!(
++                        "Ignoring emissive configuration {}: {error}",
++                        path.display()
++                    );
++                }
++                Self::default()
++            }
++        }
++    }
++    fn parse(text: &str) -> Self {
++        let mut suffix = None;
++        for line in text.lines().map(str::trim) {
++            if line.starts_with(['#', '!']) {
++                continue;
++            }
++            let Some((key, value)) = line.split_once(['=', ':', ' ', '\t']) else {
++                continue;
++            };
++            if key != "suffix.emissive" {
++                continue;
++            }
++            let value = value.trim_start().trim_start_matches(['=', ':']).trim();
++            suffix = (!value.is_empty()
++                && value.len() <= 64
++                && value
++                    .bytes()
++                    .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || b"_.-".contains(&c)))
++            .then(|| value.to_owned());
++        }
++        Self { suffix }
++    }
++    /// A canonical sibling identifier (without `.png`). The caller decides
++    /// whether it names a normal texture or a direct CTM resource and checks
++    /// that the optional image actually exists and decodes.
++    pub fn sibling(&self, texture: &str) -> Option<String> {
++        let suffix = self.suffix.as_deref()?;
++        let (namespace, path) = texture.split_once(':').unwrap_or(("minecraft", texture));
++        if !valid_namespace(namespace) || !valid_path(path) || path.ends_with(suffix) {
++            return None;
++        }
++        Some(format!("{namespace}:{path}{suffix}"))
++    }
++}
++fn valid_namespace(name: &str) -> bool {
++    !name.is_empty()
++        && name
++            .bytes()
++            .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || b"_.-".contains(&c))
++}
++fn valid_path(path: &str) -> bool {
++    !path.is_empty()
++        && path.len() <= 1024
++        && path
++            .split('/')
++            .all(|part| !part.is_empty() && part != "." && part != "..")
++        && path
++            .bytes()
++            .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || b"_./-".contains(&c))
++}
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++
++    #[test]
++    fn opt_in_namespace_and_no_recursive_siblings() {
++        let config = EmissiveTextures::parse("# comment\r\n suffix.emissive = _glow\r\n");
++        assert!(config.is_enabled());
++        assert_eq!(
++            config.sibling("block/stone").as_deref(),
++            Some("minecraft:block/stone_glow")
++        );
++        assert_eq!(
++            config.sibling("test:item/gem").as_deref(),
++            Some("test:item/gem_glow")
++        );
++        assert_eq!(
++            config.sibling("test:optifine/ctm/gem/0").as_deref(),
++            Some("test:optifine/ctm/gem/0_glow")
++        );
++        assert!(config.sibling("test:item/gem_glow").is_none());
++        assert!(EmissiveTextures::default().sibling("block/stone").is_none());
++        assert!(!EmissiveTextures::default().is_enabled());
++    }
++    #[test]
++    fn rejects_invalid_paths_and_suffixes() {
++        for value in ["", "../e", "_e.png/", "_e\\x", "_E", "_e:bad", "_e bad"] {
++            assert!(!EmissiveTextures::parse(&format!("suffix.emissive={value}")).is_enabled());
++            assert!(
++                EmissiveTextures::parse(&format!("suffix.emissive={value}"))
++                    .sibling("minecraft:block/stone")
++                    .is_none(),
++                "{value}"
++            );
++        }
++        let config = EmissiveTextures::parse("suffix.emissive:_e");
++        for name in [
++            "../test:block/a",
++            "test:../a",
++            "test:/a",
++            "test:a//b",
++            "test:a\\b",
++            "test:a:b",
++            "test:",
++        ] {
++            assert!(config.sibling(name).is_none(), "{name}");
++        }
++        assert!(
++            EmissiveTextures::parse("suffix.emissive=_e\nsuffix.emissive=")
++                .sibling("block/stone")
++                .is_none()
++        );
++    }
++}

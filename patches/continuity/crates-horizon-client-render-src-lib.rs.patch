@@ -1,6 +1,6 @@
 --- a/crates/horizon-client-render/src/lib.rs
 +++ b/crates/horizon-client-render/src/lib.rs
-@@ -23,6 +23,7 @@
+@@ -23,11 +23,13 @@
  pub mod clouds;
  pub mod collisions;
  pub mod command_block;
@@ -8,3 +8,9 @@
  pub mod containers;
  pub mod crash;
  pub mod datapack;
+ pub mod dynamic_light;
+ pub mod effects;
++pub mod emissive;
+ pub mod environment;
+ pub mod extras;
+ pub mod fast_hash;

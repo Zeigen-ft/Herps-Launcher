@@ -1,10 +1,12 @@
-# Continuity included textures in native Herps
+# Continuity textures in native Herps
 
 Herps' native renderer port targets the **default included textures** from the
 user-supplied `continuity-3.0.1+26.3.jar`. This is not Fabric Java execution or a
 conversion of the whole Continuity mod. The implemented resource rule methods
 are `ctm`, `horizontal` and `top`; all other Continuity methods and arbitrary
 third-party connected-texture packs remain outside this input's tested scope.
+The newer source also supports opt-in emissive overlays for baked block and
+item models; see the pack format and build status below.
 
 The existing unmodified Herps releases do not gain connected textures by copying
 the JAR or this extracted pack into a folder. Install a game build containing the
@@ -14,6 +16,9 @@ validation. Native Windows/macOS packaging and physical gameplay must be
 reported separately for each platform.
 
 ## Verified native downloads
+
+**These downloads contain connected textures only. They predate the emissive
+source changes and must not be used to test emissive support.**
 
 [Native run 42750869099](https://github.com/Zeigen-ft/Herps-Launcher/actions/runs/42750869099)
 passed Windows x64, Mac Apple Silicon, Mac Intel and final release-file assembly.
@@ -56,8 +61,8 @@ The **Programmer Art variant is omitted** because the native resource overlay
 does not currently preserve the origin needed to evaluate its
 `resourceCondition=...@programmer_art` checks. The separate glass-pane culling
 companion is also omitted; copying it alone can remove required pane faces.
-No Java classes, Fabric entrypoints or mod settings are included. This pack does
-not implement Continuity's arbitrary emissive-texture features.
+No Java classes, Fabric entrypoints or mod settings are included. Continuity's
+included connected-glass artwork does not add emissive areas by itself.
 
 After installing the rebuilt native game, put the resulting ZIP, unextracted,
 in the **active profile's** `resourcepacks` folder and enable it under
@@ -95,6 +100,68 @@ textures. Named profiles have separate resource-pack directories.
 The resulting pack folder must contain `pack.mcmeta` and `assets` directly.
 This carries over the selected default texture data; it does not execute the
 original Fabric mod.
+
+## Emissive block and item textures
+
+An emissive resource pack supplies this file:
+
+```properties
+# assets/minecraft/optifine/emissive.properties
+suffix.emissive=_e
+```
+
+For a base image such as `assets/minecraft/textures/block/stone.png`, add
+`stone_e.png` beside it. Only the overlay's visible pixels stay bright in dark
+lighting. Leave its other pixels transparent. Other valid suffixes and resource
+namespaces work too; each sibling stays in its base image's namespace.
+
+The native implementation preserves the ordinary base, UVs, model and biome
+tints, and overlay alpha. Emissive overlays bypass lightmap darkness, ambient
+occlusion and directional shading while retaining fog and occlusion by other
+geometry. They do not illuminate nearby blocks. Animated siblings keep their
+own `.png.mcmeta`. A selected connected-texture tile can have its own sibling,
+for example `assets/example/optifine/ctm/glass/0_e.png`; the original sprite's
+emissive image is not applied to a different CTM tile.
+
+Baked item models support overlays in inventory/GUI, held and world rendering,
+including namespaced atlas aliases. The base retains its enchantment glint;
+the added emissive overlay does not add a second glint. Special item renderers,
+entity skins, armour and arbitrary Continuity CTM methods are outside this
+implementation's scope.
+
+Solid overlays use alpha cutout; translucent bases retain alpha blending.
+Packs enabling emissive textures use classic transparency to keep coplanar
+overlays ordered correctly. The saved improved-transparency preference is
+preserved and takes effect again after those packs are removed and reloaded.
+Custom shader packs control their own lighting and are not covered by the
+native emissive guarantee.
+
+The emissive changes passed the local checks below; native packages are
+undergoing rebuild. The older verified artifacts above remain the
+connected-texture baseline until a new run is recorded here. No physical
+gameplay validation is claimed.
+
+### Emissive source validation
+
+- All 36 checksum-locked patch postimages prepared successfully and match the
+  tested development tree. Patch digest:
+  `c4a7462190943e897755cc19eadc974f7d84b58f1bde80e0681858d8296c58e6`.
+- Full Linux renderer library: **863 passed, 27 ignored**. The ignored local
+  input/GPU benchmark cases retain their existing opt-in gates.
+- Mandatory software-Vulkan rasterization exercised solid/translucent terrain
+  and items with black, dim and bright lightmaps. All four GPU cases ran with
+  `HERPS_REQUIRE_EMISSIVE_GPU=1`; missing adapters could not silently pass.
+- Item GUI/world/tint/glint/reload regressions: **4 passed**.
+- Linux client compiled from the saved source with `--no-default-features`; its
+  isolated `--help` smoke check passed.
+- Launcher/source/packaging Python suite with the real native helper:
+  **423 passed, 17 skipped** (440 total).
+
+Native CI now runs the config, sprites, block mesh, item atlas, material order,
+GPU and item-model regressions before packaging. Each run saves a
+`herps-native-engine-tests.json` receipt tied to the patch and source tree
+digests. Headless GPU availability is explicitly recorded separately from
+passing CPU tests and from physical gameplay.
 
 ## Attribution and repository contents
 
@@ -165,7 +232,7 @@ Vulkan, Metal or DX12 adapter. GLES cannot run the existing optical-flow storage
 format and post-processing depth-texture checks. Do not disable those tests to
 claim a passing renderer suite.
 
-## Current local evidence and remaining gates
+## Connected-texture baseline evidence
 
 - Verified Git-source preparation and its repeat run passed; the original
   archive pin was not changed. All 26 patch postimages verified.

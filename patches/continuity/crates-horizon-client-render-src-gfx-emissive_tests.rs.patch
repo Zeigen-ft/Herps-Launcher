@@ -1,0 +1,472 @@
+--- /dev/null
++++ b/crates/horizon-client-render/src/gfx/emissive_tests.rs
+@@ -0,0 +1,469 @@
++//! Rasterize the production shaders, including coplanar depth and alpha handling.
++use super::*;
++use bytemuck::Zeroable;
++
++#[derive(Clone, Copy, Debug)]
++enum Kind {
++    Terrain,
++    Item,
++}
++
++fn device() -> Option<(wgpu::Device, wgpu::Queue)> {
++    let instance = wgpu::Instance::new(wgpu::InstanceDescriptor::new_without_display_handle());
++    let adapter = pollster::block_on(instance.request_adapter(&Default::default())).ok()?;
++    eprintln!("emissive sampling adapter: {:?}", adapter.get_info());
++    pollster::block_on(adapter.request_device(&Default::default())).ok()
++}
++
++fn texture(
++    device: &wgpu::Device,
++    queue: &wgpu::Queue,
++    width: u32,
++    layers: u32,
++    pixels: &[u8],
++) -> wgpu::Texture {
++    device.create_texture_with_data(
++        queue,
++        &wgpu::TextureDescriptor {
++            label: Some("Synthetic emissive fixture"),
++            size: wgpu::Extent3d {
++                width,
++                height: 1,
++                depth_or_array_layers: layers,
++            },
++            mip_level_count: 1,
++            sample_count: 1,
++            dimension: wgpu::TextureDimension::D2,
++            format: wgpu::TextureFormat::Rgba8Unorm,
++            usage: wgpu::TextureUsages::TEXTURE_BINDING,
++            view_formats: &[],
++        },
++        wgpu::util::TextureDataOrder::LayerMajor,
++        pixels,
++    )
++}
++
++fn render(
++    device: &wgpu::Device,
++    queue: &wgpu::Queue,
++    kind: Kind,
++    translucent: bool,
++    light: u8,
++) -> Vec<u8> {
++    let terrain = matches!(kind, Kind::Terrain);
++    let mut globals = Globals::zeroed();
++    globals.view_proj = Mat4::IDENTITY.to_cols_array_2d();
++    globals.fog = [100.0, 200.0, 100.0, 200.0];
++    globals.filtering = [0.0, 2.0, 0.0, 0.0];
++    let uniform = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
++        label: None,
++        contents: bytemuck::bytes_of(&globals),
++        usage: wgpu::BufferUsages::UNIFORM,
++    });
++    // A darkenable base and a tinted overlay whose right half is completely clear.
++    let alpha = if translucent { 128 } else { 255 };
++    let pixels = [
++        200, 100, 50, 255, 200, 100, 50, 255, 128, 200, 80, alpha, 255, 255, 255, 0,
++    ];
++    let image = texture(
++        device,
++        queue,
++        if terrain { 2 } else { 4 },
++        if terrain { 2 } else { 1 },
++        &pixels,
++    );
++    let image_view = image.create_view(&wgpu::TextureViewDescriptor {
++        dimension: Some(if terrain {
++            wgpu::TextureViewDimension::D2Array
++        } else {
++            wgpu::TextureViewDimension::D2
++        }),
++        ..Default::default()
++    });
++    let lightmap = texture(device, queue, 1, 1, &[light, light, light, 255]);
++    let lightmap_view = lightmap.create_view(&Default::default());
++    let sampler = device.create_sampler(&Default::default());
++    let vf = wgpu::ShaderStages::VERTEX_FRAGMENT;
++    let binding = |binding, ty| wgpu::BindGroupLayoutEntry {
++        binding,
++        visibility: vf,
++        ty,
++        count: None,
++    };
++    let sampled = |dimension| wgpu::BindingType::Texture {
++        sample_type: wgpu::TextureSampleType::Float { filterable: true },
++        view_dimension: dimension,
++        multisampled: false,
++    };
++    let sampler_binding = wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering);
++    let mut entries = vec![
++        binding(
++            0,
++            wgpu::BindingType::Buffer {
++                ty: wgpu::BufferBindingType::Uniform,
++                has_dynamic_offset: false,
++                min_binding_size: None,
++            },
++        ),
++        binding(
++            1,
++            sampled(if terrain {
++                wgpu::TextureViewDimension::D2Array
++            } else {
++                wgpu::TextureViewDimension::D2
++            }),
++        ),
++        binding(2, sampler_binding),
++        binding(3, sampled(wgpu::TextureViewDimension::D2)),
++        binding(4, sampler_binding),
++    ];
++    for i in 5..if terrain { 12 } else { 8 } {
++        entries.push(binding(
++            i,
++            if !terrain && i == 6 {
++                sampler_binding
++            } else {
++                sampled(if terrain {
++                    wgpu::TextureViewDimension::D2Array
++                } else {
++                    wgpu::TextureViewDimension::D2
++                })
++            },
++        ));
++    }
++    let bindings = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
++        label: None,
++        entries: &entries,
++    });
++    let layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
++        label: None,
++        bind_group_layouts: &[Some(&bindings)],
++        ..Default::default()
++    });
++    let mut entries = vec![
++        wgpu::BindGroupEntry {
++            binding: 0,
++            resource: uniform.as_entire_binding(),
++        },
++        wgpu::BindGroupEntry {
++            binding: 1,
++            resource: wgpu::BindingResource::TextureView(&image_view),
++        },
++        wgpu::BindGroupEntry {
++            binding: 2,
++            resource: wgpu::BindingResource::Sampler(&sampler),
++        },
++        wgpu::BindGroupEntry {
++            binding: 3,
++            resource: wgpu::BindingResource::TextureView(&lightmap_view),
++        },
++        wgpu::BindGroupEntry {
++            binding: 4,
++            resource: wgpu::BindingResource::Sampler(&sampler),
++        },
++    ];
++    for binding in 5..if terrain { 12 } else { 8 } {
++        entries.push(wgpu::BindGroupEntry {
++            binding,
++            resource: if !terrain && binding == 6 {
++                wgpu::BindingResource::Sampler(&sampler)
++            } else {
++                wgpu::BindingResource::TextureView(&image_view)
++            },
++        });
++    }
++    let group = device.create_bind_group(&wgpu::BindGroupDescriptor {
++        label: None,
++        layout: &bindings,
++        entries: &entries,
++    });
++    let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
++        label: Some("Production emissive regression"),
++        source: wgpu::ShaderSource::Wgsl(if terrain {
++            include_str!("../terrain.wgsl").into()
++        } else {
++            entity_shader().into()
++        }),
++    });
++    let entity_attributes = wgpu::vertex_attr_array![0=>Float32x3,1=>Float32x2,2=>Uint32,3=>Unorm8x4,4=>Uint8x4,5=>Snorm8x4,6=>Float32x2];
++    let instance_attributes = wgpu::vertex_attr_array![5=>Float32x4];
++    let buffers = if terrain {
++        vec![
++            Some(wgpu::VertexBufferLayout {
++                array_stride: std::mem::size_of::<TerrainVertex>() as u64,
++                step_mode: wgpu::VertexStepMode::Vertex,
++                attributes: &TERRAIN_ATTRIBUTES,
++            }),
++            Some(wgpu::VertexBufferLayout {
++                array_stride: 16,
++                step_mode: wgpu::VertexStepMode::Instance,
++                attributes: &instance_attributes,
++            }),
++        ]
++    } else {
++        vec![Some(wgpu::VertexBufferLayout {
++            array_stride: std::mem::size_of::<Vertex>() as u64,
++            step_mode: wgpu::VertexStepMode::Vertex,
++            attributes: &entity_attributes,
++        })]
++    };
++    let pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
++        label: None,
++        layout: Some(&layout),
++        vertex: wgpu::VertexState {
++            module: &shader,
++            entry_point: Some(if terrain { "vs_terrain" } else { "vs_entity" }),
++            compilation_options: Default::default(),
++            buffers: &buffers,
++        },
++        primitive: Default::default(),
++        depth_stencil: Some(wgpu::DepthStencilState {
++            format: wgpu::TextureFormat::Depth32Float,
++            depth_write_enabled: Some(terrain || !translucent),
++            depth_compare: Some(wgpu::CompareFunction::GreaterEqual),
++            stencil: Default::default(),
++            bias: Default::default(),
++        }),
++        multisample: Default::default(),
++        fragment: Some(wgpu::FragmentState {
++            module: &shader,
++            entry_point: Some(if terrain {
++                if translucent {
++                    "fs_translucent"
++                } else {
++                    "fs_solid"
++                }
++            } else {
++                "fs_entity"
++            }),
++            compilation_options: Default::default(),
++            targets: &[Some(wgpu::ColorTargetState {
++                format: wgpu::TextureFormat::Rgba8Unorm,
++                blend: translucent.then_some(wgpu::BlendState::ALPHA_BLENDING),
++                write_mask: wgpu::ColorWrites::ALL,
++            })],
++        }),
++        multiview_mask: None,
++        cache: None,
++    });
++    let mut terrain_vertices = Vec::new();
++    let mut entity_vertices = Vec::new();
++    // Draw the base, a closer blue occluder, then the coplanar emissive overlay.
++    for (left, right, z, overlay, color) in [
++        (-1.0, 1.0, 0.5, false, 0xffff_ffff),
++        (-0.25, 0.0, 0.75, false, 0xffff_0000),
++        (-1.0, 1.0, 0.5, true, 0xff80_ff80),
++    ] {
++        for i in [0, 1, 2, 0, 2, 3] {
++            let pos = [
++                [left, -1.0, z],
++                [right, -1.0, z],
++                [right, 1.0, z],
++                [left, 1.0, z],
++            ][i];
++            let uv = [[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]][i];
++            terrain_vertices.push(TerrainVertex::new(
++                pos,
++                uv,
++                u16::from(overlay),
++                if overlay {
++                    color & 0x0fff_ffff | 0xa000_0000
++                } else {
++                    color
++                },
++                0xf0f0,
++            ));
++            entity_vertices.push(Vertex {
++                pos,
++                uv: [uv[0] * 0.5 + if overlay { 0.5 } else { 0.0 }, uv[1]],
++                layer: match (overlay, translucent) {
++                    (true, true) => TRANSLUCENT_EMISSIVE_ITEM_OVERLAY,
++                    (true, false) => EMISSIVE_ITEM_OVERLAY,
++                    (false, true) => TRANSLUCENT_ITEM_OVERLAY,
++                    (false, false) => 0,
++                },
++                color,
++                light: 0x0000_f0f0,
++                normal: [0; 4],
++                glint_uv: [0.0; 2],
++            });
++        }
++    }
++    let vertices = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
++        label: None,
++        contents: if terrain {
++            bytemuck::cast_slice(&terrain_vertices)
++        } else {
++            bytemuck::cast_slice(&entity_vertices)
++        },
++        usage: wgpu::BufferUsages::VERTEX,
++    });
++    let instance = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
++        label: None,
++        contents: bytemuck::cast_slice(&[0.0f32, 0.0, 0.0, 1.0 / 32768.0]),
++        usage: wgpu::BufferUsages::VERTEX,
++    });
++    let size = wgpu::Extent3d {
++        width: 16,
++        height: 4,
++        depth_or_array_layers: 1,
++    };
++    let target = device.create_texture(&wgpu::TextureDescriptor {
++        label: None,
++        size,
++        mip_level_count: 1,
++        sample_count: 1,
++        dimension: wgpu::TextureDimension::D2,
++        format: wgpu::TextureFormat::Rgba8Unorm,
++        usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::COPY_SRC,
++        view_formats: &[],
++    });
++    let depth = device.create_texture(&wgpu::TextureDescriptor {
++        label: None,
++        size,
++        mip_level_count: 1,
++        sample_count: 1,
++        dimension: wgpu::TextureDimension::D2,
++        format: wgpu::TextureFormat::Depth32Float,
++        usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
++        view_formats: &[],
++    });
++    let view = target.create_view(&Default::default());
++    let depth_view = depth.create_view(&Default::default());
++    let output = device.create_buffer(&wgpu::BufferDescriptor {
++        label: None,
++        size: 256 * 4,
++        usage: wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::MAP_READ,
++        mapped_at_creation: false,
++    });
++    let mut encoder = device.create_command_encoder(&Default::default());
++    {
++        let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
++            label: None,
++            color_attachments: &[Some(wgpu::RenderPassColorAttachment {
++                view: &view,
++                depth_slice: None,
++                resolve_target: None,
++                ops: wgpu::Operations {
++                    load: wgpu::LoadOp::Clear(wgpu::Color::BLACK),
++                    store: wgpu::StoreOp::Store,
++                },
++            })],
++            depth_stencil_attachment: Some(wgpu::RenderPassDepthStencilAttachment {
++                view: &depth_view,
++                depth_ops: Some(wgpu::Operations {
++                    load: wgpu::LoadOp::Clear(0.0),
++                    store: wgpu::StoreOp::Store,
++                }),
++                stencil_ops: None,
++            }),
++            ..Default::default()
++        });
++        pass.set_pipeline(&pipeline);
++        pass.set_bind_group(0, &group, &[]);
++        pass.set_vertex_buffer(0, vertices.slice(..));
++        if terrain {
++            pass.set_vertex_buffer(1, instance.slice(..));
++        }
++        pass.draw(0..18, 0..1);
++    }
++    encoder.copy_texture_to_buffer(
++        wgpu::TexelCopyTextureInfo {
++            texture: &target,
++            mip_level: 0,
++            origin: wgpu::Origin3d::ZERO,
++            aspect: wgpu::TextureAspect::All,
++        },
++        wgpu::TexelCopyBufferInfo {
++            buffer: &output,
++            layout: wgpu::TexelCopyBufferLayout {
++                offset: 0,
++                bytes_per_row: Some(256),
++                rows_per_image: None,
++            },
++        },
++        size,
++    );
++    queue.submit([encoder.finish()]);
++    let (tx, rx) = std::sync::mpsc::channel();
++    output.map_async(wgpu::MapMode::Read, .., move |r| tx.send(r).unwrap());
++    device.poll(wgpu::PollType::wait_indefinitely()).unwrap();
++    rx.recv().unwrap().unwrap();
++    output.get_mapped_range(..).unwrap().to_vec()
++}
++
++fn check(kind: Kind, translucent: bool) {
++    let Some((device, queue)) = device() else {
++        assert!(
++            std::env::var_os("HERPS_REQUIRE_EMISSIVE_GPU").is_none(),
++            "HERPS_REQUIRE_EMISSIVE_GPU is set but no GPU adapter/device is available"
++        );
++        eprintln!("HERPS_EMISSIVE_GPU: unavailable kind={kind:?} translucent={translucent}");
++        return;
++    };
++    for light in [0, 64, 255] {
++        let image = render(&device, &queue, kind, translucent, light);
++        let pixel = |x: usize| &image[256 + x * 4..256 + x * 4 + 3];
++        let base = [200.0, 100.0, 50.0].map(|v| v * f32::from(light) / 255.0);
++        let overlay = [128.0 * 128.0 / 255.0, 200.0, 80.0 * 128.0 / 255.0];
++        let expected = if translucent {
++            std::array::from_fn(|i| overlay[i] * (128.0 / 255.0) + base[i] * (127.0 / 255.0))
++        } else {
++            overlay
++        };
++        for (got, expected) in pixel(2).iter().zip(expected) {
++            assert!(
++                (f32::from(*got) - expected).abs() < 2.0,
++                "{kind:?} translucent={translucent}, light={light}: bright texel {:?}, expected {expected}",
++                pixel(2)
++            );
++        }
++        for (got, expected) in pixel(12).iter().zip(base) {
++            assert!(
++                (f32::from(*got) - expected).abs() < 2.0,
++                "clear overlay must retain lit base: {:?}",
++                pixel(12)
++            );
++        }
++        // Terrain and solid item pipelines write depth. Translucent items do not;
++        // their production depth comes from the terrain pass, tested above.
++        if matches!(kind, Kind::Terrain) || !translucent {
++            let expected = [0.0, 0.0, 50.0 * f32::from(light) / 255.0];
++            for (got, expected) in pixel(6).iter().zip(expected) {
++                assert!(
++                    (f32::from(*got) - expected).abs() < 2.0,
++                    "emissive must stay behind nearer surface: {:?}",
++                    pixel(6)
++                );
++            }
++        }
++    }
++    eprintln!(
++        "HERPS_EMISSIVE_GPU: exercised kind={kind:?} translucent={translucent} lightmaps=0,64,255"
++    );
++}
++
++#[test]
++fn terrain_emissive_rasterization_preserves_mask_tint_depth_and_light_independence() {
++    check(Kind::Terrain, false);
++    check(Kind::Terrain, true);
++}
++
++#[test]
++fn item_emissive_rasterization_preserves_mask_tint_and_light_independence() {
++    check(Kind::Item, false);
++    check(Kind::Item, true);
++}
++
++#[test]
++fn emissive_production_shaders_validate_without_a_gpu() {
++    for source in [include_str!("../terrain.wgsl").to_owned(), entity_shader()] {
++        let module = naga::front::wgsl::parse_str(&source).unwrap();
++        naga::valid::Validator::new(
++            naga::valid::ValidationFlags::all(),
++            naga::valid::Capabilities::all(),
++        )
++        .validate(&module)
++        .unwrap();
++    }
++}

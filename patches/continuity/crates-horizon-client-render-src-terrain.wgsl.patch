@@ -1,0 +1,18 @@
+--- a/crates/horizon-client-render/src/terrain.wgsl
++++ b/crates/horizon-client-render/src/terrain.wgsl
+@@ -284,8 +284,13 @@
+     out.uv = uv;
+     out.layer = layer;
+     let block = max(f32(light.y), dynamic_block_light(pos));
+-    out.color = vec4(color.rgb, 1.0) * sample_lightmap(f32(light.x) / 16.0, block / 16.0);
+-    out.emission = 15u - (u32(round(color.a * 255.0)) & 15u);
++    let alpha = u32(round(color.a * 255.0));
++    // Emissive pack overlays retain their tint and bypass the lightmap, including
++    // darkness/night effects. The low nibble still carries the independent HDR tier.
++    let emissive_overlay = (alpha & 0xf0u) == 0xa0u;
++    out.color = vec4(color.rgb, 1.0) * select(
++        sample_lightmap(f32(light.x) / 16.0, block / 16.0), vec4(1.0), emissive_overlay);
++    out.emission = 15u - (alpha & 15u);
+     out.spherical = length(pos);
+     out.cylindrical = max(length(pos.xz), abs(pos.y));
+     out.fade = fade_code(w);

@@ -1,0 +1,10 @@
+--- a/crates/horizon-client/src/item_render/special.rs
++++ b/crates/horizon-client/src/item_render/special.rs
+@@ -140,6 +140,7 @@
+             color,
+             foil,
+             light_emission: 0,
++            emissive: false,
+             cull_back: false,
+             translucent: false,
+             oit: false,
