@@ -45,7 +45,7 @@
          let metadata = match fs::read_to_string(path.with_extension("png.mcmeta")) {
              Ok(text) => Some(serde_json::from_str::<
                  BTreeMap<String, Box<serde_json::value::RawValue>>,
-@@ -662,3 +693,106 @@
+@@ -662,3 +693,118 @@
          assert_eq!(stepped.blend(5), blend(1, 1, 0));
      }
  }
@@ -56,14 +56,26 @@
 +    struct Fixture(std::path::PathBuf);
 +    impl Fixture {
 +        fn new() -> Self {
-+            Self(std::env::temp_dir().join(format!(
++            use std::sync::atomic::{AtomicU64, Ordering};
++            static NEXT_FIXTURE: AtomicU64 = AtomicU64::new(0);
++            // Windows' wall clock can return the same timestamp to parallel
++            // tests. Reserve a distinct directory before exposing the fixture;
++            // AlreadyExists also protects against a stale path after PID reuse.
++            loop {
++                let path = std::env::temp_dir().join(format!(
 +                    "herps-ctm-sprites-{}-{}",
 +                    std::process::id(),
-+                    std::time::SystemTime::now()
-+                        .duration_since(std::time::UNIX_EPOCH)
-+                        .unwrap()
-+                        .as_nanos()
-+                )))
++                    NEXT_FIXTURE.fetch_add(1, Ordering::Relaxed),
++                ));
++                match fs::create_dir(&path) {
++                    Ok(()) => return Self(path),
++                    Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => continue,
++                    Err(error) => panic!(
++                        "cannot create CTM sprite fixture {}: {error}",
++                        path.display()
++                    ),
++                }
++            }
 +        }
 +        fn png(&self, relative: &str, color: [u8; 4]) {
 +            let path = self.0.join(relative);

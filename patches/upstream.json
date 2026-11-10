@@ -142,7 +142,7 @@
     {
       "path": "crates/horizon-client-render/src/sprites.rs",
       "before_sha256": "ec14164a23d002cbf23ce3fb59c837705d1b7a4620df209ce1fea84b3be2474d",
-      "after_sha256": "8d8104dc66a08f1d78a5ac9e9717b25c7c3e6ab1e759afebb4182bdbf3ef30db",
+      "after_sha256": "f47674f2cf39948cc0f0a40e5e08b9e149fc7df0df496200789f80a6e024d2fa",
       "patch": "continuity/crates-horizon-client-render-src-sprites.rs.patch"
     },
     {

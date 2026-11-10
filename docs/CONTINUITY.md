@@ -141,6 +141,14 @@ filename normalization. Those cases are corrected without weakening source
 or archive validation. The source/pack fixtures now run before costly native
 compilation as well as in the full suite.
 
+The next native run,
+[42749476219](https://github.com/Zeigen-ft/Herps-Launcher/actions/runs/42749476219),
+passed those suites on Mac ARM64 but exposed a Windows race in two sprite tests
+that shared a clock-based temporary directory. A forced timestamp collision
+reproduced the missing-file error. Their fixture now reserves unique directories
+with an atomic counter and exclusive creation; both unchanged test bodies pass
+concurrently without depending on clock precision.
+
 Pushes to `codex/continuity-default-textures` in this repository trigger all three
 native targets and, after success, assembly of release-ready files. Other push
 guards are unchanged. This is internal CI artifact preparation, not release
