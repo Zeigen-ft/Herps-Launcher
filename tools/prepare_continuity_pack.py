@@ -49,7 +49,13 @@ def checked_files(raw: bytes) -> dict[str, bytes]:
             raise ValueError("Continuity archive exceeds expansion limits")
         seen: set[str] = set()
         for entry in entries:
+            # ZipInfo keeps the raw stored name separately: on Windows its
+            # filename normalizes backslashes, and every OS truncates NULs.
+            # Check both so normalization cannot hide unsafe unused entries.
+            safe_name(entry.orig_filename, entry.orig_filename.endswith("/"))
             safe_name(entry.filename, entry.is_dir())
+            if entry.orig_filename != entry.filename:
+                raise ValueError("Unsafe normalized archive path")
             identity = entry.filename.rstrip("/").casefold()
             if identity in seen:
                 raise ValueError("Duplicate archive path")

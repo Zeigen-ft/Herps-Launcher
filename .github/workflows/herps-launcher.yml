@@ -8,15 +8,15 @@ on:
         options: [all, windows, macos-arm64, macos-x64, macos-arm64-26]
         default: all
   pull_request:
-    paths: ['README.md', 'INSTALLATION.md', 'QUICK_START.md', 'RELEASE_NOTES.md', 'THIRD_PARTY_NOTICES.md', 'tools/prepare_launcher_release.py', 'content/**', 'tools/build_rlcraft_chainmail.py', 'tools/verify_rlcraft_chainmail.py', 'herps_launcher/**', 'tools/package_herps.py', 'tools/package_macos.py', 'tools/package_windows.py', 'tools/prepare_upstream.py', 'tools/verify_herps*.py', 'tools/release_evidence.py', 'tools/windows_installer.py', 'tools/smoke_herps_native.py', 'tools/ci_run.py', 'tools/inspect_targeted_packs.py', 'tools/smoke_targeted_backup.py', 'tools/inspect_rlcraft_293.py', 'tools/package_rlcraft_inspector.py', 'packaging/**', 'tests/**', 'scripts/build_*.sh', 'scripts/build_*.ps1', 'patches/**', 'upstream.lock.json', 'docs/**', 'licenses/**', 'LICENSE', '.github/workflows/herps-launcher.yml']
+    paths: ['README.md', 'INSTALLATION.md', 'QUICK_START.md', 'RELEASE_NOTES.md', 'THIRD_PARTY_NOTICES.md', 'tools/prepare_launcher_release.py', 'content/**', 'tools/build_rlcraft_chainmail.py', 'tools/verify_rlcraft_chainmail.py', 'herps_launcher/**', 'tools/package_herps.py', 'tools/package_macos.py', 'tools/package_windows.py', 'tools/prepare_upstream.py', 'tools/fetch_upstream.py', 'tools/prepare_continuity_pack.py', 'tools/verify_herps*.py', 'tools/release_evidence.py', 'tools/windows_installer.py', 'tools/smoke_herps_native.py', 'tools/ci_run.py', 'tools/inspect_targeted_packs.py', 'tools/smoke_targeted_backup.py', 'tools/inspect_rlcraft_293.py', 'tools/package_rlcraft_inspector.py', 'packaging/**', 'tests/**', 'scripts/build_*.sh', 'scripts/build_*.ps1', 'patches/**', 'upstream.lock.json', 'docs/**', 'licenses/**', 'LICENSE', '.github/workflows/herps-launcher.yml']
   push:
-    branches: [main, feature/herps-launcher-cross-platform]
-    paths: ['README.md', 'INSTALLATION.md', 'QUICK_START.md', 'RELEASE_NOTES.md', 'THIRD_PARTY_NOTICES.md', 'tools/prepare_launcher_release.py', 'content/**', 'tools/build_rlcraft_chainmail.py', 'tools/verify_rlcraft_chainmail.py', 'herps_launcher/**', 'tools/package_herps.py', 'tools/package_macos.py', 'tools/package_windows.py', 'tools/prepare_upstream.py', 'tools/verify_herps*.py', 'tools/release_evidence.py', 'tools/windows_installer.py', 'tools/smoke_herps_native.py', 'tools/ci_run.py', 'tools/inspect_targeted_packs.py', 'tools/smoke_targeted_backup.py', 'tools/inspect_rlcraft_293.py', 'tools/package_rlcraft_inspector.py', 'packaging/**', 'tests/**', 'scripts/build_*.sh', 'scripts/build_*.ps1', 'patches/**', 'upstream.lock.json', 'docs/**', 'licenses/**', 'LICENSE', '.github/workflows/herps-launcher.yml']
+    branches: [main, feature/herps-launcher-cross-platform, codex/continuity-default-textures]
+    paths: ['README.md', 'INSTALLATION.md', 'QUICK_START.md', 'RELEASE_NOTES.md', 'THIRD_PARTY_NOTICES.md', 'tools/prepare_launcher_release.py', 'content/**', 'tools/build_rlcraft_chainmail.py', 'tools/verify_rlcraft_chainmail.py', 'herps_launcher/**', 'tools/package_herps.py', 'tools/package_macos.py', 'tools/package_windows.py', 'tools/prepare_upstream.py', 'tools/fetch_upstream.py', 'tools/prepare_continuity_pack.py', 'tools/verify_herps*.py', 'tools/release_evidence.py', 'tools/windows_installer.py', 'tools/smoke_herps_native.py', 'tools/ci_run.py', 'tools/inspect_targeted_packs.py', 'tools/smoke_targeted_backup.py', 'tools/inspect_rlcraft_293.py', 'tools/package_rlcraft_inspector.py', 'packaging/**', 'tests/**', 'scripts/build_*.sh', 'scripts/build_*.ps1', 'patches/**', 'upstream.lock.json', 'docs/**', 'licenses/**', 'LICENSE', '.github/workflows/herps-launcher.yml']
 permissions:
   contents: read
 jobs:
   desktop:
-    if: ${{ github.event_name != 'push' || github.repository == 'Zeigen-ft/Herspers-Minecraft' }}
+    if: ${{ github.event_name != 'push' || github.repository == 'Zeigen-ft/Herspers-Minecraft' || (github.repository == 'Zeigen-ft/Herps-Launcher' && github.ref == 'refs/heads/codex/continuity-default-textures') }}
     strategy:
       fail-fast: false
       matrix:
@@ -104,6 +104,16 @@ jobs:
           with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as environment:
               environment.write(f"HERPS_UPSTREAM_GIT_SOURCE={source}\n")
               environment.write(f"HERPS_PREPARED_SOURCE={prepared}\n")
+      - name: Check source and pack fixtures before native compilation
+        shell: python
+        run: |
+          import subprocess
+          import sys
+          for pattern, log in (("test_fetch_upstream.py", "herps-fetch-fixtures.log"),
+                               ("test_prepare_upstream.py", "herps-prepare-fixtures.log"),
+                               ("test_prepare_continuity_pack.py", "herps-continuity-pack-fixtures.log")):
+              subprocess.run([sys.executable, "tools/ci_run.py", log, sys.executable, "-m", "unittest",
+                              "discover", "-s", "tests", "-p", pattern, "-v"], check=True)
       - name: Build pinned port-pack for the native runner
         shell: python
         run: |
@@ -279,7 +289,7 @@ jobs:
   release-files:
     name: Prepare files for manual prerelease publication
     needs: desktop
-    if: ${{ needs.desktop.result == 'success' && (github.event_name == 'pull_request' || inputs.platform == 'all') }}
+    if: ${{ needs.desktop.result == 'success' && (github.event_name == 'pull_request' || inputs.platform == 'all' || (github.event_name == 'push' && github.repository == 'Zeigen-ft/Herps-Launcher' && github.ref == 'refs/heads/codex/continuity-default-textures')) }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:

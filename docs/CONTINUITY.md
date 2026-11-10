@@ -126,15 +126,24 @@ claim a passing renderer suite.
   explicitly and passed, loading all 42 rules.
 - Renderer library suite with software Vulkan: 847 passed, 27 ignored.
 - Launcher/source/packaging Python suite using the real native helper:
-  422 passed, 17 skipped.
+  423 passed, 17 skipped.
 - Strict Clippy remains blocked by existing upstream warnings promoted to
   errors in unchanged files (`camera.rs`, `graphics_ui.rs`, `post_chain.rs`,
   and dependency code). No lint suppression or unrelated upstream edits were
   added to make it pass.
 
 Windows x64, Mac ARM64 and Mac Intel installers have **not** been built for this
-change. This cloud instance denies HTTPS access to `api.github.com`, so the native
-Actions runs could not be started. Add that domain to the environment's allowed
-destinations before resuming the native build/verification workflow. No release
-has been published, and physical gameplay with prepared vanilla resources is
-still unverified on every platform.
+change. The first native run,
+[42747948172](https://github.com/Zeigen-ft/Herps-Launcher/actions/runs/42747948172),
+reached the Python integration suite and exposed test-fixture portability issues:
+macOS temporary paths through `/var`, Windows Git line endings, and Windows ZIP
+filename normalization. Those cases are corrected without weakening source
+or archive validation. The source/pack fixtures now run before costly native
+compilation as well as in the full suite.
+
+Pushes to `codex/continuity-default-textures` in this repository trigger all three
+native targets and, after success, assembly of release-ready files. Other push
+guards are unchanged. This is internal CI artifact preparation, not release
+publication. This cloud instance still denies the GitHub API; public workflow
+and job pages provide status and failure annotations for diagnosis. Physical
+gameplay with prepared vanilla resources remains unverified on every platform.

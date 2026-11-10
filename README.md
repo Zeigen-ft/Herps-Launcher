@@ -80,8 +80,9 @@ are retained. See [migration provenance](docs/migration/README.md),
 [developer setup](docs/HERPS-LAUNCHER.md) and [the source lock](upstream.lock.json).
 Legacy game-only/Bedrock tools remain for history and regression coverage; they
 are not part of this launcher's release downloads. Heavy native builds run from
-PR validation or explicit workflow dispatch; historical pipelines remain available
-manually without automatically building unrelated products in this repository.
+PR validation, explicit workflow dispatch, or pushes to the dedicated
+`codex/continuity-default-textures` development branch; historical pipelines remain
+available manually without automatically building unrelated products in this repository.
 
 ## Licenses and attribution
 

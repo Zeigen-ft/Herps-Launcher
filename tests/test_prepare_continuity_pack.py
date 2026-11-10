@@ -45,7 +45,15 @@ class ContinuityPackTests(unittest.TestCase):
             with zipfile.ZipFile(result, "w", zipfile.ZIP_DEFLATED) as z:
                 for name, data in [*entries, *extra]:
                     if name not in omit:
-                        z.writestr(name, data)
+                        if isinstance(name, str):
+                            # Preserve malicious raw ZIP names on every OS;
+                            # ZipInfo(name) would normalize them before storage.
+                            entry = zipfile.ZipInfo()
+                            entry.filename = entry.orig_filename = name
+                            entry.compress_type = zipfile.ZIP_DEFLATED
+                        else:
+                            entry = name
+                        z.writestr(entry, data)
         self.source.write_bytes(result.getvalue())
         return result.getvalue()
 
@@ -78,9 +86,27 @@ class ContinuityPackTests(unittest.TestCase):
         self.assertEqual(self.output.read_bytes(), b"user file")
 
     def test_refuses_unsafe_paths_even_in_unused_java_entries(self):
-        for name in ("../bad", "/bad", "a/../../bad", "a\\bad", "a//bad", "C:/bad"):
+        for name in ("../bad", "/bad", "a/../../bad", "a\\bad", "a//bad", "C:/bad", "a\0bad"):
             with self.subTest(name=name):
                 self.jar(extra=[(name, b"x")])
+                with self.assertRaisesRegex(ValueError, "Unsafe"):
+                    pack.prepare(self.source, self.output)
+                self.assertFalse(self.output.exists())
+
+    def test_refuses_raw_names_hidden_by_windows_zipinfo_normalization(self):
+        original_init = zipfile.ZipInfo.__init__
+
+        def windows_init(entry, filename="NoName", date_time=(1980, 1, 1, 0, 0, 0)):
+            original_init(entry, filename, date_time)
+            # Emulate Windows' reader behavior without modifying shared os.sep.
+            entry.filename = entry.filename.replace("\\", "/")
+
+        for name in ("unused\\bad.class", "unused\0bad.class"):
+            with self.subTest(name=name), patch.object(zipfile.ZipInfo, "__init__", windows_init):
+                self.jar(extra=[(name, b"x")])
+                with zipfile.ZipFile(self.source) as archive:
+                    entry = next(info for info in archive.infolist() if info.orig_filename == name)
+                    self.assertNotEqual(entry.filename, name)
                 with self.assertRaisesRegex(ValueError, "Unsafe"):
                     pack.prepare(self.source, self.output)
                 self.assertFalse(self.output.exists())
