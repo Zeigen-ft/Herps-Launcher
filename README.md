@@ -32,8 +32,8 @@ migration does not change visibility, create a release or create a tag.
 Development source also includes native support for the default connected
 textures supplied with Continuity 3.0.1+26.3. It requires a rebuilt game and a
 locally extracted resource pack; it does not execute the Fabric JAR. See
-[the scope, build and validation instructions](docs/CONTINUITY.md). Existing
-release downloads do not contain this change.
+[the verified CTM-enabled downloads and pack instructions](docs/CONTINUITY.md).
+The historical release downloads below predate this change.
 
 ## Supported testing scope
 

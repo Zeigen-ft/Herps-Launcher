@@ -13,6 +13,29 @@ separate evidence; do not treat extraction or metadata inspection as gameplay
 validation. Native Windows/macOS packaging and physical gameplay must be
 reported separately for each platform.
 
+## Verified native downloads
+
+[Native run 42750869099](https://github.com/Zeigen-ft/Herps-Launcher/actions/runs/42750869099)
+passed Windows x64, Mac Apple Silicon, Mac Intel and final release-file assembly.
+The binaries were built from commit
+`2571d6b7c2d775c8ef085a0243879caf37ef6698`. Build, CTM tests and delivered-app
+checks passed; physical gameplay with prepared vanilla resources remains unverified.
+
+| Platform | CI artifact |
+| --- | --- |
+| Windows x64 | [Installer and portable package](https://github.com/Zeigen-ft/Herps-Launcher/actions/runs/42750869099/artifacts/13735706335) |
+| Mac Apple Silicon | [DMG package](https://github.com/Zeigen-ft/Herps-Launcher/actions/runs/42750869099/artifacts/13733574893) |
+| Mac Intel | [DMG package](https://github.com/Zeigen-ft/Herps-Launcher/actions/runs/42750869099/artifacts/13734339993) |
+| All platforms | [Combined release-ready files and checksums](https://github.com/Zeigen-ft/Herps-Launcher/actions/runs/42750869099/artifacts/13735960937) |
+
+GitHub downloads an **outer ZIP**. Extract it before using the installer or DMG.
+For Windows portable use, also extract the complete inner portable ZIP. These are
+CI artifacts; no release or tag was published. Existing release downloads linked
+elsewhere in the repository predate this change.
+
+The author texture pack is prepared locally from your original JAR using the
+instructions below; third-party artwork is not included in the source repository.
+
 ## Prepare the pack
 
 Keep the original JAR locally. From the repository root, run:
@@ -45,6 +68,33 @@ in the **active profile's** `resourcepacks` folder and enable it under
 
 Use default vanilla artwork rather than Programmer Art or replacement glass
 textures. Named profiles have separate resource-pack directories.
+
+### Manual preparation without Python
+
+1. Make a copy of your original JAR and rename the copy with a `.zip` extension.
+2. Open that ZIP and copy its `resourcepacks/default` folder into your active
+   game's `resourcepacks` folder. Rename the copied folder `Continuity-Default`.
+3. Inside that copied folder, remove
+   `assets/continuity/optifine/ctm/programmer_art`. Keep the `default` sibling.
+4. Replace the copied folder's `pack.mcmeta` with the exact JSON below. Ensure
+   the filename remains `pack.mcmeta`, rather than `pack.mcmeta.txt`.
+5. Copy `LICENSE_continuity` from the JAR's root into the copied pack folder.
+6. Enable `Continuity-Default` in the rebuilt game's **Options → Resource Packs**.
+
+```json
+{
+  "pack": {
+    "pack_format": 97,
+    "min_format": [97, 1],
+    "max_format": [97, 1],
+    "description": "Continuity default textures by PepperCode1 — native Herps CTM"
+  }
+}
+```
+
+The resulting pack folder must contain `pack.mcmeta` and `assets` directly.
+This carries over the selected default texture data; it does not execute the
+original Fabric mod.
 
 ## Attribution and repository contents
 
@@ -132,8 +182,9 @@ claim a passing renderer suite.
   and dependency code). No lint suppression or unrelated upstream edits were
   added to make it pass.
 
-Windows x64, Mac ARM64 and Mac Intel installers have **not** been built for this
-change. The first native run,
+Windows x64, Mac ARM64 and Mac Intel packages have now passed native build and
+delivered-app verification in run 42750869099, including the final checksum and
+release-file assembly gate. The first native run,
 [42747948172](https://github.com/Zeigen-ft/Herps-Launcher/actions/runs/42747948172),
 reached the Python integration suite and exposed test-fixture portability issues:
 macOS temporary paths through `/var`, Windows Git line endings, and Windows ZIP
