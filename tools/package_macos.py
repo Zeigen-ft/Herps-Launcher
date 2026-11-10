@@ -166,6 +166,14 @@ def engine_patch_provenance(source, project):
     summary = {"modified": True, "upstream_commit": lock["commit"],
                "patches_sha256": patch_hash, "prepared_tree_sha256": stamp["tree_sha256"],
                "provenance_file": "engine-patches.json"}
+    if "source_verification" in stamp:
+        verification = stamp["source_verification"]
+        if (not isinstance(verification, dict) or set(verification) != {"method", "commit", "tree"}
+                or verification.get("method") != "git-object-hash"
+                or verification.get("commit") != lock["commit"]
+                or not re.fullmatch(r"[0-9a-f]{40}", str(verification.get("tree", "")))):
+            raise ValueError("invalid verified Git engine source provenance")
+        summary["source_verification"] = verification
     return summary, {"schema": 1, "preparation": stamp, "patches": manifest}
 
 

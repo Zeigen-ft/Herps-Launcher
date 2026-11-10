@@ -1,0 +1,154 @@
+--- a/crates/horizon-client-render/src/sprites.rs
++++ b/crates/horizon-client-render/src/sprites.rs
+@@ -230,6 +230,34 @@
+             }
+         }
+     }
++    /// Load a CTM image from `assets/<namespace>/optifine/ctm/`, rather than
++    /// `textures/`. Resource keys are separate from normal sprite identifiers.
++    /// These images deliberately bypass the disk cache: its fingerprint only
++    /// covers `textures/`, so caching them there could retain stale CTM pixels.
++    pub fn insert_resource(&mut self, root: &Path, name: &str) -> Result<u32> {
++        let (namespace, relative) = name.split_once(':').ok_or("invalid CTM image identifier")?;
++        if namespace.is_empty()
++            || !namespace
++                .bytes()
++                .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || b"_.-".contains(&c))
++            || !relative.starts_with("optifine/ctm/")
++            || relative
++                .split('/')
++                .any(|part| part.is_empty() || part == "." || part == "..")
++            || !relative
++                .bytes()
++                .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || b"_./-".contains(&c))
++        {
++            return Err("unsafe CTM image identifier".into());
++        }
++        let key = format!("@resource:{name}");
++        if let Some(&layer) = self.layers.get(&key) {
++            return Ok(layer);
++        }
++        let path = root.join(format!("assets/{namespace}/{relative}.png"));
++        let decoded = Self::decode_path(&path, name)?;
++        self.register(&key, decoded)
++    }
+     fn load(&mut self, root: &Path, name: &str) -> Result<u32> {
+         let cached = self.disk.as_ref().and_then(|d| d.get(name)).cloned();
+         let decoded = match cached {
+@@ -248,6 +276,9 @@
+     fn decode(root: &Path, name: &str) -> Result<crate::sprite_cache::Decoded> {
+         let (namespace, path) = name.split_once(':').ok_or("invalid sprite identifier")?;
+         let path = root.join(format!("assets/{namespace}/textures/{path}.png"));
++        Self::decode_path(&path, name)
++    }
++    fn decode_path(path: &Path, name: &str) -> Result<crate::sprite_cache::Decoded> {
+         let metadata = match fs::read_to_string(path.with_extension("png.mcmeta")) {
+             Ok(text) => Some(serde_json::from_str::<
+                 BTreeMap<String, Box<serde_json::value::RawValue>>,
+@@ -662,3 +693,106 @@
+         assert_eq!(stepped.blend(5), blend(1, 1, 0));
+     }
+ }
++
++#[cfg(test)]
++mod ctm_resource_tests {
++    use super::*;
++    struct Fixture(std::path::PathBuf);
++    impl Fixture {
++        fn new() -> Self {
++            Self(std::env::temp_dir().join(format!(
++                    "herps-ctm-sprites-{}-{}",
++                    std::process::id(),
++                    std::time::SystemTime::now()
++                        .duration_since(std::time::UNIX_EPOCH)
++                        .unwrap()
++                        .as_nanos()
++                )))
++        }
++        fn png(&self, relative: &str, color: [u8; 4]) {
++            let path = self.0.join(relative);
++            fs::create_dir_all(path.parent().unwrap()).unwrap();
++            let mut encoder = png::Encoder::new(File::create(path).unwrap(), 16, 16);
++            encoder.set_color(png::ColorType::Rgba);
++            encoder.set_depth(png::BitDepth::Eight);
++            encoder
++                .write_header()
++                .unwrap()
++                .write_image_data(&color.repeat(256))
++                .unwrap();
++        }
++    }
++    impl Drop for Fixture {
++        fn drop(&mut self) {
++            let _ = fs::remove_dir_all(&self.0);
++        }
++    }
++    #[test]
++    fn ctm_resource_image_does_not_alias_normal_texture_identifier() {
++        let root = Fixture::new();
++        root.png("assets/test/optifine/ctm/a/0.png", [10, 20, 30, 255]);
++        root.png(
++            "assets/test/textures/optifine/ctm/a/0.png",
++            [40, 50, 60, 128],
++        );
++        let mut sprites = Sprites::default();
++        let ordinary = sprites.insert(&root.0, "test:optifine/ctm/a/0").unwrap();
++        let ctm = sprites
++            .insert_resource(&root.0, "test:optifine/ctm/a/0")
++            .unwrap();
++        assert_ne!(ordinary, ctm);
++        assert_eq!(
++            sprites
++                .insert_resource(&root.0, "test:optifine/ctm/a/0")
++                .unwrap(),
++            ctm
++        );
++        sprites.finish();
++        assert_eq!(
++            &sprites.pixels[ctm as usize * 1024..][..4],
++            &[10, 20, 30, 255]
++        );
++        assert_eq!(
++            &sprites.pixels[ordinary as usize * 1024..][..4],
++            &[40, 50, 60, 128]
++        );
++    }
++    #[test]
++    fn ctm_reload_reads_changed_pixels_and_rejects_unsafe_image_paths() {
++        let root = Fixture::new();
++        root.png("assets/test/optifine/ctm/a/0.png", [10, 20, 30, 255]);
++        fs::create_dir_all(root.0.join("assets/test/textures")).unwrap();
++        let mut before = Sprites::with_disk_cache(&root.0);
++        before
++            .insert_resource(&root.0, "test:optifine/ctm/a/0")
++            .unwrap();
++        before.save_disk_cache();
++        root.png("assets/test/optifine/ctm/a/0.png", [90, 80, 70, 255]);
++        let mut after = Sprites::with_disk_cache(&root.0);
++        let layer = after
++            .insert_resource(&root.0, "test:optifine/ctm/a/0")
++            .unwrap();
++        after.finish();
++        assert_eq!(
++            &after.pixels[layer as usize * 1024..][..4],
++            &[90, 80, 70, 255]
++        );
++        for invalid in [
++            "test:../secrets",
++            "test:optifine/ctm/../../secret",
++            "test:optifine/ctm//0",
++            "test:optifine/ctm/a\\0",
++            "../test:optifine/ctm/a/0",
++        ] {
++            assert!(
++                after.insert_resource(&root.0, invalid).is_err(),
++                "{invalid}"
++            );
++        }
++        assert!(
++            after
++                .insert_resource(&root.0, "test:optifine/ctm/a/missing")
++                .is_err()
++        );
++    }
++}

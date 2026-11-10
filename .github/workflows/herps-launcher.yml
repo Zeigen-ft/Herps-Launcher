@@ -65,6 +65,45 @@ jobs:
             ~/.cargo/git
           key: herps-engine-${{ matrix.os }}-${{ matrix.arch }}-rust-1.95-portpack-v1-${{ hashFiles('upstream.lock.json', 'patches/**') }}
           restore-keys: herps-engine-${{ matrix.os }}-${{ matrix.arch }}-rust-1.95-${{ hashFiles('upstream.lock.json', 'patches/**') }}
+      - name: Verify the pinned Git source and stage engine patches
+        shell: python
+        run: |
+          import json
+          import os
+          import re
+          import subprocess
+          import sys
+          from pathlib import Path
+          lock = json.loads(Path("upstream.lock.json").read_text(encoding="utf-8"))
+          if not re.fullmatch(r"[0-9a-f]{40}", lock["commit"]):
+              raise ValueError("A full pinned Git commit is required")
+          if not lock["repository"].startswith("https://github.com/"):
+              raise ValueError("Upstream Git source must use the configured GitHub HTTPS route")
+          source = Path(".cache/upstream-git").resolve()
+          source.mkdir(parents=True, exist_ok=False)
+          def git(*arguments):
+              subprocess.run(["git", "-C", str(source), *arguments], check=True)
+          git("init", "--quiet")
+          git("config", "core.autocrlf", "false")
+          git("config", "core.eol", "lf")
+          git("config", "core.symlinks", "false")
+          git("remote", "add", "origin", lock["repository"])
+          git("fetch", "--no-tags", "--depth=1", "origin", lock["commit"])
+          git("checkout", "--detach", lock["commit"])
+          preparation = subprocess.run([sys.executable, "tools/prepare_upstream.py", "--git-source", str(source)],
+                                       capture_output=True, text=True)
+          if preparation.returncode:
+              print(preparation.stdout)
+              print(preparation.stderr, file=sys.stderr)
+              raise SystemExit(preparation.returncode)
+          prepared = preparation.stdout.strip()
+          stamp = json.loads((Path(prepared) / ".herspers-prepared.json").read_text(encoding="utf-8"))
+          if stamp["source_verification"]["commit"] != lock["commit"]:
+              raise ValueError("Prepared source provenance differs from the lock")
+          Path("herps-engine-source.json").write_text(json.dumps(stamp, indent=2) + "\n", encoding="utf-8")
+          with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as environment:
+              environment.write(f"HERPS_UPSTREAM_GIT_SOURCE={source}\n")
+              environment.write(f"HERPS_PREPARED_SOURCE={prepared}\n")
       - name: Build pinned port-pack for the native runner
         shell: python
         run: |
@@ -79,6 +118,30 @@ jobs:
           Path("herps-port-pack-build.json").write_text(json.dumps(evidence, indent=2) + "\n", encoding="utf-8")
           with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as environment:
               environment.write(f"HERPS_TEST_PORT_PACK={binary}\n")
+      - name: Test native connected textures and mesh integration
+        shell: python
+        run: |
+          import os
+          import subprocess
+          import sys
+          from pathlib import Path
+          source = Path(os.environ["HERPS_PREPARED_SOURCE"])
+          target = Path(".cache/target").resolve()
+          base = ["cargo", "+1.95.0", "test", "--locked", "--manifest-path", str(source / "Cargo.toml"),
+                  "--target-dir", str(target), "-p", "horizon-client-render", "--lib"]
+          listed = subprocess.run(base + ["--", "--list"], text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+          Path("herps-native-render-test-list.log").write_text(listed.stdout, encoding="utf-8")
+          if listed.returncode:
+              print(listed.stdout)
+              raise SystemExit(listed.returncode)
+          for name, log in (("connected_textures::tests", "herps-native-connected-textures.log"),
+                            ("sprites::ctm_resource_tests", "herps-native-continuity-sprites.log"),
+                            ("mesher::continuity_tests", "herps-native-continuity-mesher.log")):
+              count = sum(line.startswith(name + "::") and line.endswith(": test") for line in listed.stdout.splitlines())
+              if count == 0:
+                  raise RuntimeError(f"Required native suite {name} selected zero tests")
+              print(f"Running {count} native tests in {name}", flush=True)
+              subprocess.run([sys.executable, "tools/ci_run.py", log, *base, name], check=True)
       - name: Stage reviewed native chainmail content
         run: python tools/build_rlcraft_chainmail.py
       - name: Portable and desktop integration tests with the real backend
@@ -195,6 +258,7 @@ jobs:
           path: |
             herps-*.log
             herps-port-pack-build.json
+            herps-engine-source.json
             dist/targeted-content/**
             dist/rlcraft-inspector/inspector.json
             dist/rlcraft-inspector/SHA256SUMS

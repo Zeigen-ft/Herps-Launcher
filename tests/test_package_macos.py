@@ -66,6 +66,20 @@ class PackagingTests(unittest.TestCase):
         self.project_patch.start()
         self.addCleanup(self.project_patch.stop)
 
+    def test_optional_verified_git_source_provenance_is_validated_and_reported(self):
+        verification = {"method": "git-object-hash", "commit": "a" * 40, "tree": "c" * 40}
+        self.stamp["source_verification"] = verification
+        (self.source / ".herspers-prepared.json").write_text(json.dumps(self.stamp))
+        summary, evidence = package.engine_patch_provenance(self.source, self.project)
+        self.assertEqual(summary["source_verification"], verification)
+        self.assertEqual(evidence["preparation"]["source_verification"], verification)
+        for field, value in (("method", "unchecked"), ("commit", "d" * 40), ("tree", "not-a-hash")):
+            with self.subTest(field=field):
+                self.stamp["source_verification"] = {**verification, field: value}
+                (self.source / ".herspers-prepared.json").write_text(json.dumps(self.stamp))
+                with self.assertRaisesRegex(ValueError, "invalid verified Git"):
+                    package.engine_patch_provenance(self.source, self.project)
+
     def write_binary(self, name, cpu=package.CPUS["arm64"]):
         path = self.binaries / name
         # Deliberately only a fixture header. Stage tests never run these files.

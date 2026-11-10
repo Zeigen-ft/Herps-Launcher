@@ -1,0 +1,1000 @@
+--- /dev/null
++++ b/crates/horizon-client-render/src/connected_textures.rs
+@@ -0,0 +1,997 @@
++//! Native connected-texture rules for the three methods used by Continuity's
++//! bundled default resource pack. This is original code written from the public
++//! OptiFine CTM file-format documentation and resource-image observations; it
++//! does not load Java classes or reproduce Continuity's implementation.
++use crate::{Result, models::StateModels, sprites::Sprites};
++use horizon_assets::bake::ModelQuad;
++use horizon_core::{geometry::Direction, position::BlockPos};
++use horizon_world::{
++    chunk::BlockState,
++    registry::{BlockRegistry, BlockStateId},
++};
++use std::{
++    collections::{BTreeMap, BTreeSet},
++    fs, io,
++    path::{Path, PathBuf},
++};
++
++const MAX_FILES: usize = 4096;
++const MAX_PROPERTY_BYTES: u64 = 65536;
++const MAX_DEPTH: usize = 24;
++const MAX_TILES: usize = 128;
++
++#[derive(Clone, Copy, Debug, PartialEq, Eq)]
++enum Method {
++    Ctm,
++    Horizontal,
++    Top,
++}
++#[derive(Clone, Copy, Debug, PartialEq, Eq)]
++enum Connect {
++    Block,
++    Tile,
++    State,
++}
++#[derive(Debug)]
++struct BlockPattern {
++    name: String,
++    properties: Vec<(String, Vec<String>)>,
++}
++impl BlockPattern {
++    fn matches(&self, state: &BlockState) -> bool {
++        state.name == self.name
++            && self.properties.iter().all(|(key, values)| {
++                state
++                    .properties
++                    .get(key)
++                    .is_some_and(|value| values.contains(value))
++            })
++    }
++}
++struct Rule {
++    method: Method,
++    connect: Connect,
++    faces: u8,
++    layers: BTreeSet<u32>,
++    blocks: Vec<BlockPattern>,
++    tiles: Vec<u32>,
++    weight: i32,
++    source: String,
++}
++impl Rule {
++    fn matches_state(&self, state: &BlockState) -> bool {
++        self.blocks.is_empty() || self.blocks.iter().any(|pattern| pattern.matches(state))
++    }
++    fn matches_layer(&self, layer: u32) -> bool {
++        self.layers.is_empty() || self.layers.contains(&layer)
++    }
++}
++
++/// Immutable rules and state identities, rebuilt with the resource-pack overlay.
++/// With no opted-in CTM properties, no texture or vanilla rendering changes.
++#[derive(Default)]
++pub struct ConnectedTextures {
++    rules: Vec<Rule>,
++    by_state: Vec<Vec<usize>>,
++    block_ids: Vec<u32>,
++    /// Only layers referenced by `connect=tile` rules: deterministic face
++    /// textures in the included sandstone models, not a second model catalog.
++    tile_states: BTreeMap<(u32, u8), BTreeSet<BlockStateId>>,
++}
++impl ConnectedTextures {
++    /// Load supported CTM rule documents without making a broken optional rule
++    /// fatal to ordinary resource loading. Bad/unsupported rules are logged and
++    /// ignored; file traversal, document size and tile counts are bounded.
++    pub fn load(
++        root: &Path,
++        registry: &BlockRegistry,
++        sprites: &mut Sprites,
++        models: &StateModels,
++    ) -> Result<Self> {
++        let mut files = Vec::new();
++        let assets = root.join("assets");
++        if !assets.is_dir() {
++            return Ok(Self::default());
++        }
++        for entry in fs::read_dir(&assets)? {
++            let entry = entry?;
++            if !entry.file_type()?.is_dir() {
++                continue;
++            }
++            let namespace = entry.file_name().to_string_lossy().into_owned();
++            if !identifier_part(&namespace) {
++                continue;
++            }
++            let dir = entry.path().join("optifine/ctm");
++            if dir.is_dir() && !dir.is_symlink() {
++                gather(&dir, 0, &namespace, &mut files)?;
++            }
++        }
++        files.sort_by(|a, b| a.1.cmp(&b.1));
++        let mut rules = Vec::new();
++        for (file, name) in files {
++            match parse_rule(root, &file, name, sprites) {
++                Ok(Some(rule)) => rules.push(rule),
++                Ok(None) => {}
++                Err(error) => log::warn!(
++                    "Ignoring connected-texture rule {}: {error}",
++                    file.display()
++                ),
++            }
++        }
++        // Tile-based matches have priority; within a class the highest weight
++        // wins, then the lexical resource name, as documented by CTM.
++        rules.sort_by(|a, b| {
++            a.layers
++                .is_empty()
++                .cmp(&b.layers.is_empty())
++                .then_with(|| b.weight.cmp(&a.weight))
++                .then_with(|| a.source.cmp(&b.source))
++        });
++        if rules.is_empty() {
++            return Ok(Self::default());
++        }
++        let mut names = BTreeMap::new();
++        let mut block_ids = Vec::with_capacity(registry.len());
++        let mut by_state = Vec::with_capacity(registry.len());
++        for index in 0..registry.len() {
++            let state = registry
++                .state(BlockStateId(index as u32))
++                .ok_or("missing CTM registry state")?;
++            let next = names.len() as u32;
++            block_ids.push(*names.entry(state.name.as_str()).or_insert(next));
++            by_state.push(
++                rules
++                    .iter()
++                    .enumerate()
++                    .filter(|(_, rule)| rule.matches_state(state))
++                    .map(|(index, _)| index)
++                    .collect(),
++            );
++        }
++        let tile_layers: BTreeSet<u32> = rules
++            .iter()
++            .filter(|r| r.connect == Connect::Tile)
++            .flat_map(|r| r.layers.iter().copied())
++            .collect();
++        let mut tile_states: BTreeMap<(u32, u8), BTreeSet<BlockStateId>> = BTreeMap::new();
++        if !tile_layers.is_empty() {
++            let mut baked = Vec::new();
++            for index in 0..registry.len() {
++                let id = BlockStateId(index as u32);
++                if models
++                    .models_at(id, BlockPos::default(), &mut baked)
++                    .is_err()
++                {
++                    continue;
++                }
++                for model in &baked {
++                    for face in &model.faces {
++                        if tile_layers.contains(&face.layer) {
++                            tile_states
++                                .entry((face.layer, face.quad.facing as u8))
++                                .or_default()
++                                .insert(id);
++                        }
++                    }
++                }
++            }
++        }
++        log::info!("Loaded {} native connected-texture rules", rules.len());
++        Ok(Self {
++            rules,
++            by_state,
++            block_ids,
++            tile_states,
++        })
++    }
++    pub fn is_empty(&self) -> bool {
++        self.rules.is_empty()
++    }
++    pub fn rule_count(&self) -> usize {
++        self.rules.len()
++    }
++    /// Choose a sprite for one baked face. The neighbor callback reads world
++    /// positions, including section/chunk boundaries; no process-global state is
++    /// used, so resource reloads and concurrent mesh jobs remain independent.
++    pub fn replacement(
++        &self,
++        state: BlockStateId,
++        layer: u32,
++        face: Direction,
++        pos: BlockPos,
++        neighbor: impl FnMut(BlockPos) -> BlockStateId,
++    ) -> Option<u32> {
++        self.replacement_with_axes(state, layer, face, axes(face), pos, neighbor)
++    }
++    /// Use the quad's actual texture axes rather than its outward normal alone.
++    /// Pane faces can mirror U and block models can rotate UVs: these transforms
++    /// must also rotate the neighbor mask, or the removed border is wrong.
++    pub fn replacement_for_quad(
++        &self,
++        state: BlockStateId,
++        layer: u32,
++        quad: &ModelQuad,
++        pos: BlockPos,
++        neighbor: impl FnMut(BlockPos) -> BlockStateId,
++    ) -> Option<u32> {
++        let face = Direction::ALL[quad.facing as usize];
++        let indices = self.by_state.get(state.0 as usize)?;
++        if !indices.iter().any(|&index| {
++            let rule = &self.rules[index];
++            rule.faces & (1 << face as u8) != 0 && rule.matches_layer(layer)
++        }) {
++            return None;
++        }
++        self.replacement_with_axes(state, layer, face, quad_axes(quad)?, pos, neighbor)
++    }
++    #[allow(clippy::too_many_arguments)]
++    fn replacement_with_axes(
++        &self,
++        state: BlockStateId,
++        layer: u32,
++        face: Direction,
++        basis: ([i32; 3], [i32; 3]),
++        pos: BlockPos,
++        mut neighbor: impl FnMut(BlockPos) -> BlockStateId,
++    ) -> Option<u32> {
++        let indices = self.by_state.get(state.0 as usize)?;
++        for &index in indices {
++            let rule = &self.rules[index];
++            if rule.faces & (1 << face as u8) == 0 || !rule.matches_layer(layer) {
++                continue;
++            }
++            let mut connects = |offset: [i32; 3]| {
++                let other = neighbor(pos.offset(offset[0], offset[1], offset[2]));
++                match rule.connect {
++                    Connect::Block => self
++                        .block_ids
++                        .get(state.0 as usize)
++                        .zip(self.block_ids.get(other.0 as usize))
++                        .is_some_and(|(a, b)| a == b),
++                    Connect::State => state == other,
++                    Connect::Tile => self
++                        .tile_states
++                        .get(&(layer, face as u8))
++                        .is_some_and(|states| states.contains(&other)),
++                }
++            };
++            let tile = match rule.method {
++                Method::Top => {
++                    if matches!(face, Direction::Down | Direction::Up) || !connects([0, 1, 0]) {
++                        continue;
++                    }
++                    0
++                }
++                Method::Horizontal => {
++                    let (_, right) = basis;
++                    match (connects(neg(right)), connects(right)) {
++                        (false, false) => 3,
++                        (false, true) => 0,
++                        (true, false) => 2,
++                        (true, true) => 1,
++                    }
++                }
++                Method::Ctm => {
++                    let (up, right) = basis;
++                    let offsets = [up, right, neg(up), neg(right)];
++                    let mut mask = 0u8;
++                    for (i, offset) in offsets.iter().copied().enumerate() {
++                        if connects(offset) {
++                            mask |= 1 << i;
++                        }
++                    }
++                    // A diagonal can remove an inner corner only when both
++                    // adjacent cardinal neighbors are connected.
++                    for (corner, (a, b)) in [(0, 1), (1, 2), (2, 3), (3, 0)].into_iter().enumerate()
++                    {
++                        if mask & (1 << a) != 0
++                            && mask & (1 << b) != 0
++                            && connects(add(offsets[a], offsets[b]))
++                        {
++                            mask |= 1 << (corner + 4);
++                        }
++                    }
++                    ctm_index(mask)
++                }
++            };
++            if let Some(&replacement) = rule.tiles.get(tile) {
++                return Some(replacement);
++            }
++        }
++        None
++    }
++}
++
++fn error(message: &str) -> io::Error {
++    io::Error::new(io::ErrorKind::InvalidData, message)
++}
++fn identifier_part(text: &str) -> bool {
++    !text.is_empty()
++        && text
++            .bytes()
++            .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b"._-".contains(&b))
++}
++fn resource_path(text: &str) -> bool {
++    !text.is_empty()
++        && !text.contains('\\')
++        && !text.contains(':')
++        && !text.bytes().any(|b| b.is_ascii_control())
++        && text
++            .split('/')
++            .all(|part| identifier_part(part) && part != "." && part != "..")
++}
++fn gather(
++    dir: &Path,
++    depth: usize,
++    namespace: &str,
++    out: &mut Vec<(PathBuf, String)>,
++) -> Result<()> {
++    if depth > MAX_DEPTH {
++        return Err(error("CTM directory depth exceeds limit").into());
++    }
++    for entry in fs::read_dir(dir)? {
++        let entry = entry?;
++        let kind = entry.file_type()?;
++        // Overlay folders link selected files to their original pack. Follow
++        // final file links, but never recurse into directory links (cycles).
++        if kind.is_dir() {
++            gather(&entry.path(), depth + 1, namespace, out)?;
++        } else if (kind.is_file() || kind.is_symlink() && entry.path().is_file())
++            && entry
++                .path()
++                .extension()
++                .is_some_and(|ext| ext == "properties")
++        {
++            if out.len() >= MAX_FILES {
++                return Err(error("CTM rule count exceeds limit").into());
++            }
++            let path = entry.path();
++            let rel = path
++                .components()
++                .map(|p| p.as_os_str().to_string_lossy())
++                .collect::<Vec<_>>()
++                .join("/");
++            out.push((path, format!("{namespace}:{rel}")));
++        }
++    }
++    Ok(())
++}
++fn properties(text: &str) -> BTreeMap<String, String> {
++    text.lines()
++        .filter_map(|line| {
++            let line = line.trim();
++            if line.is_empty() || line.starts_with('#') || line.starts_with('!') {
++                return None;
++            }
++            let (key, value) = line.split_once('=').or_else(|| line.split_once(':'))?;
++            Some((key.trim().to_owned(), value.trim().to_owned()))
++        })
++        .collect()
++}
++fn block_pattern(text: &str) -> Result<BlockPattern> {
++    let mut fields = text.split(':').peekable();
++    let first = fields.next().ok_or("empty CTM block pattern")?;
++    let (namespace, name) = if fields.peek().is_some_and(|next| !next.contains('=')) {
++        (first, fields.next().ok_or("missing CTM block name")?)
++    } else {
++        ("minecraft", first)
++    };
++    if !identifier_part(namespace) || !resource_path(name) {
++        return Err(error("invalid CTM block identifier").into());
++    }
++    let mut properties = Vec::new();
++    for field in fields {
++        let (key, value) = field
++            .split_once('=')
++            .ok_or("invalid CTM block-state predicate")?;
++        let values: Vec<_> = value.split(',').map(str::to_owned).collect();
++        if !identifier_part(key) || values.iter().any(|v| !identifier_part(v)) {
++            return Err(error("invalid CTM property predicate").into());
++        }
++        properties.push((key.to_owned(), values));
++    }
++    Ok(BlockPattern {
++        name: format!("{namespace}:{name}"),
++        properties,
++    })
++}
++fn tile_name(text: &str) -> Result<String> {
++    let text = text.trim_end_matches(".png");
++    let (namespace, path) = text.split_once(':').unwrap_or(("minecraft", text));
++    let path = path.strip_prefix("textures/").unwrap_or(path);
++    if !identifier_part(namespace) || !resource_path(path) {
++        return Err(error("invalid CTM match tile").into());
++    }
++    Ok(format!(
++        "{namespace}:{}{}",
++        if path.contains('/') { "" } else { "block/" },
++        path
++    ))
++}
++fn expand_tiles(text: &str) -> Result<Vec<String>> {
++    let mut tiles = Vec::new();
++    for part in text.split_whitespace() {
++        if let Some((a, b)) = part
++            .split_once('-')
++            .and_then(|(a, b)| Some((a.parse::<u32>().ok()?, b.parse::<u32>().ok()?)))
++        {
++            if b < a || u64::from(b) - u64::from(a) + 1 > MAX_TILES as u64 {
++                return Err(error("invalid CTM tile range").into());
++            }
++            for n in a..=b {
++                tiles.push(n.to_string());
++            }
++        } else {
++            tiles.push(part.to_owned());
++        }
++        if tiles.len() > MAX_TILES {
++            return Err(error("CTM tile count exceeds limit").into());
++        }
++    }
++    Ok(tiles)
++}
++fn tile_resource(namespace: &str, directory: &str, text: &str) -> Result<String> {
++    let text = text.trim_end_matches(".png");
++    let (namespace, path) = if let Some((ns, path)) = text.split_once(':') {
++        (ns, path.to_owned())
++    } else if let Some(path) = text.strip_prefix("~/") {
++        (namespace, format!("optifine/{path}"))
++    } else if let Some(path) = text.strip_prefix("./") {
++        (namespace, format!("{directory}/{path}"))
++    } else if text.contains('/') {
++        (namespace, text.to_owned())
++    } else {
++        (namespace, format!("{directory}/{text}"))
++    };
++    if !identifier_part(namespace) || !resource_path(&path) {
++        return Err(error("invalid CTM tile resource path").into());
++    }
++    Ok(format!("{namespace}:{path}"))
++}
++fn faces(text: Option<&String>) -> Result<u8> {
++    let Some(text) = text else {
++        return Ok(0x3f);
++    };
++    let mut mask = 0;
++    for face in text.split_whitespace() {
++        mask |= match face {
++            "all" => 0x3f,
++            "sides" => 0x3c,
++            "bottom" | "down" => 1,
++            "top" | "up" => 2,
++            "north" => 4,
++            "south" => 8,
++            "west" => 16,
++            "east" => 32,
++            _ => return Err(error("unknown CTM face restriction").into()),
++        };
++    }
++    Ok(mask)
++}
++fn parse_rule(
++    root: &Path,
++    file: &Path,
++    source: String,
++    sprites: &mut Sprites,
++) -> Result<Option<Rule>> {
++    let metadata = fs::metadata(file)?;
++    if !metadata.is_file() || metadata.len() > MAX_PROPERTY_BYTES {
++        return Err(error("CTM property document exceeds limit").into());
++    }
++    let props = properties(&fs::read_to_string(file)?);
++    let method = match props.get("method").map(String::as_str).unwrap_or("ctm") {
++        "ctm" => Method::Ctm,
++        "horizontal" => Method::Horizontal,
++        "top" => Method::Top,
++        _ => return Err(error("unsupported connected-texture method").into()),
++    };
++    // Do not silently ignore predicates the renderer cannot honor.
++    for predicate in [
++        "biomes",
++        "heights",
++        "minHeight",
++        "maxHeight",
++        "name",
++        "innerSeams",
++        "connectBlocks",
++        "connectTiles",
++        "symmetry",
++    ] {
++        if props.contains_key(predicate) {
++            return Err(error("unsupported CTM predicate").into());
++        }
++    }
++    let relative = file.strip_prefix(root.join("assets"))?;
++    let namespace = relative
++        .components()
++        .next()
++        .ok_or("missing CTM namespace")?
++        .as_os_str()
++        .to_str()
++        .ok_or("invalid CTM namespace")?;
++    let directory = relative
++        .parent()
++        .and_then(|p| p.strip_prefix(namespace).ok())
++        .map(resource_directory)
++        .ok_or("invalid CTM directory")?;
++    if let Some(condition) = props.get("resourceCondition") {
++        if !resource_path(condition) {
++            return Err(error("invalid CTM resource condition").into());
++        }
++        let target = root.join("assets/minecraft").join(condition);
++        if !target.is_file() {
++            return Ok(None);
++        }
++    }
++    let inferred = file
++        .file_stem()
++        .and_then(|s| s.to_str())
++        .ok_or("invalid CTM file name")?;
++    let block_text = props.get("matchBlocks").cloned().or_else(|| {
++        (!props.contains_key("matchTiles"))
++            .then(|| inferred.strip_prefix("block_").map(str::to_owned))
++            .flatten()
++    });
++    let tile_text = props.get("matchTiles").cloned().or_else(|| {
++        (!props.contains_key("matchBlocks") && !inferred.starts_with("block_"))
++            .then(|| inferred.to_owned())
++    });
++    let blocks = block_text
++        .as_deref()
++        .unwrap_or("")
++        .split_whitespace()
++        .map(block_pattern)
++        .collect::<Result<Vec<_>>>()?;
++    let mut layers = BTreeSet::new();
++    if let Some(text) = &tile_text {
++        for tile in text.split_whitespace() {
++            if let Some(layer) = sprites.layers.get(&tile_name(tile)?) {
++                layers.insert(*layer);
++            }
++        }
++        if layers.is_empty() {
++            return Ok(None);
++        }
++    }
++    let connect = match props.get("connect").map(String::as_str) {
++        Some("block") => Connect::Block,
++        Some("state") => Connect::State,
++        Some("tile") => Connect::Tile,
++        None if !blocks.is_empty() => Connect::Block,
++        None => Connect::Tile,
++        _ => return Err(error("unknown CTM connection mode").into()),
++    };
++    if connect == Connect::Tile && layers.is_empty() {
++        return Err(error("connect=tile requires a matching sprite").into());
++    }
++    let names = expand_tiles(props.get("tiles").ok_or("CTM rule is missing tiles")?)?;
++    let expected = match method {
++        Method::Ctm => 47,
++        Method::Horizontal => 4,
++        Method::Top => 1,
++    };
++    if names.len() != expected {
++        return Err(error("CTM method has incorrect number of tiles").into());
++    }
++    // Missing or invalid PNGs reject the whole rule, not just one neighbor case.
++    let mut resources = Vec::new();
++    for tile in names {
++        let id = tile_resource(namespace, &directory, &tile)?;
++        let (ns, path) = id.split_once(':').ok_or("invalid CTM tile resource")?;
++        let path = root.join(format!("assets/{ns}/{path}.png"));
++        if !path.is_file() {
++            return Err(error("CTM replacement PNG is missing").into());
++        }
++        resources.push(id);
++    }
++    let tiles = resources
++        .iter()
++        .map(|name| sprites.insert_resource(root, name))
++        .collect::<Result<Vec<_>>>()?;
++    Ok(Some(Rule {
++        method,
++        connect,
++        faces: faces(props.get("faces"))?,
++        layers,
++        blocks,
++        tiles,
++        weight: props
++            .get("weight")
++            .map(|v| v.parse())
++            .transpose()?
++            .unwrap_or(0),
++        source,
++    }))
++}
++
++/// Resource identifiers always use '/', including when the disk paths came
++/// from Windows Path components. Never put platform separators in sprite keys.
++fn resource_directory(path: &Path) -> String {
++    path.components()
++        .map(|part| part.as_os_str().to_string_lossy())
++        .collect::<Vec<_>>()
++        .join("/")
++}
++fn cardinal(vector: [f32; 3]) -> Option<[i32; 3]> {
++    let magnitude = vector.iter().copied().map(f32::abs).fold(0.0f32, f32::max);
++    if !magnitude.is_finite() || magnitude < 1.0e-6 {
++        return None;
++    }
++    let mut result = [0; 3];
++    for i in 0..3 {
++        let normalized = vector[i] / magnitude;
++        if !normalized.is_finite() {
++            return None;
++        }
++        if normalized.abs() > 1.0 - 1.0e-4 {
++            result[i] = if normalized > 0.0 { 1 } else { -1 };
++        } else if normalized.abs() > 1.0e-4 {
++            return None;
++        }
++    }
++    (result.iter().map(|v| v * v).sum::<i32>() == 1).then_some(result)
++}
++fn quad_axes(quad: &ModelQuad) -> Option<([i32; 3], [i32; 3])> {
++    // Solve dPosition/dU and dPosition/dV from two independent quad edges.
++    // Using UV deltas handles reversed ranges and 90-degree face rotations
++    // without depending on vertex ordering or on a particular pane template.
++    for a in 1..4 {
++        for b in a + 1..4 {
++            let uv_a = [quad.uv[a][0] - quad.uv[0][0], quad.uv[a][1] - quad.uv[0][1]];
++            let uv_b = [quad.uv[b][0] - quad.uv[0][0], quad.uv[b][1] - quad.uv[0][1]];
++            let determinant = uv_a[0] * uv_b[1] - uv_b[0] * uv_a[1];
++            if !determinant.is_finite() || determinant.abs() < 1.0e-8 {
++                continue;
++            }
++            let edge_a: [f32; 3] =
++                std::array::from_fn(|i| quad.positions[a][i] - quad.positions[0][i]);
++            let edge_b: [f32; 3] =
++                std::array::from_fn(|i| quad.positions[b][i] - quad.positions[0][i]);
++            let right = cardinal(std::array::from_fn(|i| {
++                (uv_b[1] * edge_a[i] - uv_a[1] * edge_b[i]) / determinant
++            }))?;
++            let up = cardinal(std::array::from_fn(|i| {
++                (uv_b[0] * edge_a[i] - uv_a[0] * edge_b[i]) / determinant
++            }))?;
++            let dot = |a: [i32; 3], b: [i32; 3]| (0..3).map(|i| a[i] * b[i]).sum::<i32>();
++            return (dot(up, right) == 0
++                && dot(up, Direction::ALL[quad.facing as usize].normal()) == 0
++                && dot(right, Direction::ALL[quad.facing as usize].normal()) == 0)
++                .then_some((up, right));
++        }
++    }
++    None
++}
++fn neg(a: [i32; 3]) -> [i32; 3] {
++    a.map(|n| -n)
++}
++fn add(a: [i32; 3], b: [i32; 3]) -> [i32; 3] {
++    std::array::from_fn(|i| a[i] + b[i])
++}
++/// Increasing texture U goes right; decreasing V goes up. These bases follow
++/// the engine's unrotated block-face UV conventions, including horizontal faces.
++fn axes(face: Direction) -> ([i32; 3], [i32; 3]) {
++    match face {
++        Direction::Down => ([0, 0, 1], [1, 0, 0]),
++        Direction::Up => ([0, 0, -1], [1, 0, 0]),
++        Direction::North => ([0, 1, 0], [-1, 0, 0]),
++        Direction::South => ([0, 1, 0], [1, 0, 0]),
++        Direction::West => ([0, 1, 0], [0, 0, 1]),
++        Direction::East => ([0, 1, 0], [0, 0, -1]),
++    }
++}
++// Standard 47-tile CTM arrangement. Low bits are connections U,R,D,L;
++// high bits are the inner-corner connections UR,DR,DL,UL. The tile layout
++// was checked against the visible borders of the supplied glass PNGs.
++const CTM_MASKS: [u8; 47] = [
++    0, 2, 10, 8, 6, 12, 7, 14, 31, 47, 207, 159, 4, 38, 110, 76, 3, 9, 11, 13, 143, 79, 111, 63, 5,
++    55, 255, 205, 39, 78, 23, 46, 223, 191, 95, 175, 1, 19, 155, 137, 27, 141, 139, 77, 239, 127,
++    15,
++];
++fn canonical_mask(mut mask: u8) -> u8 {
++    for (corner, (a, b)) in [(0, 1), (1, 2), (2, 3), (3, 0)].into_iter().enumerate() {
++        if mask & (1 << a) == 0 || mask & (1 << b) == 0 {
++            mask &= !(1 << (corner + 4));
++        }
++    }
++    mask
++}
++fn ctm_index(mask: u8) -> usize {
++    CTM_MASKS
++        .iter()
++        .position(|&m| m == canonical_mask(mask))
++        .unwrap_or(0)
++}
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++    #[test]
++    fn all_256_neighborhoods_have_one_of_47_unique_tiles() {
++        let unique: BTreeSet<_> = CTM_MASKS.into_iter().collect();
++        assert_eq!(unique.len(), 47);
++        for mask in 0..=u8::MAX {
++            assert_eq!(CTM_MASKS[ctm_index(mask)], canonical_mask(mask));
++        }
++        assert_eq!(ctm_index(0), 0);
++        assert_eq!(ctm_index(255), 26);
++        assert_eq!(ctm_index(15), 46);
++    }
++    #[test]
++    fn diagonal_does_not_connect_across_absent_cardinal() {
++        assert_eq!(ctm_index(0xf0), 0);
++        assert_eq!(ctm_index(0xf2), 1);
++        assert_ne!(ctm_index(2 | 4), ctm_index(2 | 4 | 32));
++    }
++    #[test]
++    fn face_bases_are_perpendicular_and_follow_uv_orientation() {
++        for face in Direction::ALL {
++            let (up, right) = axes(face);
++            let normal = face.normal();
++            let dot = |a: [i32; 3], b: [i32; 3]| (0..3).map(|i| a[i] * b[i]).sum::<i32>();
++            assert_eq!(dot(up, right), 0);
++            assert_eq!(dot(up, normal), 0);
++            assert_eq!(dot(right, normal), 0);
++            assert_eq!(dot(up, up), 1);
++            assert_eq!(dot(right, right), 1);
++        }
++        assert_eq!(axes(Direction::North), ([0, 1, 0], [-1, 0, 0]));
++        assert_eq!(axes(Direction::South), ([0, 1, 0], [1, 0, 0]));
++        assert_eq!(axes(Direction::Up), ([0, 0, -1], [1, 0, 0]));
++        assert_eq!(axes(Direction::Down), ([0, 0, 1], [1, 0, 0]));
++    }
++    #[test]
++    fn parser_handles_crlf_and_expands_only_bounded_ranges() {
++        let p = properties("# comment\r\nmethod=horizontal\r\ntiles=0-3\r\n");
++        assert_eq!(p["method"], "horizontal");
++        assert_eq!(expand_tiles(&p["tiles"]).unwrap(), vec!["0", "1", "2", "3"]);
++        assert!(expand_tiles("0-999999999").is_err());
++        assert!(expand_tiles("4-2").is_err());
++        assert!(tile_resource("minecraft", "optifine/ctm/test", "../secret").is_err());
++        assert!(tile_resource("minecraft", "optifine/ctm/test", "/secret").is_err());
++    }
++    #[test]
++    fn block_matching_preserves_namespace_and_property_alternatives() {
++        let state = BlockState {
++            name: "minecraft:oak_log".to_owned(),
++            properties: BTreeMap::from([("axis".to_owned(), "x".to_owned())]),
++        };
++        assert!(block_pattern("oak_log:axis=x,z").unwrap().matches(&state));
++        assert!(
++            block_pattern("minecraft:oak_log:axis=x,z")
++                .unwrap()
++                .matches(&state)
++        );
++        assert!(!block_pattern("oak_log:axis=y").unwrap().matches(&state));
++        assert!(!block_pattern("mod:oak_log:axis=x").unwrap().matches(&state));
++        assert_eq!(tile_name("glass.png").unwrap(), "minecraft:block/glass");
++        assert_eq!(
++            tile_name("mod:textures/block/glass.png").unwrap(),
++            "mod:block/glass"
++        );
++    }
++    fn fixture(method: Method, connect: Connect, faces: u8) -> ConnectedTextures {
++        let count = match method {
++            Method::Ctm => 47,
++            Method::Horizontal => 4,
++            Method::Top => 1,
++        };
++        ConnectedTextures {
++            rules: vec![Rule {
++                method,
++                connect,
++                faces,
++                layers: BTreeSet::from([5]),
++                blocks: Vec::new(),
++                tiles: (100..100 + count).collect(),
++                weight: 0,
++                source: String::new(),
++            }],
++            by_state: vec![vec![], vec![0], vec![0], vec![]],
++            block_ids: vec![0, 1, 1, 2],
++            tile_states: BTreeMap::from([(
++                (5, Direction::North as u8),
++                BTreeSet::from([BlockStateId(1), BlockStateId(3)]),
++            )]),
++        }
++    }
++    #[test]
++    fn ctm_replacement_connects_across_section_boundaries_on_every_face() {
++        let ctm = fixture(Method::Ctm, Connect::Block, 0x3f);
++        for face in Direction::ALL {
++            let p = BlockPos::new(15, 15, -16);
++            let (up, right) = axes(face);
++            let neighbors = BTreeSet::from(
++                [
++                    p.offset(up[0], up[1], up[2]),
++                    p.offset(right[0], right[1], right[2]),
++                    p.offset(up[0] + right[0], up[1] + right[1], up[2] + right[2]),
++                ]
++                .map(|p| (p.x, p.y, p.z)),
++            );
++            let got = ctm.replacement(BlockStateId(1), 5, face, p, |n| {
++                if neighbors.contains(&(n.x, n.y, n.z)) {
++                    BlockStateId(2)
++                } else {
++                    BlockStateId(0)
++                }
++            });
++            assert_eq!(got, Some(100 + ctm_index(1 | 2 | 16) as u32));
++        }
++    }
++    #[test]
++    fn horizontal_tiles_distinguish_endcaps_and_middle() {
++        let ctm = fixture(Method::Horizontal, Connect::Block, 0x3c);
++        let p = BlockPos::default();
++        assert_eq!(
++            ctm.replacement(BlockStateId(1), 5, Direction::South, p, |_| BlockStateId(0)),
++            Some(103)
++        );
++        assert_eq!(
++            ctm.replacement(BlockStateId(1), 5, Direction::South, p, |n| if n.x > 0 {
++                BlockStateId(1)
++            } else {
++                BlockStateId(0)
++            }),
++            Some(100)
++        );
++        assert_eq!(
++            ctm.replacement(BlockStateId(1), 5, Direction::South, p, |n| if n.x < 0 {
++                BlockStateId(1)
++            } else {
++                BlockStateId(0)
++            }),
++            Some(102)
++        );
++        assert_eq!(
++            ctm.replacement(BlockStateId(1), 5, Direction::South, p, |_| BlockStateId(1)),
++            Some(101)
++        );
++        assert_eq!(
++            ctm.replacement(BlockStateId(1), 5, Direction::Up, p, |_| BlockStateId(1)),
++            None
++        );
++        assert_eq!(
++            ctm.replacement(BlockStateId(1), 6, Direction::South, p, |_| BlockStateId(1)),
++            None
++        );
++    }
++    #[test]
++    fn top_checks_world_above_and_tile_connection_not_block_identity() {
++        let ctm = fixture(Method::Top, Connect::Tile, 0x3f);
++        let p = BlockPos::default();
++        assert_eq!(
++            ctm.replacement(BlockStateId(1), 5, Direction::North, p, |n| if n.y == 1 {
++                BlockStateId(3)
++            } else {
++                BlockStateId(0)
++            }),
++            Some(100)
++        );
++        assert_eq!(
++            ctm.replacement(BlockStateId(1), 5, Direction::North, p, |_| BlockStateId(2)),
++            None
++        );
++        assert_eq!(
++            ctm.replacement(BlockStateId(1), 5, Direction::Up, p, |_| BlockStateId(3)),
++            None
++        );
++        let state = fixture(Method::Horizontal, Connect::State, 0x3f);
++        assert_eq!(
++            state.replacement(BlockStateId(1), 5, Direction::North, p, |_| BlockStateId(2)),
++            Some(103)
++        );
++    }
++    fn quad(face: Direction, uv: [f32; 4]) -> ModelQuad {
++        horizon_assets::bake::bake_flat_face(
++            [7.0, 0.0, 0.0],
++            [9.0, 16.0, 7.0],
++            uv,
++            horizon_assets::model::Direction::ALL[face as usize],
++            horizon_assets::model::Material {
++                sprite: "minecraft:block/glass".to_owned(),
++                force_translucent: false,
++            },
++            -1,
++        )
++        .unwrap()
++    }
++    #[test]
++    fn pane_flipped_uv_connects_the_border_in_texture_space() {
++        // The included pane-side template's west face reverses U (16 -> 9).
++        let pane = quad(Direction::West, [16.0, 0.0, 9.0, 16.0]);
++        assert_eq!(quad_axes(&pane), Some(([0, 1, 0], [0, 0, -1])));
++        let ctm = fixture(Method::Ctm, Connect::Block, 0x3f);
++        let got = ctm.replacement_for_quad(BlockStateId(1), 5, &pane, BlockPos::default(), |p| {
++            if p.z == -1 {
++                BlockStateId(1)
++            } else {
++                BlockStateId(0)
++            }
++        });
++        assert_eq!(got, Some(101)); // Right edge removed, not left edge (tile 3).
++    }
++    #[test]
++    fn rotated_uv_axes_and_degenerate_quads_are_handled() {
++        let mut q = quad(Direction::West, [0.0, 0.0, 16.0, 16.0]);
++        let (old_up, old_right) = quad_axes(&q).unwrap();
++        q.uv = q.uv.map(|[u, v]| [v, 1.0 - u]);
++        assert_eq!(quad_axes(&q), Some((old_right, neg(old_up))));
++        q.uv = [[0.0; 2]; 4];
++        assert_eq!(quad_axes(&q), None);
++        assert_eq!(
++            fixture(Method::Ctm, Connect::Block, 0x3f).replacement_for_quad(
++                BlockStateId(1),
++                5,
++                &q,
++                BlockPos::default(),
++                |_| BlockStateId(1)
++            ),
++            None
++        );
++    }
++    #[test]
++    fn resource_directory_keys_use_forward_slashes_on_all_platforms() {
++        let path = PathBuf::from("optifine").join("ctm").join("glass");
++        assert_eq!(resource_directory(&path), "optifine/ctm/glass");
++        assert_eq!(
++            tile_resource("continuity", &resource_directory(&path), "0").unwrap(),
++            "continuity:optifine/ctm/glass/0"
++        );
++    }
++    #[cfg(unix)]
++    #[test]
++    fn linked_overlay_property_png_and_condition_files_load() {
++        use std::os::unix::fs::symlink;
++        let scratch = std::env::temp_dir().join(format!(
++            "horizon-ctm-links-{}-{}",
++            std::process::id(),
++            std::time::SystemTime::now()
++                .duration_since(std::time::UNIX_EPOCH)
++                .unwrap()
++                .as_nanos()
++        ));
++        fs::create_dir_all(&scratch).unwrap();
++        struct Cleanup(PathBuf);
++        impl Drop for Cleanup {
++            fn drop(&mut self) {
++                let _ = fs::remove_dir_all(&self.0);
++            }
++        }
++        let _cleanup = Cleanup(scratch.clone());
++        let source = scratch.join("source");
++        let root = scratch.join("overlay");
++        let dir = root.join("assets/continuity/optifine/ctm/glass");
++        fs::create_dir_all(&source).unwrap();
++        fs::create_dir_all(&dir).unwrap();
++        fs::create_dir_all(root.join("assets/minecraft/textures/block")).unwrap();
++        let png = source.join("glass.png");
++        {
++            let mut encoder = png::Encoder::new(fs::File::create(&png).unwrap(), 16, 16);
++            encoder.set_color(png::ColorType::Rgba);
++            encoder.set_depth(png::BitDepth::Eight);
++            let mut writer = encoder.write_header().unwrap();
++            writer
++                .write_image_data(&[180, 210, 240, 128].repeat(256))
++                .unwrap();
++        }
++        symlink(&png, root.join("assets/minecraft/textures/block/glass.png")).unwrap();
++        for n in 0..4 {
++            symlink(&png, dir.join(format!("{n}.png"))).unwrap();
++        }
++        let document = source.join("rule.properties");
++        fs::write(&document,"method=horizontal\nmatchTiles=glass\nmatchBlocks=glass\ntiles=0-3\nresourceCondition=textures/block/glass.png\n").unwrap();
++        symlink(&document, dir.join("glass.properties")).unwrap();
++        let mut files = Vec::new();
++        gather(&dir, 0, "continuity", &mut files).unwrap();
++        assert_eq!(files.len(), 1);
++        let mut sprites = Sprites::default();
++        sprites.insert(&root, "minecraft:block/glass").unwrap();
++        let parsed = parse_rule(&root, &files[0].0, files[0].1.clone(), &mut sprites)
++            .unwrap()
++            .unwrap();
++        assert_eq!(parsed.method, Method::Horizontal);
++        assert_eq!(parsed.tiles.len(), 4);
++    }
++}

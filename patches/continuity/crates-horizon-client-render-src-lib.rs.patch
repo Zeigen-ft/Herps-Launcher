@@ -1,0 +1,10 @@
+--- a/crates/horizon-client-render/src/lib.rs
++++ b/crates/horizon-client-render/src/lib.rs
+@@ -23,6 +23,7 @@
+ pub mod clouds;
+ pub mod collisions;
+ pub mod command_block;
++pub mod connected_textures;
+ pub mod containers;
+ pub mod crash;
+ pub mod datapack;

@@ -1,0 +1,83 @@
+--- a/crates/horizon-client-render/src/mesher.rs
++++ b/crates/horizon-client-render/src/mesher.rs
+@@ -1077,6 +1077,25 @@
+                             if face.quad.cull.is_some_and(|d| !visible[d as usize]) {
+                                 continue;
+                             }
++                            let layer = self
++                                .render
++                                .connected_textures
++                                .replacement_for_quad(
++                                    BlockStateId(id),
++                                    face.layer,
++                                    &face.quad,
++                                    world,
++                                    |neighbor| {
++                                        BlockStateId(
++                                            pad.blocks[pi(
++                                                x + neighbor.x - world.x,
++                                                y + neighbor.y - world.y,
++                                                z + neighbor.z - world.z,
++                                            )],
++                                        )
++                                    },
++                                )
++                                .unwrap_or(face.layer);
+                             self.face(
+                                 pad,
+                                 &mut tints,
+@@ -1084,6 +1103,7 @@
+                                 [x, y, z],
+                                 origin,
+                                 face,
++                                layer,
+                                 ao,
+                                 state,
+                             );
+@@ -1121,6 +1141,7 @@
+         pos: [i32; 3],
+         origin: [f32; 3],
+         face: &BakedFace,
++        layer: u32,
+         ao: bool,
+         state: &Info,
+     ) {
+@@ -1143,7 +1164,16 @@
+             ([lighting::gray(directional); 4], [coords; 4])
+         };
+         let tint = Self::tint(state, q.tint_index, tints, pos);
+-        let target = if face.translucent {
++        // A pack can explicitly force a model material into the translucent
++        // pass independently of its pixels; selecting a CTM sprite retains it.
++        let translucent =
++            q.material.force_translucent || self.render.translucent_layers[layer as usize];
++        let opaque = if layer == face.layer {
++            face.opaque
++        } else {
++            self.render.opaque_layers[layer as usize]
++        };
++        let target = if translucent {
+             &mut out.translucent
+         } else {
+             &mut out.solid
+@@ -1160,10 +1190,10 @@
+                 q.uv[i],
+                 // Opaque leaves (forceOpaque) and quads over opaque texels draw in the
+                 // solid layer: no alpha cutout (a dirt path's side skips its clear top row).
+-                if face.opaque && !face.translucent || !self.cutout_leaves && state.leaves {
+-                    face.layer as u16 | OPAQUE_LAYER
++                if opaque && !translucent || !self.cutout_leaves && state.leaves {
++                    layer as u16 | OPAQUE_LAYER
+                 } else {
+-                    face.layer as u16
++                    layer as u16
+                 },
+                 emitting(pack_rgb(rgb), tier),
+                 pack_coords(lighting::with_emission(coords[i], q.light_emission)),
+@@ -1176,3 +1206,6 @@
+ pub fn borrow(region: &Region) -> [[Option<&Chunk>; 3]; 3] {
+     std::array::from_fn(|z| std::array::from_fn(|x| region[z][x].as_deref()))
+ }
++
++#[cfg(test)]
++mod continuity_tests;

@@ -4,10 +4,15 @@ import hashlib
 import importlib.util
 import io
 import json
+import os
+import contextlib
+import shutil
+import subprocess
 from pathlib import Path
 import tarfile
 import tempfile
 import unittest
+from unittest.mock import patch
 
 
 PROJECT = Path(__file__).resolve().parents[1]
@@ -218,6 +223,62 @@ class PrepareTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Symlink"):
             self.stage()
         self.assertFalse(list(elsewhere.iterdir()))
+
+
+    @unittest.skipUnless(shutil.which("git"), "Git is required for verified source exports")
+    def test_git_source_preserves_checksums_and_repeats_without_archive_access(self):
+        checkout = self.root / "checkout"
+        checkout.mkdir()
+        (checkout / "src").mkdir()
+        (checkout / "src/example.rs").write_bytes(self.before)
+        (checkout / "Cargo.lock").write_bytes(self.lockfile)
+        subprocess.check_call(["git", "init", "-q", str(checkout)])
+        subprocess.check_call(["git", "-C", str(checkout), "add", "."])
+        subprocess.check_call(["git", "-C", str(checkout), "-c", "user.name=Fixture",
+                               "-c", "user.email=fixture@example.invalid", "-c", "commit.gpgsign=false",
+                               "commit", "-qm", "fixture"])
+        self.lock["commit"] = subprocess.check_output(["git", "-C", str(checkout), "rev-parse", "HEAD"], text=True).strip()
+        # A deliberately unusable archive lock must stay unchanged in Git mode.
+        self.lock["archive_sha256"] = "0" * 64
+        self.write_manifest()
+        source = prepare.prepare(self.lock, self.manifest, self.cache, git_source=checkout)
+        self.assertEqual((source / "src/example.rs").read_bytes(), self.after)
+        self.assertEqual((source / "Cargo.lock").read_bytes(), self.lockfile)
+        stamp = json.loads((source / prepare.STAMP).read_text())
+        self.assertEqual(stamp["upstream"], self.lock)
+        self.assertEqual(stamp["source_verification"]["commit"], self.lock["commit"])
+        self.assertEqual(source, prepare.prepare(self.lock, self.manifest, self.cache, git_source=checkout))
+        self.entry["before_sha256"] = "0" * 64
+        self.write_manifest()
+        with self.assertRaisesRegex(ValueError, "preimage checksum mismatch"):
+            prepare.prepare(self.lock, self.manifest, self.cache, git_source=checkout)
+        self.assertEqual((checkout / "src/example.rs").read_bytes(), self.before)
+
+    def test_cli_explicit_source_and_archive_override_environment_default(self):
+        configured = self.root / "configured-git-source"
+        explicit = self.root / "explicit-git-source"
+        cases = [([], None, configured),
+                 (["--git-source", str(explicit)], None, explicit),
+                 (["--archive", str(self.archive)], self.archive, None)]
+        for arguments, archive, source in cases:
+            with self.subTest(arguments=arguments), patch.dict(os.environ, {"HERPS_UPSTREAM_GIT_SOURCE": str(configured)}), \
+                    patch("sys.argv", ["prepare_upstream.py", *arguments]), \
+                    patch.object(prepare, "prepare", return_value=self.cache) as staged, \
+                    contextlib.redirect_stdout(io.StringIO()):
+                self.assertEqual(prepare.main(), 0)
+                self.assertEqual(staged.call_args.args[3:], (archive, source))
+
+    def test_cli_default_keeps_checksum_archive_mode_without_explicit_environment(self):
+        with patch.dict(os.environ, {"HERPS_UPSTREAM_GIT_SOURCE": ""}), \
+                patch("sys.argv", ["prepare_upstream.py"]), \
+                patch.object(prepare, "prepare", return_value=self.cache) as staged, \
+                contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(prepare.main(), 0)
+            self.assertEqual(staged.call_args.args[3:], (None, None))
+
+    def test_archive_and_git_source_are_mutually_exclusive(self):
+        with self.assertRaisesRegex(ValueError, "not both"):
+            prepare.prepare(self.lock, self.manifest, self.cache, self.archive, self.root)
 
 
 class UnifiedPatchTests(unittest.TestCase):

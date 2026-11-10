@@ -87,8 +87,11 @@ def build_port_pack(host_target: str) -> tuple[Path, dict]:
         binary_architecture(binary, arch)
         verify_macos_binary(binary, arch)
         verified = {"architecture": arch, "sha256": digest(binary)}
-    return binary, {"source_revision": REVISION, "rust_toolchain": RUST, "target": host_target,
-                    "build_sha256": digest(binary), "binary_validation": verified}
+    evidence = {"source_revision": REVISION, "rust_toolchain": RUST, "target": host_target,
+                "build_sha256": digest(binary), "binary_validation": verified}
+    if "source_verification" in stamp:
+        evidence["source_verification"] = stamp["source_verification"]
+    return binary, evidence
 
 
 def pyinstaller_command(output: Path, build: Path, helper: Path, port_pack: Path, host_target: str) -> list:

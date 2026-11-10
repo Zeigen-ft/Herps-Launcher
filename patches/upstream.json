@@ -120,6 +120,42 @@
       "before_sha256": "0fcca49d533dcc39777140f52aeaeb373543b6c5cdb55b5c9aeb82591a8537a2",
       "after_sha256": "18c0b8f8cca9cff45280ed9460bb4831d07caf026c737323e159760db9364926",
       "patch": "engine/crates-horizon-shaders-src-translate-mod.rs.patch"
+    },
+    {
+      "path": "crates/horizon-client-render/src/assets.rs",
+      "before_sha256": "b74dc37b7b8f96c367b337b7acf5dac40dfd561ecd185e479817e536df6601c0",
+      "after_sha256": "637e7fef438e3494e254039d393125e19ed1f450f825bb9dbf82c3dd2ad088ac",
+      "patch": "continuity/crates-horizon-client-render-src-assets.rs.patch"
+    },
+    {
+      "path": "crates/horizon-client-render/src/lib.rs",
+      "before_sha256": "8ec225beadc21a50294e27792ef96425c10eae1f58509a3160d6038e8999daed",
+      "after_sha256": "d3a74a48b3e020d152a88556543affa8b601987db6dbe62117891683b6b83f39",
+      "patch": "continuity/crates-horizon-client-render-src-lib.rs.patch"
+    },
+    {
+      "path": "crates/horizon-client-render/src/mesher.rs",
+      "before_sha256": "a9b468148da238ac20dc3a471703e49dc0878a860b73ae5a903a3986d07e1d49",
+      "after_sha256": "059514a951569f9a8c279fb8cb3f189d8692c3433f7354282548d176e70d0f88",
+      "patch": "continuity/crates-horizon-client-render-src-mesher.rs.patch"
+    },
+    {
+      "path": "crates/horizon-client-render/src/sprites.rs",
+      "before_sha256": "ec14164a23d002cbf23ce3fb59c837705d1b7a4620df209ce1fea84b3be2474d",
+      "after_sha256": "8d8104dc66a08f1d78a5ac9e9717b25c7c3e6ab1e759afebb4182bdbf3ef30db",
+      "patch": "continuity/crates-horizon-client-render-src-sprites.rs.patch"
+    },
+    {
+      "path": "crates/horizon-client-render/src/connected_textures.rs",
+      "before_sha256": null,
+      "after_sha256": "d8838721fc4dd145d3ff7a929b5c90b3b03040631cd6f3d6a3d9f608e13d6193",
+      "patch": "continuity/crates-horizon-client-render-src-connected_textures.rs.patch"
+    },
+    {
+      "path": "crates/horizon-client-render/src/mesher/continuity_tests.rs",
+      "before_sha256": null,
+      "after_sha256": "3a633e4e6c75073134bc961e4e98ed22d4b2d19b1b701fb36b4474f678daa2e4",
+      "patch": "continuity/crates-horizon-client-render-src-mesher-continuity_tests.rs.patch"
     }
   ]
 }

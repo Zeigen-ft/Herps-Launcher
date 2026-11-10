@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
-"""Fetch the pinned public source with TLS and archive checksum verification."""
+"""Fetch checksum-locked archives or export a hash-verified pinned Git commit."""
 from __future__ import annotations
 
 import argparse
 import hashlib
 import json
 import os
+import re
+import stat
+import subprocess
 from pathlib import Path, PurePosixPath
 import shutil
 import sys
@@ -67,6 +70,138 @@ def unpack(archive: Path, destination: Path, prefix: str) -> None:
             with source, target.open("xb") as output:
                 shutil.copyfileobj(source, output)
             target.chmod(0o755 if member.mode & 0o111 else 0o644)
+
+
+def export_git(lock: dict, source: Path, destination: Path) -> dict:
+    """Export the locked commit's verified objects, never a working-tree snapshot.
+
+    This explicit alternative is useful when a repository rename changes GitHub's
+    generated archive bytes. The archive lock is deliberately not weakened.
+    """
+    revision = lock.get("commit", "")
+    if not isinstance(revision, str) or not re.fullmatch(r"[0-9a-f]{40}", revision):
+        raise ValueError("Git source requires a full pinned SHA-1 commit")
+    for part in (source, *source.parents):
+        if part.is_symlink():
+            raise ValueError("Symlinked Git source paths are unsupported")
+    source = source.resolve(strict=True)
+    env = dict(os.environ, GIT_NO_REPLACE_OBJECTS="1", GIT_OPTIONAL_LOCKS="0")
+    # Do not permit caller-supplied repository/index/object selectors to redirect
+    # verification away from the explicitly selected source.
+    for key in ("GIT_DIR", "GIT_COMMON_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE",
+                "GIT_OBJECT_DIRECTORY", "GIT_ALTERNATE_OBJECT_DIRECTORIES"):
+        env.pop(key, None)
+    command = ["git", "--no-replace-objects", "-C", str(source),
+               "-c", "core.fsmonitor=false", "-c", "core.hooksPath=/dev/null"]
+    def git(*args):
+        try:
+            return subprocess.run(command + list(args), env=env, check=True,
+                                  stdout=subprocess.PIPE, stderr=subprocess.PIPE).stdout
+        except subprocess.CalledProcessError as error:
+            raise ValueError("Git source verification failed") from error
+    if Path(os.fsdecode(git("rev-parse", "--show-toplevel").strip())).resolve() != source:
+        raise ValueError("Git source must identify the checkout root")
+    if git("rev-parse", "--verify", "HEAD^{commit}").decode().strip() != revision:
+        raise ValueError("Git checkout HEAD does not match the pinned commit")
+    if git("status", "--porcelain=v1", "-z", "--untracked-files=all", "--ignored=matching"):
+        raise ValueError("Git source contains local changes or extra files; preserve it")
+    process = subprocess.Popen(command + ["cat-file", "--batch"], env=env,
+                               stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                               stderr=subprocess.DEVNULL)
+    total, count = 0, 0
+    def read_object(oid, kind):
+        nonlocal total, count
+        process.stdin.write(oid.encode() + b"\n")
+        process.stdin.flush()
+        header = process.stdout.readline().split()
+        if len(header) != 3 or header[0].decode() != oid or header[1].decode() != kind:
+            raise ValueError("Missing or invalid Git source object")
+        size = int(header[2])
+        total += size
+        count += 1
+        if size < 0 or total > MAX_EXPANDED_BYTES or count > 50000:
+            raise ValueError("Git source exceeds export limits")
+        data = process.stdout.read(size)
+        if len(data) != size or process.stdout.read(1) != b"\n":
+            raise ValueError("Truncated Git source object")
+        actual = hashlib.sha1(kind.encode() + b" " + str(size).encode() + b"\0" + data).hexdigest()
+        if actual != oid:
+            raise ValueError("Git source object checksum mismatch")
+        return data
+    try:
+        commit = read_object(revision, "commit")
+        match = re.match(rb"tree ([0-9a-f]{40})\n", commit)
+        if not match:
+            raise ValueError("Pinned Git commit has no valid tree")
+        tree = match[1].decode()
+        entries, seen = {}, set()
+        def walk(oid, prefix=""):
+            raw = read_object(oid, "tree")
+            offset = 0
+            while offset < len(raw):
+                space, end = raw.find(b" ", offset), raw.find(b"\0", offset)
+                if space < offset or end <= space or end + 21 > len(raw):
+                    raise ValueError("Invalid Git source tree entry")
+                mode = raw[offset:space].decode("ascii")
+                name = raw[space + 1:end].decode("utf-8")
+                child = raw[end + 1:end + 21].hex()
+                offset = end + 21
+                if not name or name in (".", "..") or any(c in name for c in "/\\:\0") or name.casefold() == ".git":
+                    raise ValueError("Unsafe Git source path")
+                reserved = {"con", "prn", "aux", "nul", *[f"{kind}{n}" for kind in ("com", "lpt") for n in range(1, 10)]}
+                if name.endswith((".", " ")) or name.split(".")[0].casefold() in reserved:
+                    raise ValueError("Unsafe portable Git source path")
+                path = prefix + name
+                identity = path.casefold()
+                if identity in seen:
+                    raise ValueError("Duplicate Git source path")
+                seen.add(identity)
+                if mode == "40000":
+                    walk(child, path + "/")
+                elif mode in ("100644", "100755", "120000"):
+                    entries[path] = (mode, read_object(child, "blob"))
+                else:
+                    raise ValueError("Unsupported Git source mode (including submodules)")
+        walk(tree)
+        # Check real checkout bytes as well: clean/smudge filters and a stale
+        # index must not disguise edited source. Export still uses verified blobs.
+        for name, (mode, data) in entries.items():
+            target = source.joinpath(*PurePosixPath(name).parts)
+            for parent in target.parents:
+                if parent == source:
+                    break
+                if parent.is_symlink():
+                    raise ValueError("Symlinked Git source parent")
+            info = target.lstat()
+            if mode == "120000":
+                # Git on Windows commonly checks out a symlink as its exact
+                # link-blob text when core.symlinks=false. Both representations
+                # are verified, and neither is followed during export.
+                actual = (os.fsencode(os.readlink(target)) if stat.S_ISLNK(info.st_mode)
+                          else target.read_bytes() if stat.S_ISREG(info.st_mode) else None)
+                if actual != data:
+                    raise ValueError("Git source link does not match its committed blob")
+            elif (not stat.S_ISREG(info.st_mode) or target.read_bytes() != data
+                  or (os.name != "nt" and bool(info.st_mode & 0o111) != (mode == "100755"))):
+                raise ValueError("Git source file does not match its committed blob")
+        for name, (mode, data) in entries.items():
+            if mode == "120000":
+                link = PurePosixPath(os.fsdecode(data))
+                original = entries.get(str(PurePosixPath(name).parent / link))
+                if (link.is_absolute() or len(link.parts) != 1 or link.parts[0] in (".", "..")
+                        or original is None or original[0] not in ("100644", "100755")):
+                    raise ValueError("Unsafe Git source link")
+                mode, data = original
+            target = destination.joinpath(*PurePosixPath(name).parts)
+            target.parent.mkdir(parents=True, exist_ok=True)
+            with target.open("xb") as output:
+                output.write(data)
+            target.chmod(0o755 if mode == "100755" else 0o644)
+        return {"method": "git-object-hash", "commit": revision, "tree": tree}
+    finally:
+        process.stdin.close()
+        process.stdout.close()
+        process.wait()
 
 
 def fetch(lock: dict, cache: Path, supplied_archive: Path | None = None) -> Path:

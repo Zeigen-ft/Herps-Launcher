@@ -1,0 +1,381 @@
+--- /dev/null
++++ b/crates/horizon-client-render/src/mesher/continuity_tests.rs
+@@ -0,0 +1,378 @@
++//! Generated geometry fixtures: no prepared game resources or third-party code.
++use super::*;
++use crate::{
++    assets::Properties, connected_textures::ConnectedTextures, models::StateModels,
++    sprites::Sprites,
++};
++use horizon_world::registry::BlockRegistry;
++use serde_json::json;
++use std::{
++    collections::{BTreeMap, BTreeSet},
++    fs,
++    path::{Path, PathBuf},
++    sync::atomic::{AtomicU64, Ordering},
++};
++
++static NEXT: AtomicU64 = AtomicU64::new(0);
++struct Fixture(PathBuf);
++impl Fixture {
++    fn new(alpha: u8, force_translucent: bool) -> Self {
++        let dir = std::env::temp_dir().join(format!(
++            "herps-ctm-mesh-{}-{}",
++            std::process::id(),
++            NEXT.fetch_add(1, Ordering::Relaxed)
++        ));
++        fs::create_dir_all(&dir).unwrap();
++        let f = Self(dir);
++        f.write(
++            "assets/minecraft/blockstates/glass.json",
++            &json!({"variants":{"":{"model":"minecraft:block/glass"}}}).to_string(),
++        );
++        f.write("assets/minecraft/models/block/glass.json", &json!({
++            "ambientocclusion":false,
++            "textures":{"all":{"sprite":"minecraft:block/glass","force_translucent":force_translucent}},
++            "elements":[{"from":[0,0,0],"to":[16,16,16],"faces":{"south":{"texture":"#all","uv":[0,0,16,16]}}}]
++        }).to_string());
++        f.png(
++            "assets/minecraft/textures/block/glass.png",
++            [253, 19, 7, alpha],
++        );
++        for (i, name) in ["grass", "foliage", "dry_foliage"].into_iter().enumerate() {
++            f.png(
++                &format!("assets/minecraft/textures/colormap/{name}.png"),
++                [32 + i as u8, 80, 40, 255],
++            );
++        }
++        f.write("data/minecraft/worldgen/biome/plains.json", "{}");
++        f
++    }
++    fn write(&self, name: &str, text: &str) {
++        let p = self.0.join(name);
++        fs::create_dir_all(p.parent().unwrap()).unwrap();
++        fs::write(p, text).unwrap();
++    }
++    fn png(&self, name: &str, rgba: [u8; 4]) {
++        let p = self.0.join(name);
++        fs::create_dir_all(p.parent().unwrap()).unwrap();
++        let mut encoder = png::Encoder::new(fs::File::create(p).unwrap(), 16, 16);
++        encoder.set_color(png::ColorType::Rgba);
++        encoder.set_depth(png::BitDepth::Eight);
++        encoder
++            .write_header()
++            .unwrap()
++            .write_image_data(&rgba.repeat(256))
++            .unwrap();
++    }
++    fn rules(&self, alpha: u8) {
++        self.write(
++            "assets/minecraft/optifine/ctm/test/glass.properties",
++            "method=ctm\nmatchBlocks=glass\nmatchTiles=glass\ntiles=0-46\nconnect=block\nresourceCondition=textures/block/glass.png\n",
++        );
++        for i in 0..47 {
++            self.png(
++                &format!("assets/minecraft/optifine/ctm/test/{i}.png"),
++                [i, 100, 200, alpha],
++            );
++        }
++    }
++    fn assets(&self) -> Assets {
++        let registry=BlockRegistry::from_facts_json(&br#"{"defaults":{"minecraft:air":0,"minecraft:glass":1},"states":[["air",true,false,"","minecraft:air"],["glass",false,false,"","minecraft:glass"]]}"#[..]).unwrap();
++        Assets {
++            registry: Box::leak(Box::new(registry)),
++            properties: Properties::for_tests(&[
++                (true, false, false, false),
++                (false, false, true, true),
++            ]),
++            material_states: [BlockStateId(1); 6],
++            blocks_fluid_flow: BTreeSet::new(),
++        }
++    }
++    fn render(&self, assets: &Assets) -> RenderAssets {
++        let mut sprites = Sprites::default();
++        // The exact-input fixture populates every documented condition texture;
++        // register them as ordinary model sprites before CTM compiles matchTiles.
++        let mut textures: Vec<_> = fs::read_dir(self.0.join("assets/minecraft/textures/block"))
++            .unwrap()
++            .map(|entry| entry.unwrap().path())
++            .collect();
++        textures.sort();
++        for path in textures {
++            if path.extension().and_then(|e| e.to_str()) == Some("png") {
++                let name = format!(
++                    "minecraft:block/{}",
++                    path.file_stem().unwrap().to_str().unwrap()
++                );
++                sprites.insert(&self.0, &name).unwrap();
++            }
++        }
++        let facts = BTreeMap::from([(
++            "minecraft:glass".to_owned(),
++            json!({"schema":{},"states":[{}]}),
++        )]);
++        let catalog =
++            StateModels::from_facts(&self.0, assets.registry, &["glass"], &mut sprites, &facts)
++                .unwrap();
++        let connected_textures =
++            ConnectedTextures::load(&self.0, assets.registry, &mut sprites, &catalog).unwrap();
++        sprites.finish();
++        let texture_layers = sprites.count() as u32;
++        RenderAssets {
++            sprite_size: sprites.size,
++            sprite_minimum_size: sprites.minimum_size,
++            pixels: sprites.pixels,
++            texture_layers,
++            model_catalog: catalog,
++            model_library: Err("no item models in generated fixture".into()),
++            model_placements: vec![],
++            model_gallery: vec![],
++            animations: sprites.animations,
++            sprite_layers: sprites.layers,
++            translucent_layers: sprites.translucent,
++            opaque_layers: sprites.opaque,
++            connected_textures,
++            sprite_mips: sprites.mips,
++        }
++    }
++    fn mesh(
++        &self,
++        assets: &Assets,
++        render: &RenderAssets,
++        center: &Chunk,
++        east: Option<&Chunk>,
++        sy: i32,
++    ) -> SectionMesh {
++        let air = Info {
++            solid: false,
++            full: false,
++            permeable: true,
++            shade: 1.0,
++            emission: 0,
++            tier: 0,
++            emissive: false,
++            fluid: FluidState::EMPTY,
++            model: false,
++            block_entity: false,
++            tints: [Tint::None; 2],
++            tint_count: 0,
++            offset: None,
++            legacy_solid: false,
++            overlay: false,
++            leaves: false,
++            blocks_flow: false,
++            ice: false,
++            sturdy: 0,
++            face: [0; 6],
++            cover: [0.0; 6],
++        };
++        let mut glass = air;
++        glass.model = true;
++        let visibility = FaceVisibility::empty();
++        let tables = MeshTables {
++            info: vec![air, glass],
++            visibility: visibility.clone(),
++            water_still: 0,
++            water_flow: 0,
++            water_overlay: 0,
++            lava_still: 0,
++            lava_flow: 0,
++        };
++        let biomes = Biomes::load(&self.0).unwrap();
++        let mut mesher = Mesher {
++            nether_shading: false,
++            assets,
++            render,
++            tables: &tables,
++            biomes: &biomes,
++            visibility,
++            zoom: BiomeZoom::new(7),
++            blend_radius: 0,
++            smooth_lighting: false,
++            cutout_leaves: true,
++        };
++        let mut region = [[None; 3]; 3];
++        region[1][1] = Some(center);
++        region[1][2] = east;
++        mesher.mesh(&region, sy)
++    }
++}
++impl Drop for Fixture {
++    fn drop(&mut self) {
++        let _ = fs::remove_dir_all(&self.0);
++    }
++}
++fn layer_at(mesh: &SectionMesh, pos: [i32; 3]) -> u16 {
++    let [x, y, z] = pos.map(|v| v as f32);
++    let face = mesh
++        .solid
++        .chunks_exact(4)
++        .chain(mesh.translucent.chunks_exact(4))
++        .find(|q| {
++            q.iter().all(|v| v.pos[2] == z + 1.0)
++                && q.iter().map(|v| v.pos[0]).fold(f32::INFINITY, f32::min) == x
++                && q.iter().map(|v| v.pos[1]).fold(f32::INFINITY, f32::min) == y
++        })
++        .expect("generated south face was actually meshed");
++    let layer = face[0].layer & !OPAQUE_LAYER;
++    assert!(face.iter().all(|v| v.layer & !OPAQUE_LAYER == layer));
++    layer
++}
++fn center(points: &[[i32; 3]]) -> Chunk {
++    let mut c = Chunk::empty(0, 0);
++    for &[x, y, z] in points {
++        c.set(x, MIN_Y + y, z, 1);
++    }
++    c
++}
++
++#[test]
++fn adjacent_glass_changes_real_mesh_and_reload_removes_rules() {
++    let f = Fixture::new(128, false);
++    let assets = f.assets();
++    let plain = f.render(&assets);
++    let chunk = center(&[[4, 4, 4], [5, 4, 4]]);
++    let original = f.mesh(&assets, &plain, &chunk, None, 0);
++    assert!(plain.connected_textures.is_empty());
++    assert_eq!(original.solid.len(), 0);
++    assert_eq!(original.translucent.len(), 8);
++    let base = layer_at(&original, [4, 4, 4]);
++    f.rules(128);
++    let connected = f.render(&assets);
++    assert_eq!(connected.connected_textures.rule_count(), 1);
++    let mesh = f.mesh(&assets, &connected, &chunk, None, 0);
++    assert_eq!(mesh.solid.len(), 0);
++    assert_eq!(mesh.translucent.len(), 8);
++    assert_ne!(layer_at(&mesh, [4, 4, 4]), base);
++    assert_ne!(layer_at(&mesh, [4, 4, 4]), layer_at(&mesh, [5, 4, 4]));
++    fs::remove_dir_all(f.0.join("assets/minecraft/optifine")).unwrap();
++    let reloaded = f.render(&assets);
++    let restored = f.mesh(&assets, &reloaded, &chunk, None, 0);
++    assert!(reloaded.connected_textures.is_empty());
++    assert_eq!(layer_at(&restored, [4, 4, 4]), base);
++    assert_eq!(
++        bytemuck::cast_slice::<TerrainVertex, u8>(&restored.translucent),
++        bytemuck::cast_slice::<TerrainVertex, u8>(&original.translucent)
++    );
++}
++
++#[test]
++fn diagonal_and_chunk_section_neighbors_reach_the_real_mesher() {
++    let f = Fixture::new(128, false);
++    f.rules(128);
++    let a = f.assets();
++    let r = f.render(&a);
++    let corner = center(&[[4, 4, 4], [5, 4, 4], [4, 5, 4]]);
++    let filled = center(&[[4, 4, 4], [5, 4, 4], [4, 5, 4], [5, 5, 4]]);
++    assert_ne!(
++        layer_at(&f.mesh(&a, &r, &corner, None, 0), [4, 4, 4]),
++        layer_at(&f.mesh(&a, &r, &filled, None, 0), [4, 4, 4])
++    );
++    let isolated = center(&[[15, 15, 4]]);
++    let vertical = center(&[[15, 15, 4], [15, 16, 4]]);
++    let mut east = Chunk::empty(1, 0);
++    east.set(0, MIN_Y + 15, 4, 1);
++    east.set(0, MIN_Y + 16, 4, 1);
++    let none = f.mesh(&a, &r, &isolated, None, 0);
++    let edge = f.mesh(&a, &r, &vertical, Some(&east), 0);
++    assert_ne!(layer_at(&none, [15, 15, 4]), layer_at(&edge, [15, 15, 4]));
++    assert_eq!(
++        layer_at(&edge, [15, 15, 4]),
++        layer_at(&f.mesh(&a, &r, &filled, None, 0), [4, 4, 4])
++    );
++}
++
++#[test]
++fn forced_translucent_material_remains_translucent_with_opaque_ctm_pixels() {
++    let f = Fixture::new(255, true);
++    f.rules(255);
++    let a = f.assets();
++    let r = f.render(&a);
++    let mesh = f.mesh(&a, &r, &center(&[[4, 4, 4], [5, 4, 4]]), None, 0);
++    assert_eq!(mesh.solid.len(), 0);
++    assert_eq!(mesh.translucent.len(), 8);
++    assert!(mesh.translucent.iter().all(|v| v.layer & OPAQUE_LAYER == 0));
++}
++
++#[cfg(unix)]
++#[test]
++fn symlinked_overlay_properties_and_replacement_images_are_loaded() {
++    let f = Fixture::new(128, false);
++    f.rules(128);
++    let src = f.0.join("assets/minecraft/optifine/ctm/test");
++    let external = f.0.join("original-pack-files");
++    fs::create_dir_all(&external).unwrap();
++    for name in
++        std::iter::once("glass.properties".to_owned()).chain((0..47).map(|i| format!("{i}.png")))
++    {
++        fs::rename(src.join(&name), external.join(&name)).unwrap();
++        std::os::unix::fs::symlink(external.join(&name), src.join(&name)).unwrap();
++    }
++    let condition = f.0.join("assets/minecraft/textures/block/glass.png");
++    fs::rename(&condition, external.join("glass-base.png")).unwrap();
++    std::os::unix::fs::symlink(external.join("glass-base.png"), &condition).unwrap();
++    let a = f.assets();
++    let r = f.render(&a);
++    assert_eq!(r.connected_textures.rule_count(), 1);
++    let mesh = f.mesh(&a, &r, &center(&[[4, 4, 4], [5, 4, 4]]), None, 0);
++    assert_eq!(mesh.translucent.len(), 8);
++}
++
++#[test]
++#[ignore = "requires HERPS_CONTINUITY_PACK pointing to the extracted uploaded Continuity default resource pack"]
++fn uploaded_default_pack_loads_all_42_rules_and_changes_real_glass_mesh() {
++    use std::io::Read;
++    let input = std::env::var_os("HERPS_CONTINUITY_PACK")
++        .expect("HERPS_CONTINUITY_PACK must be set for the exact-input validation");
++    let f = Fixture::new(128, false);
++    let mut zip = zip::ZipArchive::new(fs::File::open(input).unwrap()).unwrap();
++    for i in 0..zip.len() {
++        let mut entry = zip.by_index(i).unwrap();
++        if entry.is_dir() {
++            continue;
++        }
++        let relative = entry.enclosed_name().unwrap();
++        let out = f.0.join(relative);
++        fs::create_dir_all(out.parent().unwrap()).unwrap();
++        let mut bytes = Vec::new();
++        entry.read_to_end(&mut bytes).unwrap();
++        fs::write(out, bytes).unwrap();
++    }
++    let ctm = f.0.join("assets/continuity/optifine/ctm/default");
++    fn populate_conditions(root: &Path, dir: &Path) {
++        for entry in fs::read_dir(dir).unwrap() {
++            let path = entry.unwrap().path();
++            if path.is_dir() {
++                populate_conditions(root, &path);
++                continue;
++            }
++            if path.extension().and_then(|e| e.to_str()) != Some("properties") {
++                continue;
++            }
++            let text = fs::read_to_string(&path).unwrap();
++            if let Some(relative) = text
++                .lines()
++                .find_map(|line| line.trim().strip_prefix("resourceCondition="))
++            {
++                let target = root.join("assets/minecraft").join(relative);
++                fs::create_dir_all(target.parent().unwrap()).unwrap();
++                fs::copy(path.parent().unwrap().join("0.png"), target).unwrap();
++            }
++        }
++    }
++    populate_conditions(&f.0, &ctm);
++    let a = f.assets();
++    let r = f.render(&a);
++    assert_eq!(r.connected_textures.rule_count(), 42);
++    let single = f.mesh(&a, &r, &center(&[[4, 4, 4]]), None, 0);
++    let joined = f.mesh(&a, &r, &center(&[[4, 4, 4], [5, 4, 4]]), None, 0);
++    assert_ne!(layer_at(&single, [4, 4, 4]), layer_at(&joined, [4, 4, 4]));
++    let selected = usize::from(layer_at(&joined, [4, 4, 4]));
++    let bytes = (r.sprite_size * r.sprite_size * 4) as usize;
++    assert!(
++        r.pixels[selected * bytes..(selected + 1) * bytes]
++            .iter()
++            .any(|&v| v != 0)
++    );
++    println!(
++        "Original Continuity default pack: 42 rules loaded; connected glass changed an actual section mesh; selected replacement pixels are nonempty."
++    );
++}

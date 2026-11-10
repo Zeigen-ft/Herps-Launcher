@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Stage checksum-locked Herspers engine patches over a pristine upstream archive."""
+"""Stage checksum-locked engine patches over verified archive or Git source."""
 from __future__ import annotations
 
 import argparse
@@ -116,7 +116,10 @@ def tree_digest(root: Path) -> str:
     return digest.hexdigest()
 
 
-def prepare(lock: dict, manifest_path: Path, cache: Path, supplied_archive: Path | None = None) -> Path:
+def prepare(lock: dict, manifest_path: Path, cache: Path, supplied_archive: Path | None = None,
+            git_source: Path | None = None) -> Path:
+    if supplied_archive is not None and git_source is not None:
+        raise ValueError("Choose an archive or a Git source, not both")
     ordinary(manifest_path, manifest_path.parent)
     raw_manifest = manifest_path.read_bytes()
     manifest = json.loads(raw_manifest)
@@ -151,12 +154,15 @@ def prepare(lock: dict, manifest_path: Path, cache: Path, supplied_archive: Path
     no_links(upstream_cache)
     if supplied_archive is not None:
         ordinary(supplied_archive, supplied_archive.parent)
-    fetcher.fetch(lock, upstream_cache, supplied_archive)
-    archive = supplied_archive or upstream_cache / f"{lock['commit']}.tar.gz"
-    ordinary(archive, archive.parent)
+    archive = None
+    if git_source is None:
+        fetcher.fetch(lock, upstream_cache, supplied_archive)
+        archive = supplied_archive or upstream_cache / f"{lock['commit']}.tar.gz"
+        ordinary(archive, archive.parent)
     patch_hash = fingerprint.hexdigest()
     cache.mkdir(parents=True, exist_ok=True)
-    destination = cache / f"{lock['commit']}-{patch_hash}"
+    suffix = "-git" if git_source is not None else ""
+    destination = cache / f"{lock['commit']}-{patch_hash}{suffix}"
     lease = cache / f".{destination.name}.preparing"
     try:
         lease.mkdir()
@@ -165,9 +171,13 @@ def prepare(lock: dict, manifest_path: Path, cache: Path, supplied_archive: Path
     stage = None
     try:
         stage = Path(tempfile.mkdtemp(prefix="source-", dir=cache))
-        fetcher.unpack(archive, stage, lock["archive_root"])
+        provenance = None
+        if git_source is not None:
+            provenance = fetcher.export_git(lock, git_source, stage)
+        else:
+            fetcher.unpack(archive, stage, lock["archive_root"])
         if (stage / STAMP).exists():
-            raise ValueError("Upstream archive contains a reserved preparation stamp")
+            raise ValueError("Upstream source contains a reserved preparation stamp")
         for entry, relative, patch in entries:
             target = stage.joinpath(*relative.parts)
             before = entry["before_sha256"]
@@ -186,6 +196,8 @@ def prepare(lock: dict, manifest_path: Path, cache: Path, supplied_archive: Path
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_bytes(revised)
         stamp = {"upstream": lock, "patches_sha256": patch_hash, "tree_sha256": tree_digest(stage)}
+        if provenance is not None:
+            stamp["source_verification"] = provenance
         (stage / STAMP).write_text(json.dumps(stamp, sort_keys=True, indent=2) + "\n")
         if destination.exists() or destination.is_symlink():
             if destination.is_symlink() or not destination.is_dir():
@@ -204,13 +216,19 @@ def prepare(lock: dict, manifest_path: Path, cache: Path, supplied_archive: Path
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--archive", type=Path, help="Use a local source archive (still checksum checked)")
+    origin = parser.add_mutually_exclusive_group()
+    origin.add_argument("--archive", type=Path, help="Use a local source archive (still checksum checked)")
+    origin.add_argument("--git-source", type=Path, help="Export a clean checkout after verifying the pinned Git commit and all tree/blob hashes")
     parser.add_argument("--manifest", type=Path, default=ROOT / "patches/upstream.json")
     parser.add_argument("--cache", type=Path, default=ROOT / ".cache/herspers-upstream")
     args = parser.parse_args()
+    git_source = args.git_source
+    if git_source is None and args.archive is None and os.environ.get("HERPS_UPSTREAM_GIT_SOURCE"):
+        git_source = Path(os.environ["HERPS_UPSTREAM_GIT_SOURCE"])
     try:
         lock = json.loads((ROOT / "upstream.lock.json").read_text())
-        print(prepare(lock, args.manifest.absolute(), args.cache.absolute(), args.archive.absolute() if args.archive else None))
+        print(prepare(lock, args.manifest.absolute(), args.cache.absolute(), args.archive.absolute() if args.archive else None,
+                      git_source.absolute() if git_source else None))
         return 0
     except (OSError, ValueError, tarfile.TarError) as error:
         print(f"prepare_upstream: {error}", file=sys.stderr)
