@@ -1,0 +1,195 @@
+{
+  "schema": 1,
+  "source_commit": "4d6831152512aeb9e26f9b6993415bdbcd479719",
+  "branch": "feature/photon-fullbright",
+  "base_commit": "98f961ed85db4cbc5a8c40a207af14dc6188e4ba",
+  "windows_run": {
+    "id": 43062810811,
+    "url": "https://github.com/Zeigen-ft/Herps-Launcher/actions/runs/43062810811",
+    "status": "completed",
+    "conclusion": "success",
+    "platform": "Windows x64 GitHub Actions runner; not physical Windows 11 acceptance",
+    "source_tests": {
+      "passed": 498,
+      "skipped": 15,
+      "failed": 0
+    },
+    "lightmap_cpu_probe": {
+      "passed": 3,
+      "failed": 0,
+      "skipped": 0
+    },
+    "full_renderer_lightmap": {
+      "passed": 3,
+      "failed": 0,
+      "ignored_private_archive_tests": 2,
+      "other_tests_filtered_out": 849
+    },
+    "installed_cases": [
+      {
+        "report": "installed-workflows.json",
+        "status": "passed",
+        "passed": 68,
+        "failed": 0,
+        "skipped": 0,
+        "developer_tools_on_path": {
+          "cargo": null,
+          "rustc": null,
+          "rustup": null
+        },
+        "interactive_verified": false,
+        "gameplay_verified": false
+      },
+      {
+        "report": "installed-flint.json",
+        "status": "passed",
+        "passed": 7,
+        "failed": 0,
+        "skipped": 0,
+        "developer_tools_on_path": {
+          "cargo": null,
+          "rustc": null,
+          "rustup": null
+        },
+        "interactive_verified": false,
+        "gameplay_verified": false
+      },
+      {
+        "report": "installed-gathering.json",
+        "status": "passed",
+        "passed": 7,
+        "failed": 0,
+        "skipped": 0,
+        "developer_tools_on_path": {
+          "cargo": null,
+          "rustc": null,
+          "rustup": null
+        },
+        "interactive_verified": false,
+        "gameplay_verified": false
+      },
+      {
+        "report": "installed-woodcutting.json",
+        "status": "passed",
+        "passed": 8,
+        "failed": 0,
+        "skipped": 0,
+        "developer_tools_on_path": {
+          "cargo": null,
+          "rustc": null,
+          "rustup": null
+        },
+        "interactive_verified": false,
+        "gameplay_verified": false
+      },
+      {
+        "report": "installed-bandage.json",
+        "status": "passed",
+        "passed": 8,
+        "failed": 0,
+        "skipped": 0,
+        "developer_tools_on_path": {
+          "cargo": null,
+          "rustc": null,
+          "rustup": null
+        },
+        "interactive_verified": false,
+        "gameplay_verified": false
+      }
+    ],
+    "existing_profile_and_preference_preserved": true,
+    "manual_release_file_assembly": "skipped"
+  },
+  "portable_ci": {
+    "id": 43062810196,
+    "conclusion": "success",
+    "linux": {
+      "passed": 395,
+      "skipped": 118,
+      "failed": 0
+    },
+    "windows": {
+      "passed": 408,
+      "skipped": 105,
+      "failed": 0
+    }
+  },
+  "legacy_shader_workflow": {
+    "id": 43062809459,
+    "conclusion": "skipped",
+    "reason": "Existing repository-name guard; no GPU shader acceptance claimed"
+  },
+  "artifacts": [
+    {
+      "name": "Herps-Launcher-evidence-Windows-x86_64",
+      "id": 13880266143,
+      "bytes": 827261,
+      "sha256": "d8feaab62c2b861086d8cc79ee666e3137d2518d45962dc2ceac1bebf182291c",
+      "url": "https://github.com/Zeigen-ft/Herps-Launcher/actions/runs/43062810811/artifacts/13880266143",
+      "expires_at": "2027-02-09T16:53:53Z",
+      "crc_all_entries_passed": true
+    },
+    {
+      "name": "Herps-Launcher-0.1.0-Windows-x86_64",
+      "id": 13879871388,
+      "bytes": 238835061,
+      "sha256": "e876d202d9816d18dff72a145fd09bfbd20aebcd01893df0e8da67a773c92fbf",
+      "url": "https://github.com/Zeigen-ft/Herps-Launcher/actions/runs/43062810811/artifacts/13879871388",
+      "expires_at": "2027-02-09T16:53:53Z",
+      "crc_all_entries_passed": true,
+      "delivered_lightmap_sha256": "7f05b1a35be3efd82b6830684f2bc61e21dc2cee4eddb96299a3d854719c6f84",
+      "original_photon_archive_not_bundled": true,
+      "packages": [
+        {
+          "file": "Herps-Launcher-0.1.0-Windows-x64-Setup.exe",
+          "bytes": 102694780,
+          "sha256": "fd85ed3ac70b2e87effdad81b5bccc06623d34c7b3bf82f01949a0cd84e97dd1"
+        },
+        {
+          "file": "Herps-Launcher-0.1.0-x86_64-pc-windows-msvc-wi2vzqt1.zip",
+          "bytes": 138036439,
+          "sha256": "8302cd38f912980ef29a43456d7153858ba967b6048cd2535f5b6eca3bb77a62"
+        }
+      ]
+    }
+  ],
+  "native_windows_cpu_report": {
+    "status": "passed",
+    "passed": 3,
+    "failed": 0,
+    "skipped": 0,
+    "platform": "win32",
+    "engine_revision": "7301f6fdd7f470b11317276e7a11b4dc615c137a",
+    "rust_toolchain": "1.95.0",
+    "lightmap_source_sha256": "7f05b1a35be3efd82b6830684f2bc61e21dc2cee4eddb96299a3d854719c6f84",
+    "sky_type_sha256": "cb83c394cf8adb24fe4b745375135b1b3a7a8985f1fd64f04a07049ef686de06",
+    "private_photon_input": "NOT RUN: private input absent",
+    "archive_sha256": "a51dc9c24afa8d98f75fa88abe6308774625cd10a126c62e4b1fa4d0254ab79e",
+    "fragment_sha256": "cfeeb9abd871b1ac5a0e3b84a8f1a47182838880b33e3b6a7a08cbf95048a86a",
+    "scope": "Exact production CPU code/type and unit tests; private case checks an effective file only",
+    "resource_pack_overlay_integration": "NOT RUN: full renderer integration needs private archive",
+    "gpu_and_interactive_gameplay": "NOT RUN",
+    "redistributed_pack": false
+  },
+  "local_cpu_report": "PHOTON-LOCAL-CPU.json",
+  "local_source_regressions": {
+    "passed": 494,
+    "skipped": 19,
+    "failed": 0
+  },
+  "limitations": {
+    "windows_physical_visual_gameplay": "NOT RUN",
+    "macos_arm64_build_and_gameplay": "NOT RUN",
+    "macos_intel_build_and_gameplay": "NOT RUN",
+    "original_archive_full_overlay_integration": "NOT RUN",
+    "gpu_visual_and_performance": "NOT RUN",
+    "private_pack_redistributed": false,
+    "full_rlcraft_or_funcraft_compatibility": false,
+    "public_release_published": false
+  },
+  "transient_failures": [
+    "Sandboxed engine preparation could not reach the proxy; a checksum-verified existing local source archive was used.",
+    "First local source test run could not bind an owned loopback socket; the permitted full rerun passed.",
+    "GitHub CLI artifact transfer failed; the GitHub connector and its temporary download references succeeded, and all reported candidate/evidence hashes were independently verified."
+  ]
+}

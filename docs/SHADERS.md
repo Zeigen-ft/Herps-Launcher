@@ -34,6 +34,12 @@ The uploaded ZIP and its artwork are not bundled or published; use the file you 
 
 ## Current scope
 
+The uploaded **Photon [3.1.2-M1] by PrecisionZero** is also a fullbright
+**resource pack**, distinct from the unrelated Iris Photon shader product.
+The [Photon guide](PHOTON.md) explains the new fingerprint support, private-ZIP
+installation, [candidate verification](PHOTON-VERIFICATION.md) and visual tests
+that remain NOT RUN. Do not import that ZIP through the launcher's Shaders page.
+
 | Pack | Exact input | Evidence and remaining work |
 | --- | --- | --- |
 | Complementary Reimagined | r5.5.1, original author release | Main programs translate for Overworld, Nether and End. Required GPU pipelines build in both terrain modes; custom noise/cloud-water inputs reach the renderer. An original terrain scene draws through actual shadow, geometry and post passes and produces finite, nonconstant GPU output. Full visual/gameplay parity remains unverified. |
