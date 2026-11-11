@@ -1,0 +1,18 @@
+{
+  "status": "passed",
+  "passed": 4,
+  "failed": 0,
+  "skipped": 0,
+  "platform": "linux",
+  "engine_revision": "7301f6fdd7f470b11317276e7a11b4dc615c137a",
+  "rust_toolchain": "1.95.0",
+  "lightmap_source_sha256": "7f05b1a35be3efd82b6830684f2bc61e21dc2cee4eddb96299a3d854719c6f84",
+  "sky_type_sha256": "cb83c394cf8adb24fe4b745375135b1b3a7a8985f1fd64f04a07049ef686de06",
+  "private_photon_input": "passed",
+  "archive_sha256": "a51dc9c24afa8d98f75fa88abe6308774625cd10a126c62e4b1fa4d0254ab79e",
+  "fragment_sha256": "cfeeb9abd871b1ac5a0e3b84a8f1a47182838880b33e3b6a7a08cbf95048a86a",
+  "scope": "Exact production CPU code/type and unit tests; private case checks an effective file only",
+  "resource_pack_overlay_integration": "NOT RUN: full renderer integration needs private archive",
+  "gpu_and_interactive_gameplay": "NOT RUN",
+  "redistributed_pack": false
+}

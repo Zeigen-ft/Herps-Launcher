@@ -46,7 +46,7 @@
     {
       "path": "crates/horizon-client-render/src/gfx/lightmap.rs",
       "before_sha256": null,
-      "after_sha256": "c81fbeb10aee6e95d820cf48fba41740a548aa54fda9ed95c8a09de2ff8a56b1",
+      "after_sha256": "7f05b1a35be3efd82b6830684f2bc61e21dc2cee4eddb96299a3d854719c6f84",
       "patch": "engine/crates-horizon-client-render-src-gfx-lightmap.rs.patch"
     },
     {

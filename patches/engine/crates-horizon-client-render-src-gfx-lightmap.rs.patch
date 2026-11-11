@@ -1,8 +1,8 @@
 --- /dev/null
 +++ b/crates/horizon-client-render/src/gfx/lightmap.rs
-@@ -0,0 +1,194 @@
+@@ -0,0 +1,231 @@
 +// SPDX-License-Identifier: MIT
-+//! Native lightmap generation and the exact uploaded Fullbright UB 7.0 profile.
++//! Native lightmap generation for the two explicitly reviewed fullbright profiles.
 +//! Shader programs are not copied or executed here: the recognized fragment's
 +//! constant-white output has the same effect as the native full-light lightmap.
 +use crate::environment::Sky;
@@ -16,9 +16,20 @@
 +    0x0c, 0x1e, 0x32, 0x0b, 0x95, 0x4a, 0x91, 0x9f, 0xbc, 0xe0, 0xf8, 0x20, 0x3a, 0x21, 0x7d, 0xbf,
 +];
 +
++// Photon [3.1.2-M1] by PrecisionZero. Only its reviewed fragment fingerprint
++// is stored; the copyrighted ZIP, artwork and GLSL are not redistributed.
++const PHOTON_312_M1: [u8; 32] = [
++    0xcf, 0xee, 0xb9, 0xab, 0xd8, 0x71, 0xb1, 0xac, 0x5a, 0x0e, 0x3b, 0x84, 0xa8, 0xf1, 0xa4, 0x71,
++    0x82, 0x83, 0x88, 0x80, 0xb3, 0x3e, 0x3b, 0x6a, 0x7a, 0x08, 0xcb, 0xf9, 0x50, 0x48, 0xa8, 0x6a,
++];
++
++fn recognized_digest(digest: [u8; 32]) -> bool {
++    digest == FULLBRIGHT_UB_7 || digest == PHOTON_312_M1
++}
++
 +/// Inspect only the effective overlay, after resource-pack precedence and filters.
 +/// Unrecognized shader replacements keep native lighting; this is support for
-+/// this precise uploaded profile, rather than a general core-shader interpreter.
++/// these precise uploaded profiles, rather than a general core-shader interpreter.
 +pub fn fullbright_override(root: &Path) -> bool {
 +    let Ok(file) = File::open(root.join(FRAGMENT)) else {
 +        return false;
@@ -28,7 +39,7 @@
 +        return false;
 +    }
 +    let digest: [u8; 32] = Sha256::digest(&source).into();
-+    digest == FULLBRIGHT_UB_7
++    recognized_digest(digest)
 +}
 +
 +/// Generate all 256 lightmap entries using the normal engine algorithm, or the
@@ -112,6 +123,20 @@
 +    }
 +
 +    #[test]
++    fn reviewed_profiles_are_explicit_and_unknown_digests_stay_disabled() {
++        assert!(recognized_digest(FULLBRIGHT_UB_7));
++        assert!(recognized_digest(PHOTON_312_M1));
++        assert!(!recognized_digest([0; 32]));
++        for profile in [FULLBRIGHT_UB_7, PHOTON_312_M1] {
++            for byte in 0..32 {
++                let mut changed = profile;
++                changed[byte] ^= 1;
++                assert!(!recognized_digest(changed));
++            }
++        }
++    }
++
++    #[test]
 +    fn unrecognized_or_missing_core_shaders_do_not_enable_fullbright() {
 +        let scratch = Scratch::new();
 +        assert!(!fullbright_override(&scratch.0));
@@ -148,12 +173,24 @@
 +    #[test]
 +    #[ignore = "requires the user's exact Fullbright UB 7.0 archive"]
 +    fn uploaded_fullbright_pack_applies_with_resource_overlay_and_is_reversible() {
-+        let input = std::env::var_os("HORIZON_TEST_FULLBRIGHT_PACK")
-+            .expect("Set HORIZON_TEST_FULLBRIGHT_PACK to the uploaded unmodified ZIP");
++        check_uploaded_pack("HORIZON_TEST_FULLBRIGHT_PACK", "Fullbright-UB-26.3 fub-7.0.zip",
++            "a4c251fdee1a63cc19b5e7e4371f2146da41d619c2d8d31aab79379d01fcb2ae");
++    }
++
++    #[test]
++    #[ignore = "requires the user's exact private Photon [3.1.2-M1] archive"]
++    fn uploaded_photon_pack_applies_with_resource_overlay_and_is_reversible() {
++        check_uploaded_pack("HORIZON_TEST_PHOTON_PACK", "Photon [3.1.2-M1].zip",
++            "a51dc9c24afa8d98f75fa88abe6308774625cd10a126c62e4b1fa4d0254ab79e");
++    }
++
++    fn check_uploaded_pack(variable: &str, filename: &str, expected_sha256: &str) {
++        let input = std::env::var_os(variable)
++            .expect("Set the named environment variable to the original user-supplied ZIP");
 +        let bytes = std::fs::read(&input).unwrap();
 +        assert_eq!(
 +            format!("{:x}", Sha256::digest(&bytes)),
-+            "a4c251fdee1a63cc19b5e7e4371f2146da41d619c2d8d31aab79379d01fcb2ae",
++            expected_sha256,
 +            "The integration input must be the exact user-provided archive",
 +        );
 +        let scratch = Scratch::new();
@@ -162,7 +199,7 @@
 +        let cache = scratch.0.join("overlays");
 +        std::fs::create_dir_all(&directory).unwrap();
 +        write_fragment(&vanilla, b"original vanilla-lightmap fixture");
-+        std::fs::write(directory.join("Fullbright-UB-26.3 fub-7.0.zip"), bytes).unwrap();
++        std::fs::write(directory.join(filename), bytes).unwrap();
 +        let overriding = directory.join("Higher priority");
 +        write_fragment(&overriding, b"original different-lightmap fixture");
 +        std::fs::write(
@@ -172,7 +209,7 @@
 +        let found = crate::packs::discover(&vanilla, &directory);
 +        let fullbright = found
 +            .iter()
-+            .find(|p| p.id == "file/Fullbright-UB-26.3 fub-7.0.zip")
++            .find(|p| p.id == format!("file/{filename}"))
 +            .unwrap();
 +        assert!(fullbright.compatible);
 +        let higher = found

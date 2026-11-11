@@ -44,6 +44,21 @@
       "lightmap_sha256": "5eaad45db7ee7a6222bc3de4d21bdb810c1e320b954a919fbce0f8203a217dbf",
       "redistributed": false,
       "notes": "The uploaded archive has no license file and remains an external user input. Compatibility implements its constant-white lightmap behavior in original Rust."
+    },
+    {
+      "id": "photon-fullbright",
+      "name": "Photon",
+      "version": "3.1.2-M1 / Java 26.3",
+      "author": "PrecisionZero",
+      "filename": "Photon [3.1.2-M1].zip",
+      "source": "user-upload",
+      "sha256": "a51dc9c24afa8d98f75fa88abe6308774625cd10a126c62e4b1fa4d0254ab79e",
+      "bytes": 3657,
+      "lightmap_path": "assets/minecraft/shaders/core/lightmap.fsh",
+      "lightmap_sha256": "cfeeb9abd871b1ac5a0e3b84a8f1a47182838880b33e3b6a7a08cbf95048a86a",
+      "license": "All Rights Reserved, Copyright 2026 PrecisionZero",
+      "redistributed": false,
+      "notes": "Original upload is a resource pack with a constant-white lightmap, not the unrelated Iris Photon shader. Native Rust implements the lighting effect. Personal use only; written author permission is required to redistribute the archive, artwork or shader."
     }
   ]
 }

@@ -16,6 +16,11 @@ Minecraft 26.3 resource pack using the existing launcher and in-game pack menu.
 Windows/Linux native data/model checks passed; [verified download and installation](docs/BETTER-LEAVES.md).
 Visual acceptance and FPS remain NOT RUN.
 
+[Photon 3.1.2-M1 fullbright](docs/PHOTON.md) adds optional recognition of the
+user's original PrecisionZero resource ZIP using native lighting. The pack
+itself is not redistributed. [Candidate and evidence](docs/PHOTON-VERIFICATION.md);
+physical visual/gameplay acceptance remains NOT RUN.
+
 [Downloads and release notes](https://github.com/Zeigen-ft/Herps-Launcher/releases) ·
 [CI builds](https://github.com/Zeigen-ft/Herps-Launcher/actions/workflows/herps-launcher.yml) ·
 [Prepared release notes](RELEASE_NOTES.md) · [Known limits](docs/HERPS-SUPPORT.md)

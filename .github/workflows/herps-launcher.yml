@@ -103,6 +103,21 @@ jobs:
       - name: Validate chainmail with the pinned native content and recipe engine
         if: runner.os == 'Windows'
         run: python tools/ci_run.py herps-chainmail-native.log python tools/verify_rlcraft_chainmail.py --native-crafting --report dist/targeted-content/native-validation.json
+      - name: Verify native fullbright profiles without redistributing private packs
+        if: runner.os == 'Windows'
+        run: python tools/ci_run.py herps-fullbright-native.log python tools/verify_fullbright.py --report dist/herps/photon-lightmap.json --fetch
+      - name: Run full renderer lightmap unit tests on Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          CARGO_TARGET_DIR: ${{ github.workspace }}/.cache/target
+          RUSTFLAGS: '-C target-feature=+crt-static -C link-arg=/STACK:16777216'
+          HORIZON_VERSION: '0.7.6'
+        run: |
+          $sourceRoot = python tools/prepare_upstream.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python tools/ci_run.py herps-fullbright-renderer.log cargo +1.95.0 test --locked --profile fast --target x86_64-pc-windows-msvc --manifest-path "$sourceRoot/Cargo.toml" -p horizon-client-render --lib gfx::lightmap --no-default-features
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Validate flint starter with the pinned Rust recipe and item engine
         if: runner.os == 'Windows'
         run: python tools/ci_run.py herps-flint-native.log python tools/verify_rlcraft_flint.py --report dist/flint-content/native-validation.json
@@ -203,6 +218,7 @@ jobs:
             dist/herps/*.dmg
             dist/herps/*.exe
             dist/herps/native-build-proof.json
+            dist/herps/photon-lightmap.json
           if-no-files-found: error
       - name: Upload native chainmail content and validation
         uses: actions/upload-artifact@v4

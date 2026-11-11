@@ -1,5 +1,13 @@
 # Licences and third-party notices
 
+Photon [3.1.2-M1], copyright 2026 PrecisionZero, is an external user-provided
+resource pack under its supplied **All Rights Reserved** licence. Its ZIP,
+artwork and GLSL are not included in the repository or candidate packages.
+The native fullbright compatibility implementation stores only the reviewed
+shader fingerprint and uses original MIT engine code. Personal-use modification
+is allowed by the supplied licence; redistribution requires the author's
+written permission. See [usage and limitations](docs/PHOTON.md).
+
 The user-provided Better Leaves 9.6 pack is by Motschen, under its supplied MIT
 license (Copyright (c) 2024 Motschen). The focused resource-pack adaptation retains
 the exact selected upstream assets and permission notice in
