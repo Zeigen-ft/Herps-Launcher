@@ -1,0 +1,51 @@
+{
+  "source": "User-uploaded logs and screenshots, 12 November 2026",
+  "engine_version": "0.7.6",
+  "exact_launcher_candidate_commit": "not confirmed by log headers",
+  "photon_selection_user_report": "FAIL: Resource reload failed",
+  "old_profile_user_report": "FAIL: missing glyphs/background",
+  "physical_retest": "NOT RUN",
+  "logs": [
+    {
+      "file": "20261112-140259-43daec84.log",
+      "bytes": 1205,
+      "sha256": "1ccf5173e2f198cc2f24bd39cfa8376646cb198dfca99dc8474960563d6cdfa4",
+      "windows_448_count": 1,
+      "crash_report_saved": false,
+      "reached_rest_ready": false,
+      "gpu": "NVIDIA GeForce GTX 960",
+      "backend": "Dx12"
+    },
+    {
+      "file": "20261112-140419-d954be52.log",
+      "bytes": 1442,
+      "sha256": "d6703383c7d50476030a0679139fd4e07005220a6e466013f29646d6e5d7858a",
+      "windows_448_count": 2,
+      "crash_report_saved": true,
+      "reached_rest_ready": false,
+      "gpu": "NVIDIA GeForce GTX 960",
+      "backend": "Dx12"
+    },
+    {
+      "file": "20261112-140407-d9b21c1d.log",
+      "bytes": 1755,
+      "sha256": "769391c0c756232193e46f0ac096cb2b271ac26900eef9381d541d1e5d6bc416",
+      "windows_448_count": 0,
+      "crash_report_saved": false,
+      "reached_rest_ready": true,
+      "gpu": "NVIDIA GeForce GTX 960",
+      "backend": "Vulkan"
+    },
+    {
+      "file": "20261112-140314-1940233f.log",
+      "bytes": 1442,
+      "sha256": "8f9d11c5a5a43b5cef14bc11ec842d7a8ce8cfeb0005882ad77415b2a0da5131",
+      "windows_448_count": 2,
+      "crash_report_saved": true,
+      "reached_rest_ready": false,
+      "gpu": "NVIDIA GeForce GTX 960",
+      "backend": "Dx12"
+    }
+  ],
+  "privacy": "Summaries/hashes only; original private paths and crash report contents not published"
+}

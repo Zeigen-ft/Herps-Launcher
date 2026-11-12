@@ -1,0 +1,95 @@
+--- a/crates/horizon-client-render/src/packs.rs
++++ b/crates/horizon-client-render/src/packs.rs
+@@ -582,11 +582,12 @@
+         fs::hard_link(target, at).or_else(|_| fs::copy(target, at).map(|_| ()))
+     }
+ }
+-/// A directory junction (`horizon_threads::junction`); the mirror falls back to copying the
+-/// tree when it fails.
++/// Windows may create a junction successfully but refuse later traversal with
++/// ERROR_UNTRUSTED_MOUNT_POINT (448), hiding fonts and failing reloads. Use the
++/// existing ordinary-directory/file-link fallback without weakening OS policy.
+ #[cfg(windows)]
+-fn junction(target: &Path, at: &Path) -> io::Result<()> {
+-    horizon_threads::junction(target, at)
++fn junction(_: &Path, _: &Path) -> io::Result<()> {
++    Err(io::ErrorKind::Unsupported.into())
+ }
+ #[cfg(not(windows))]
+ fn junction(_: &Path, _: &Path) -> io::Result<()> {
+@@ -917,6 +918,10 @@
+     let hash = key.bytes().fold(0xcbf2_9ce4_8422_2325u64, |h, b| {
+         (h ^ u64::from(b)).wrapping_mul(0x100_0000_01b3)
+     });
++    // Preserve old overlays instead of traversing/removing their rejected mount
++    // points. This namespace changes whenever Windows overlay semantics change.
++    #[cfg(windows)]
++    let cache = cache.join(format!("windows-files-v{}", cache::VERSION));
+     let out = cache.join(format!("{hash:016x}"));
+     build_overlay(vanilla, packs, &out)?;
+     Ok(out)
+@@ -1408,15 +1413,61 @@
+             fs::read(out.join("assets/minecraft/textures/font/ascii.png")).unwrap(),
+             b"font"
+         );
+-        // Linked, not mirrored: a junction on Windows, a symlink on unix.
+-        assert!(
++        // Unix retains symlinks; Windows uses ordinary directories, never junctions.
++        assert_eq!(
+             fs::symlink_metadata(out.join("assets/minecraft/textures/font"))
+                 .unwrap()
+                 .file_type()
+-                .is_symlink()
++                .is_symlink(),
++            cfg!(unix)
+         );
+         let _ = fs::remove_dir_all(base);
+     }
++    #[cfg(windows)]
++    #[test]
++    fn windows_overlay_keeps_fonts_readable_and_preserves_legacy_profile_cache() {
++        use std::os::windows::fs::MetadataExt;
++        const REPARSE_POINT: u32 = 0x400;
++        let base = std::env::temp_dir().join(format!("herps-pack-windows-files-{}", std::process::id()));
++        let vanilla = base.join("vanilla");
++        let folder = base.join("packs/Owned lightmap");
++        let cache = base.join("profile/.horizon-cache/resourcepacks");
++        fs::create_dir_all(vanilla.join("assets/minecraft/textures/font")).unwrap();
++        fs::create_dir_all(vanilla.join("assets/minecraft/textures/gui/title/background")).unwrap();
++        fs::write(vanilla.join("assets/minecraft/textures/font/ascii.png"), b"owned font bytes").unwrap();
++        fs::write(vanilla.join("assets/minecraft/textures/gui/title/background/panorama_0.png"), b"owned panorama bytes").unwrap();
++        fs::create_dir_all(folder.join("assets/minecraft/shaders/core")).unwrap();
++        fs::write(folder.join("pack.mcmeta"), br#"{"pack":{"description":"Owned lightmap fixture","min_format":97,"max_format":98}}"#).unwrap();
++        fs::write(folder.join("assets/minecraft/shaders/core/lightmap.fsh"), b"owned inert shader bytes").unwrap();
++        let packs = discover(&vanilla, &base.join("packs"));
++        assert_eq!(packs.len(), 1);
++        let key = packs[0].id.as_bytes().iter().fold(0xcbf2_9ce4_8422_2325u64,
++            |h, b| (h ^ u64::from(*b)).wrapping_mul(0x100_0000_01b3));
++        let legacy = cache.join(format!("{key:016x}"));
++        fs::create_dir_all(&legacy).unwrap();
++        fs::write(legacy.join("preserve-old-cache"), b"old cache remains intact").unwrap();
++        // Even a legacy junction to a missing target must not be traversed.
++        horizon_threads::junction(&base.join("missing-old-target"), &legacy.join("old-mount")).unwrap();
++        let save = base.join("profile/saves/valued-world/level.dat");
++        fs::create_dir_all(save.parent().unwrap()).unwrap();
++        fs::write(&save, b"owned world preservation sentinel").unwrap();
++        let out = resource_root(&vanilla, &packs, &cache).unwrap();
++        assert!(out.starts_with(cache.join(format!("windows-files-v{}", cache::VERSION))));
++        for rel in ["assets", "assets/minecraft/textures/font", "assets/minecraft/textures/gui/title/background"] {
++            assert_eq!(fs::symlink_metadata(out.join(rel)).unwrap().file_attributes() & REPARSE_POINT, 0);
++        }
++        assert_eq!(fs::read(out.join("assets/minecraft/textures/font/ascii.png")).unwrap(), b"owned font bytes");
++        assert_eq!(fs::read(out.join("assets/minecraft/textures/gui/title/background/panorama_0.png")).unwrap(), b"owned panorama bytes");
++        assert_eq!(resource_root(&vanilla, &packs, &cache).unwrap(), out);
++        assert_eq!(resource_root(&vanilla, &[], &cache).unwrap(), vanilla);
++        assert_eq!(fs::read(legacy.join("preserve-old-cache")).unwrap(), b"old cache remains intact");
++        assert_eq!(fs::read(&save).unwrap(), b"owned world preservation sentinel");
++        assert_eq!(fs::read(vanilla.join("assets/minecraft/textures/font/ascii.png")).unwrap(), b"owned font bytes");
++        // Remove the deliberately dangling fixture junction itself before cleanup.
++        fs::remove_dir(legacy.join("old-mount")).unwrap();
++        fs::remove_dir_all(base).unwrap();
++    }
++
+     #[test]
+     fn zip_entries_never_leave_the_overlay() {
+         use std::io::Write as _;

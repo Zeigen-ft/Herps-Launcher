@@ -150,6 +150,18 @@
       "before_sha256": null,
       "after_sha256": "c1c1c15ac231531d0ef0119e85df64a48925455ab04242973228d5b40894f186",
       "patch": "engine/crates-horizon-client-src-game-herspers_woodcutting_rules.rs.patch"
+    },
+    {
+      "path": "crates/horizon-client-render/src/packs.rs",
+      "before_sha256": "de2a489a5badeacaa97be24164eebe5cdb2dc9086b868509f7a86f784c8b7e23",
+      "after_sha256": "60a2c673e5bd369e3cde576661161e822e0b9fda4408eddab4721b4a9c50d8de",
+      "patch": "engine/crates-horizon-client-render-src-packs.rs.patch"
+    },
+    {
+      "path": "crates/horizon-client-render/src/packs/cache.rs",
+      "before_sha256": "8dcbc271e214aeafae2541bae4509833686d00f78bd9e6993693014ae628bc29",
+      "after_sha256": "6b4f101afddbcb1be994a768658412dd23ee155cd0956dbee051c6b17ac5a302",
+      "patch": "engine/crates-horizon-client-render-src-packs-cache.rs.patch"
     }
   ]
 }
