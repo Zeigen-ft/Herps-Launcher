@@ -8,10 +8,10 @@ on:
         options: [all, windows, macos-arm64, macos-x64, macos-arm64-26]
         default: all
   pull_request:
-    paths: ['README.md', 'INSTALLATION.md', 'QUICK_START.md', 'RELEASE_NOTES.md', 'THIRD_PARTY_NOTICES.md', 'tools/prepare_launcher_release.py', 'content/**', 'native/**', 'tools/build_rlcraft_gathering.py', 'tools/verify_rlcraft_gathering.py', 'tools/build_rlcraft_woodcutting.py', 'tools/verify_rlcraft_woodcutting.py', 'tools/build_rlcraft_bandage.py', 'tools/verify_rlcraft_bandage.py', 'tools/build_rlcraft_chainmail.py', 'tools/verify_rlcraft_chainmail.py', 'tools/build_rlcraft_flint.py', 'tools/verify_rlcraft_flint.py', 'herps_launcher/**', 'tools/package_herps.py', 'tools/package_macos.py', 'tools/package_windows.py', 'tools/prepare_upstream.py', 'tools/verify_herps*.py', 'tools/release_evidence.py', 'tools/windows_installer.py', 'tools/smoke_herps_native.py', 'tools/ci_run.py', 'tools/inspect_targeted_packs.py', 'tools/smoke_targeted_backup.py', 'tools/inspect_rlcraft_293.py', 'tools/package_rlcraft_inspector.py', 'packaging/**', 'tests/**', 'scripts/build_*.sh', 'scripts/build_*.ps1', 'patches/**', 'upstream.lock.json', 'docs/**', 'licenses/**', 'LICENSE', '.github/workflows/herps-launcher.yml']
+    paths: ['README.md', 'INSTALLATION.md', 'QUICK_START.md', 'RELEASE_NOTES.md', 'THIRD_PARTY_NOTICES.md', 'tools/prepare_launcher_release.py', 'content/**', 'native/**', 'tools/build_rlcraft_gathering.py', 'tools/verify_rlcraft_gathering.py', 'tools/build_rlcraft_woodcutting.py', 'tools/verify_rlcraft_woodcutting.py', 'tools/build_rlcraft_bandage.py', 'tools/verify_rlcraft_bandage.py', 'tools/build_rlcraft_chainmail.py', 'tools/verify_rlcraft_chainmail.py', 'tools/build_rlcraft_flint.py', 'tools/verify_rlcraft_flint.py', 'herps_launcher/**', 'tools/package_herps.py', 'tools/package_macos.py', 'tools/package_windows.py', 'tools/embed_game_icon.py', '.gitattributes', 'tools/prepare_upstream.py', 'tools/verify_herps*.py', 'tools/release_evidence.py', 'tools/windows_installer.py', 'tools/smoke_herps_native.py', 'tools/ci_run.py', 'tools/inspect_targeted_packs.py', 'tools/smoke_targeted_backup.py', 'tools/inspect_rlcraft_293.py', 'tools/package_rlcraft_inspector.py', 'packaging/**', 'tests/**', 'scripts/build_*.sh', 'scripts/build_*.ps1', 'patches/**', 'upstream.lock.json', 'docs/**', 'licenses/**', 'LICENSE', '.github/workflows/herps-launcher.yml']
   push:
     branches: [main, feature/herps-launcher-cross-platform]
-    paths: ['README.md', 'INSTALLATION.md', 'QUICK_START.md', 'RELEASE_NOTES.md', 'THIRD_PARTY_NOTICES.md', 'tools/prepare_launcher_release.py', 'content/**', 'native/**', 'tools/build_rlcraft_gathering.py', 'tools/verify_rlcraft_gathering.py', 'tools/build_rlcraft_woodcutting.py', 'tools/verify_rlcraft_woodcutting.py', 'tools/build_rlcraft_bandage.py', 'tools/verify_rlcraft_bandage.py', 'tools/build_rlcraft_chainmail.py', 'tools/verify_rlcraft_chainmail.py', 'tools/build_rlcraft_flint.py', 'tools/verify_rlcraft_flint.py', 'herps_launcher/**', 'tools/package_herps.py', 'tools/package_macos.py', 'tools/package_windows.py', 'tools/prepare_upstream.py', 'tools/verify_herps*.py', 'tools/release_evidence.py', 'tools/windows_installer.py', 'tools/smoke_herps_native.py', 'tools/ci_run.py', 'tools/inspect_targeted_packs.py', 'tools/smoke_targeted_backup.py', 'tools/inspect_rlcraft_293.py', 'tools/package_rlcraft_inspector.py', 'packaging/**', 'tests/**', 'scripts/build_*.sh', 'scripts/build_*.ps1', 'patches/**', 'upstream.lock.json', 'docs/**', 'licenses/**', 'LICENSE', '.github/workflows/herps-launcher.yml']
+    paths: ['README.md', 'INSTALLATION.md', 'QUICK_START.md', 'RELEASE_NOTES.md', 'THIRD_PARTY_NOTICES.md', 'tools/prepare_launcher_release.py', 'content/**', 'native/**', 'tools/build_rlcraft_gathering.py', 'tools/verify_rlcraft_gathering.py', 'tools/build_rlcraft_woodcutting.py', 'tools/verify_rlcraft_woodcutting.py', 'tools/build_rlcraft_bandage.py', 'tools/verify_rlcraft_bandage.py', 'tools/build_rlcraft_chainmail.py', 'tools/verify_rlcraft_chainmail.py', 'tools/build_rlcraft_flint.py', 'tools/verify_rlcraft_flint.py', 'herps_launcher/**', 'tools/package_herps.py', 'tools/package_macos.py', 'tools/package_windows.py', 'tools/embed_game_icon.py', '.gitattributes', 'tools/prepare_upstream.py', 'tools/verify_herps*.py', 'tools/release_evidence.py', 'tools/windows_installer.py', 'tools/smoke_herps_native.py', 'tools/ci_run.py', 'tools/inspect_targeted_packs.py', 'tools/smoke_targeted_backup.py', 'tools/inspect_rlcraft_293.py', 'tools/package_rlcraft_inspector.py', 'packaging/**', 'tests/**', 'scripts/build_*.sh', 'scripts/build_*.ps1', 'patches/**', 'upstream.lock.json', 'docs/**', 'licenses/**', 'LICENSE', '.github/workflows/herps-launcher.yml']
 permissions:
   contents: read
 jobs:
@@ -118,6 +118,11 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python tools/ci_run.py herps-fullbright-renderer.log cargo +1.95.0 test --locked --profile fast --target x86_64-pc-windows-msvc --manifest-path "$sourceRoot/Cargo.toml" -p horizon-client-render --lib gfx::lightmap --no-default-features
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python tools/ci_run.py herps-resource-overlay.log cargo +1.95.0 test --locked --profile fast --target x86_64-pc-windows-msvc --manifest-path "$sourceRoot/Cargo.toml" -p horizon-client-render --lib packs:: --no-default-features
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Verify delivered native game icon resources without executing the game
+        if: runner.os == 'Windows'
+        run: python tools/embed_game_icon.py dist/windows-x86_64/Herspers-Minecraft/bin/horizon-client.exe --icon patches/assets/game.ico --verify-only --report dist/herps/game-icon.json
       - name: Validate flint starter with the pinned Rust recipe and item engine
         if: runner.os == 'Windows'
         run: python tools/ci_run.py herps-flint-native.log python tools/verify_rlcraft_flint.py --report dist/flint-content/native-validation.json
@@ -219,6 +224,7 @@ jobs:
             dist/herps/*.exe
             dist/herps/native-build-proof.json
             dist/herps/photon-lightmap.json
+            dist/herps/game-icon.json
           if-no-files-found: error
       - name: Upload native chainmail content and validation
         uses: actions/upload-artifact@v4

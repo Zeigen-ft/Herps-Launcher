@@ -44,6 +44,11 @@ $launcher = Join-Path $launcherDir 'Herspers-Minecraft.exe'
 Invoke-Checked 'rustc' @("+$toolchain", '--edition=2021', '--target', $target,
     '-C', 'target-feature=+crt-static', '-O',
     (Join-Path $projectRoot 'packaging/launcher_windows.rs'), '-o', $launcher)
+Invoke-Checked 'python' @((Join-Path $projectRoot 'tools/embed_game_icon.py'), $launcher,
+    '--icon', (Join-Path $projectRoot 'patches/assets/game.ico'))
+Invoke-Checked 'python' @((Join-Path $projectRoot 'tools/embed_game_icon.py'),
+    (Join-Path $env:CARGO_TARGET_DIR "$target/$BuildProfile/horizon-client.exe"),
+    '--icon', (Join-Path $projectRoot 'patches/assets/game.ico'), '--verify-only')
 
 $packageOutput = Join-Path $projectRoot 'dist/windows-x86_64'
 if (Test-Path $packageOutput) {

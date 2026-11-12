@@ -162,6 +162,24 @@
       "before_sha256": "8dcbc271e214aeafae2541bae4509833686d00f78bd9e6993693014ae628bc29",
       "after_sha256": "6b4f101afddbcb1be994a768658412dd23ee155cd0956dbee051c6b17ac5a302",
       "patch": "engine/crates-horizon-client-render-src-packs-cache.rs.patch"
+    },
+    {
+      "path": "packaging/icons/horizon.ico",
+      "before_sha256": "de139ce1bdb40750f532171118a37b643cbb015e6f5aa51c2c827195da34ef2b",
+      "after_sha256": "c56671c5ba81b77e7df9e90afc02efbd91c72fa462f00815190d2caa1cd1cc38",
+      "patch": "assets/game.ico"
+    },
+    {
+      "path": "packaging/icons/horizon.icns",
+      "before_sha256": "19f532f7cbb45cacb39c4ddd9ff669de88996c4e7934103a92e86e9a76557b58",
+      "after_sha256": "c2b05314a46682d6cb9ae5b2e4ed752653f92f703667d80fe401252b6dda4462",
+      "patch": "assets/game.icns"
+    },
+    {
+      "path": "crates/horizon-theme/icons/horizon-64.png",
+      "before_sha256": "1017decdf41f0dba0113dcc02e65845456ae07ed6ce419b71723e7e50a1e3f67",
+      "after_sha256": "2026358d59bffe44d4cad20c32cc89aa9e8170de3591f1e0d320d8705b39f846",
+      "patch": "assets/game-window.png"
     }
   ]
 }

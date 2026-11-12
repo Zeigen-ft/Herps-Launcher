@@ -204,6 +204,7 @@ def assemble(source, binaries, arch, output, stage_only=False):
         staged = Path(scratch) / APP_NAME
         macos = staged / "Contents/MacOS"
         resources = staged / "Contents/Resources"
+        game_icon = checked_file(source / "packaging/icons/horizon.icns")
         macos.mkdir(parents=True)
         resources.mkdir()
         for name in BINARIES:
@@ -252,7 +253,9 @@ def assemble(source, binaries, arch, output, stage_only=False):
                   if stage_only else
                   "Packaged on macOS with ad hoc signatures. Not notarized; gameplay has not been verified.\n")
         (resources / "BUILD-STATUS.txt").write_text(status + "Game resources are not included; run prepare.command first.\n")
+        shutil.copy2(game_icon, resources / "HerspersMinecraft.icns")
         info = {"CFBundleName": "Herspers Minecraft", "CFBundleDisplayName": "Herspers Minecraft",
+                "CFBundleIconFile": "HerspersMinecraft.icns",
                 "CFBundleIdentifier": "dev.herspers.minecraft", "CFBundleExecutable": "herspers-minecraft",
                 "CFBundlePackageType": "APPL", "CFBundleInfoDictionaryVersion": "6.0",
                 "CFBundleShortVersionString": PRODUCT_VERSION, "CFBundleVersion": "203",

@@ -67,6 +67,32 @@ class PrepareTests(unittest.TestCase):
         self.assertFalse(list(self.cache.glob("source-*")))
         self.assertFalse(list(self.cache.glob("*.preparing")))
 
+    def test_binary_icon_asset_is_hash_locked_and_preserves_archive(self):
+        original = b"original icon"
+        replacement = b"\x89PNG\r\n\x1a\n\x00\xffowned-image"
+        self.make_archive({"Cargo.lock": self.lockfile, "icons/game.png": original})
+        self.lock["archive_sha256"] = sha(self.archive.read_bytes())
+        archive_before = self.archive.read_bytes()
+        self.patch = self.patches / "game.png"
+        self.patch.write_bytes(replacement)
+        self.entry.update(path="icons/game.png", patch="game.png", before_sha256=sha(original), after_sha256=sha(replacement))
+        self.write_manifest()
+        result = self.stage()
+        self.assertEqual((result / "icons/game.png").read_bytes(), replacement)
+        self.assertEqual(self.stage(), result)
+        self.assertEqual(self.archive.read_bytes(), archive_before)
+        self.patch.write_bytes(replacement + b"changed")
+        with self.assertRaisesRegex(ValueError, "postimage"):
+            self.stage()
+
+    def test_binary_icon_asset_cannot_replace_source_code(self):
+        self.patch = self.patches / "code.png"
+        self.patch.write_bytes(self.after)
+        self.entry["patch"] = "code.png"
+        self.write_manifest()
+        with self.assertRaisesRegex(ValueError, "image target"):
+            self.stage()
+
     def test_reproducible_patch_preserves_archive_and_lockfile(self):
         original_archive = self.archive.read_bytes()
         source = self.stage()

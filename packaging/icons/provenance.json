@@ -1,0 +1,23 @@
+{
+  "source": "User-supplied download.ico; file signature identifies original as 1254x1254 RGBA PNG",
+  "conversion": "Artwork preserved; standard resampling and icon container encoding only",
+  "pillow": "13.0.0",
+  "files": {
+    "packaging/icons/game-source.png": {
+      "bytes": 737912,
+      "sha256": "a2e0fda7cd2d16507cc29221495476d1da75d811a77229217e8e641e9aa31965"
+    },
+    "patches/assets/game-window.png": {
+      "bytes": 4168,
+      "sha256": "2026358d59bffe44d4cad20c32cc89aa9e8170de3591f1e0d320d8705b39f846"
+    },
+    "patches/assets/game.icns": {
+      "bytes": 839595,
+      "sha256": "c2b05314a46682d6cb9ae5b2e4ed752653f92f703667d80fe401252b6dda4462"
+    },
+    "patches/assets/game.ico": {
+      "bytes": 63380,
+      "sha256": "c56671c5ba81b77e7df9e90afc02efbd91c72fa462f00815190d2caa1cd1cc38"
+    }
+  }
+}

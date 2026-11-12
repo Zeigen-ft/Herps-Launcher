@@ -19,7 +19,8 @@ Visual acceptance and FPS remain NOT RUN.
 [Photon 3.1.2-M1 fullbright](docs/PHOTON.md) adds optional recognition of the
 user's original PrecisionZero resource ZIP using native lighting. The pack
 itself is not redistributed. [Candidate and evidence](docs/PHOTON-VERIFICATION.md);
-physical visual/gameplay acceptance remains NOT RUN.
+Windows resource failures are recorded in the [recovery verification](docs/WINDOWS-RESOURCE-RECOVERY.md).
+Physical retesting and macOS acceptance remain open.
 
 [Downloads and release notes](https://github.com/Zeigen-ft/Herps-Launcher/releases) ·
 [CI builds](https://github.com/Zeigen-ft/Herps-Launcher/actions/workflows/herps-launcher.yml) ·

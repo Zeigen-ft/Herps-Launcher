@@ -21,7 +21,10 @@ Written author permission is required before redistributing any of its contents.
 The compatibility code contains fingerprints and original Rust only.
 
 The new original-ZIP recognition needs the **Photon Windows test candidate**
-identified in [verification](PHOTON-VERIFICATION.md). Older builds can instead
+identified in [Windows resource recovery](WINDOWS-RESOURCE-RECOVERY.md).
+The earlier candidate has a reported resource-path failure; its historical
+[verification](PHOTON-VERIFICATION.md) does not accept physical gameplay.
+Older builds can instead
 use their existing **Options → Horizon Settings → Extras → Fullbright** switch
 for the native lighting effect. Exact on-screen wording still needs physical
 confirmation. Neither route is visually accepted by these automated tests.

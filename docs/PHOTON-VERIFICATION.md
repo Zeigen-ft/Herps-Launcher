@@ -1,5 +1,11 @@
 # Photon fullbright verification
 
+**Physical failure reported, 12 November 2026:** Photon reload and old-profile
+graphics failed on the user's Windows PC; supplied logs contain error 448
+(untrusted mount point). The historical candidate below is **not physically
+accepted**. See the [resource recovery correction and retest plan](WINDOWS-RESOURCE-RECOVERY.md).
+Its automated passes do not resolve this reported failure.
+
 Tested code/candidate commit: **`4d6831152512aeb9e26f9b6993415bdbcd479719`**.
 Branch: `feature/photon-fullbright`, based on Better Leaves commit
 `98f961ed85db4cbc5a8c40a207af14dc6188e4ba`. RLCraft work remains paused.

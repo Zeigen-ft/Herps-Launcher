@@ -27,6 +27,9 @@ class PackagingTests(unittest.TestCase):
         self.binaries = self.root / "binaries"
         self.output = self.root / "output"
         self.source.mkdir()
+        icon_dir = self.source / "packaging/icons"
+        icon_dir.mkdir(parents=True)
+        shutil.copy2(PROJECT / "patches/assets/game.icns", icon_dir / "horizon.icns")
         self.binaries.mkdir()
         (self.source / "research-lock.json").write_text(json.dumps({"minecraft": {"version": "26.3", "java_major": 25}}))
         for relative in package.PREPARATION_DIRS:
@@ -74,6 +77,14 @@ class PackagingTests(unittest.TestCase):
 
     def stage(self, arch="arm64"):
         return package.assemble(self.source, self.binaries, arch, self.output, stage_only=True)
+
+    def test_game_bundle_uses_supplied_icon(self):
+        app, archive = self.stage()
+        self.assertIsNone(archive)
+        info = plistlib.loads((app / "Contents/Info.plist").read_bytes())
+        self.assertEqual(info["CFBundleIconFile"], "HerspersMinecraft.icns")
+        self.assertEqual((app / "Contents/Resources/HerspersMinecraft.icns").read_bytes(),
+                         (self.source / "packaging/icons/horizon.icns").read_bytes())
 
     def test_stage_contains_sources_notices_and_unverified_metadata_but_no_zip(self):
         private = self.source / ".local/game.jar"

@@ -11,6 +11,8 @@ on:
       - 'packaging/private_server.rs'
       - 'packaging/windows/**'
       - 'tools/package_windows.py'
+      - 'tools/embed_game_icon.py'
+      - '.gitattributes'
       - 'tools/package_macos.py'
       - 'tools/fetch_upstream.py'
       - 'tools/prepare_upstream.py'

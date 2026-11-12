@@ -144,6 +144,9 @@ def prepare(lock: dict, manifest_path: Path, cache: Path, supplied_archive: Path
                 raise ValueError(f"Invalid {field}: {relative}")
         patch_path = manifest_path.parent.joinpath(*relative_path(entry["patch"]).parts)
         ordinary(patch_path, manifest_path.parent)
+        if patch_path.suffix in {".png", ".ico", ".icns"}:
+            if relative.suffix != patch_path.suffix or patch_path.stat().st_size > 4 * 1024 * 1024:
+                raise ValueError(f"Binary icon asset must match its image target and size limit: {relative}")
         patch = patch_path.read_bytes()
         fingerprint.update(len(patch).to_bytes(8, "big") + patch)
         entries.append((entry, relative, patch))
@@ -185,7 +188,9 @@ def prepare(lock: dict, manifest_path: Path, cache: Path, supplied_archive: Path
                 original = target.read_bytes()
                 if hashlib.sha256(original).hexdigest() != before:
                     raise ValueError(f"Patch preimage checksum mismatch: {relative}")
-            revised = apply_patch(original, patch, str(relative), before is None)
+            # Literal, hash-locked image assets use the same pre/postimage and
+            # provenance checks as text patches. Code/lock files cannot use this path.
+            revised = patch if Path(entry["patch"]).suffix in {".png", ".ico", ".icns"} else apply_patch(original, patch, str(relative), before is None)
             if hashlib.sha256(revised).hexdigest() != entry["after_sha256"]:
                 raise ValueError(f"Patch postimage checksum mismatch: {relative}")
             target.parent.mkdir(parents=True, exist_ok=True)

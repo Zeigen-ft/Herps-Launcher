@@ -1,2 +1,5 @@
 # Engine patches apply byte-for-byte to the verified upstream archive.
 patches/** text eol=lf
+# Binary game artwork must remain byte-identical to its pinned hashes.
+patches/assets/** -text
+packaging/icons/*.png -text
