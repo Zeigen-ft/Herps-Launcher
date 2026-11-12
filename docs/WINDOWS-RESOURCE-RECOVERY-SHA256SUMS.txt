@@ -1,0 +1,4 @@
+399e0425d0305a4a45f1aaa310b3fb2ea266d7ee372a97e48cd2b4ad01547786  Herps-Launcher-evidence-Windows-x86_64.zip
+597e8c5f27e3ff886af545603accf05f7133cc626059b53b7437b2e9bb889461  Herps-Launcher-0.1.0-Windows-x86_64.zip
+7c76ccded04141b3ab7fd2d07466aed40e3e5d28b06742924406fa52056a020b  Herps-Launcher-0.1.0-Windows-x64-Setup.exe
+201c887565b47f7af69ceff8e234a45b7ce6a96e559d13f0140a2347d28b6d37  Herps-Launcher-0.1.0-x86_64-pc-windows-msvc-dxrrq0oo.zip

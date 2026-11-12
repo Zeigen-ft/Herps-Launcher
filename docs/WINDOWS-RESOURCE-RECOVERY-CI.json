@@ -1,0 +1,218 @@
+{
+  "schema": 1,
+  "source_commit": "4dff066cf488ba603e5aef85564c11713434ee64",
+  "resource_fix_commit": "026e281c84baf179e10e2a4b82e7eb27b63ac930",
+  "branch": "feature/photon-fullbright",
+  "physical_failure_evidence": "WINDOWS-RESOURCE-FAILURE-EVIDENCE.json",
+  "windows_ci": {
+    "run_id": 43167905016,
+    "url": "https://github.com/Zeigen-ft/Herps-Launcher/actions/runs/43167905016",
+    "workflow_status": "completed",
+    "workflow_conclusion": "success",
+    "source_tests": {
+      "passed": 501,
+      "skipped": 15,
+      "failed": 0,
+      "skip_cases": [
+        "test_clean_launch_uses_separate_game_folder_and_original_binary (test_herps_launcher.LauncherTests.test_clean_launch_uses_separate_game_folder_and_original_binary) ... skipped 'Owned POSIX process fixture'",
+        "test_failed_resource_check_does_not_start_game_and_releases_lock (test_herps_launcher.LauncherTests.test_failed_resource_check_does_not_start_game_and_releases_lock) ... skipped 'Owned POSIX process fixture'",
+        "test_play_real_child_logs_exit_and_relaunch_without_touching_saves (test_herps_launcher.LauncherTests.test_play_real_child_logs_exit_and_relaunch_without_touching_saves) ... skipped 'Owned POSIX child fixture; Windows CI covers native tests separately'",
+        "test_supplied_apk (test_inspect_apk.ApkTests.test_supplied_apk) ... skipped 'Set HORIZON_TEST_APK to run supplied-APK integration'",
+        "test_actual_dialog_scripts_compile_on_mac (test_macos_launcher.MacLauncherTests.test_actual_dialog_scripts_compile_on_mac) ... skipped 'Mac Bash behavior tests need Unix paths and executable scripts'",
+        "test_dialog_cancellation_preserves_original_preparer_failure (test_macos_launcher.MacLauncherTests.test_dialog_cancellation_preserves_original_preparer_failure) ... skipped 'Mac Bash behavior tests need Unix paths and executable scripts'",
+        "test_failed_resource_check_prints_error_and_opens_preparation (test_macos_launcher.MacLauncherTests.test_failed_resource_check_prints_error_and_opens_preparation) ... skipped 'Mac Bash behavior tests need Unix paths and executable scripts'",
+        "test_game_failure_surfaces_log_and_preserves_client_status (test_macos_launcher.MacLauncherTests.test_game_failure_surfaces_log_and_preserves_client_status) ... skipped 'Mac Bash behavior tests need Unix paths and executable scripts'",
+        "test_non_mac_host_is_rejected_before_creating_player_data (test_macos_launcher.MacLauncherTests.test_non_mac_host_is_rejected_before_creating_player_data) ... skipped 'Mac Bash behavior tests need Unix paths and executable scripts'",
+        "test_open_failure_preserves_preparer_error_and_prints_manual_path (test_macos_launcher.MacLauncherTests.test_open_failure_preserves_preparer_error_and_prints_manual_path) ... skipped 'Mac Bash behavior tests need Unix paths and executable scripts'",
+        "test_prepared_resources_launch_client_with_literal_arguments_and_profile (test_macos_launcher.MacLauncherTests.test_prepared_resources_launch_client_with_literal_arguments_and_profile) ... skipped 'Mac Bash behavior tests need Unix paths and executable scripts'",
+        "test_show_resource_log_uses_exact_path_without_starting_game (test_macos_launcher.MacLauncherTests.test_show_resource_log_uses_exact_path_without_starting_game) ... skipped 'Mac Bash behavior tests need Unix paths and executable scripts'",
+        "test_case_collision_is_rejected (test_package_bedrock_windows.BedrockPackagingTests.test_case_collision_is_rejected) ... skipped 'Filesystem cannot construct distinct case-colliding files'",
+        "test_linked_profile_and_settings_preserve_external_files (test_rlcraft_chainmail.ChainmailTests.test_linked_profile_and_settings_preserve_external_files) ... skipped 'Windows link guards are exercised with junctions separately'",
+        "test_linked_mod_folder_and_receipt_cannot_redirect_install (test_rlcraft_flint.FlintTests.test_linked_mod_folder_and_receipt_cannot_redirect_install) ... skipped 'POSIX symlink fixture; Windows junction case is separate'"
+      ]
+    },
+    "lightmap_cpu": {
+      "passed": 3,
+      "failed": 0,
+      "ignored": 2,
+      "other_library_tests_filtered": 850
+    },
+    "resource_overlay": {
+      "passed": 15,
+      "failed": 0,
+      "ignored": 1,
+      "other_library_tests_filtered": 839,
+      "ignored_case": "packs::cache::tests::benchmark_real_resource_root: requires prepared resources and real pack paths in environment",
+      "recovery_case": "packs::tests::windows_overlay_keeps_fonts_readable_and_preserves_legacy_profile_cache",
+      "recovery_case_result": "passed",
+      "exact_user_windows_trust_policy_reproduced": false
+    },
+    "installed_cases": [
+      {
+        "report": "installed-workflows.json",
+        "status": "passed",
+        "passed": 68,
+        "skipped": 0,
+        "failed": 0,
+        "tools_on_path": {
+          "cargo": null,
+          "rustc": null,
+          "rustup": null
+        },
+        "gameplay_verified": false,
+        "interactive_verified": false
+      },
+      {
+        "report": "installed-flint.json",
+        "status": "passed",
+        "passed": 7,
+        "skipped": 0,
+        "failed": 0,
+        "tools_on_path": {
+          "cargo": null,
+          "rustc": null,
+          "rustup": null
+        },
+        "gameplay_verified": false,
+        "interactive_verified": false
+      },
+      {
+        "report": "installed-gathering.json",
+        "status": "passed",
+        "passed": 7,
+        "skipped": 0,
+        "failed": 0,
+        "tools_on_path": {
+          "cargo": null,
+          "rustc": null,
+          "rustup": null
+        },
+        "gameplay_verified": false,
+        "interactive_verified": false
+      },
+      {
+        "report": "installed-woodcutting.json",
+        "status": "passed",
+        "passed": 8,
+        "skipped": 0,
+        "failed": 0,
+        "tools_on_path": {
+          "cargo": null,
+          "rustc": null,
+          "rustup": null
+        },
+        "gameplay_verified": false,
+        "interactive_verified": false
+      },
+      {
+        "report": "installed-bandage.json",
+        "status": "passed",
+        "passed": 8,
+        "skipped": 0,
+        "failed": 0,
+        "tools_on_path": {
+          "cargo": null,
+          "rustc": null,
+          "rustup": null
+        },
+        "gameplay_verified": false,
+        "interactive_verified": false
+      }
+    ],
+    "existing_profile_and_preference_preserved": true,
+    "game_icon": {
+      "status": "passed",
+      "frames": 9,
+      "icon_sha256": "c56671c5ba81b77e7df9e90afc02efbd91c72fa462f00815190d2caa1cd1cc38",
+      "executable_sha256": "8d48f2f1fa88af2bc64353099b96baffa48b6726ff1f9639c4b80522e55fca5b",
+      "executable": "horizon-client.exe",
+      "executed_executable": false,
+      "physical_visual_verified": false
+    },
+    "native_mod_compile_select_rollback": "passed"
+  },
+  "portable_ci": {
+    "run_id": 43167905387,
+    "result": "success",
+    "windows": {
+      "passed": 411,
+      "skipped": 105,
+      "failed": 0
+    },
+    "linux": {
+      "passed": 398,
+      "skipped": 118,
+      "failed": 0
+    }
+  },
+  "local": {
+    "source_tests": {
+      "passed": 497,
+      "skipped": 19,
+      "failed": 0
+    },
+    "private_photon_cpu_tests": {
+      "passed": 4,
+      "skipped": 0,
+      "failed": 0
+    },
+    "macos_bundle_layout_tests": "16 passed as Linux staging fixtures; not native Mac testing"
+  },
+  "artifacts": [
+    {
+      "name": "Herps-Launcher-evidence-Windows-x86_64",
+      "id": 13924155280,
+      "bytes": 814427,
+      "sha256": "399e0425d0305a4a45f1aaa310b3fb2ea266d7ee372a97e48cd2b4ad01547786",
+      "url": "https://github.com/Zeigen-ft/Herps-Launcher/actions/runs/43167905016/artifacts/13924155280",
+      "expires_at": "2027-02-10T06:24:21Z",
+      "crc_all_entries_passed": true
+    },
+    {
+      "name": "Herps-Launcher-0.1.0-Windows-x86_64",
+      "id": 13923915521,
+      "bytes": 240758221,
+      "sha256": "597e8c5f27e3ff886af545603accf05f7133cc626059b53b7437b2e9bb889461",
+      "url": "https://github.com/Zeigen-ft/Herps-Launcher/actions/runs/43167905016/artifacts/13923915521",
+      "expires_at": "2027-02-10T06:24:21Z",
+      "crc_all_entries_passed": true,
+      "delivered_lightmap_sha256": "7f05b1a35be3efd82b6830684f2bc61e21dc2cee4eddb96299a3d854719c6f84",
+      "original_photon_archive_not_bundled": true,
+      "engine_manifest_postimages_verified": 30,
+      "native_game_icon": {
+        "status": "passed",
+        "frames": 9,
+        "icon_sha256": "c56671c5ba81b77e7df9e90afc02efbd91c72fa462f00815190d2caa1cd1cc38",
+        "executable_sha256": "8d48f2f1fa88af2bc64353099b96baffa48b6726ff1f9639c4b80522e55fca5b",
+        "executable": "horizon-client.exe",
+        "executed_executable": false,
+        "physical_visual_verified": false
+      },
+      "packages": [
+        {
+          "file": "Herps-Launcher-0.1.0-Windows-x64-Setup.exe",
+          "bytes": 103547219,
+          "sha256": "7c76ccded04141b3ab7fd2d07466aed40e3e5d28b06742924406fa52056a020b"
+        },
+        {
+          "file": "Herps-Launcher-0.1.0-x86_64-pc-windows-msvc-dxrrq0oo.zip",
+          "bytes": 139105451,
+          "sha256": "201c887565b47f7af69ceff8e234a45b7ce6a96e559d13f0140a2347d28b6d37"
+        }
+      ]
+    }
+  ],
+  "limits": {
+    "previous_windows_physical_report": "FAIL: error 448; missing glyphs/background and Photon reload failure",
+    "new_candidate_physical_retest": "NOT RUN",
+    "real_survival_world_save_load_retest": "NOT RUN",
+    "macos_native_build_icon_and_gameplay": "NOT RUN",
+    "native_icon_visual_appearance": "NOT RUN",
+    "gpu_visual_and_performance": "NOT RUN",
+    "private_zip_full_overlay_integration": "NOT RUN",
+    "original_photon_pack_redistributed": false,
+    "full_rlcraft_or_funcraft_compatibility": false,
+    "public_release_published": false
+  },
+  "preflight_correction": "Text normalization for patches/** would corrupt binary icon files; -text attributes added and all committed asset bytes checked against pinned hashes before pushing."
+}
