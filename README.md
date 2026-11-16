@@ -61,6 +61,11 @@ migration does not change visibility, create a release or create a tag.
   [Verification](docs/targeted-porting/NATIVE_SURVIVAL_STAGE_4_VERIFICATION.md)
   keeps Stage 4 physical gameplay open; Stage 3's user report does not accept Stage 4.
 
+An optional [Herps 26.3 server dynamic-lighting test pack](docs/SERVER-DYNAMIC-LIGHTING.md)
+has a local Windows installer with a verified-backup guard. It is experimental,
+starts disabled and requires a disposable test world. Multiplayer gameplay is
+**NOT RUN**; it does not implement full OptiFine.
+
 ## Supported testing scope
 
 | Target | Current evidence | Remaining acceptance |

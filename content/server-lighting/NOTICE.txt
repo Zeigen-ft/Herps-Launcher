@@ -1,0 +1,20 @@
+Herps Server Dynamic Lighting 0.1.0 - EXPERIMENTAL TEST PACK
+Copyright (c) 2026 Herps contributors. License: AGPL-3.0-only.
+
+Adapted from Dynamic Lighting 1.0 by quillphen:
+https://modrinth.com/datapack/dynamic-lighting
+The user-supplied archive declares AGPL-3.0-only in its loader metadata.
+Original SHA-256: f4c66fc343c03532be4028859e8a0bd510c182348b8649b63301865f99239e82
+The original contains 84 ZIP entries and no Java classes. It was inspected as
+data; no Java code or original pack commands were executed.
+
+Changes: rewritten native command functions; disabled on first load; explicit
+enable/disable; ordinary-air-only placement; marker-owned cleanup; strongest
+tier first; dropped-item search limited to 32 nearest within 24 blocks per
+player; no water, mob, on-fire, legacy config, or unsafe broad-fill behavior.
+All preferred source and the full license are included. No OptiFine code,
+assets, JARs, or Minecraft game resources are included. No warranty.
+
+If you modify and make this adaptation available to remote users, follow
+AGPL section 13 and prominently offer the corresponding source. Keep this
+notice, the license, and modified source available with your distribution.

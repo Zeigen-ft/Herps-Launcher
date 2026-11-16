@@ -1,0 +1,42 @@
+name: Verify server dynamic lighting test pack
+on:
+  workflow_dispatch:
+  pull_request:
+    paths: ['tools/*server_lighting.py', 'packaging/server-lighting/**', 'content/server-lighting/**', 'tests/test_server_lighting.py', 'docs/SERVER-DYNAMIC-LIGHTING.md', 'licenses/server-lighting-AGPL-3.0.txt', '.github/workflows/server-lighting.yml']
+permissions:
+  contents: read
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 40
+    env:
+      PYTHONUTF8: '1'
+      CARGO_BUILD_JOBS: '3'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Static boundary, dependency, checksum and source reproducibility tests
+        run: python -m unittest discover -s tests -p test_server_lighting.py -v
+      - name: Build data-only pack and beginner installation bundle
+        run: python tools/build_server_lighting.py
+      - name: Real Windows installer safety fixtures (not gameplay)
+        shell: powershell
+        run: ./packaging/server-lighting/test_install.ps1
+      - name: Install pinned command-parser toolchain
+        run: rustup toolchain install 1.95.0 --profile minimal
+      - name: Validate with pinned native command parser (no command execution)
+        run: python tools/verify_server_lighting.py
+      - name: Upload internal test bundle and checksums
+        uses: actions/upload-artifact@v4
+        with:
+          name: Herps-Server-Dynamic-Lighting-0.1.0-Windows-Test
+          path: |
+            .cache/server-lighting/Herps-Server-Dynamic-Lighting-0.1.0-Windows-Test.zip
+            .cache/server-lighting/SHA256SUMS.txt
+          if-no-files-found: error
+          retention-days: 90

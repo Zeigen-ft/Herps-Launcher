@@ -1,5 +1,14 @@
 # Licences and third-party notices
 
+The separate experimental **Herps Server Dynamic Lighting 0.1.0** datapack,
+its generator and installer use **AGPL-3.0-only**, as declared by the supplied
+Dynamic Lighting 1.0 archive by quillphen. See its
+[provenance and modifications](content/server-lighting/NOTICE.txt),
+[complete license](licenses/server-lighting-AGPL-3.0.txt) and
+[test-only installation guide](docs/SERVER-DYNAMIC-LIGHTING.md).
+Its downloadable bundle includes complete preferred source. It contains no
+Java classes or OptiFine code and is separate from the launcher binary.
+
 Photon [3.1.2-M1], copyright 2026 PrecisionZero, is an external user-provided
 resource pack under its supplied **All Rights Reserved** licence. Its ZIP,
 artwork and GLSL are not included in the repository or candidate packages.

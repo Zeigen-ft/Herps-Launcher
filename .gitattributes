@@ -3,3 +3,9 @@ patches/** text eol=lf
 # Binary game artwork must remain byte-identical to its pinned hashes.
 patches/assets/** -text
 packaging/icons/*.png -text
+# Reproducible data-only server test bundle, including its preferred source.
+packaging/server-lighting/** text eol=lf
+content/server-lighting/** text eol=lf
+tools/build_server_lighting.py text eol=lf
+docs/SERVER-DYNAMIC-LIGHTING.md text eol=lf
+licenses/server-lighting-AGPL-3.0.txt text eol=lf
