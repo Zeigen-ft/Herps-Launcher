@@ -92,6 +92,9 @@ def zip_bytes(files):
     with zipfile.ZipFile(output, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
         for name, data in sorted(files.items()):
             entry = zipfile.ZipInfo(name, (2026, 1, 1, 0, 0, 0))
+            # ZipInfo otherwise records the build host (Windows=0, Unix=3),
+            # changing checksums despite byte-identical source and contents.
+            entry.create_system = 3
             entry.compress_type = zipfile.ZIP_DEFLATED
             entry.external_attr = 0o100644 << 16
             archive.writestr(entry, data)

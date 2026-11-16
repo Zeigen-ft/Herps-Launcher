@@ -69,6 +69,9 @@ class ServerLightingTests(unittest.TestCase):
             self.assertEqual((Path(directory) / PACK_NAME).read_bytes(), pack)
             self.assertEqual((Path(directory) / BUNDLE_NAME).read_bytes(), bundle)
             with zipfile.ZipFile(io.BytesIO(bundle)) as archive:
+                self.assertTrue(all(entry.create_system == 3 for entry in archive.infolist()))
+                with zipfile.ZipFile(io.BytesIO(pack)) as inner:
+                    self.assertTrue(all(entry.create_system == 3 for entry in inner.infolist()))
                 sums = archive.read('SHA256SUMS.txt').decode()
                 for line in sums.splitlines():
                     expected, name = line.split('  ', 1)
