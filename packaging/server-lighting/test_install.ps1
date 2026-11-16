@@ -74,3 +74,6 @@ try {
 } finally {
     Remove-Item -LiteralPath $root -Recurse -Force
 }
+# Expected child-process refusals leave LASTEXITCODE=1. The fixture suite itself
+# succeeds only after every assertion and cleanup above completed successfully.
+exit 0
