@@ -1,6 +1,9 @@
 name: Verify server dynamic lighting test pack
 on:
   workflow_dispatch:
+  push:
+    branches: [feature/photon-fullbright]
+    paths: ['tools/*server_lighting.py', 'packaging/server-lighting/**', 'content/server-lighting/**', 'tests/test_server_lighting.py', 'docs/SERVER-DYNAMIC-LIGHTING.md', 'licenses/server-lighting-AGPL-3.0.txt', '.github/workflows/server-lighting.yml']
   pull_request:
     paths: ['tools/*server_lighting.py', 'packaging/server-lighting/**', 'content/server-lighting/**', 'tests/test_server_lighting.py', 'docs/SERVER-DYNAMIC-LIGHTING.md', 'licenses/server-lighting-AGPL-3.0.txt', '.github/workflows/server-lighting.yml']
 permissions:
