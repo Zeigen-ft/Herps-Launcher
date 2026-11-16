@@ -1,0 +1,37 @@
+{
+  "source_commit": "2420d31201a7693d0c1e94984c0bf118a5f2df7e",
+  "run_id": 43913856821,
+  "artifact_id": 14248758756,
+  "artifact_name": "Herps-Server-Dynamic-Lighting-0.1.0-Windows-Test",
+  "artifact_sha256": "e2d04664dd5f5e96da8d3098a4a05dbc6b179f0b6e1d576837132a24da7430cf",
+  "artifact_bytes": 42339,
+  "bundle_sha256": "2f8277a983170cddb594a8e7cf1c1c32d336bd1f1124138afccd9fd8859d5c18",
+  "bundle_bytes": 59506,
+  "pack_sha256": "11dff393eb1e85e5692eeb009226d04478a5f745f0ba623cabf8cfe9cda8fe8d",
+  "pack_bytes": 18165,
+  "all_inner_hashes_verified": true,
+  "windows_linux_byte_identical": true,
+  "native_server_runtime": "NOT RUN",
+  "physical_gameplay": "NOT RUN",
+  "artifact_expires_at": "2027-02-14T17:01:15Z",
+  "branch": "feature/photon-fullbright",
+  "regression_run_id": 43913856837,
+  "package_tests_passed": 4,
+  "windows_installer_assertions_passed": 20,
+  "native_commands_parsed": 36,
+  "invalid_commands_rejected": 3,
+  "native_permission": 2,
+  "windows_regressions": {
+    "total": 520,
+    "passed": 415,
+    "skipped": 105
+  },
+  "linux_regressions": {
+    "total": 520,
+    "passed": 402,
+    "skipped": 118
+  },
+  "macos_hosting": "NOT RUN",
+  "main_unchanged": "b292a48c279c2b718a5395fe5558f2ff83dcea30",
+  "public_release_created": false
+}
