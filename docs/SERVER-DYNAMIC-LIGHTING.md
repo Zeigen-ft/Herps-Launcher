@@ -44,6 +44,23 @@ Clients must actually connect to this server; no JAR goes in a Herps mods folder
    `%USERPROFILE%\Documents\Herspers-Server`. Search **inside your selected
    test server folder** for `level.dat`; do not assume the server folder itself
    is the world. Custom server/world locations can differ.
+   To start a separate test host with the existing Windows game wrapper, open
+   PowerShell, replace the first path below with the `Herspers-Minecraft.exe`
+   in the game installation selected in Launcher Settings, and run:
+
+   ```powershell
+   & "C:\path\to\game\Herspers-Minecraft.exe" --host-tailscale --server-dir "$env:USERPROFILE\Documents\Herps-Lighting-Test-Server" --port 25566
+   ```
+
+   Use a **new, unused** folder name. This existing host command requires a
+   connected Tailscale installation and asks you to read/accept Minecraft's
+   EULA if needed. It creates a separate private test server configuration;
+   it does not select the default existing host. Join the printed address on
+   port 25566, then stop it before installing the pack. Use this **same command**
+   to restart the test host later. The launcher's normal hosting button selects
+   its default server, so do not use that button for this separate test.
+   The command's argument handling has automated coverage; this exact physical
+   two-PC test-host procedure remains unverified.
 5. Download the Windows test bundle from the successful server-lighting Actions
    run, extract its outer artifact ZIP, then extract
    `Herps-Server-Dynamic-Lighting-0.1.0-Windows-Test.zip` into a new folder.
