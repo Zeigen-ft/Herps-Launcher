@@ -4,7 +4,10 @@ Status: **implementation and automated checks PASS; interactive acceptance OPEN*
 Branch: `feature/herps-distant-terrain`, based on
 `7f6840eb9f4ff7fdc833da1d3d15424b5d08efaa`.
 Verified code: `0a52572a5a94c763dc298328fde471c84f66d03f`.
-No merge into main, tag, public release or new installer was created.
+No merge into main, tag or public release was created. The original native
+verification run below produced logs only. A later
+[Windows installer/portable candidate](DISTANT-TERRAIN-WINDOWS-CANDIDATE.md)
+from `44b21a8` is built and independently audited; physical acceptance stays open.
 
 ## Implemented behavior
 
@@ -102,8 +105,10 @@ The receipt is also retained in [DISTANT-TERRAIN-CI.json](DISTANT-TERRAIN-CI.jso
 
 Every physical Windows/macOS graphics/gameplay, seam/z-fighting, frame-rate,
 save/relaunch/restore and crash-recovery checklist case is **NOT RUN**. Native
-macOS compilation, a release-profile game binary and packaged installers are
-also **NOT RUN** for this stage. This is an experimental feature branch.
+macOS compilation and a release-profile game binary are also **NOT RUN** for
+this stage. The later Windows candidate uses the optimized `fast` build profile
+and has passed automated packaging/lifecycle checks. This is an experimental
+feature branch.
 
 The CPU budget covers bounded derived LOD data and working reserves, not total
 game RSS, full-detail chunks, textures or the GPU arena. Captures retain only

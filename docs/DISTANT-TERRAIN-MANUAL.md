@@ -13,6 +13,12 @@ each test. Source/CPU/CI tests are separate evidence from what you see in-game.
 
 ## Enable it
 
+For a ready-made Windows build, follow the
+[beginner quick start and download](DISTANT-TERRAIN-WINDOWS-QUICKSTART.md).
+Its [candidate receipt](DISTANT-TERRAIN-WINDOWS-CANDIDATE.md) separates automated
+installation evidence from physical testing. You do not need Rust/Cargo to
+use that packaged candidate.
+
 Use a native game build from `feature/herps-distant-terrain`; the earlier
 launcher or server-lighting ZIP does not include this renderer change. The
 Stage 1 CI artifact contains verification evidence, **not an installer**.
