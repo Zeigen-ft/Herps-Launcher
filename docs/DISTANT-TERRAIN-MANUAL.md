@@ -13,6 +13,22 @@ each test. Source/CPU/CI tests are separate evidence from what you see in-game.
 
 ## Enable it
 
+Use a native game build from `feature/herps-distant-terrain`; the earlier
+launcher or server-lighting ZIP does not include this renderer change. The
+Stage 1 CI artifact contains verification evidence, **not an installer**.
+For a Windows developer build, use Python, PowerShell 7, rustup and Visual
+Studio C++ Build Tools/Windows SDK, then run from this branch's repository root:
+
+```powershell
+pwsh -File scripts/build_windows.ps1 -BuildProfile fast
+```
+
+The existing script prints a new package location under `dist/windows-x86_64`.
+Use that build through the launcher's existing installation selection and keep
+resource preparation/verification unchanged. Building/linking this installer
+and launching it interactively are separate from the CI type-check; neither
+has been claimed as a physical PASS for Stage 1.
+
 1. Start the candidate and open its graphics settings, then **Advanced**.
 2. For a focused Stage 1 test, leave the older **LOD Distance** option **Off**.
    That separate existing option can generate far terrain for local worlds;
@@ -112,6 +128,8 @@ private addresses, usernames, personal paths and credentials before sharing.
   terrain. Resource-pack, graphics or world changes can require a cache reset.
 * The same-address/same-seed remote world-reset ambiguity described above is
   unresolved; this is a rendering cache, not an authoritative world identity.
+  Recreating a local save at the same path with the same seed has the same
+  visual-staleness limitation. Different seeds are included in the scope key.
 * Memory and disk limits intentionally evict data. A small budget can leave
   holes in a previously explored route; revisiting can repopulate it.
 * No Distant Horizons source/JAR is used by this original extension. It is not

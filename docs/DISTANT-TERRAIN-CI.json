@@ -1,0 +1,56 @@
+{
+  "status": "PASS",
+  "engine_revision": "7301f6fdd7f470b11317276e7a11b4dc615c137a",
+  "rust_toolchain": "1.95.0",
+  "source_commit": "0a52572a5a94c763dc298328fde471c84f66d03f",
+  "patches_sha256": "ef2fdf978aa5b54112c267906f6bb7f090fe8fdb94a96cf8a24ca07a60e03502",
+  "checks": [
+    "native lod and GPU fade math unit tests",
+    "graphics config unit tests",
+    "graphics UI unit tests",
+    "full client integration check"
+  ],
+  "coverage": [
+    "native LOD downsampling/observed source/cache/mesh tests",
+    "graphics default/config/UI tests",
+    "existing GPU fade math tests",
+    "game binary integration type-check with existing mods feature"
+  ],
+  "new_mode_default": "OFF",
+  "java_executed": false,
+  "distant_horizons_source_adapted": false,
+  "server_streaming_added": false,
+  "physical_windows_gameplay": "NOT RUN",
+  "macos_gameplay": "NOT RUN",
+  "interactive_graphics": "NOT RUN",
+  "installer_built": false,
+  "branch": "feature/herps-distant-terrain",
+  "base_commit": "7f6840eb9f4ff7fdc833da1d3d15424b5d08efaa",
+  "native_run_id": 44093952683,
+  "regression_run_id": 44093952949,
+  "native_lod_tests": {
+    "passed": 50,
+    "ignored": 1
+  },
+  "native_graphics_tests_passed": 9,
+  "native_graphics_ui_tests_passed": 14,
+  "patch_guard_tests_passed": 4,
+  "windows_source_tests": {
+    "total": 524,
+    "passed": 419,
+    "skipped": 105
+  },
+  "linux_source_tests": {
+    "total": 524,
+    "passed": 406,
+    "skipped": 118
+  },
+  "artifact_id": 14332468382,
+  "artifact_name": "Herps-Distant-Terrain-Stage1-Verification-Windows",
+  "artifact_bytes": 9408,
+  "artifact_sha256": "730d9e18edb638039342c7bddbc38cb1a360fcc5e36d050bde00582608d15952",
+  "artifact_download_independently_verified": true,
+  "main_unchanged": "b292a48c279c2b718a5395fe5558f2ff83dcea30",
+  "public_release_created": false,
+  "full_native_acceptance": false
+}
