@@ -240,6 +240,12 @@
       "before_sha256": null,
       "after_sha256": "799c2d6c51ecca7e21c1bfad54239bff9c50546dd62aae8b7fd8e512fc8a34b1",
       "patch": "engine/crates-horizon-client-src-game-visited_lod.rs.patch"
+    },
+    {
+      "path": "crates/horizon-client-render/src/lod/mesh.rs",
+      "before_sha256": "cb3a32d2b0096b60d1d3aa27d9511e43174663111810430ce4c06e3d7cbdc930",
+      "after_sha256": "508d7c7f2f85d816d8557a408eb355b8909ff3267aa4795571fc1fb8e411c92b",
+      "patch": "engine/crates-horizon-client-render-src-lod-mesh.rs.patch"
     }
   ]
 }

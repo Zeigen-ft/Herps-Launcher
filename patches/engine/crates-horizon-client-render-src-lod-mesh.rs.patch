@@ -1,0 +1,41 @@
+--- a/crates/horizon-client-render/src/lod/mesh.rs
++++ b/crates/horizon-client-render/src/lod/mesh.rs
+@@ -1126,6 +1126,38 @@
+         v.uv.map(|u| f32::from(u) / crate::mesher::TILED_UV_STEPS)
+     }
+     #[test]
++    fn received_heightmap_mesh_preserves_tint_and_clips_near_and_unknown_columns() {
++        let columns: Vec<_> = (0..256).map(|i| {
++            if i / 16 >= 8 { Column::default() } else {
++                Column::from_surface(Some(super::super::Surface {
++                    height: 64, state: BlockStateId(1), water: None, biome: 7,
++                }))
++            }
++        }).collect();
++        // A level-1 tile covers 2x2 chunks. Only its upper half is known;
++        // the left near chunk is excluded. Exactly one 16x16 top remains.
++        let covered = [(0, 0), (0, 1)].into_iter().collect();
++        let generated = mesh_columns(TileKey { x: 0, z: 0, level: 1 }, &columns,
++            &covered, Some([0, 0, 1, 2]), |span, dir, at| {
++                let mut result = material(span, dir, at);
++                result.faces[0].as_mut().unwrap().color = if span.biome == 7 { 0xff123456 } else { 0 };
++                result
++            });
++        let mut top_area = 0.0;
++        for quad in generated.solid.as_chunks::<4>().0 {
++            if !quad.iter().all(|v| v.pos[1] == 64.0) { continue; }
++            let lo_x = quad.iter().map(|v| v.pos[0]).reduce(f32::min).unwrap();
++            let hi_x = quad.iter().map(|v| v.pos[0]).reduce(f32::max).unwrap();
++            let lo_z = quad.iter().map(|v| v.pos[2]).reduce(f32::min).unwrap();
++            let hi_z = quad.iter().map(|v| v.pos[2]).reduce(f32::max).unwrap();
++            assert!(lo_x >= 16.0 && hi_x <= 32.0 && lo_z >= 0.0 && hi_z <= 16.0);
++            assert!(quad.iter().all(|v| v.color == 0xff123456));
++            top_area += (hi_x - lo_x) * (hi_z - lo_z);
++        }
++        assert_eq!(top_area, 256.0);
++        assert!(generated.translucent.is_empty());
++    }
++    #[test]
+     fn wide_faces_split_and_keep_their_texture_phase() {
+         let mut mesh = SectionMesh::default();
+         let key = FaceKey {
