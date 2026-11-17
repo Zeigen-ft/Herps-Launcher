@@ -44,6 +44,13 @@ memory. The client can recreate the LOD worker/cache when its limits change;
 radius changes apply during subsequent world updates. A cache rebuild can
 temporarily remove far terrain until results return.
 
+The disk quota applies to each combined world/dimension scope. A scope also
+has a 4,096-record cap. An atomic replacement can temporarily use one additional
+record (up to 1 MiB compressed) while the previous complete record remains.
+Unknown files are preserved and count against the quota. Under rapid movement,
+the bounded eight-entry/byte-limited observation queue can omit a capture;
+revisiting can fill that gap. Rendering caches are expendable, not backups.
+
 ## Cache location and preservation
 
 Stage 1 stores its disposable rendering cache under:

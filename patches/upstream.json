@@ -232,13 +232,13 @@
     {
       "path": "crates/horizon-client/src/game/remote.rs",
       "before_sha256": "f21bf9b2160bb8f0537ae910b1d21924a508e80d22254e29a1b4bde7559628de",
-      "after_sha256": "55cf9ff5ff13d34f7cb7e641fba195d7b6a3b6b14949a9b2186d3fe1096099ca",
+      "after_sha256": "c368acfcdeafe6b3dfba6aefdd0610fb93cbedff96ec1fcae324e073a94170c9",
       "patch": "engine/crates-horizon-client-src-game-remote.rs.patch"
     },
     {
       "path": "crates/horizon-client/src/game/visited_lod.rs",
       "before_sha256": null,
-      "after_sha256": "25f096bc4f1a15f201b2ef8da46ff2b278a3fd5f383528929f5db49c40ac11df",
+      "after_sha256": "799c2d6c51ecca7e21c1bfad54239bff9c50546dd62aae8b7fd8e512fc8a34b1",
       "patch": "engine/crates-horizon-client-src-game-visited_lod.rs.patch"
     }
   ]

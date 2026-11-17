@@ -69,6 +69,14 @@ starts disabled and requires a disposable test world. The user reports
 Two-player visibility, cleanup/restart and macOS acceptance remain open.
 It does not implement full OptiFine.
 
+On `feature/herps-distant-terrain`, the optional **Explored Terrain LOD** mode
+caches only terrain received by the native client. It starts **Off**, uses a
+separate per-world/dimension rendering cache and adds radius/memory/disk/worker
+limits. See the [renderer and storage design](docs/DISTANT-TERRAIN-ARCHITECTURE.md)
+and [manual checklist and limitations](docs/DISTANT-TERRAIN-MANUAL.md).
+Native graphics/gameplay acceptance is **NOT RUN**; this adds no server LOD
+streaming or Java Distant Horizons execution.
+
 ## Supported testing scope
 
 | Target | Current evidence | Remaining acceptance |
