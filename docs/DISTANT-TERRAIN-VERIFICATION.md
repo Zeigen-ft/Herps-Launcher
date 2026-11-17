@@ -8,6 +8,10 @@ No merge into main, tag or public release was created. The original native
 verification run below produced logs only. A later
 [Windows installer/portable candidate](DISTANT-TERRAIN-WINDOWS-CANDIDATE.md)
 from `44b21a8` is built and independently audited; physical acceptance stays open.
+Subsequent user screenshots reported poor visual results. The
+[unknown-edge wall correction](DISTANT-TERRAIN-EDGE-FIX.md) at `a95e004` has
+56 native LOD cases passing and a [corrected Windows candidate](DISTANT-TERRAIN-EDGE-WINDOWS-CANDIDATE.md).
+Corrected-candidate physical graphics/gameplay remains NOT RUN.
 
 ## Implemented behavior
 

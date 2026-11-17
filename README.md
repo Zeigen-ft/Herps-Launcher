@@ -75,7 +75,7 @@ separate per-world/dimension rendering cache and adds radius/memory/disk/worker
 limits. See the [renderer and storage design](docs/DISTANT-TERRAIN-ARCHITECTURE.md)
 and [manual checklist and limitations](docs/DISTANT-TERRAIN-MANUAL.md).
 Windows users can follow the [download and quick start](docs/DISTANT-TERRAIN-WINDOWS-QUICKSTART.md)
-for the independently audited [internal candidate](docs/DISTANT-TERRAIN-WINDOWS-CANDIDATE.md).
+for the independently audited [internal candidate](docs/DISTANT-TERRAIN-EDGE-WINDOWS-CANDIDATE.md).
 Native graphics/gameplay acceptance is **NOT RUN**; this adds no server LOD
 streaming or Java Distant Horizons execution.
 

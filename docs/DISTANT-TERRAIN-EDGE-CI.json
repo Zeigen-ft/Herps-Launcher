@@ -1,0 +1,62 @@
+{
+  "status": "PASS",
+  "engine_revision": "7301f6fdd7f470b11317276e7a11b4dc615c137a",
+  "rust_toolchain": "1.95.0",
+  "source_commit": "a95e004746abe0ebdbe404a0becb1fa3e803a7b0",
+  "patches_sha256": "ad5035ada0a6503ae84c2e30f0d5330145272e35062e0f34d93656025076de05",
+  "checks": [
+    "native lod and GPU fade math unit tests",
+    "graphics config unit tests",
+    "graphics UI unit tests",
+    "full client integration check"
+  ],
+  "coverage": [
+    "native LOD downsampling/observed source/cache/mesh tests",
+    "graphics default/config/UI tests",
+    "existing GPU fade math tests",
+    "game binary integration type-check with existing mods feature"
+  ],
+  "new_mode_default": "OFF",
+  "java_executed": false,
+  "distant_horizons_source_adapted": false,
+  "server_streaming_added": false,
+  "physical_windows_gameplay": "NOT RUN",
+  "macos_gameplay": "NOT RUN",
+  "interactive_graphics": "NOT RUN",
+  "installer_built": false,
+  "native_run_id": 44170889270,
+  "regression_run_id": 44170889304,
+  "native_lod_tests": {
+    "passed": 56,
+    "ignored": 1
+  },
+  "native_graphics_tests_passed": 9,
+  "native_graphics_ui_tests_passed": 14,
+  "patch_guard_tests_passed": 4,
+  "patch_preparer_tests_passed": 25,
+  "windows_source_tests": {
+    "total": 524,
+    "passed": 419,
+    "skipped": 105
+  },
+  "linux_source_tests": {
+    "total": 524,
+    "passed": 406,
+    "skipped": 118
+  },
+  "artifact_id": 14367602882,
+  "artifact_name": "Herps-Distant-Terrain-Stage1-Verification-Windows",
+  "artifact_bytes": 4389,
+  "artifact_sha256": "2209b1ae811cd1ee86ae2985b1ebee7ce948f9e3299bdfdd2f1919be7a2ce52b",
+  "artifact_download_independently_verified": true,
+  "corrected_candidate_run_id": 44171833781,
+  "corrected_candidate_status": "PASS (automated/package only)",
+  "corrected_candidate_physical_acceptance": "NOT RUN",
+  "previous_user_report": "Visual failure; exact run/toggles unconfirmed",
+  "public_release_created": false,
+  "full_native_acceptance": false,
+  "scope": "Native CPU/type-check evidence; original installer_built=false describes that native run only",
+  "corrected_candidate_package_receipt": "DISTANT-TERRAIN-EDGE-WINDOWS-CANDIDATE.json",
+  "corrected_candidate_artifact_id": 14370852822,
+  "corrected_candidate_download_independently_verified": true
+}

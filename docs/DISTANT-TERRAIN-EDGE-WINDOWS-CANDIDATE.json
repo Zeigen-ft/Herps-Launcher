@@ -1,0 +1,219 @@
+{
+  "status": "PASS",
+  "scope": "Windows x64 corrected LOD internal candidate; automated/package evidence only",
+  "branch": "feature/herps-distant-terrain",
+  "source_commit": "a95e004746abe0ebdbe404a0becb1fa3e803a7b0",
+  "run_id": 44171833781,
+  "run_url": "https://github.com/Zeigen-ft/Herps-Launcher/actions/runs/44171833781",
+  "workflow_conclusion": "success",
+  "runner_platform": "Windows-2025Server-10.0.26100-SP0",
+  "engine_revision": "7301f6fdd7f470b11317276e7a11b4dc615c137a",
+  "patches_sha256": "ad5035ada0a6503ae84c2e30f0d5330145272e35062e0f34d93656025076de05",
+  "build_profile": "fast (optimized)",
+  "artifacts": [
+    {
+      "name": "Herps-Launcher-0.1.0-Windows-x86_64",
+      "id": 14370852822,
+      "bytes": 241045484,
+      "sha256": "f350dfc5c1c36a4bc9c3cd22f209936486e0755817b0eb2b6c06d5f84395147d",
+      "url": "https://github.com/Zeigen-ft/Herps-Launcher/actions/runs/44171833781/artifacts/14370852822",
+      "expires_at": "2027-02-15T20:40:49Z",
+      "crc_all_entries_passed": true,
+      "delivered_lightmap_sha256": "7f05b1a35be3efd82b6830684f2bc61e21dc2cee4eddb96299a3d854719c6f84",
+      "original_photon_archive_not_bundled": true,
+      "engine_manifest_postimages_verified": 41,
+      "received_only_lod_default_off_source_verified": true,
+      "distant_horizons_jar_not_bundled": true,
+      "native_game_icon": {
+        "status": "passed",
+        "frames": 9,
+        "icon_sha256": "c56671c5ba81b77e7df9e90afc02efbd91c72fa462f00815190d2caa1cd1cc38",
+        "executable_sha256": "b18ffe5b10adb78be30795fcfa6621ea7214131a288dbc670457c3b1c78bc5de",
+        "executable": "horizon-client.exe",
+        "executed_executable": false,
+        "physical_visual_verified": false
+      },
+      "packages": [
+        {
+          "file": "Herps-Launcher-0.1.0-Windows-x64-Setup.exe",
+          "bytes": 103719620,
+          "sha256": "e1a5e4171c5841115be4da81b357d40aaa9a7a8f31439d784992f540bdfdfa37"
+        },
+        {
+          "file": "Herps-Launcher-0.1.0-x86_64-pc-windows-msvc-2dckr9gh.zip",
+          "bytes": 139224054,
+          "sha256": "d960d40234ac2f45566e3ae77030c9b80906cde00d0e59210f03ac027abd53d9"
+        }
+      ]
+    },
+    {
+      "name": "Herps-Launcher-evidence-Windows-x86_64",
+      "id": 14371002590,
+      "bytes": 780357,
+      "sha256": "bbfc23b5ee3725b2d6e57ab12d98375123d4a08110387e4c5f0b9fc9a2b855ef",
+      "url": "https://github.com/Zeigen-ft/Herps-Launcher/actions/runs/44171833781/artifacts/14371002590",
+      "expires_at": "2027-02-15T20:40:49Z",
+      "crc_all_entries_passed": true
+    }
+  ],
+  "source_regression": {
+    "total": 524,
+    "passed": 509,
+    "skipped": 15,
+    "failed": 0
+  },
+  "delivered_workflow_cases": 98,
+  "delivered_checks": {
+    "launcher-smoke.json": {
+      "status": "passed",
+      "pages_opened": 7,
+      "architecture": "x86_64"
+    },
+    "installed-bandage.json": {
+      "status": "passed",
+      "tests_run": 8,
+      "failures": [],
+      "errors": [],
+      "skipped": [],
+      "tools_on_path": {
+        "cargo": null,
+        "rustc": null,
+        "rustup": null
+      },
+      "interactive_verified": false,
+      "gameplay_verified": false
+    },
+    "installed-flint.json": {
+      "status": "passed",
+      "tests_run": 7,
+      "failures": [],
+      "errors": [],
+      "skipped": [],
+      "tools_on_path": {
+        "cargo": null,
+        "rustc": null,
+        "rustup": null
+      },
+      "interactive_verified": false,
+      "gameplay_verified": false
+    },
+    "installed-gathering.json": {
+      "status": "passed",
+      "tests_run": 7,
+      "failures": [],
+      "errors": [],
+      "skipped": [],
+      "tools_on_path": {
+        "cargo": null,
+        "rustc": null,
+        "rustup": null
+      },
+      "interactive_verified": false,
+      "gameplay_verified": false
+    },
+    "installed-smoke.json": {
+      "status": "passed",
+      "pages_opened": 7,
+      "architecture": "x86_64"
+    },
+    "installed-woodcutting.json": {
+      "status": "passed",
+      "tests_run": 8,
+      "failures": [],
+      "errors": [],
+      "skipped": [],
+      "tools_on_path": {
+        "cargo": null,
+        "rustc": null,
+        "rustup": null
+      },
+      "interactive_verified": false,
+      "gameplay_verified": false
+    },
+    "installed-workflows.json": {
+      "status": "passed",
+      "tests_run": 68,
+      "failures": [],
+      "errors": [],
+      "skipped": [],
+      "tools_on_path": {
+        "cargo": null,
+        "rustc": null,
+        "rustup": null
+      },
+      "interactive_verified": false,
+      "gameplay_verified": false
+    },
+    "reinstalled-smoke.json": {
+      "status": "passed",
+      "pages_opened": 7,
+      "architecture": "x86_64"
+    },
+    "windows-lifecycle.json": {
+      "status": "passed",
+      "interactive_verified": false,
+      "gameplay_verified": false,
+      "platform": "Windows-2025Server-10.0.26100-SP0",
+      "setup_sha256": "e1a5e4171c5841115be4da81b357d40aaa9a7a8f31439d784992f540bdfdfa37",
+      "overlong_destination_rejected_before_copy": true,
+      "existing_profile_and_preference_preserved": true,
+      "preserved_fixture_files": {
+        "game\\options.txt": "4fc5a5f8bcc5c930c78048d5aac2ab10e81d4ebad9aa7c351aeaa4efc1613a06",
+        "herps-launcher\\settings.json": "a30c100e797761c69f727b925d65c08d8089de4ca731030762cde3655f89e63f",
+        "game\\shaderpacks\\owned.txt": "4fc5a5f8bcc5c930c78048d5aac2ab10e81d4ebad9aa7c351aeaa4efc1613a06",
+        "game\\horizon-mod-data\\existing\\data.txt": "4fc5a5f8bcc5c930c78048d5aac2ab10e81d4ebad9aa7c351aeaa4efc1613a06",
+        "game\\saves\\Existing\\level.dat": "4fc5a5f8bcc5c930c78048d5aac2ab10e81d4ebad9aa7c351aeaa4efc1613a06",
+        "herps-launcher\\profiles\\existing\\saves\\Existing\\level.dat": "4fc5a5f8bcc5c930c78048d5aac2ab10e81d4ebad9aa7c351aeaa4efc1613a06",
+        "herps-launcher\\profiles\\owned_acceptance\\saves\\Owned\\level.dat": "fe0b6d4ccdae359392e280fd37a346637178ab553f315d23e692081713a0e0ee",
+        "herps-launcher\\targeted-backups\\funcraft\\existing\\owned-backup-marker.txt": "4fc5a5f8bcc5c930c78048d5aac2ab10e81d4ebad9aa7c351aeaa4efc1613a06"
+      }
+    }
+  },
+  "native_mod_compile_selection_rollback": {
+    "status": "passed",
+    "target": "x86_64-pc-windows-msvc",
+    "revision": "7301f6fdd7f470b11317276e7a11b4dc615c137a",
+    "mixins": "4342a0bfbe71d4d14185528d64e496d6022f16a1",
+    "compiled_binary_sha256": "044a39ed21a0e597634c8adc86a1c4c9ca39f203fae9cf0feb591c3feaea6c0d",
+    "injected_marker_present": true,
+    "native_selection_verified": true,
+    "rollback_selection_verified": true,
+    "save_preserved": true,
+    "clean_binary_preserved": true,
+    "source_cache_preserved": true,
+    "hook_execution_verified": false,
+    "gameplay_verified": false
+  },
+  "windows_native_lightmap_probe": {
+    "status": "passed",
+    "passed": 3,
+    "failed": 0,
+    "skipped": 0,
+    "platform": "win32",
+    "engine_revision": "7301f6fdd7f470b11317276e7a11b4dc615c137a",
+    "rust_toolchain": "1.95.0",
+    "lightmap_source_sha256": "7f05b1a35be3efd82b6830684f2bc61e21dc2cee4eddb96299a3d854719c6f84",
+    "sky_type_sha256": "cb83c394cf8adb24fe4b745375135b1b3a7a8985f1fd64f04a07049ef686de06",
+    "private_photon_input": "NOT RUN: private input absent",
+    "archive_sha256": "a51dc9c24afa8d98f75fa88abe6308774625cd10a126c62e4b1fa4d0254ab79e",
+    "fragment_sha256": "cfeeb9abd871b1ac5a0e3b84a8f1a47182838880b33e3b6a7a08cbf95048a86a",
+    "scope": "Exact production CPU code/type and unit tests; private case checks an effective file only",
+    "resource_pack_overlay_integration": "NOT RUN: full renderer integration needs private archive",
+    "gpu_and_interactive_gameplay": "NOT RUN",
+    "redistributed_pack": false
+  },
+  "installer_built": true,
+  "portable_built": true,
+  "new_mode_default": "OFF",
+  "java_mod_executed": false,
+  "distant_horizons_source_adapted": false,
+  "server_streaming_added": false,
+  "physical_windows_gameplay": "NOT RUN for corrected candidate",
+  "interactive_graphics": "NOT RUN for corrected candidate",
+  "macos_build": "NOT RUN for this correction",
+  "macos_gameplay": "NOT RUN",
+  "full_native_acceptance": false,
+  "public_release_created": false,
+  "main_unchanged": "b292a48c279c2b718a5395fe5558f2ff83dcea30",
+  "previous_user_report": "Visual failure after initial candidate delivery; exact run and toggles unconfirmed"
+}

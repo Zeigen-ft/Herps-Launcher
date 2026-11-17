@@ -4,32 +4,35 @@ This is a client graphics feature, not a JAR or `.hmod` package. Your server
 does not need a new LOD mod or streaming service. Only terrain this client has
 received can appear in the distant view. Use a disposable profile/world first.
 
-**[Download the Windows LOD candidate](https://github.com/Zeigen-ft/Herps-Launcher/actions/runs/44102123363/artifacts/14339754271)**
-from successful run **44102123363**, source **44b21a8**. GitHub may ask you to
+**[Download the Windows LOD candidate](https://github.com/Zeigen-ft/Herps-Launcher/actions/runs/44171833781/artifacts/14370852822)**
+from successful run **44171833781**, source **a95e004**. GitHub may ask you to
 sign in. Choose **Herps-Launcher-0.1.0-Windows-x86_64**, not a verification-log
 or native-content artifact. The download contains Setup and a portable ZIP.
-The [candidate receipt and exact SHA-256 hashes](DISTANT-TERRAIN-WINDOWS-CANDIDATE.md)
+The [candidate receipt and exact SHA-256 hashes](DISTANT-TERRAIN-EDGE-WINDOWS-CANDIDATE.md)
 were independently checked. The earlier Stage 1 source/CPU ZIP contains logs,
-not the launcher.
+not the launcher. This candidate includes the
+[unknown-edge wall correction](DISTANT-TERRAIN-EDGE-FIX.md).
+**Physical retest: NOT RUN.**
 
 ## Open the new game build
 
 1. Download the Windows candidate's outer GitHub artifact ZIP. Extract it.
 2. For the first test, use the **portable ZIP inside it**. Extract into a new,
-   short folder such as `C:\Herps-LOD-Test`. Keep your old installation,
+   short folder such as `C:\Herps-LOD-Fix`. Keep your old installation,
    profiles, prepared resources, worlds and backups. Compare the portable ZIP's
    SHA-256 with the included `SHA256SUMS` before extracting it.
 3. Close the old game and launcher. Open `Herps Launcher.exe` in the newly
    extracted `Herps Launcher` folder.
 4. Open **Settings → Switch / update game installation…**. Select the new
    candidate's **`game\Herspers-Minecraft`** folder. For the example above this
-   is normally `C:\Herps-LOD-Test\Herps Launcher\game\Herspers-Minecraft`.
+   is normally `C:\Herps-LOD-Fix\Herps Launcher\game\Herspers-Minecraft`.
    Click **Validate installation**. Check the version/source details.
 5. The launcher preserves a manually selected old game installation across
    updates. If you skip the previous step, you may launch the old game and
    never see the new LOD option.
-6. On **Home**, choose **+ New profile** and name it `lod_test`. Use the normal
-   legitimate resource preparation/validation if prompted; this feature does
+6. On **Home**, select your existing **disposable LOD test profile** for a
+   same-world comparison, or choose **+ New profile** and name it `lod_edge_test`.
+   Use the normal legitimate resource preparation/validation if prompted; this feature does
    not change that process. Click **PLAY**, then create/open a disposable world.
    For an existing test server, use the launcher's **Multiplayer** page and
    keep your intended player name unchanged.
