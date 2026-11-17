@@ -1,0 +1,50 @@
+name: Verify native explored distant terrain
+on:
+  workflow_dispatch:
+  push:
+    branches: [feature/herps-distant-terrain]
+    paths: ['patches/**', 'tools/verify_distant_terrain.py', 'tests/test_distant_terrain.py', '.github/workflows/distant-terrain.yml']
+  pull_request:
+    paths: ['patches/**', 'tools/verify_distant_terrain.py', 'tests/test_distant_terrain.py', '.github/workflows/distant-terrain.yml']
+permissions:
+  contents: read
+jobs:
+  windows-native:
+    runs-on: windows-latest
+    timeout-minutes: 100
+    env:
+      PYTHONUTF8: '1'
+      CARGO_BUILD_JOBS: '3'
+      CARGO_PROFILE_DEV_DEBUG: '0'
+      CARGO_PROFILE_TEST_DEBUG: '0'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install pinned native toolchain
+        run: rustup toolchain install 1.95.0 --profile minimal
+      - uses: actions/cache@v4
+        with:
+          path: |
+            .cache/distant-terrain-target
+            .cache/upstream
+            ~/.cargo/registry
+          key: herps-explored-terrain-windows-rust195-${{ hashFiles('upstream.lock.json', 'patches/**') }}
+          restore-keys: herps-explored-terrain-windows-rust195-
+      - name: Verify exact patches, client-only boundaries and defaults
+        run: python -m unittest discover -s tests -p test_distant_terrain.py -v
+      - name: Native downsampling, cache, mesh and config tests; client integration check
+        run: python tools/ci_run.py distant-terrain-native.log python tools/verify_distant_terrain.py
+      - name: Retain native evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Herps-Distant-Terrain-Stage1-Verification-Windows
+          path: |
+            distant-terrain-native.log
+            .cache/distant-terrain-verification.json
+          if-no-files-found: warn
+          retention-days: 90

@@ -1,0 +1,117 @@
+--- a/crates/horizon-client-render/src/graphics_ui.rs
++++ b/crates/horizon-client-render/src/graphics_ui.rs
+@@ -24,6 +24,11 @@
+ pub enum H {
+     Preset,
+     LodDistance,
++    VisitedLod,
++    VisitedLodRadius,
++    LodMemory,
++    LodDisk,
++    LodWorkers,
+     FarDetail,
+     CaveCulling,
+     EntityCulling,
+@@ -174,6 +179,11 @@
+             render,
+             lod,
+             far,
++            h(H::VisitedLod, Medium, "Experimental: distant terrain already received by this client only."),
++            h(H::VisitedLodRadius, Medium, "Explored-terrain radius. Unknown areas remain empty; no server requests."),
++            h(H::LodMemory, Medium, "Explored-terrain CPU cache limit. Applies when the cache opens."),
++            h(H::LodDisk, None, "Explored-terrain disk cache limit per world. Old cache data may be evicted."),
++            h(H::LodWorkers, Low, "Explored-terrain workers. Applies when the cache opens."),
+             v(
+                 Opt::SimulationDistance,
+                 Medium,
+@@ -460,6 +470,10 @@
+                     .unwrap_or(LOD_STEPS.len() - 1);
+                 Some(i as f32 / (LOD_STEPS.len() - 1) as f32)
+             }
++            H::VisitedLodRadius => Some((g.visited_lod_radius.saturating_sub(16)) as f32 / 240.0),
++            H::LodMemory => Some((g.lod_memory_mib.saturating_sub(8)) as f32 / 504.0),
++            H::LodDisk => Some((g.lod_disk_mib.saturating_sub(16)) as f32 / 4080.0),
++            H::LodWorkers => Some((g.lod_workers.saturating_sub(1)) as f32 / 3.0),
+             H::Workers => Some(g.workers as f32 / max_workers() as f32),
+             H::ResolutionScale => Some((g.resolution_scale as f32 - 50.0) / 150.0),
+             // Auto, then 10..480 by 10.
+@@ -482,6 +496,11 @@
+                 0 => labelled("LOD Distance", "Off"),
+                 n => labelled("LOD Distance", lang::tr("%s chunks", &[&n])),
+             },
++            H::VisitedLod => labelled("Explored Terrain LOD", on_off(g.visited_lod)),
++            H::VisitedLodRadius => labelled("Explored LOD Radius", lang::tr("%s chunks", &[&g.visited_lod_radius])),
++            H::LodMemory => labelled("LOD Memory", lang::tr("%s MiB", &[&g.lod_memory_mib])),
++            H::LodDisk => labelled("LOD Disk Cache", lang::tr("%s MiB", &[&g.lod_disk_mib])),
++            H::LodWorkers => labelled("LOD Workers", g.lod_workers),
+             H::FarDetail => labelled("Far Detail", g.far_detail.label()),
+             H::CaveCulling => labelled("Cave Culling", on_off(g.cave_culling)),
+             H::EntityCulling => labelled("Entity Culling", on_off(g.entity_culling)),
+@@ -580,6 +599,10 @@
+             H::LodDistance => {
+                 g.lod_distance = LOD_STEPS[(v * (LOD_STEPS.len() - 1) as f32).round() as usize]
+             }
++            H::VisitedLodRadius => g.visited_lod_radius = (16.0 + v.clamp(0.0, 1.0) * 240.0).round() as u32,
++            H::LodMemory => g.lod_memory_mib = (8.0 + v.clamp(0.0, 1.0) * 504.0).round() as u32,
++            H::LodDisk => g.lod_disk_mib = (16.0 + v.clamp(0.0, 1.0) * 4080.0).round() as u32,
++            H::LodWorkers => g.lod_workers = (1.0 + v.clamp(0.0, 1.0) * 3.0).round() as u32,
+             H::Workers => g.workers = (v * max_workers() as f32).round() as u32,
+             H::ResolutionScale => g.resolution_scale = (50.0 + (v * 30.0).round() * 5.0) as u32,
+             H::HdrPaperWhite => g.hdr_paper_white = (v * 48.0).round() as u32 * 10,
+@@ -608,6 +631,7 @@
+         }
+         let g = &mut s.horizon;
+         match self {
++            H::VisitedLod => g.visited_lod = !g.visited_lod,
+             H::FarDetail => {
+                 g.far_detail = step(&[FarDetail::Full, FarDetail::Reduced], g.far_detail, back)
+             }
+@@ -697,6 +721,7 @@
+     pub fn switch(self, s: &Settings) -> Option<bool> {
+         let g = &s.horizon;
+         Some(match self {
++            Item::Horizon(H::VisitedLod) => g.visited_lod,
+             Item::Horizon(H::CaveCulling) => g.cave_culling,
+             Item::Horizon(H::EntityCulling) => g.entity_culling,
+             Item::Horizon(H::Sky) => g.sky,
+@@ -725,7 +750,7 @@
+     }
+     pub fn label(self, s: &Settings) -> Text {
+         match self {
+-            Item::Vanilla(Opt::RenderDistance) if s.horizon.lod_distance > 0 => labelled(
++            Item::Vanilla(Opt::RenderDistance) if s.horizon.lod_distance > 0 || s.horizon.visited_lod => labelled(
+                 "Full Detail Distance",
+                 lang::tr("%s chunks", &[&s.render_distance]),
+             ),
+@@ -1521,4 +1546,30 @@
+         }
+         assert_eq!(item.label(&s).plain(), "Entity Culling: On");
+     }
+-}
++
++    #[test]
++    fn explored_lod_controls_are_opt_in_and_do_not_change_near_or_legacy_distance() {
++        let mut s = Settings::default();
++        let near = s.render_distance;
++        let legacy = s.horizon.lod_distance;
++        assert_eq!(Item::Horizon(H::VisitedLod).label(&s).plain(), "Explored Terrain LOD: Off");
++        H::VisitedLod.cycle(&mut s, false);
++        assert!(s.horizon.visited_lod);
++        for (control, low, high) in [
++            (H::VisitedLodRadius, 16, 256),
++            (H::LodMemory, 8, 512),
++            (H::LodDisk, 16, 4096),
++            (H::LodWorkers, 1, 4),
++        ] {
++            control.set_slider(&mut s, 0.0);
++            assert_eq!(control.slider(&s), Some(0.0));
++            assert!(control.label(&s).plain().contains(&low.to_string()));
++            control.set_slider(&mut s, 1.0);
++            assert_eq!(control.slider(&s), Some(1.0));
++            assert!(control.label(&s).plain().contains(&high.to_string()));
++        }
++        assert_eq!(s.render_distance, near);
++        assert_eq!(s.horizon.lod_distance, legacy);
++    }
++
++}

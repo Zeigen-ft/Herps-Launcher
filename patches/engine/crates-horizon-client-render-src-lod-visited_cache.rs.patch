@@ -1,0 +1,313 @@
+--- /dev/null
++++ b/crates/horizon-client-render/src/lod/visited_cache.rs
+@@ -0,0 +1,310 @@
++// SPDX-License-Identifier: MIT
++//! Disposable, bounded snapshots of chunks actually received by the client.
++//! This cache is separate from the world's save and legacy generated LoD cache.
++//! New files use versioned, checksummed records and atomic replacement. Cache
++//! failures are misses; they must never prevent play or alter authoritative chunks.
++use super::{Column, cache};
++use std::{
++    fs::{self, File, FileTimes, OpenOptions},
++    io::{Read, Write},
++    path::{Path, PathBuf},
++    sync::{Arc, Mutex, atomic::{AtomicU64, Ordering}},
++    time::SystemTime,
++};
++
++const MAGIC: &[u8; 4] = b"HVLD";
++const FORMAT: u32 = 1;
++const HEADER: usize = 32;
++const MAX_COMPRESSED: usize = 1 << 20;
++const MAX_DECODED: u64 = 2 << 20;
++const MAX_FILES: usize = 4096;
++const MAX_SCAN: usize = MAX_FILES * 4;
++static TEMP_ID: AtomicU64 = AtomicU64::new(0);
++
++struct Entry {
++    path: PathBuf,
++    size: u64,
++    modified: SystemTime,
++    owned: bool,
++}
++
++pub struct VisitedCache {
++    root: PathBuf,
++    registry_key: u64,
++    max_disk_bytes: u64,
++    io: Mutex<()>,
++}
++
++impl VisitedCache {
++    /// `root` is a client cache namespace selected by world and dimension, never
++    /// a region-save directory. A zero budget disables disk caching entirely.
++    pub fn new(root: PathBuf, registry_key: u64, max_disk_bytes: u64) -> Self {
++        let root = if root.is_absolute() { root } else {
++            std::env::current_dir().map_or_else(|_| root.clone(), |cwd| cwd.join(&root))
++        };
++        let cache = Self { root, registry_key, max_disk_bytes, io: Mutex::new(()) };
++        if max_disk_bytes != 0 && ordinary_directory(&cache.root) {
++            // Apply a newly reduced quota to this cache's files on open too.
++            let _ = cache.reserve(0, None);
++        }
++        cache
++    }
++
++    pub fn get(&self, x: i32, z: i32) -> Option<Arc<[Column; 256]>> {
++        if self.max_disk_bytes == 0 { return None; }
++        let _guard = self.io.lock().ok()?;
++        if !ordinary_directory(&self.root) { return None; }
++        let path = self.path(x, z);
++        let meta = fs::symlink_metadata(&path).ok()?;
++        if !meta.is_file() || meta.file_type().is_symlink() || is_reparse(&meta) { return None; }
++        if meta.len() < HEADER as u64 || meta.len() > (HEADER + MAX_COMPRESSED) as u64 { return None; }
++        let mut file = OpenOptions::new().read(true).write(true).open(&path)
++            .or_else(|_| File::open(&path)).ok()?;
++        let mut header = [0; HEADER];
++        file.read_exact(&mut header).ok()?;
++        if !valid_header(&header) || header[8..16] != self.registry_key.to_le_bytes()
++            || header[16..20] != x.to_le_bytes() || header[20..24] != z.to_le_bytes() { return None; }
++        let len = u32::from_le_bytes(header[24..28].try_into().ok()?) as usize;
++        if len > MAX_COMPRESSED || meta.len() != (HEADER + len) as u64 { return None; }
++        let mut bytes = vec![0; len];
++        file.read_exact(&mut bytes).ok()?;
++        if checksum(&header[..28], &bytes) != u32::from_le_bytes(header[28..32].try_into().ok()?) { return None; }
++        let columns = cache::decode_bounded(&bytes, MAX_DECODED)?;
++        // Disk eviction uses read/write recency, rather than a growing RAM index.
++        let _ = file.set_times(FileTimes::new().set_modified(SystemTime::now()));
++        Some(Arc::new(columns))
++    }
++
++    /// Refreshed chunks replace their old snapshot; unlike the generation cache,
++    /// player edits must not be hidden by a first-write-wins policy.
++    pub fn put(&self, x: i32, z: i32, columns: &[Column; 256]) {
++        if self.max_disk_bytes == 0 { return; }
++        let bytes = cache::encode(columns);
++        if bytes.len() > MAX_COMPRESSED { return; }
++        let incoming = (HEADER + bytes.len()) as u64;
++        if incoming > self.max_disk_bytes { return; }
++        let Ok(_guard) = self.io.lock() else { return; };
++        if !create_ordinary_directory(&self.root) { return; }
++        let path = self.path(x, z);
++        if let Ok(meta) = fs::symlink_metadata(&path) {
++            if !meta.is_file() || meta.file_type().is_symlink() || is_reparse(&meta) || !owned_file(&path) { return; }
++        }
++        if self.reserve(incoming, Some(&path)).is_none() { return; }
++        let mut header = Vec::with_capacity(HEADER);
++        header.extend_from_slice(MAGIC);
++        header.extend_from_slice(&FORMAT.to_le_bytes());
++        header.extend_from_slice(&self.registry_key.to_le_bytes());
++        header.extend_from_slice(&x.to_le_bytes());
++        header.extend_from_slice(&z.to_le_bytes());
++        header.extend_from_slice(&(bytes.len() as u32).to_le_bytes());
++        let crc = checksum(&header, &bytes);
++        header.extend_from_slice(&crc.to_le_bytes());
++        let temporary = self.root.join(format!(".visit-{x}-{z}-{}-{}.tmp", std::process::id(), TEMP_ID.fetch_add(1, Ordering::Relaxed)));
++        let mut temporary_created = false;
++        let result = (|| -> std::io::Result<()> {
++            let mut file = OpenOptions::new().write(true).create_new(true).open(&temporary)?;
++            temporary_created = true;
++            file.write_all(&header)?;
++            file.write_all(&bytes)?;
++            file.sync_all()?;
++            drop(file);
++            // Both paths share the same directory/filesystem. A reader sees the
++            // old complete record or the new complete record, never half a file.
++            fs::rename(&temporary, &path)
++        })();
++        if result.is_err() && temporary_created { let _ = fs::remove_file(&temporary); }
++    }
++
++    fn path(&self, x: i32, z: i32) -> PathBuf { self.root.join(format!("c.{x}.{z}.hlod")) }
++
++    /// Evict only records created by this format. Unknown files count toward the
++    /// quota but are preserved. The transient atomic replacement may use one
++    /// extra bounded record while the prior version still exists.
++    fn reserve(&self, incoming: u64, replacing: Option<&Path>) -> Option<()> {
++        let mut entries = Vec::new();
++        let mut count = 0usize;
++        let mut total = incoming;
++        for (seen, entry) in fs::read_dir(&self.root).ok()?.enumerate() {
++            if seen >= MAX_SCAN { return None; }
++            let path = entry.ok()?.path();
++            let meta = fs::symlink_metadata(&path).ok()?;
++            if !meta.is_file() || meta.file_type().is_symlink() || is_reparse(&meta) { return None; }
++            if replacing == Some(path.as_path()) { continue; }
++            total = total.checked_add(meta.len())?;
++            count += 1;
++            entries.push(Entry { owned: owned_file(&path), path, size: meta.len(), modified: meta.modified().unwrap_or(SystemTime::UNIX_EPOCH) });
++        }
++        // Make space for the incoming record, including the independent file cap.
++        let wanted_count = usize::from(incoming != 0);
++        entries.sort_by(|a, b| a.modified.cmp(&b.modified).then_with(|| a.path.cmp(&b.path)));
++        for entry in entries {
++            if total <= self.max_disk_bytes && count + wanted_count <= MAX_FILES { return Some(()); }
++            if !entry.owned { continue; }
++            fs::remove_file(&entry.path).ok()?;
++            total = total.saturating_sub(entry.size);
++            count = count.saturating_sub(1);
++        }
++        (total <= self.max_disk_bytes && count + wanted_count <= MAX_FILES).then_some(())
++    }
++}
++
++fn valid_header(header: &[u8; HEADER]) -> bool { header[..4] == *MAGIC && header[4..8] == FORMAT.to_le_bytes() }
++
++fn owned_file(path: &Path) -> bool {
++    let Some(name) = path.file_name().and_then(|s| s.to_str()) else { return false; };
++    let Some(inner) = name.strip_prefix("c.").and_then(|s| s.strip_suffix(".hlod")) else { return false; };
++    let Some((x, z)) = inner.split_once('.') else { return false; };
++    let (Ok(x), Ok(z)) = (x.parse::<i32>(), z.parse::<i32>()) else { return false; };
++    if name != format!("c.{x}.{z}.hlod") { return false; }
++    let Ok(mut file) = File::open(path) else { return false; };
++    let mut header = [0; HEADER];
++    file.read_exact(&mut header).is_ok() && valid_header(&header)
++}
++
++fn checksum(header: &[u8], bytes: &[u8]) -> u32 {
++    // IEEE CRC-32, little-endian record encoding. Detects accidental corruption;
++    // this is not an authentication or ownership-verification mechanism.
++    let mut crc = !0u32;
++    for byte in header.iter().chain(bytes) {
++        crc ^= u32::from(*byte);
++        for _ in 0..8 { crc = (crc >> 1) ^ (0xedb8_8320 & (0u32.wrapping_sub(crc & 1))); }
++    }
++    !crc
++}
++
++fn is_reparse(meta: &fs::Metadata) -> bool {
++    #[cfg(windows)] { use std::os::windows::fs::MetadataExt; meta.file_attributes() & 0x400 != 0 }
++    #[cfg(not(windows))] { let _ = meta; false }
++}
++
++fn ordinary_directory(path: &Path) -> bool {
++    path.ancestors().all(|part| fs::symlink_metadata(part).is_ok_and(|m| m.is_dir() && !m.file_type().is_symlink() && !is_reparse(&m)))
++}
++
++fn create_ordinary_directory(path: &Path) -> bool {
++    match fs::symlink_metadata(path) {
++        Ok(m) => m.is_dir() && !m.file_type().is_symlink() && !is_reparse(&m) && path.parent().is_none_or(ordinary_directory),
++        Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
++            path.parent().is_some_and(create_ordinary_directory)
++                && (fs::create_dir(path).is_ok() || ordinary_directory(path))
++        }
++        Err(_) => false,
++    }
++}
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++    use crate::lod::{Span, Surface};
++    use horizon_world::registry::BlockStateId;
++
++    struct Scratch(PathBuf);
++    impl Scratch { fn new() -> Self { Self(std::env::temp_dir().join(format!("herps-visited-{}-{}", std::process::id(), TEMP_ID.fetch_add(1, Ordering::Relaxed)))) } }
++    impl Drop for Scratch { fn drop(&mut self) { let _ = fs::remove_dir_all(&self.0); } }
++    fn columns(height: i32) -> [Column; 256] {
++        std::array::from_fn(|i| Column { surface: Some(Surface { height, state: BlockStateId((i % 4) as u32), water: None, biome: (i % 3) as u16 }), spans: vec![Span { min: -64, max: height as i16, state: BlockStateId(1), biome: 2, light: 240 }] })
++    }
++    fn file_size(columns: &[Column; 256]) -> u64 { (HEADER + cache::encode(columns).len()) as u64 }
++
++    #[test]
++    fn visited_roundtrip_negative_coordinates_reopen_and_refresh() {
++        let scratch = Scratch::new();
++        let cache = VisitedCache::new(scratch.0.clone(), 7, 1 << 20);
++        cache.put(-32, -1, &columns(64));
++        assert_eq!(*cache.get(-32, -1).unwrap(), columns(64));
++        cache.put(-32, -1, &columns(80));
++        assert_eq!(*cache.get(-32, -1).unwrap(), columns(80), "edits replace an old snapshot");
++        drop(cache);
++        assert_eq!(*VisitedCache::new(scratch.0.clone(), 7, 1 << 20).get(-32, -1).unwrap(), columns(80));
++        assert!(VisitedCache::new(scratch.0.clone(), 8, 1 << 20).get(-32, -1).is_none(), "registry identity mismatch");
++    }
++
++    #[test]
++    fn checksum_truncated_tail_and_unbounded_stream_are_misses() {
++        let scratch = Scratch::new();
++        let cache = VisitedCache::new(scratch.0.clone(), 7, 1 << 20);
++        cache.put(0, 0, &columns(64));
++        let path = cache.path(0, 0);
++        let original = fs::read(&path).unwrap();
++        for index in [8, 16, 24, 28, HEADER, original.len()-1] {
++            let mut damaged = original.clone(); damaged[index] ^= 1;
++            fs::write(&path, damaged).unwrap();
++            assert!(cache.get(0, 0).is_none(), "corrupt byte {index}");
++        }
++        for len in [0, HEADER-1, original.len()-1] {
++            fs::write(&path, &original[..len]).unwrap();
++            assert!(cache.get(0, 0).is_none());
++        }
++        let encoded = cache::encode(&columns(64));
++        assert!(cache::decode_bounded(&encoded, 16).is_none(), "decoded-size bound enforced");
++    }
++
++    #[test]
++    fn disk_budget_and_reduced_budget_evict_only_cache_records() {
++        let scratch = Scratch::new();
++        let size = file_size(&columns(64));
++        let cache = VisitedCache::new(scratch.0.clone(), 7, size * 2);
++        cache.put(0, 0, &columns(64)); cache.put(1, 0, &columns(64));
++        // Make eviction deterministic without depending on filesystem clock resolution.
++        OpenOptions::new().write(true).open(cache.path(0, 0)).unwrap().set_times(FileTimes::new().set_modified(SystemTime::UNIX_EPOCH)).unwrap();
++        cache.put(2, 0, &columns(64));
++        assert!(cache.get(0, 0).is_none());
++        assert!(cache.get(1, 0).is_some()); assert!(cache.get(2, 0).is_some());
++        let total: u64 = fs::read_dir(&scratch.0).unwrap().map(|e| e.unwrap().metadata().unwrap().len()).sum();
++        assert!(total <= size * 2);
++        drop(cache);
++        let _cache = VisitedCache::new(scratch.0.clone(), 7, size);
++        assert!(fs::read_dir(&scratch.0).unwrap().count() <= 1, "smaller configured quota applies on reopen");
++        fs::write(scratch.0.join("user-file.txt"), b"preserve me").unwrap();
++        let zero = VisitedCache::new(scratch.0.clone(), 7, 0);
++        zero.put(3, 0, &columns(64)); assert!(zero.get(3, 0).is_none());
++        assert_eq!(fs::read(scratch.0.join("user-file.txt")).unwrap(), b"preserve me");
++    }
++
++    #[test]
++    fn undersized_budget_and_unknown_file_never_overwrite_existing_data() {
++        let scratch = Scratch::new();
++        let cache = VisitedCache::new(scratch.0.clone(), 7, 1);
++        cache.put(0, 0, &columns(64)); assert!(!scratch.0.exists());
++        fs::create_dir_all(&scratch.0).unwrap();
++        fs::write(cache.path(0, 0), b"user data").unwrap();
++        let cache = VisitedCache::new(scratch.0.clone(), 7, 1 << 20);
++        cache.put(0, 0, &columns(64));
++        assert_eq!(fs::read(cache.path(0, 0)).unwrap(), b"user data");
++    }
++
++    #[test]
++    fn reads_refresh_disk_eviction_recency() {
++        let scratch = Scratch::new();
++        let size = file_size(&columns(64));
++        let cache = VisitedCache::new(scratch.0.clone(), 7, size * 2);
++        cache.put(0, 0, &columns(64)); cache.put(1, 0, &columns(64));
++        for (x, seconds) in [(0, 0), (1, 1)] {
++            OpenOptions::new().write(true).open(cache.path(x, 0)).unwrap()
++                .set_times(FileTimes::new().set_modified(SystemTime::UNIX_EPOCH + std::time::Duration::from_secs(seconds))).unwrap();
++        }
++        assert!(cache.get(0, 0).is_some()); // Recently read beats the later write.
++        cache.put(2, 0, &columns(64));
++        assert!(cache.get(0, 0).is_some());
++        assert!(cache.get(1, 0).is_none());
++        assert!(cache.get(2, 0).is_some());
++    }
++
++    #[cfg(unix)]
++    #[test]
++    fn symlinked_root_and_record_are_refused() {
++        use std::os::unix::fs::symlink;
++        let scratch = Scratch::new(); fs::create_dir_all(&scratch.0).unwrap();
++        let outside = scratch.0.join("outside"); fs::create_dir(&outside).unwrap();
++        let linked = scratch.0.join("linked"); symlink(&outside, &linked).unwrap();
++        let cache = VisitedCache::new(linked, 7, 1 << 20);
++        cache.put(0, 0, &columns(64)); assert!(cache.get(0, 0).is_none());
++        assert_eq!(fs::read_dir(&outside).unwrap().count(), 0);
++        let root = scratch.0.join("ordinary"); fs::create_dir(&root).unwrap();
++        fs::write(outside.join("keep"), b"outside").unwrap();
++        symlink(outside.join("keep"), root.join("c.0.0.hlod")).unwrap();
++        let cache = VisitedCache::new(root, 7, 1 << 20);
++        cache.put(0, 0, &columns(64)); assert!(cache.get(0, 0).is_none());
++        assert_eq!(fs::read(outside.join("keep")).unwrap(), b"outside");
++    }
++}

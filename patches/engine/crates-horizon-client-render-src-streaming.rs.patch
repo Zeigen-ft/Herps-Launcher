@@ -1,0 +1,13 @@
+--- a/crates/horizon-client-render/src/streaming.rs
++++ b/crates/horizon-client-render/src/streaming.rs
+@@ -137,6 +137,10 @@
+     }
+ }
+ pub trait LodSource: Send + Sync {
++    /// Client-only received terrain sources persist observations on the LOD
++    /// worker. The default generation-based source keeps its existing behavior.
++    fn remember(&self, _x: i32, _z: i32, _columns: Arc<[crate::lod::Column; 256]>) {}
++    fn observed_only(&self) -> bool { false }
+     fn sampler(self: Arc<Self>) -> Box<dyn LodSampler>;
+ }
+ struct GeneratorSampler<G: ChunkGenerator> {

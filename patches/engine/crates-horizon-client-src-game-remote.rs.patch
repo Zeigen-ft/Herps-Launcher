@@ -1,0 +1,41 @@
+--- a/crates/horizon-client/src/game/remote.rs
++++ b/crates/horizon-client/src/game/remote.rs
+@@ -1865,6 +1865,7 @@
+         self.streaming.sky_light = has_sky;
+         self.streaming.nether_shading = self.dim == Dim::Nether;
+         // The seed in SpawnInfo is already the hashed one the client's BiomeManager holds.
++        self.visited_lod_seed = spawn.seed;
+         self.streaming.biome_zoom = horizon_core::biome::BiomeZoom::new(spawn.seed);
+         self.player = None;
+         // handleLogin / handleRespawn: LocalPlayer.setPortalCooldown, so a
+@@ -1898,8 +1899,11 @@
+         for &(x, z) in &gone {
+             freed.extend(self.streaming.forget(&mut self.world, x, z));
+         }
++        self.observe_visited_retiring(&freed);
+         if let Some(renderer) = self.renderer.as_mut() {
+-            renderer.remove_columns(gone.iter().copied());
++            if self.settings.horizon.visited_lod {
++                renderer.remove_visited_columns(gone.iter().copied());
++            } else { renderer.remove_columns(gone.iter().copied()); }
+         }
+         horizon_client::chunk::free_columns(freed, gone.len());
+         // One pass for all of them.
+@@ -2755,12 +2759,15 @@
+             C::ChunksBiomes(p) => self.remote_chunks_biomes(&p),
+             C::ForgetLevelChunk(p) => {
+                 let [x, z] = p.pos;
+-                self.streaming.forget(&mut self.world, x, z);
++                let retired = self.streaming.forget(&mut self.world, x, z);
++                self.observe_visited_retiring(&retired);
+                 self.world
+                     .block_entities
+                     .retain(|k, _| (k.0 >> 4, k.2 >> 4) != (x, z));
+                 if let Some(renderer) = self.renderer.as_mut() {
+-                    renderer.remove_columns([(x, z)]);
++                    if self.settings.horizon.visited_lod {
++                        renderer.remove_visited_columns([(x, z)]);
++                    } else { renderer.remove_columns([(x, z)]); }
+                 }
+             }
+             C::ChunkBatchFinished(_) => {

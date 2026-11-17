@@ -1,0 +1,34 @@
+--- a/crates/horizon-client-render/src/lod/cache.rs
++++ b/crates/horizon-client-render/src/lod/cache.rs
+@@ -192,7 +192,7 @@
+     hasher.finish()
+ }
+ 
+-fn encode(columns: &[Column; 256]) -> Vec<u8> {
++pub(super) fn encode(columns: &[Column; 256]) -> Vec<u8> {
+     let mut out = Vec::new();
+     for column in columns {
+         match column.surface {
+@@ -224,12 +224,20 @@
+     deflate.finish().unwrap()
+ }
+ 
+-fn decode(bytes: &[u8]) -> Option<[Column; 256]> {
++pub(super) fn decode(bytes: &[u8]) -> Option<[Column; 256]> {
++    decode_bounded(bytes, u64::from(MAX_RECORD) * 8)
++}
++
++/// Decode within the caller's memory bound; oversized streams are cache misses.
++pub(super) fn decode_bounded(bytes: &[u8], max_raw_bytes: u64) -> Option<[Column; 256]> {
+     let mut raw = Vec::new();
+     flate2::read::DeflateDecoder::new(bytes)
+-        .take(u64::from(MAX_RECORD) * 8)
++        .take(max_raw_bytes.saturating_add(1))
+         .read_to_end(&mut raw)
+         .ok()?;
++    if raw.len() as u64 > max_raw_bytes {
++        return None;
++    }
+     let mut at = 0;
+     let mut take = |n: usize| {
+         let field = raw.get(at..at + n)?;

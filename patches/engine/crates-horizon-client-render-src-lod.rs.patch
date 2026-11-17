@@ -1,0 +1,492 @@
+--- a/crates/horizon-client-render/src/lod.rs
++++ b/crates/horizon-client-render/src/lod.rs
+@@ -8,6 +8,8 @@
+     streaming::{LodSource, WorkerContext},
+ };
+ pub mod cache;
++pub mod observed;
++pub mod visited_cache;
+ mod mesh;
+ use horizon_world::registry::BlockStateId;
+ use std::{
+@@ -302,6 +304,37 @@
+     let water = water_source(kinds);
+     Arc::new(std::array::from_fn(|i| {
+         Column::from_chunk(chunk, kinds, water, (i & 15) as i32, (i >> 4) as i32)
++    }))
++}
++/// Stage 1 intentionally caches a height surface rather than caves/voxel runs.
++/// Scanning from the top needs no temporary full-column span allocation.
++fn summarize_surface(chunk: &Chunk, kinds: &[u8]) -> Arc<[Column; 256]> {
++    let water_state = water_source(kinds);
++    Arc::new(std::array::from_fn(|i| {
++        let (x, z) = ((i & 15) as i32, (i >> 4) as i32);
++        let mut water = None;
++        let mut surface = None;
++        for y in (chunk.min_y()..chunk.min_y() + chunk.sections.len() as i32 * 16).rev() {
++            let mut state = BlockStateId(chunk.get(x, y, z));
++            let mut kind = kinds.get(state.0 as usize).copied().unwrap_or(0);
++            if kind & KEPT == 0 { continue; }
++            if kind & WATERY != 0 && let Some(pure) = water_state {
++                state = pure;
++                kind = kinds[pure.0 as usize];
++            }
++            if kind & FLUID != 0 {
++                water.get_or_insert((y + 1, state));
++            } else {
++                surface = Some(Surface { height: y + 1, state, water,
++                    biome: chunk.biome(x, y, z) });
++                break;
++            }
++        }
++        if surface.is_none() && let Some((height, state)) = water {
++            surface = Some(Surface { height: chunk.min_y(), state: BlockStateId(kinds.iter().position(|kind| kind & AIR != 0).unwrap_or(0) as u32),
++                water: Some((height, state)), biome: chunk.biome(x, height - 1, z) });
++        }
++        Column::from_surface(surface)
+     }))
+ }
+ /// The water source state: the first plain kept fluid without light
+@@ -595,6 +628,32 @@
+                 [(z / width) * (16 / width) + x / width]
+         }
+     }
++    fn surface(columns: Arc<[Column; 256]>) -> Self {
++        let levels = std::array::from_fn(|level| {
++            let width = 2 << level;
++            (0..16 / width).flat_map(|z| {
++                let columns = &columns;
++                (0..16 / width).map(move |x| observed::reduce_surface(columns, x * width, z * width, width))
++            }).collect()
++        });
++        Self { columns, levels }
++    }
++    fn memory_bytes(&self) -> usize {
++        columns_bytes(self.columns.as_ref()).saturating_add(
++            self.levels.iter().map(|level| columns_bytes(level)).sum::<usize>())
++    }
++}
++/// A surface-only tile uses at most two spans for each of 256 columns. Leave
++/// room for vector headers/capacity and shared-map bookkeeping in the estimate.
++const SURFACE_TILE_RESERVE: usize = 64 * 1024;
++fn columns_bytes(columns: &[Column]) -> usize {
++    std::mem::size_of_val(columns).saturating_add(columns.iter()
++        .map(|c| c.spans.capacity().saturating_mul(std::mem::size_of::<Span>())).sum::<usize>())
++}
++fn mesh_bytes(mesh: &SectionMesh) -> usize {
++    mesh.solid.capacity().saturating_add(mesh.translucent.capacity())
++        .saturating_mul(std::mem::size_of::<crate::mesher::TerrainVertex>())
++        .saturating_add(mesh.block_entities.capacity().saturating_mul(std::mem::size_of::<([i32; 3], u32)>()))
+ }
+ enum Job {
+     Sample(TileKey),
+@@ -691,9 +750,24 @@
+     saved: Saved,
+     reduced: Reduced,
+     saved_order: VecDeque<(i32, i32)>,
++    /// Empty sampled tiles are remembered without allocating 256 empty columns.
++    /// New received chunks invalidate misses that intersect them.
++    misses: FxHashSet<TileKey>,
++    /// Derived CPU LOD data budget for explored-only mode. Shared game chunks,
++    /// renderer assets and GPU arenas belong to their existing budgets.
++    observed_limit: Option<usize>,
+ }
+ impl Lod {
+     pub fn new(source: Arc<dyn LodSource>, context: Arc<WorkerContext>) -> Self {
++        Self::with_limits(source, context, None, 0)
++    }
++    /// Received terrain only: no generation sampler and explicitly bounded work.
++    /// `memory_bytes` is this runtime's share; the source has a separate share.
++    pub fn observed(source: Arc<dyn LodSource>, context: Arc<WorkerContext>, memory_bytes: usize, workers: usize) -> Self {
++        Self::with_limits(source, context, Some(memory_bytes.max(4 * 1024 * 1024)), workers.clamp(1, 4))
++    }
++    fn with_limits(source: Arc<dyn LodSource>, context: Arc<WorkerContext>, observed_limit: Option<usize>, workers: usize) -> Self {
++        let observed_only = observed_limit.is_some();
+         let cores = thread::available_parallelism().map_or(1, |n| n.get());
+         let shared = Arc::new(Shared {
+             jobs: Mutex::new(VecDeque::new()),
+@@ -711,10 +785,10 @@
+             .spawn(move || {
+                 // Ticks and frames come first (horizon_threads).
+                 horizon_threads::behind_server();
+-                let mut sampler = source.sampler();
+-                let count = sampling_threads(cores);
++                let mut sampler = source.clone().sampler();
++                let count = if observed_only { workers.saturating_sub(1).max(1) } else { sampling_threads(cores) };
+                 let mut sampling = Vec::new();
+-                for _ in 0..count {
++                for _ in 0..if observed_only { 0 } else { count } {
+                     let Some(mut sample) = sampler.fork() else {
+                         break;
+                     };
+@@ -768,7 +842,7 @@
+                 'work: loop {
+                     for (key, columns) in sampler.drain_details() {
+                         if tx
+-                            .send(Done::Detail(key, ReducedColumns::new(columns)))
++                            .send(Done::Detail(key, if observed_only { ReducedColumns::surface(columns) } else { ReducedColumns::new(columns) }))
+                             .is_err()
+                         {
+                             break 'work;
+@@ -805,7 +879,9 @@
+                             let (Some(chunk), Some(kinds)) = (chunk, worker.kinds.get()) else {
+                                 continue;
+                             };
+-                            Done::Observed(key, ReducedColumns::new(summarize(&chunk, kinds)))
++                            let columns = if observed_only { summarize_surface(&chunk, kinds) } else { summarize(&chunk, kinds) };
++                            if observed_only { source.remember(key.0, key.1, columns.clone()); }
++                            Done::Observed(key, if observed_only { ReducedColumns::surface(columns) } else { ReducedColumns::new(columns) })
+                         }
+                         Job::RequestDetail { chunks, center } => {
+                             sampler.request_detail(&chunks, center);
+@@ -831,39 +907,38 @@
+                             let per_thread = work.len().div_ceil(meshers.len()).max(1);
+                             let (inputs, cut) = (&snapshot, &covered);
+                             let (stop, context) = (&worker.stop, &mesh_context);
+-                            let meshes: Vec<_> = thread::scope(|scope| {
+-                                let threads: Vec<_> = work
+-                                    .chunks(per_thread)
+-                                    .zip(meshers.iter_mut())
+-                                    .map(|(work, mesher)| {
+-                                        scope.spawn(move || {
+-                                            let mut meshes = Vec::with_capacity(work.len());
+-                                            for (key, finer) in work {
+-                                                if stop.load(Ordering::Relaxed) {
+-                                                    break;
+-                                                }
+-                                                let input = inputs.mesh_input(*key, finer.clone());
+-                                                let mut mesh = mesher.mesh(
+-                                                    input.key,
+-                                                    &input.columns(),
+-                                                    cut,
+-                                                    bounds,
+-                                                    context,
+-                                                    &input.neighbors,
+-                                                    &input.finer,
+-                                                );
+-                                                mesh.sort_solid();
+-                                                meshes.push((input.key, mesh));
+-                                            }
+-                                            meshes
+-                                        })
+-                                    })
+-                                    .collect();
+-                                threads
+-                                    .into_iter()
+-                                    .flat_map(|thread| thread.join().unwrap_or_default())
+-                                    .collect()
+-                            });
++                            let process = |work: &[(TileKey, Vec<TileKey>)], mesher: &mut mesh::Mesher| {
++                                let mut meshes = Vec::with_capacity(work.len());
++                                let mut bytes = 0usize;
++                                for (key, finer) in work {
++                                    if stop.load(Ordering::Relaxed) { break; }
++                                    let input = inputs.mesh_input(*key, finer.clone());
++                                    let mut mesh = mesher.mesh(input.key, &input.columns(), cut, bounds,
++                                        context, &input.neighbors, &input.finer);
++                                    mesh.sort_solid();
++                                    let size = mesh_bytes(&mesh);
++                                    let budget = observed_limit.map(|n| n / 4 / count.max(1));
++                                    if budget.is_some_and(|budget| bytes.saturating_add(size) > budget) {
++                                        // No oversized completed payload can wait on the render thread.
++                                        // An empty mesh is safer than exceeding the configured cache budget.
++                                        mesh = SectionMesh::default();
++                                    } else { bytes = bytes.saturating_add(size); }
++                                    meshes.push((input.key, mesh));
++                                }
++                                meshes
++                            };
++                            let meshes: Vec<_> = if observed_only && workers == 1 {
++                                process(&work, &mut meshers[0])
++                            } else {
++                                thread::scope(|scope| {
++                                    let threads: Vec<_> = work.chunks(per_thread).zip(meshers.iter_mut())
++                                        .map(|(work, mesher)| {
++                                            let process = &process;
++                                            scope.spawn(move || process(work, mesher))
++                                        }).collect();
++                                    threads.into_iter().flat_map(|thread| thread.join().unwrap_or_default()).collect()
++                                })
++                            };
+                             if worker.stop.load(Ordering::Relaxed) {
+                                 break 'work;
+                             }
+@@ -876,6 +951,17 @@
+                     };
+                     if tx.send(done).is_err() {
+                         break;
++                    }
++                }
++                // Flush the final bounded observation queue on normal close.
++                // This cannot request/generate terrain; only received section
++                // snapshots are persisted before this worker is joined.
++                if observed_only {
++                    let pending = std::mem::take(&mut *worker.observed.lock().unwrap());
++                    if let Some(kinds) = worker.kinds.get() {
++                        for (key, chunk) in pending {
++                            source.remember(key.0, key.1, summarize_surface(&chunk, kinds));
++                        }
+                     }
+                 }
+                 // Under the lock the samplers wait on: one between its check
+@@ -907,7 +993,7 @@
+             detail_request_pending: false,
+             detail_request_at: std::time::Instant::now(),
+             small: cores <= 4,
+-            sample_jobs: SAMPLE_JOBS.max(sampling_threads(cores) + 1),
++            sample_jobs: if observed_only { workers.max(1) } else { SAMPLE_JOBS.max(sampling_threads(cores) + 1) },
+             near_loading: false,
+             held_sample_at: std::time::Instant::now(),
+             ready: FxHashMap::default(),
+@@ -922,6 +1008,34 @@
+             saved: FxHashMap::default(),
+             reduced: FxHashMap::default(),
+             saved_order: VecDeque::new(),
++            misses: FxHashSet::default(),
++            observed_limit,
++        }
++    }
++    pub fn is_observed(&self) -> bool { self.observed_limit.is_some() }
++    /// Conservative accounting of retained derived columns (shared allocations
++    /// count more than once); transient jobs use the remaining budget reserve.
++    pub fn memory_bytes(&self) -> usize {
++        self.saved.values().map(|c| columns_bytes(c.as_ref())).sum::<usize>()
++            .saturating_add(self.reduced.values().map(|c| c.memory_bytes()).sum::<usize>())
++            .saturating_add(self.ready.values().map(|c| columns_bytes(c.as_ref())).sum::<usize>())
++    }
++    fn enforce_budget(&mut self) {
++        let Some(limit) = self.observed_limit.map(|n| n / 4) else { return; };
++        while self.memory_bytes() > limit {
++            if let Some(old) = self.saved_order.pop_front() {
++                self.saved.remove(&old);
++                self.reduced.remove(&old);
++            } else { break; }
++        }
++        let center = self.area.map_or([0, 0], |a| [a.0[0] * 16, a.0[1] * 16]);
++        let mut keys: Vec<_> = self.ready.keys().copied().collect();
++        keys.sort_unstable_by_key(|key| std::cmp::Reverse((key.distance(center), *key)));
++        for key in keys {
++            if self.memory_bytes() <= limit { break; }
++            self.ready.remove(&key);
++            self.detail_masks.remove(&key);
++            self.reselect = true;
+         }
+     }
+     /// The solid ground at block column (x, z): its top face's height and
+@@ -929,6 +1043,9 @@
+     /// resident chunks (`game.raycast`); water is passed, as the view's ray
+     /// passes it.
+     pub fn ground(&self, x: i32, z: i32) -> Option<(i32, BlockStateId)> {
++        // This client cache is visual only; it must never extend interaction,
++        // selection, collision or simulation beyond authoritative full chunks.
++        if self.is_observed() { return None; }
+         (0..=MAX_LEVEL).find_map(|level| {
+             let size = 16 << level;
+             let key = TileKey {
+@@ -1006,6 +1123,45 @@
+     /// layers: the worker summarizes the chunk (`summarize`, a few
+     /// milliseconds a chunk), then `finish_observed` keeps it.
+     pub fn observe(&mut self, chunk: Arc<Chunk>, facts: &BlockFacts) {
++        self.observe_inner(chunk, facts, false);
++    }
++    /// Retiring chunks take precedence over opportunistic resident snapshots.
++    /// Under fast-travel pressure the bounded queue may omit a capture rather
++    /// than retaining arbitrarily many full chunks.
++    pub fn observe_retiring(&mut self, chunk: Arc<Chunk>, facts: &BlockFacts) {
++        self.observe_inner(chunk, facts, true);
++    }
++    fn observe_inner(&mut self, chunk: Arc<Chunk>, facts: &BlockFacts, retiring: bool) {
++        let chunk = if let Some(limit) = self.observed_limit {
++            let bytes = chunk.heap_bytes().saturating_add(std::mem::size_of::<Chunk>());
++            if bytes > limit / 4 { return; }
++            // Retain block/biome sections only, never entity NBT, inventories or
++            // server-side extras just because a visual chunk summary is queued.
++            let mut snapshot = Chunk::with_layout(chunk.x, chunk.z, chunk.layout());
++            snapshot.sections = chunk.sections.clone();
++            let mut observed = self.shared.observed.lock().unwrap();
++            let used = observed.values().map(|c| c.heap_bytes()
++                .saturating_add(std::mem::size_of::<Chunk>())).sum::<usize>();
++            if used.saturating_add(bytes) > limit / 4 {
++                if !retiring { return; }
++                observed.clear();
++                self.shared.jobs.lock().unwrap().retain(|job| !matches!(job, Job::Observe(_)));
++            }
++            Arc::new(snapshot)
++        } else { chunk };
++        if self.observed_limit.is_some() {
++            let mut observed = self.shared.observed.lock().unwrap();
++            let key = (chunk.x, chunk.z);
++            if !observed.contains_key(&key) && observed.len() >= OBSERVE_AHEAD {
++                if !retiring { return; }
++                // Replace one pending snapshot, not a worker's in-flight data.
++                if let Some(old) = observed.keys().copied().min() {
++                    observed.remove(&old);
++                    let mut jobs = self.shared.jobs.lock().unwrap();
++                    jobs.retain(|job| !matches!(job, Job::Observe(k) if *k == old));
++                }
++            }
++        }
+         self.shared.kinds.get_or_init(|| state_kinds(facts));
+         let key = (chunk.x, chunk.z);
+         if self
+@@ -1050,6 +1206,23 @@
+         }
+         self.saved.insert(key, columns.columns.clone());
+         self.finish_detail(key, columns);
++        if self.observed_limit.is_some() {
++            // Cached misses sampled before this observation must be retried.
++            self.ready.retain(|tile, _| {
++                let [x, _, z] = tile.origin();
++                let size = tile.size();
++                tile.level == 0 || !(key.0 * 16 < x + size && x < (key.0 + 1) * 16
++                    && key.1 * 16 < z + size && z < (key.1 + 1) * 16)
++            });
++            self.misses.retain(|tile| {
++                let [x, _, z] = tile.origin();
++                let size = tile.size();
++                !(key.0 * 16 < x + size && x < (key.0 + 1) * 16
++                    && key.1 * 16 < z + size && z < (key.1 + 1) * 16)
++            });
++            self.reselect = true;
++        }
++        self.enforce_budget();
+     }
+     fn apply_fine(&mut self, (cx, cz): (i32, i32), columns: &[Column; 256]) {
+         let fine = TileKey {
+@@ -1106,6 +1279,11 @@
+     }
+     fn finish_sample(&mut self, key: TileKey, samples: Vec<Column>) {
+         self.pending.remove(&key);
++        if self.observed_limit.is_some() && samples.iter().all(|column| column.spans.is_empty()) {
++            self.misses.insert(key);
++            self.ready.remove(&key);
++            return;
++        }
+         if self.plan.nodes.contains(&key) && samples.len() == CELLS * CELLS {
+             let mut samples = samples;
+             if let (Some(old), Some(mask)) = (self.ready.get(&key), self.detail_masks.get(&key)) {
+@@ -1116,6 +1294,7 @@
+                 }
+             }
+             self.ready.insert(key, Arc::new(samples));
++            self.enforce_budget();
+             self.reselect = true;
+         }
+     }
+@@ -1252,6 +1431,7 @@
+                     self.reduced_detail,
+                 );
+                 self.ready.retain(|key, _| self.plan.nodes.contains(key));
++                self.misses.retain(|key| self.plan.nodes.contains(key));
+                 self.detail_masks
+                     .retain(|key, _| self.plan.nodes.contains(key));
+                 self.replanned = true;
+@@ -1261,6 +1441,7 @@
+         let mut meshes = Vec::new();
+         crate::spans::time("lod_results", || self.receive(&mut meshes));
+         crate::spans::time("lod_covered", || self.cover(covered));
++        self.enforce_budget();
+         if !self.meshing {
+             crate::spans::time("lod_select", || self.select());
+         }
+@@ -1304,14 +1485,15 @@
+         if let Some(full) = covered
+             && self.full != full
+         {
+-            self.retiring.extend(self.full.difference(&full).copied());
++            if self.observed_limit.is_some() { self.retiring.clear(); }
++            else { self.retiring.extend(self.full.difference(&full).copied()); }
+             self.retiring.retain(|column| !full.contains(column));
+             self.full = full;
+             self.leave_out();
+         }
+         // Complete resident columns need no duplicate noise work. Their real
+         // summaries are retained when the full-detail chunks leave the view.
+-        if std::mem::take(&mut self.replanned) {
++        if std::mem::take(&mut self.replanned) && self.observed_limit.is_none() {
+             for &key in &self.plan.nodes {
+                 if key.level == 0 && self.covered.contains(&(key.x, key.z)) {
+                     self.ready
+@@ -1401,6 +1583,10 @@
+                     .iter()
+                     .filter_map(|key| Some((*key, self.ready.get(key)?.clone())))
+                     .collect();
++                // Publish an entire replacement cohort atomically. A partial
++                // dirty batch must never mark unmeshed children active or drop
++                // their parent early. Worker mesh payloads are independently
++                // budgeted; pressure may omit far geometry, never near chunks.
+                 let keys: Vec<_> = self.dirty.drain().collect();
+                 self.meshing = true;
+                 self.shared.jobs.lock().unwrap().push_front(Job::Mesh {
+@@ -1421,6 +1607,10 @@
+     }
+     fn request_samples(&mut self, camera: [i32; 2]) {
+         // Every sample slot busy: no tile can be requested this frame.
++        if let Some(limit) = self.observed_limit {
++            let max_tiles = (limit / 4 / SURFACE_TILE_RESERVE).max(1);
++            if self.ready.len().saturating_add(self.pending.len()) >= max_tiles { return; }
++        }
+         let free = if self.held() {
+             usize::from(
+                 self.pending.is_empty() && self.held_sample_at.elapsed() >= HELD_SAMPLE_STEP,
+@@ -1449,7 +1639,9 @@
+             .plan
+             .nodes
+             .iter()
+-            .filter(|key| !self.plan.split.contains(key) && !self.ready.contains_key(key))
++            .filter(|key| !self.plan.split.contains(key) && !self.ready.contains_key(key)
++                && !self.misses.contains(key)
++                && !(self.observed_limit.is_some() && key.level == 0 && self.covered.contains(&(key.x, key.z))))
+             .map(|&key| (i64::from(key.distance(camera)), key))
+             .collect();
+         // Only the first `free` keys not already pending are taken: the best
+@@ -1643,6 +1835,49 @@
+ mod tests {
+     use super::*;
+     use crate::mesher::TerrainVertex;
++    #[test]
++    fn observed_summary_scans_top_surface_and_water_without_cave_runs() {
++        let mut chunk = Chunk::empty(-1, 2);
++        let (air, stone, water) = (BlockStateId(0), BlockStateId(1), BlockStateId(2));
++        let kinds = [AIR, KEPT, KEPT | FLUID];
++        chunk.set(0, 20, 0, stone.0);
++        chunk.set(0, 90, 0, stone.0); // Build above the stale chunk height map.
++        chunk.set(1, 40, 1, stone.0);
++        for y in 41..46 { chunk.set(1, y, 1, water.0); }
++        let columns = summarize_surface(&chunk, &kinds);
++        assert_eq!(columns[0].surface.unwrap().height, 91);
++        assert_eq!(columns[0].surface.unwrap().state, stone);
++        assert_eq!(columns[17].surface.unwrap().height, 41);
++        assert_eq!(columns[17].surface.unwrap().water, Some((46, water)));
++        assert!(columns[255].surface.is_none());
++        assert!(columns.iter().all(|column| column.spans.len() <= 2));
++        chunk.set(0, 90, 0, air.0);
++        assert_eq!(summarize_surface(&chunk, &kinds)[0].surface.unwrap().height, 21);
++    }
++    #[test]
++    fn observed_reductions_keep_surface_metadata_and_bounded_spans() {
++        let columns = Arc::new(std::array::from_fn(|_| Column::from_surface(Some(Surface {
++            height: 80, state: BlockStateId(4), water: None, biome: 12,
++        }))));
++        let reduced = ReducedColumns::surface(columns);
++        for width in [1, 2, 4, 8, 16] {
++            let cell = reduced.get(0, 0, width);
++            assert_eq!(cell.surface.unwrap().height, 80);
++            assert_eq!(cell.surface.unwrap().state, BlockStateId(4));
++            assert_eq!(cell.surface.unwrap().biome, 12);
++            assert!(cell.spans.len() <= 2);
++        }
++    }
++    #[test]
++    fn observed_memory_accounting_counts_reserved_span_capacity() {
++        let mut columns = vec![Column::default(); 256];
++        let empty_bytes = columns_bytes(&columns);
++        columns[0].spans.reserve_exact(128);
++        assert!(columns_bytes(&columns) >= empty_bytes + 128 * std::mem::size_of::<Span>());
++        let mut mesh = SectionMesh::default();
++        mesh.solid.reserve_exact(256);
++        assert!(mesh_bytes(&mesh) >= 256 * std::mem::size_of::<TerrainVertex>());
++    }
+     #[test]
+     fn retiring_fine_stand_ins_request_detail_before_their_gpu_meshes_can_retire() {
+         let column = (12, 0);

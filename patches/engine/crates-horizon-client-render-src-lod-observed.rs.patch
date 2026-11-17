@@ -1,0 +1,414 @@
+--- /dev/null
++++ b/crates/horizon-client-render/src/lod/observed.rs
+@@ -0,0 +1,411 @@
++//! Received/visited terrain only. This source never generates or requests chunks.
++//! Original Herps code; no Distant Horizons implementation is used.
++use super::{Column, Surface, visited_cache::VisitedCache};
++use crate::streaming::{LodDetail, LodSampler, LodSource};
++use std::{
++    collections::{BTreeMap, HashMap},
++    sync::{
++        Arc, Mutex,
++        atomic::{AtomicU64, Ordering},
++    },
++};
++
++type Columns = Arc<[Column; 256]>;
++fn surfaces_only(columns: &Columns) -> Columns {
++    Arc::new(std::array::from_fn(|i| Column::from_surface(columns[i].surface)))
++}
++
++/// Height-map reduction used by both the received sampler and its in-memory
++/// tile reductions. Legacy `Column::reduced` reduces voxel spans and deliberately
++/// leaves `surface` unset, so it cannot be used by this surface-only mode.
++/// At least half the fully-known footprint must have a surface. Pick the most
++/// common material/biome (lowest IDs break ties) and average its heights; this
++/// does not inflate a single tall corner sample into an entire coarse cell.
++pub(super) fn reduce_surface(columns: &[Column; 256], x: usize, z: usize, width: usize) -> Column {
++    if width == 0 || width > 16 || x.checked_add(width).is_none_or(|v| v > 16)
++        || z.checked_add(width).is_none_or(|v| v > 16)
++    {
++        return Column::default();
++    }
++    if width == 1 { return Column::from_surface(columns[z * 16 + x].surface); }
++    let area = width * width;
++    let mut occupied = 0usize;
++    let mut materials: BTreeMap<(u32, u16), (usize, i64)> = BTreeMap::new();
++    let mut water: BTreeMap<u32, (usize, i64)> = BTreeMap::new();
++    for dz in z..z + width {
++        for dx in x..x + width {
++            if let Some(surface) = columns[dz * 16 + dx].surface {
++                occupied += 1;
++                let value = materials.entry((surface.state.0, surface.biome)).or_default();
++                value.0 += 1;
++                value.1 += i64::from(surface.height);
++                if let Some((height, state)) = surface.water {
++                    let value = water.entry(state.0).or_default();
++                    value.0 += 1;
++                    value.1 += i64::from(height);
++                }
++            }
++        }
++    }
++    if occupied * 2 < area { return Column::default(); }
++    let Some((&(state, biome), &(count, sum))) = materials.iter()
++        .max_by_key(|(key, (count, _))| (*count, std::cmp::Reverse(**key)))
++    else { return Column::default() };
++    let height = sum.div_euclid(count as i64) as i32;
++    let water = water.iter()
++        .max_by_key(|(state, (count, _))| (*count, std::cmp::Reverse(**state)))
++        .and_then(|(&state, &(count, sum))| {
++            let top = sum.div_euclid(count as i64) as i32;
++            (count * 2 >= area && top > height).then_some((top, horizon_world::registry::BlockStateId(state)))
++        });
++    Column::from_surface(Some(Surface {
++        height, state: horizon_world::registry::BlockStateId(state), water, biome,
++    }))
++}
++/// Maximum footprint sampled into one far cell: eight by eight chunks. Larger
++/// cells remain absent at this stage rather than causing unbounded disk scans.
++pub const MAX_FOOTPRINT: i32 = 128;
++const MAX_DETAIL_RESULTS: usize = 16;
++const MAX_DETAIL_SCAN: usize = 512;
++
++struct Entry {
++    columns: Columns,
++    bytes: usize,
++    used: u64,
++}
++
++#[derive(Default)]
++struct Resident {
++    entries: HashMap<(i32, i32), Entry>,
++    bytes: usize,
++    clock: u64,
++}
++
++impl Resident {
++    fn get(&mut self, key: (i32, i32)) -> Option<Columns> {
++        self.clock = self.clock.wrapping_add(1);
++        let entry = self.entries.get_mut(&key)?;
++        entry.used = self.clock;
++        Some(entry.columns.clone())
++    }
++
++    fn put(&mut self, key: (i32, i32), columns: Columns, limit: usize) {
++        if let Some(old) = self.entries.remove(&key) {
++            self.bytes = self.bytes.saturating_sub(old.bytes);
++        }
++        // Include the fixed column array, all retained span allocations, Arc
++        // bookkeeping and a conservative hash-map entry overhead allowance.
++        let bytes = std::mem::size_of::<[Column; 256]>()
++            .saturating_add(columns.iter().map(|c| {
++                c.spans.capacity().saturating_mul(std::mem::size_of::<super::Span>())
++            }).fold(0usize, usize::saturating_add))
++            .saturating_add(128);
++        if bytes > limit {
++            return;
++        }
++        while self.bytes.saturating_add(bytes) > limit {
++            let Some(old) = self.entries.iter().min_by_key(|(_, value)| value.used).map(|(key, _)| *key)
++            else { break };
++            if let Some(entry) = self.entries.remove(&old) {
++                self.bytes = self.bytes.saturating_sub(entry.bytes);
++            }
++        }
++        self.clock = self.clock.wrapping_add(1);
++        self.bytes = self.bytes.saturating_add(bytes);
++        self.entries.insert(key, Entry { columns, bytes, used: self.clock });
++    }
++}
++
++/// Cache-backed source shared by the far-terrain mesher/samplers. The caller
++/// assigns a portion of its overall LOD budget to this source's RAM. Each worker
++/// additionally retains at most one chunk while sampling and at most sixteen
++/// queued detail summaries; the renderer owns its
++/// own mesh budget and the observer owns its separately bounded pending queue.
++pub struct ObservedSource {
++    cache: Arc<VisitedCache>,
++    resident: Mutex<Resident>,
++    memory_limit: usize,
++    revision: AtomicU64,
++}
++
++impl ObservedSource {
++    pub fn new(cache: Arc<VisitedCache>, max_memory_bytes: usize) -> Arc<Self> {
++        Arc::new(Self {
++            cache,
++            resident: Mutex::new(Resident::default()),
++            memory_limit: max_memory_bytes,
++            revision: AtomicU64::new(0),
++        })
++    }
++
++    fn get(&self, key: (i32, i32)) -> Option<Columns> {
++        if let Some(columns) = self.resident.lock().ok()?.get(key) {
++            return Some(columns);
++        }
++        // The disk read does not hold our RAM lock. Cache itself serializes
++        // reads/writes and validates coordinate/key/size/checksum before decode.
++        let revision = self.revision.load(Ordering::Acquire);
++        let columns = surfaces_only(&self.cache.get(key.0, key.1)?);
++        let mut resident = self.resident.lock().ok()?;
++        // A remembered edit can complete while the disk read is in flight.
++        // Do not repopulate the RAM cache with its older disk snapshot.
++        if self.revision.load(Ordering::Acquire) != revision {
++            return resident.get(key);
++        }
++        resident.put(key, columns.clone(), self.memory_limit);
++        Some(columns)
++    }
++
++    pub fn resident_bytes(&self) -> usize {
++        self.resident.lock().map_or(0, |resident| resident.bytes)
++    }
++}
++
++impl LodSource for ObservedSource {
++    fn sampler(self: Arc<Self>) -> Box<dyn LodSampler> {
++        Box::new(ObservedSampler {
++            source: self,
++            local: None,
++            details: Vec::new(),
++        })
++    }
++
++    fn remember(&self, x: i32, z: i32, columns: Columns) {
++        let columns = surfaces_only(&columns);
++        self.cache.put(x, z, &columns);
++        if let Ok(mut resident) = self.resident.lock() {
++            resident.put((x, z), columns, self.memory_limit);
++            self.revision.fetch_add(1, Ordering::Release);
++        }
++    }
++}
++
++struct ObservedSampler {
++    source: Arc<ObservedSource>,
++    // Cache a missing lookup too: an unknown column should not open the same
++    // nonexistent file 256 times while sampling its adjacent block columns.
++    local: Option<((i32, i32), u64, Option<Columns>)>,
++    details: Vec<LodDetail>,
++}
++
++impl ObservedSampler {
++    fn chunk(&mut self, x: i32, z: i32) -> Option<Columns> {
++        let key = (x, z);
++        let revision = self.source.revision.load(Ordering::Acquire);
++        if let Some((old_key, old_revision, columns)) = &self.local
++            && *old_key == key && *old_revision == revision
++        {
++            return columns.clone();
++        }
++        let columns = self.source.get(key);
++        self.local = Some((key, revision, columns.clone()));
++        columns
++    }
++
++    /// Some(empty) means observed air. None means unknown terrain, which is
++    /// intentionally not widened into a guessed coarse surface.
++    fn known_reduced(&mut self, x: i32, z: i32, width: i32) -> Option<Column> {
++        if width < 1 || width > MAX_FOOTPRINT || !(width as u32).is_power_of_two() {
++            return None;
++        }
++        if width <= 16 {
++            let lx = x.rem_euclid(16) as usize;
++            let lz = z.rem_euclid(16) as usize;
++            if lx + width as usize <= 16 && lz + width as usize <= 16 {
++                let columns = self.chunk(x.div_euclid(16), z.div_euclid(16))?;
++                return Some(reduce_surface(&columns, lx, lz, width as usize));
++            }
++            // Normally grid cells are aligned, but handle cross-chunk calls
++            // conservatively too (including negative world coordinates).
++            let mut footprint: [Column; 256] = std::array::from_fn(|_| Column::default());
++            for dz in 0..width {
++                for dx in 0..width {
++                    let bx = x.checked_add(dx)?;
++                    let bz = z.checked_add(dz)?;
++                    let columns = self.chunk(bx.div_euclid(16), bz.div_euclid(16))?;
++                    footprint[dz as usize * 16 + dx as usize] =
++                        columns[bz.rem_euclid(16) as usize * 16 + bx.rem_euclid(16) as usize].clone();
++                }
++            }
++            return Some(reduce_surface(&footprint, 0, 0, width as usize));
++        }
++        let half = width / 2;
++        let mut quadrants: [Column; 256] = std::array::from_fn(|_| Column::default());
++        for dz in 0..2 {
++            for dx in 0..2 {
++                quadrants[dz * 16 + dx] = self.known_reduced(
++                    x.checked_add(dx as i32 * half)?,
++                    z.checked_add(dz as i32 * half)?,
++                    half,
++                )?;
++            }
++        }
++        Some(reduce_surface(&quadrants, 0, 0, 2))
++    }
++}
++
++impl LodSampler for ObservedSampler {
++    fn fork(&self) -> Option<Box<dyn LodSampler>> {
++        Some(Box::new(Self { source: self.source.clone(), local: None, details: Vec::new() }))
++    }
++
++    fn request_detail(&mut self, chunks: &[(i32, i32)], _center: [i32; 2]) {
++        // Request means a local cache lookup only. Never ask a server or world
++        // generator to provide a missing chunk. Bound both work and results.
++        for &(x, z) in chunks.iter().take(MAX_DETAIL_SCAN) {
++            if self.details.len() >= MAX_DETAIL_RESULTS { break; }
++            if let Some(columns) = self.chunk(x, z) {
++                self.details.push(((x, z), columns));
++            }
++        }
++    }
++
++    fn drain_details(&mut self) -> Vec<LodDetail> {
++        std::mem::take(&mut self.details)
++    }
++
++    fn sample(&mut self, x: i32, z: i32) -> Option<Surface> {
++        self.known_reduced(x, z, 1)?.surface
++    }
++
++    fn column(&mut self, x: i32, z: i32) -> Column {
++        self.known_reduced(x, z, 1).unwrap_or_default()
++    }
++
++    fn reduced_column(&mut self, x: i32, z: i32, width: i32) -> Column {
++        self.known_reduced(x, z, width).unwrap_or_default()
++    }
++}
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++    use horizon_world::registry::BlockStateId;
++    use std::{path::PathBuf, time::{SystemTime, UNIX_EPOCH}};
++
++    struct Temp(PathBuf);
++    impl Temp {
++        fn new() -> Self {
++            Self(std::env::temp_dir().join(format!("herps-observed-{}-{}", std::process::id(),
++                SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos())))
++        }
++    }
++    impl Drop for Temp {
++        fn drop(&mut self) { let _ = std::fs::remove_dir_all(&self.0); }
++    }
++    fn columns(height: i32) -> Columns {
++        Arc::new(std::array::from_fn(|_| Column::from_surface(Some(Surface {
++            height, state: BlockStateId(1), water: None, biome: 7,
++        }))))
++    }
++    fn make_source(path: &Temp, memory: usize) -> Arc<ObservedSource> {
++        ObservedSource::new(Arc::new(VisitedCache::new(path.0.clone(), 42, 8 * 1024 * 1024)), memory)
++    }
++
++    #[test]
++    fn unknown_is_empty_and_a_late_observation_invalidates_missing_worker_lookup() {
++        let path = Temp::new();
++        let source = make_source(&path, 1024 * 1024);
++        let mut sampler = source.clone().sampler();
++        assert!(sampler.sample(3, 4).is_none());
++        source.remember(0, 0, columns(72));
++        assert_eq!(sampler.sample(3, 4).unwrap().height, 72);
++        assert!(sampler.sample(16, 4).is_none());
++    }
++
++    #[test]
++    fn coarse_cells_require_every_chunk_and_preserve_flat_height_material_and_biome() {
++        let path = Temp::new();
++        let source = make_source(&path, 1024 * 1024);
++        for z in 0..8 {
++            for x in 0..8 { source.remember(x, z, columns(75)); }
++        }
++        let mut sampler = source.clone().sampler();
++        for width in [2, 4, 8, 16, 32, 64, 128] {
++            let column = sampler.reduced_column(0, 0, width);
++            let surface = column.surface.unwrap();
++            assert_eq!((surface.height, surface.state, surface.biome), (75, BlockStateId(1), 7));
++        }
++        assert!(sampler.reduced_column(16, 16, 128).surface.is_none());
++        assert!(sampler.reduced_column(0, 0, 256).surface.is_none());
++        assert!(sampler.reduced_column(0, 0, 3).surface.is_none());
++    }
++
++    #[test]
++    fn negative_coordinates_and_cross_chunk_footprints_stay_in_their_world_columns() {
++        let path = Temp::new();
++        let source = make_source(&path, 1024 * 1024);
++        for z in -2..=0 {
++            for x in -2..=0 { source.remember(x, z, columns(66)); }
++        }
++        let mut sampler = source.sampler();
++        assert_eq!(sampler.sample(-1, -17).unwrap().height, 66);
++        assert_eq!(sampler.reduced_column(-1, -1, 2).surface.unwrap().height, 66);
++        assert!(sampler.reduced_column(i32::MAX, 0, 2).surface.is_none());
++    }
++
++    #[test]
++    fn old_observations_are_replaced_and_ram_never_exceeds_its_assigned_budget() {
++        let path = Temp::new();
++        let budget = 32 * 1024;
++        let source = make_source(&path, budget);
++        let mut sampler = source.clone().sampler();
++        source.remember(0, 0, columns(60));
++        assert_eq!(sampler.sample(0, 0).unwrap().height, 60);
++        source.remember(0, 0, columns(81));
++        assert_eq!(sampler.sample(0, 0).unwrap().height, 81);
++        for x in 1..8 {
++            source.remember(x, 0, columns(81));
++            assert!(source.resident_bytes() <= budget);
++        }
++        let empty = make_source(&path, 0);
++        empty.remember(0, 1, columns(80));
++        assert_eq!(empty.resident_bytes(), 0);
++    }
++
++    #[test]
++    fn detail_requests_and_forks_only_return_known_cache_and_bound_the_batch() {
++        let path = Temp::new();
++        let source = make_source(&path, 1024 * 1024);
++        for x in 0..24 { source.remember(x, 0, columns(64)); }
++        let mut sampler = source.sampler();
++        let mut fork = sampler.fork().unwrap();
++        let chunks: Vec<_> = (0..100).map(|x| (x, 0)).collect();
++        sampler.request_detail(&chunks, [0, 0]);
++        assert_eq!(sampler.drain_details().len(), MAX_DETAIL_RESULTS);
++        assert!(sampler.drain_details().is_empty());
++        fork.request_detail(&[(100, 100), (3, 0)], [0, 0]);
++        let details = fork.drain_details();
++        assert_eq!(details.len(), 1);
++        assert_eq!(details[0].0, (3, 0));
++        assert_eq!(details[0].1[0].surface.unwrap().height, 64);
++    }
++
++    #[test]
++    fn reduction_votes_material_and_biome_averages_height_and_keeps_majority_water() {
++        let mut chunk: [Column; 256] = std::array::from_fn(|_| Column::default());
++        let surface = |height, state, biome, water| Column::from_surface(Some(Surface {
++            height, state: BlockStateId(state), water, biome,
++        }));
++        chunk[0] = surface(100, 1, 7, None);
++        assert!(reduce_surface(&chunk, 0, 0, 2).surface.is_none());
++        for i in [1, 16, 17] { chunk[i] = surface(64, 1, 7, None); }
++        let result = reduce_surface(&chunk, 0, 0, 2).surface.unwrap();
++        assert_eq!((result.height, result.state, result.biome), (73, BlockStateId(1), 7));
++        chunk[0] = surface(10, 2, 9, None);
++        chunk[1] = surface(10, 2, 9, None);
++        chunk[16] = surface(20, 1, 7, None);
++        chunk[17] = surface(20, 1, 7, None);
++        let tie = reduce_surface(&chunk, 0, 0, 2).surface.unwrap();
++        assert_eq!((tie.height, tie.state, tie.biome), (20, BlockStateId(1), 7));
++        for i in [0, 1, 16, 17] { chunk[i] = surface(20, 1, 7, Some((64, BlockStateId(2)))); }
++        assert_eq!(reduce_surface(&chunk, 0, 0, 2).surface.unwrap().water, Some((64, BlockStateId(2))));
++        for i in [1, 16, 17] { chunk[i] = surface(20, 1, 7, None); }
++        assert!(reduce_surface(&chunk, 0, 0, 2).surface.unwrap().water.is_none());
++        chunk[0] = surface(-5, 1, 7, None);
++        for i in [1, 16, 17] { chunk[i] = surface(-4, 1, 7, None); }
++        assert_eq!(reduce_surface(&chunk, 0, 0, 2).surface.unwrap().height, -5);
++        assert!(reduce_surface(&chunk, 15, 15, 2).surface.is_none());
++        assert!(reduce_surface(&chunk, usize::MAX, 0, 2).surface.is_none());
++    }
++}

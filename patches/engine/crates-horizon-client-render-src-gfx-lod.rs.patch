@@ -1,0 +1,18 @@
+--- a/crates/horizon-client-render/src/gfx/lod.rs
++++ b/crates/horizon-client-render/src/gfx/lod.rs
+@@ -262,6 +262,15 @@
+             self.release_tile(tile);
+         }
+         self.set_lod_cutout(Default::default());
++    }
++
++    /// Received-only LOD has no generator that can guarantee a replacement.
++    /// Do not pin full-detail chunks indefinitely when cache pressure drops an
++    /// unload observation. Existing leave_section/FADE handles bounded fading.
++    pub fn remove_visited_columns(&mut self, columns: impl IntoIterator<Item = (i32, i32)>) {
++        let columns: Vec<_> = columns.into_iter().collect();
++        for key in &columns { self.lod_cutout.remove(key); }
++        self.remove_columns(columns);
+     }
+ 
+     /// Queues a finished mesh job (`Lod::update`, `Lod::removed`,

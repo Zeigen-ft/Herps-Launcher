@@ -1,0 +1,88 @@
+--- /dev/null
++++ b/crates/horizon-client/src/game/visited_lod.rs
+@@ -0,0 +1,85 @@
++//! Original Herps received-chunk terrain integration. No Java/DH code or protocol.
++use super::Game;
++use std::{path::PathBuf, sync::Arc};
++
++/// A filesystem-safe, stable opaque namespace. Not an authentication or world
++/// ownership identifier. Two independent hashes avoid platform path characters.
++fn namespace(value: &str) -> String {
++    fn hash(bytes: &[u8], seed: u64) -> u64 {
++        bytes.iter().fold(seed, |h, b| (h ^ u64::from(*b)).wrapping_mul(0x100000001b3))
++    }
++    format!("{:016x}{:016x}", hash(value.as_bytes(), 0xcbf29ce484222325),
++        hash(value.as_bytes(), 0x84222325cbf29ce4))
++}
++
++impl Game<'_> {
++    pub(super) fn start_visited_lod(&mut self) {
++        // The client profile's directory is the process game-dir. Cache files
++        // never go in saves, region files, server folders, or profile settings.
++        let Ok(profile) = std::env::current_dir() else { return };
++        let local = self.integrated.as_ref().and_then(|server| {
++            server.call(|game| game.world_root.clone())
++        }).filter(|p| !p.as_os_str().is_empty());
++        let world = local.or_else(|| (!self.world_root.as_os_str().is_empty()
++            && self.remote.is_none()).then(|| self.world_root.clone()));
++        let identity = if let Some(path) = world {
++            let canonical = path.canonicalize().unwrap_or(path);
++            format!("local:{}:{}", canonical.to_string_lossy(), self.visited_lod_seed)
++        } else {
++            // Vanilla exposes a hashed biome seed, not a persistent world UUID.
++            // Same-address/same-seed server resets require clearing this cache.
++            format!("remote:{}:{}", self.server_address().unwrap_or("unknown-server"), self.visited_lod_seed)
++        };
++        let base_key = horizon_client::lod::cache::build_key(
++            self.pack.assets.registry.registry.len(), self.res.biomes().list.len());
++        use std::hash::{Hash, Hasher};
++        let mut registry = std::collections::hash_map::DefaultHasher::new();
++        base_key.hash(&mut registry);
++        for id in 0..self.pack.assets.registry.registry.len() {
++            if let Some(state) = self.pack.assets.registry.state(horizon_world::registry::BlockStateId(id as u32)) {
++                state.name.hash(&mut registry);
++                state.properties.hash(&mut registry);
++            }
++        }
++        for biome in &self.res.biomes().list { biome.name.hash(&mut registry); }
++        let registry_key = registry.finish();
++        let scope = format!("{}:{}:{}", identity, self.dim.id(), registry_key);
++        let root: PathBuf = profile.join("herps-lod-cache/v1").join(namespace(&scope));
++        let g = &self.settings.horizon;
++        let memory = (g.lod_memory_mib.clamp(8, 512) as usize) * 1024 * 1024;
++        let disk = u64::from(g.lod_disk_mib.clamp(16, 4096)) * 1024 * 1024;
++        let cache = Arc::new(horizon_client::lod::visited_cache::VisitedCache::new(
++            root, registry_key, disk));
++        let source = horizon_client::lod::observed::ObservedSource::new(cache, memory / 2);
++        self.lod = Some(horizon_client::lod::Lod::observed(source,
++            self.pack.context.clone(), memory / 2, g.lod_workers.clamp(1, 4) as usize));
++        self.lod_observe.extend(self.world.chunks.keys().copied());
++        log::info!("Herps explored terrain enabled: {} chunks, {} MiB CPU cache, {} MiB disk, {} worker(s)",
++            g.visited_lod_radius, g.lod_memory_mib, g.lod_disk_mib, g.lod_workers);
++    }
++
++    pub(super) fn observe_visited_retiring(&mut self, chunks: &[Arc<horizon_client::chunk::Chunk>]) {
++        if !self.settings.horizon.visited_lod { return; }
++        if let Some(lod) = &mut self.lod {
++            for chunk in chunks {
++                self.lod_observe.remove(&(chunk.x, chunk.z));
++                lod.observe_retiring(chunk.clone(), self.res.facts());
++            }
++        }
++    }
++}
++
++#[cfg(test)]
++mod tests {
++    use super::namespace;
++    #[test]
++    fn namespace_is_opaque_stable_and_world_dimension_isolated() {
++        let id = namespace("remote:example.test:25565:123:overworld");
++        assert_eq!(id.len(), 32);
++        assert!(id.bytes().all(|c| c.is_ascii_hexdigit()));
++        assert_eq!(id, namespace("remote:example.test:25565:123:overworld"));
++        assert_ne!(id, namespace("remote:example.test:25565:123:the_nether"));
++        assert_ne!(id, namespace("remote:other.test:25565:123:overworld"));
++        assert_ne!(id, namespace("remote:example.test:25565:124:overworld"));
++    }
++}
