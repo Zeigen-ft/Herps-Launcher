@@ -208,11 +208,18 @@
   "java_mod_executed": false,
   "distant_horizons_source_adapted": false,
   "server_streaming_added": false,
-  "physical_windows_gameplay": "NOT RUN",
-  "interactive_graphics": "NOT RUN",
+  "physical_windows_gameplay": "PARTIAL: user-reported visual failure; exact run/settings unconfirmed",
+  "interactive_graphics": "USER-REPORTED VISUAL FAILURE; corrected candidate requires retest",
   "macos_build": "NOT RUN",
   "macos_gameplay": "NOT RUN",
   "full_native_acceptance": false,
   "public_release_created": false,
-  "main_unchanged": "b292a48c279c2b718a5395fe5558f2ff83dcea30"
+  "main_unchanged": "b292a48c279c2b718a5395fe5558f2ff83dcea30",
+  "physical_report": {
+    "date": "2026-11-18",
+    "evidence": "Two user-supplied screenshots show abrupt terrain cutoffs and tall blue vertical boundary faces",
+    "candidate_and_toggle_state_independently_confirmed": false,
+    "performance_or_save_tests_reported": false,
+    "root_cause_from_screenshots_alone_confirmed": false
+  }
 }

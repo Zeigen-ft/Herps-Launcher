@@ -202,7 +202,7 @@
     {
       "path": "crates/horizon-client-render/src/lod.rs",
       "before_sha256": "199ac38749620556315be56f53674269a642a8a2b0a4e16d380460ece8b5b1e2",
-      "after_sha256": "6df91a13348a83677748e00aa6bfc6422f8ea506481e9b950c7e0e9cf13e7d1b",
+      "after_sha256": "8ded3fdedfdafc18fe35c86290ee220228e51e18db4addf197ed5f00eae43a21",
       "patch": "engine/crates-horizon-client-render-src-lod.rs.patch"
     },
     {
@@ -244,7 +244,7 @@
     {
       "path": "crates/horizon-client-render/src/lod/mesh.rs",
       "before_sha256": "cb3a32d2b0096b60d1d3aa27d9511e43174663111810430ce4c06e3d7cbdc930",
-      "after_sha256": "508d7c7f2f85d816d8557a408eb355b8909ff3267aa4795571fc1fb8e411c92b",
+      "after_sha256": "b0d6a443fa3206197caf96fc6aecce213a24b0606878abe92c9a5fcfc7717e58",
       "patch": "engine/crates-horizon-client-render-src-lod-mesh.rs.patch"
     }
   ]

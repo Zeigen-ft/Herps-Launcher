@@ -96,7 +96,14 @@ installation, preserving user data.
 
 ## Physical acceptance and limits
 
-All physical candidate checks remain **NOT RUN**: visible distant terrain,
+The user subsequently reported that the result "doesnt work well" and supplied
+screenshots showing abrupt terrain cutoffs and tall blue boundary faces.
+The exact run and toggle state have not been reconfirmed. Record this as a
+**user-reported visual failure requiring retest**, not a graphics PASS. See the
+[bounded edge-wall correction](DISTANT-TERRAIN-EDGE-FIX.md).
+
+Other physical candidate checks remain **NOT RUN**: controlled visible-terrain
+acceptance,
 near/far transitions and z-fighting, performance, actual memory/disk behavior,
 real save/inventory preservation, relaunch, independent restore and crash
 recovery. macOS ARM64/Intel compilation and physical acceptance are **NOT RUN**

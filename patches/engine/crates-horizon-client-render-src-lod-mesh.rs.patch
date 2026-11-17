@@ -1,6 +1,156 @@
 --- a/crates/horizon-client-render/src/lod/mesh.rs
 +++ b/crates/horizon-client-render/src/lod/mesh.rs
-@@ -1126,6 +1126,38 @@
+@@ -55,8 +55,14 @@
+ #[derive(Default)]
+ pub(super) struct Mesher {
+     styles: FxHashMap<(BlockStateId, u8), Styles>,
++    observed_only: bool,
+ }
+ impl Mesher {
++    /// Heightmap sides toward unobserved columns have no authoritative floor.
++    /// Keep that policy separate from the legacy voxel-column mesher.
++    pub(super) fn observed() -> Self {
++        Self { observed_only: true, ..Self::default() }
++    }
+     pub(super) fn mesh(
+         &mut self,
+         key: TileKey,
+@@ -67,13 +73,14 @@
+         neighbors: &[Vec<EdgeColumn>; 4],
+         finer: &[TileKey],
+     ) -> SectionMesh {
+-        mesh_columns_with_edges(
++        mesh_columns_with_mode(
+             key,
+             columns,
+             covered,
+             covered_bounds,
+             neighbors,
+             finer,
++            self.observed_only,
+             |span, direction, at| self.material(span, direction, at, context),
+         )
+     }
+@@ -332,6 +339,7 @@
+         spans,
+     }
+ }
++#[cfg(test)]
+ fn mesh_columns_with_edges(
+     key: TileKey,
+     columns: &[Column],
+@@ -339,6 +347,18 @@
+     covered_bounds: Option<[i32; 4]>,
+     neighbors: &[Vec<EdgeColumn>; 4],
+     finer: &[TileKey],
++    material: impl FnMut(&Span, Direction, [i32; 2]) -> Material,
++) -> SectionMesh {
++    mesh_columns_with_mode(key, columns, covered, covered_bounds, neighbors, finer, false, material)
++}
++fn mesh_columns_with_mode(
++    key: TileKey,
++    columns: &[Column],
++    covered: &FxHashSet<(i32, i32)>,
++    covered_bounds: Option<[i32; 4]>,
++    neighbors: &[Vec<EdgeColumn>; 4],
++    finer: &[TileKey],
++    observed_only: bool,
+     mut material: impl FnMut(&Span, Direction, [i32; 2]) -> Material,
+ ) -> SectionMesh {
+     assert_eq!(columns.len(), CELLS * CELLS);
+@@ -499,7 +519,9 @@
+                                 segment.material,
+                             );
+                         }
+-                        if segment.bottom {
++                        // Heightmap MIN_Y is an artificial extrusion, not an observed
++                        // underside. Drawing it exposes a false world-floor cap.
++                        if segment.bottom && !observed_only {
+                             add_face(
+                                 &mut faces,
+                                 Direction::Down,
+@@ -562,13 +584,26 @@
+                             // water and a seal shows through it as a wall.
+                             if is_covered(nw[0], nw[1]) {
+                                 if segment.material.opaque {
++                                    // A near mesh may need a seal, but a heightmap
++                                    // is not a solid cliff extending to MIN_Y.
++                                    // Limit the skirt to one local step (1..16 blocks).
++                                    let seal = Segment {
++                                        min: if observed_only {
++                                            segment.min.max(segment.max - step.clamp(1, 16) as f32)
++                                        } else { segment.min },
++                                        span: segment.span,
++                                        max: segment.max,
++                                        material: segment.material,
++                                        top: segment.top,
++                                        bottom: segment.bottom,
++                                    };
+                                     add_side(
+                                         &mut faces,
+                                         direction,
+                                         plane,
+                                         u0,
+                                         u1,
+-                                        segment,
++                                        &seal,
+                                         &[],
+                                         side,
+                                         own_sky,
+@@ -582,17 +617,13 @@
+                             } else if (0..CELLS as i32).contains(&nx)
+                                 && (0..CELLS as i32).contains(&nz)
+                             {
+-                                add_side(
+-                                    &mut faces,
+-                                    direction,
+-                                    plane,
+-                                    u0,
+-                                    u1,
+-                                    segment,
+-                                    &prepared[nz as usize * CELLS + nx as usize],
+-                                    side,
+-                                    own_sky,
+-                                );
++                                let neighbor = &prepared[nz as usize * CELLS + nx as usize];
++                                // Empty observed columns also represent unknown
++                                // coverage. Never turn their boundary into a wall.
++                                if !observed_only || !neighbor.is_empty() {
++                                    add_side(&mut faces, direction, plane, u0, u1,
++                                        segment, neighbor, side, own_sky);
++                                }
+                             } else {
+                                 let edge_side = match direction {
+                                     Direction::West => 0,
+@@ -601,7 +632,7 @@
+                                     Direction::South => 3,
+                                     _ => unreachable!(),
+                                 };
+-                                if neighbors[edge_side].is_empty() {
++                                if !observed_only && neighbors[edge_side].is_empty() {
+                                     add_side(
+                                         &mut faces,
+                                         direction,
+@@ -619,7 +650,8 @@
+                                 for (i, edge) in neighbors[edge_side].iter().enumerate() {
+                                     let start = u0.max(edge.start as f32);
+                                     let end = u1.min(edge.end as f32);
+-                                    if start < end {
++                                    let neighbor = &prepared[edge_offsets[edge_side] + i];
++                                    if start < end && (!observed_only || !neighbor.is_empty()) {
+                                         add_side(
+                                             &mut faces,
+                                             direction,
+@@ -627,7 +659,7 @@
+                                             start,
+                                             end,
+                                             segment,
+-                                            &prepared[edge_offsets[edge_side] + i],
++                                            neighbor,
+                                             side,
+                                             own_sky,
+                                         );
+@@ -1126,6 +1158,142 @@
          v.uv.map(|u| f32::from(u) / crate::mesher::TILED_UV_STEPS)
      }
      #[test]
@@ -34,6 +184,110 @@
 +        }
 +        assert_eq!(top_area, 256.0);
 +        assert!(generated.translucent.is_empty());
++    }
++    fn observed_mesh(
++        key: TileKey, columns: &[Column], covered: &FxHashSet<(i32, i32)>,
++        bounds: Option<[i32; 4]>, neighbors: &[Vec<EdgeColumn>; 4],
++    ) -> SectionMesh {
++        mesh_columns_with_mode(key, columns, covered, bounds, neighbors, &[], true, material)
++    }
++    fn surface(height: i32, water: Option<i32>) -> Column {
++        Column::from_surface(Some(super::super::Surface {
++            height, state: BlockStateId(1), water: water.map(|y| (y, BlockStateId(2))), biome: 0,
++        }))
++    }
++    #[test]
++    fn observed_unknown_land_edges_have_no_world_floor_curtains() {
++        for level in [0, 1, 4, 6] {
++            for (x, z) in [(0, 0), (8, 8), (15, 15)] {
++                let mut columns = columns();
++                columns[z * CELLS + x] = surface(80, None);
++                let key = TileKey { x: -1, z: -2, level };
++                let generated = observed_mesh(key, &columns, &FxHashSet::default(), None,
++                    &std::array::from_fn(|_| Vec::new()));
++                assert_eq!(generated.solid.len(), 4, "only the known top: level={level}, x={x}, z={z}");
++                assert!(normal(generated.solid.as_chunks::<4>().0.first().unwrap()).y > 0.0);
++                assert!(generated.solid.iter().all(|v| v.pos[1] == 80.0));
++                // Reproduce the original defect through the preserved legacy path.
++                let legacy = mesh_columns(key, &columns, &FxHashSet::default(), None, material);
++                assert!(legacy.solid.iter().any(|v| v.pos[1] == crate::chunk::MIN_Y as f32));
++            }
++        }
++    }
++    #[test]
++    fn observed_unknown_ocean_edges_keep_surface_without_water_curtains() {
++        let mut columns = columns();
++        columns[8 * CELLS + 8] = surface(20, Some(64));
++        let generated = observed_mesh(TileKey { x: 0, z: 0, level: 2 }, &columns,
++            &FxHashSet::default(), None, &std::array::from_fn(|_| Vec::new()));
++        assert_eq!(generated.solid.len(), 4);
++        assert_eq!(generated.translucent.len(), 4);
++        for quad in generated.translucent.as_chunks::<4>().0 {
++            assert!(normal(quad).y > 0.0);
++            assert!(quad.iter().all(|v| (v.pos[1] - (64.0 - 1.0 / 9.0)).abs() < 0.001));
++        }
++    }
++    #[test]
++    fn observed_empty_halo_does_not_expose_extruded_edges() {
++        let mut columns = columns();
++        columns[8 * CELLS + 15] = surface(80, Some(90));
++        let mut neighbors = std::array::from_fn(|_| Vec::new());
++        neighbors[1].push(EdgeColumn { start: 8, end: 9, column: Column::default() });
++        let generated = observed_mesh(TileKey { x: 0, z: 0, level: 0 }, &columns,
++            &FxHashSet::default(), None, &neighbors);
++        assert_eq!(generated.solid.len(), 4);
++        assert_eq!(generated.translucent.len(), 4);
++    }
++    #[test]
++    fn observed_known_neighbors_keep_real_cliffs_and_cross_tile_steps() {
++        for across_tile in [false, true] {
++            let mut columns = columns();
++            let mut neighbors = std::array::from_fn(|_| Vec::new());
++            let x = if across_tile { 15 } else { 8 };
++            columns[8 * CELLS + x] = surface(80, None);
++            if across_tile {
++                neighbors[1].push(EdgeColumn { start: 8, end: 9, column: surface(60, None) });
++            } else { columns[8 * CELLS + x + 1] = surface(60, None); }
++            let generated = observed_mesh(TileKey { x: 0, z: 0, level: 0 }, &columns,
++                &FxHashSet::default(), None, &neighbors);
++            let walls: Vec<_> = generated.solid.as_chunks::<4>().0.iter()
++                .filter(|q| normal(q).y == 0.0).collect();
++            assert_eq!(walls.len(), 1);
++            let wall = walls[0];
++            assert_eq!(wall.iter().map(|v| v.pos[1]).reduce(f32::min), Some(60.0));
++            assert_eq!(wall.iter().map(|v| v.pos[1]).reduce(f32::max), Some(80.0));
++        }
++    }
++    #[test]
++    fn observed_near_boundary_seals_are_finite_and_do_not_overlap_near_tops() {
++        let columns = vec![surface(80, None); CELLS * CELLS];
++        let covered = [(0, 0)].into_iter().collect();
++        let generated = observed_mesh(TileKey { x: 0, z: 0, level: 1 }, &columns,
++            &covered, Some([0, 0, 16, 16]), &std::array::from_fn(|_| Vec::new()));
++        let mut walls = 0;
++        let mut top_area = 0.0;
++        for quad in generated.solid.as_chunks::<4>().0 {
++            assert!(quad.iter().all(|v| v.pos[1] >= 78.0));
++            if normal(quad).y == 0.0 { walls += 1; } else {
++                assert!(normal(quad).y > 0.0);
++                let x = quad.iter().map(|v| v.pos[0]).reduce(f32::min).unwrap();
++                let z = quad.iter().map(|v| v.pos[2]).reduce(f32::min).unwrap();
++                assert!(x >= 16.0 || z >= 16.0);
++                top_area += normal(quad).y;
++            }
++        }
++        assert!(walls > 0);
++        assert_eq!(top_area, 32.0 * 32.0 - 16.0 * 16.0);
++    }
++    #[test]
++    fn observed_known_ocean_neighbors_cull_shared_water_faces() {
++        let mut columns = columns();
++        columns[8 * CELLS + 8] = surface(20, Some(64));
++        columns[8 * CELLS + 9] = surface(30, Some(64));
++        let generated = observed_mesh(TileKey { x: 0, z: 0, level: 0 }, &columns,
++            &FxHashSet::default(), None, &std::array::from_fn(|_| Vec::new()));
++        assert!(!generated.translucent.is_empty());
++        assert!(generated.translucent.as_chunks::<4>().0.iter().all(|q| normal(q).y > 0.0));
 +    }
 +    #[test]
      fn wide_faces_split_and_keep_their_texture_phase() {
