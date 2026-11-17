@@ -49,9 +49,29 @@ The earlier Windows-host ZIP metadata variant is also recognized by hash.
 
 ## Automated and native acceptance
 
-Four local package/source tests pass. Windows installation/upgrade fixtures,
-native parsing, cross-platform regression results and independently audited
-artifact receipts will be recorded here after CI finishes.
+Fix source commit: `721768671ae2773c11822e209451b2197b0b691f` (local).
+Four local package/source tests pass, including a byte-identical rebuild from
+the preferred source bundled with the package. The full local regression run
+executed 520 tests: 500 passed, 19 skipped, one existing launcher fixture was
+blocked from binding its owned loopback port. Rerunning that module with local
+loopback permission passed all four tests, including its 31 native cases.
+
+The corrected pack contains 72 command lines and zero custom item-tag files.
+Its native parser check and real Windows installation/upgrade fixtures are
+**NOT RUN for 0.1.1 yet**, pending the feature-branch CI run. These must not be
+inferred from 0.1.0's earlier results. No corrected GitHub artifact is available
+at this point.
+
+Automatic approval review rejected pushing `feature/photon-fullbright` because
+the user's earlier explicit branch authorization named
+`feature/herps-java-compatibility`. No alternative push route was attempted.
+The reviewable local fix and report are retained; explicit approval of the
+current branch is needed before publishing the change to GitHub and running CI.
+`main` remains `b292a48c279c2b718a5395fe5558f2ff83dcea30`.
+
+The local (not Windows-CI-accepted) 0.1.1 Windows bundle SHA-256 is
+`8b86a75238e104deb2dcb3c6628fb2f436e541c814cee62eb6d7980719fcf892`;
+the inner pack is `b162ce565eddfd497bd5858dff8267a741b61dede739733351f555f24fae4844`.
 
 Real 0.1.1 light placement, visibility to two players, movement cleanup,
 dimensions, world/inventory persistence and restart/crash recovery remain
