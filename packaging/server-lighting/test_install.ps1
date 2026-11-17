@@ -24,9 +24,9 @@ function Install([string]$World) {
 }
 try {
     $bundle = Join-Path $root 'bundle'
-    Expand-Archive -LiteralPath '.cache/server-lighting/Herps-Server-Dynamic-Lighting-0.1.0-Windows-Test.zip' -DestinationPath $bundle
+    Expand-Archive -LiteralPath '.cache/server-lighting/Herps-Server-Dynamic-Lighting-0.1.1-Windows-Test.zip' -DestinationPath $bundle
     $installer = Join-Path $bundle 'Install-Lighting.ps1'
-    $packName = 'Herps-Server-Dynamic-Lighting-0.1.0.zip'
+    $packName = 'Herps-Server-Dynamic-Lighting-0.1.1.zip'
     $world = Fixture 'stopped-disposable-world'
     $before = (Get-FileHash -LiteralPath (Join-Path $world 'level.dat')).Hash
     Check ((Install $world) -eq 0) 'stopped fixture installation succeeds'
@@ -66,6 +66,31 @@ try {
         Check (-not (Test-Path -LiteralPath (Join-Path $linked 'datapacks'))) 'junction world unchanged'
         Check ((Get-Content -LiteralPath (Join-Path $outside 'sentinel.txt') -Raw) -eq 'outside untouched') 'external files unchanged'
     } finally { [IO.Directory]::Delete($junction) }
+    $upgrade = Fixture 'upgrade-from-known-0.1.0'
+    [void][IO.Directory]::CreateDirectory((Join-Path $upgrade 'datapacks'))
+    $oldName = 'Herps-Server-Dynamic-Lighting-0.1.0.zip'
+    $oldPack = Join-Path $upgrade "datapacks/$oldName"
+    Copy-Item -LiteralPath 'tests/fixtures/server-lighting-0.1.0.zip' -Destination $oldPack
+    $oldHash = (Get-FileHash -LiteralPath $oldPack).Hash
+    Check ((Install $upgrade) -eq 0) 'verified 0.1.0 upgrade succeeds'
+    Check (-not (Test-Path -LiteralPath $oldPack)) 'old pack is outside active datapacks'
+    Check (Test-Path -LiteralPath (Join-Path $upgrade "datapacks/$packName")) 'new pack installed after upgrade'
+    Check ((Get-Content -LiteralPath (Join-Path $upgrade 'level.dat') -Raw) -eq 'world sentinel') 'upgrade preserves world bytes'
+    $upgradeBackup = @(Get-ChildItem -LiteralPath (Join-Path $root '.herps-lighting-backups') | Where-Object {
+        (Get-Content -LiteralPath (Join-Path $_.FullName 'manifest.json') -Raw | ConvertFrom-Json).world -eq $upgrade
+    })
+    Check ($upgradeBackup.Count -eq 1) 'upgrade has its own full verified backup'
+    Check ((Get-FileHash -LiteralPath (Join-Path $upgradeBackup[0].FullName "world/datapacks/$oldName")).Hash -eq $oldHash) 'old pack retained in full backup'
+    Check ((Get-FileHash -LiteralPath (Join-Path $upgradeBackup[0].FullName "retired-$oldName")).Hash -eq $oldHash) 'retired pack archived intact'
+    $modified = Fixture 'modified-old-pack'
+    [void][IO.Directory]::CreateDirectory((Join-Path $modified 'datapacks'))
+    $modifiedOld = Join-Path $modified "datapacks/$oldName"
+    Copy-Item -LiteralPath 'tests/fixtures/server-lighting-0.1.0.zip' -Destination $modifiedOld
+    [IO.File]::AppendAllText($modifiedOld, 'user modification')
+    $modifiedHash = (Get-FileHash -LiteralPath $modifiedOld).Hash
+    Check ((Install $modified) -ne 0) 'modified old pack upgrade refused'
+    Check ((Get-FileHash -LiteralPath $modifiedOld).Hash -eq $modifiedHash) 'modified old pack preserved'
+    Check (-not (Test-Path -LiteralPath (Join-Path $modified "datapacks/$packName"))) 'refused upgrade leaves no new active pack'
     $bad = Fixture 'corrupt-pack'
     [IO.File]::AppendAllText((Join-Path $bundle $packName), 'corruption')
     Check ((Install $bad) -ne 0) 'corrupt pack refused'

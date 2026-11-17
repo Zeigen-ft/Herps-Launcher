@@ -1,5 +1,10 @@
 # Herps 26.3 server lighting: internal test candidate
 
+**0.1.0 is superseded: the user confirmed a native gameplay failure.** The
+pack loads and enables, but its custom item-tag commands are rejected. See the
+[0.1.1 correction and physical failure evidence](SERVER-DYNAMIC-LIGHTING-0.1.1-VERIFICATION.md).
+The historical CI results below did not establish working server lighting.
+
 Status: **experimental; native server runtime and physical multiplayer acceptance NOT RUN**.
 This is a separate data-only add-on, not a new launcher executable, OptiFine
 implementation, Java compatibility bridge, or public release.

@@ -12,8 +12,8 @@ from pathlib import Path
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
-PACK_NAME = "Herps-Server-Dynamic-Lighting-0.1.0.zip"
-BUNDLE_NAME = "Herps-Server-Dynamic-Lighting-0.1.0-Windows-Test.zip"
+PACK_NAME = "Herps-Server-Dynamic-Lighting-0.1.1.zip"
+BUNDLE_NAME = "Herps-Server-Dynamic-Lighting-0.1.1-Windows-Test.zip"
 SOURCE_SHA256 = "f4c66fc343c03532be4028859e8a0bd510c182348b8649b63301865f99239e82"
 LEVELS = {
     15: ["glowstone", "sea_lantern", "lantern", "jack_o_lantern", "shroomlight", "beacon",
@@ -41,12 +41,9 @@ def pack_files():
         add(f"data/herps_dl/function/{name}.mcfunction", "\n".join(lines) + "\n")
 
     add("pack.mcmeta", {"pack": {"pack_format": 121,
-        "description": "Herps 26.3 experimental server lighting 0.1.0 (disabled until enabled)"}})
+        "description": "Herps 26.3 experimental server lighting 0.1.1 (direct item checks)"}})
     for event in ["load", "tick"]:
         add(f"data/minecraft/tags/function/{event}.json", {"values": [f"herps_dl:{event}"]})
-    for level, items in LEVELS.items():
-        add(f"data/herps_dl/tags/item/level{level}.json",
-            {"values": ["minecraft:" + item for item in items]})
     function("load", [
         "scoreboard objectives add herps_dl dummy",
         "execute unless score #enabled herps_dl matches 0..1 run scoreboard players set #enabled herps_dl 0",
@@ -60,11 +57,15 @@ def pack_files():
         "execute if score #enabled herps_dl matches 1 run function herps_dl:sources"])
     sources = []
     # Higher tiers run first globally: shared positions keep the strongest source.
-    for level in LEVELS:
-        sources += [
-            f"execute as @a at @s if items entity @s weapon.* #herps_dl:level{level} positioned ~ ~1 ~ run function herps_dl:place{level}",
-            f"execute as @a at @s as @e[type=minecraft:item,distance=..24,limit=32,sort=nearest] at @s if items entity @s contents #herps_dl:level{level} run function herps_dl:place{level}",
-        ]
+    for level, items in LEVELS.items():
+        # The shipped engine's command registry contains built-in tags only.
+        # User's real server accepts literal torch but rejects our custom tag.
+        # Use only known vanilla item IDs; do not inject tags into the probe.
+        for item in items:
+            sources += [
+                f"execute as @a at @s if items entity @s weapon.* minecraft:{item} positioned ~ ~1 ~ run function herps_dl:place{level}",
+                f"execute as @a at @s as @e[type=minecraft:item,distance=..24,limit=32,sort=nearest] at @s if items entity @s contents minecraft:{item} run function herps_dl:place{level}",
+            ]
     function("sources", sources)
     # Only ordinary air is eligible. Never replace water, solid blocks, existing
     # lights, cave_air, or void_air. No broad fill and no teleport/search side effects.

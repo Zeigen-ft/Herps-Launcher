@@ -9,3 +9,4 @@ content/server-lighting/** text eol=lf
 tools/build_server_lighting.py text eol=lf
 docs/SERVER-DYNAMIC-LIGHTING.md text eol=lf
 licenses/server-lighting-AGPL-3.0.txt text eol=lf
+tests/fixtures/server-lighting-0.1.0.zip -text

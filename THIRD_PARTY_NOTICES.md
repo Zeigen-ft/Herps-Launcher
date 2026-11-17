@@ -1,6 +1,6 @@
 # Licences and third-party notices
 
-The separate experimental **Herps Server Dynamic Lighting 0.1.0** datapack,
+The separate experimental **Herps Server Dynamic Lighting 0.1.1** datapack,
 its generator and installer use **AGPL-3.0-only**, as declared by the supplied
 Dynamic Lighting 1.0 archive by quillphen. See its
 [provenance and modifications](content/server-lighting/NOTICE.txt),

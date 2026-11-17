@@ -1,4 +1,4 @@
-Herps Server Dynamic Lighting 0.1.0 - EXPERIMENTAL TEST PACK
+Herps Server Dynamic Lighting 0.1.1 - EXPERIMENTAL TEST PACK
 Copyright (c) 2026 Herps contributors. License: AGPL-3.0-only.
 
 Adapted from Dynamic Lighting 1.0 by quillphen:
@@ -12,6 +12,8 @@ Changes: rewritten native command functions; disabled on first load; explicit
 enable/disable; ordinary-air-only placement; marker-owned cleanup; strongest
 tier first; dropped-item search limited to 32 nearest within 24 blocks per
 player; no water, mob, on-fire, legacy config, or unsafe broad-fill behavior.
+Version 0.1.1 replaces unsupported custom item-tag command checks with direct
+vanilla item IDs, and adds backup-first upgrade of recognized 0.1.0 packages.
 All preferred source and the full license are included. No OptiFine code,
 assets, JARs, or Minecraft game resources are included. No warranty.
 

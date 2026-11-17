@@ -1,0 +1,8 @@
+Trusted legacy upgrade fixture: server-lighting-0.1.0.zip
+SHA-256: 11dff393eb1e85e5692eeb009226d04478a5f745f0ba623cabf8cfe9cda8fe8d
+Source commit: 2420d31201a7693d0c1e94984c0bf118a5f2df7e
+Generator: tools/build_server_lighting.py at that commit.
+AGPL-3.0-only; license and attribution are included inside the ZIP and retained
+in licenses/server-lighting-AGPL-3.0.txt. Data-only; no Java code. The archive's
+plain-text function definitions are also its directly editable datapack source.
+Used only for stopped-world upgrade/backup filesystem regression fixtures.

@@ -57,8 +57,11 @@ class ServerLightingTests(unittest.TestCase):
         self.assertTrue(load.rstrip().endswith('herps_dl 0'))
         sources = files['data/herps_dl/function/sources.mcfunction'].decode().splitlines()
         self.assertEqual([int(re.search(r'place(\d+)$', line)[1]) for line in sources],
-                         [15, 15, 14, 14, 10, 10, 7, 7])
-        self.assertEqual(sum('distance=..24,limit=32,sort=nearest' in line for line in sources), 4)
+                         [level for level, items in LEVELS.items() for item in items for _ in range(2)])
+        self.assertEqual(sum('distance=..24,limit=32,sort=nearest' in line for line in sources),
+                         sum(len(items) for items in LEVELS.values()))
+        self.assertNotIn('#herps_dl:', '\n'.join(sources))
+        self.assertFalse(any(name.startswith('data/herps_dl/tags/item/') for name in files))
         all_items = [item for items in LEVELS.values() for item in items]
         self.assertEqual(len(all_items), len(set(all_items)))
 

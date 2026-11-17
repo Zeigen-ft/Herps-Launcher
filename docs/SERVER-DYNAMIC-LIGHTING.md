@@ -1,10 +1,39 @@
-# Herps 26.3 server dynamic lighting — experimental 0.1.0
+# Herps 26.3 server dynamic lighting — experimental 0.1.1
 
 This is a small native server datapack adapted from your Dynamic Lighting 1.0
 upload. It contains no Java code and needs no Forge, Fabric, Java mod loader,
 Rust compiler, or OptiFine installation. It is **not full OptiFine** and is not
 yet accepted for an important or public server. Physical multiplayer lighting,
 save/restart and cleanup tests are **NOT RUN** until you test them.
+
+Version **0.1.1 fixes a confirmed 0.1.0 detection failure**. The user tested on
+a real Windows host: the pack was enabled, its score was 1 and a direct torch
+test passed, but the server rejected `#herps_dl:level14` as an unknown item tag.
+The corrected pack uses direct vanilla item checks for all listed items.
+The old parser probe had artificially supplied those custom tags; it now tests
+without them and explicitly rejects the old failing command. Corrected real
+lighting and multiplayer acceptance remain open until the user retests.
+
+## Updating the installed 0.1.0 test pack
+
+1. In the SAME host's console, type `function herps_dl:disable`, then `stop`.
+   Wait for it to close. Keep your original pre-test backup.
+2. Download and fully extract the **0.1.1** Windows test bundle. Run its
+   `Install-Lighting.cmd`, selecting the **same disposable world** you used
+   previously, and confirm `INSTALL TEST PACK`.
+3. The installer verifies the old pack's hash, backs up the entire current
+   world and moves the recognized old ZIP outside the world's active
+   `datapacks` folder before committing the new ZIP. It never overwrites saves.
+   Modified or unrecognized old packs are preserved and automatic upgrade stops.
+   An interrupted upgrade has a full backup; a failed final file move attempts
+   to put the previous pack back. Never start the server during installation.
+4. Wait for `VERIFIED BACKUP`, `ARCHIVED OLD PACK` and `INSTALLED`. Restart the
+   same host, type `function herps_dl:enable`, and test again in the dark with
+   client Dynamic Lights and Photon/fullbright OFF.
+
+Fresh installations start disabled. Upgrades preserve the world's existing
+enabled/disabled scoreboard value; disabling before shutdown keeps the upgrade
+off until you explicitly enable it. Do not keep both versions in `datapacks`.
 
 ## What it does
 
@@ -63,11 +92,11 @@ Clients must actually connect to this server; no JAR goes in a Herps mods folder
    two-PC test-host procedure remains unverified.
 5. Download the Windows test bundle from the successful server-lighting Actions
    run, extract its outer artifact ZIP, then extract
-   `Herps-Server-Dynamic-Lighting-0.1.0-Windows-Test.zip` into a new folder.
+   `Herps-Server-Dynamic-Lighting-0.1.1-Windows-Test.zip` into a new folder.
    Do not run anything from inside a ZIP. Check its checksum against the run's
    `SHA256SUMS.txt` using PowerShell:
 
-   `Get-FileHash -Algorithm SHA256 "C:\path\Herps-Server-Dynamic-Lighting-0.1.0-Windows-Test.zip"`
+   `Get-FileHash -Algorithm SHA256 "C:\path\Herps-Server-Dynamic-Lighting-0.1.1-Windows-Test.zip"`
 
 ## Install and turn on
 
@@ -80,11 +109,13 @@ Clients must actually connect to this server; no JAR goes in a Herps mods folder
 4. Wait for `VERIFIED BACKUP`, then `INSTALLED`. Copy the backup location.
    A complete file copy and SHA-256 manifest are stored in the sibling
    `.herps-lighting-backups` folder. Only transient `session.lock` is excluded.
-   The installer refuses existing packs, active world locks and links/junctions.
+   The installer refuses duplicate current versions, unknown/modified older
+   copies, active world locks and links/junctions. It can upgrade a recognized
+   original 0.1.0 copy after backing it up.
    A failed backup prevents pack installation. It does not start the server.
 5. Restart the **same disposable host**. In the server console, without a `/`,
    type `datapack list enabled`. Check for
-   `file/Herps-Server-Dynamic-Lighting-0.1.0.zip`.
+   `file/Herps-Server-Dynamic-Lighting-0.1.1.zip`.
 6. Type `function herps_dl:enable`. It starts disabled on its first load.
    Your enabled/disabled choice is saved by the world's scoreboard on normal
    shutdown. Do not remove the `herps_dl` objective or kill its markers manually.

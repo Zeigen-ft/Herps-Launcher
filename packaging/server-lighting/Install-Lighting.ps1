@@ -8,6 +8,8 @@ $packName = '@PACK_NAME@'
 $expectedHash = '@PACK_SHA256@'
 $worldLock = $null
 $staging = $null
+$retiredPack = $null
+$legacyPack = $null
 
 function Assert-OrdinaryPath([string]$Path) {
     $node = Get-Item -LiteralPath $Path -Force
@@ -52,8 +54,22 @@ try {
     if ((Test-Path -LiteralPath $destination) -or (Test-Path -LiteralPath (Join-Path $datapacks 'herps-server-dynamic-lighting'))) {
         throw 'This test pack is already installed. No files were replaced.'
     }
+    $legacyName = 'Herps-Server-Dynamic-Lighting-0.1.0.zip'
+    if (Test-Path -LiteralPath $datapacks) {
+        foreach ($existing in Get-ChildItem -LiteralPath $datapacks -Filter 'Herps-Server-Dynamic-Lighting-*.zip' -Force) {
+            if ($existing.Name -ne $legacyName) { throw "Unrecognized lighting pack: $($existing.Name). No files changed." }
+            Assert-OrdinaryPath $existing.FullName
+            $legacyHash = (Get-FileHash -LiteralPath $existing.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+            if ($legacyHash -notin @('11dff393eb1e85e5692eeb009226d04478a5f745f0ba623cabf8cfe9cda8fe8d',
+                                     'ddf0f256e0ef4cf4d6cd42b5337453863fffdf30877e1be08b2444f1ba9c9335')) {
+                throw 'Existing 0.1.0 pack is modified or unrecognized. It was preserved; automatic upgrade refused.'
+            }
+            $legacyPack = $existing.FullName
+        }
+    }
     Write-Host "Selected world: $world"
     Write-Host 'A full, hash-verified world backup will be made before installation. Allow enough free disk space.'
+    if ($null -ne $legacyPack) { Write-Host 'UPGRADE: the verified 0.1.0 pack will be archived outside the world after the backup.' }
     if (-not $ConfirmedDisposableWorld) {
         if ((Read-Host 'If the host is CLOSED and this is a DISPOSABLE test world, type INSTALL TEST PACK') -cne 'INSTALL TEST PACK') {
             throw 'Cancelled. No world files changed.'
@@ -100,14 +116,26 @@ try {
     if ((Get-FileHash -LiteralPath $staging -Algorithm SHA256).Hash.ToLowerInvariant() -ne $expectedHash) {
         throw 'Copied pack checksum failed.'
     }
+    if ($null -ne $legacyPack) {
+        $retiredPack = Join-Path $backup ('retired-' + $legacyName)
+        [IO.File]::Move($legacyPack, $retiredPack) # held world lock; verified old pack remains recoverable
+    }
     [IO.File]::Move($staging, $destination) # no overwrite
     $staging = $null
+    if ($null -ne $retiredPack) { Write-Host "ARCHIVED OLD PACK: $retiredPack" }
+    $retiredPack = $null # commit successful; do not roll back the installed upgrade
     Write-Host "INSTALLED: $destination"
     Write-Host 'Start the SAME test host. In its console type: function herps_dl:enable'
     Write-Host 'To stop lighting: function herps_dl:disable'
     Write-Host 'It starts disabled on the first load. Read README.txt for testing and cleanup.'
 } catch {
     Write-Host "INSTALLATION STOPPED: $($_.Exception.Message)" -ForegroundColor Red
+    if ($null -ne $retiredPack -and (Test-Path -LiteralPath $retiredPack)) {
+        if (-not (Test-Path -LiteralPath $legacyPack)) {
+            try { [IO.File]::Move($retiredPack, $legacyPack); Write-Host 'The previous pack was restored after the failed upgrade.' }
+            catch { Write-Host "Previous pack remains safe at: $retiredPack" }
+        } else { Write-Host "Previous pack remains safe at: $retiredPack" }
+    }
     Write-Host 'Existing saves were not restored or overwritten. Any completed backup remains available.'
     exit 1
 } finally {

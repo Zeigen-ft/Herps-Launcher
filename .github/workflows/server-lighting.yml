@@ -3,9 +3,9 @@ on:
   workflow_dispatch:
   push:
     branches: [feature/photon-fullbright]
-    paths: ['tools/*server_lighting.py', 'packaging/server-lighting/**', 'content/server-lighting/**', 'tests/test_server_lighting.py', 'docs/SERVER-DYNAMIC-LIGHTING.md', 'licenses/server-lighting-AGPL-3.0.txt', '.github/workflows/server-lighting.yml']
+    paths: ['tools/*server_lighting.py', 'packaging/server-lighting/**', 'content/server-lighting/**', 'tests/test_server_lighting.py', 'tests/fixtures/server-lighting-*.zip', '.gitattributes', 'docs/SERVER-DYNAMIC-LIGHTING.md', 'licenses/server-lighting-AGPL-3.0.txt', '.github/workflows/server-lighting.yml']
   pull_request:
-    paths: ['tools/*server_lighting.py', 'packaging/server-lighting/**', 'content/server-lighting/**', 'tests/test_server_lighting.py', 'docs/SERVER-DYNAMIC-LIGHTING.md', 'licenses/server-lighting-AGPL-3.0.txt', '.github/workflows/server-lighting.yml']
+    paths: ['tools/*server_lighting.py', 'packaging/server-lighting/**', 'content/server-lighting/**', 'tests/test_server_lighting.py', 'tests/fixtures/server-lighting-*.zip', '.gitattributes', 'docs/SERVER-DYNAMIC-LIGHTING.md', 'licenses/server-lighting-AGPL-3.0.txt', '.github/workflows/server-lighting.yml']
 permissions:
   contents: read
 jobs:
@@ -37,9 +37,9 @@ jobs:
       - name: Upload internal test bundle and checksums
         uses: actions/upload-artifact@v4
         with:
-          name: Herps-Server-Dynamic-Lighting-0.1.0-Windows-Test
+          name: Herps-Server-Dynamic-Lighting-0.1.1-Windows-Test
           path: |
-            .cache/server-lighting/Herps-Server-Dynamic-Lighting-0.1.0-Windows-Test.zip
+            .cache/server-lighting/Herps-Server-Dynamic-Lighting-0.1.1-Windows-Test.zip
             .cache/server-lighting/SHA256SUMS.txt
           if-no-files-found: error
           retention-days: 90
