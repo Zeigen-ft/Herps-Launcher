@@ -16,7 +16,7 @@
   "custom_item_tag_files": 0,
   "custom_item_tag_commands": 0,
   "command_lines": 72,
-  "physical_011_gameplay": "NOT RUN",
+  "physical_011_gameplay": "PARTIAL PASS (user-reported basic Windows server lighting)",
   "artifact_expires_at": "2027-02-15T03:41:42Z",
   "regression_run_id": 44011990685,
   "package_tests_passed": 4,
@@ -37,9 +37,12 @@
   },
   "native_parser": "PASS",
   "windows_filesystem_fixtures": "PASS",
-  "native_world_execution": "NOT RUN",
+  "native_world_execution": "USER-REPORTED BASIC PASS",
   "macos_hosting": "NOT RUN",
   "branch_push_explicitly_approved": true,
   "main_unchanged": "b292a48c279c2b718a5395fe5558f2ff83dcea30",
-  "public_release_created": false
+  "public_release_created": false,
+  "physical_report_file": "SERVER-DYNAMIC-LIGHTING-0.1.1-WINDOWS-USER-REPORT.json",
+  "physical_report_date": "2026-11-17",
+  "full_native_acceptance": false
 }

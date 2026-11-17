@@ -1,7 +1,28 @@
 # Server Dynamic Lighting 0.1.1: custom item-tag detection correction
 
-Status: corrected internal candidate; **CI PASS; 0.1.1 physical gameplay retest NOT RUN**.
+Status: corrected internal candidate; **CI PASS; basic Windows server lighting PASS (user-reported)**.
+Broader native acceptance remains open.
 No full OptiFine compatibility, public release, engine rewrite or Java execution.
+
+## User's successful 0.1.1 retest — 17 November 2026
+
+After confirming the 0.1.1 ZIP was present in the server world's `datapacks`
+folder and receiving the restart/enable/torch test instructions, the user
+reported: **“it now works”**. Record the basic server-lighting symptom as
+**PASS — user-reported**, resolving their earlier “still nothing” observation
+at this scope. This was the user's physical Windows server test, not a CI
+simulation or an independently observed Codex gameplay session.
+
+The brief report does not itemize hand/slot, resource-pack settings, world
+position or time, every supported light item, player count, cleanup or restart
+checks. Do not infer those individual passes. The user confirmed the installed
+filename/version; the installed file's SHA-256 was not returned. The expected
+download and checksums below identify the supplied candidate.
+
+See the [structured user report](SERVER-DYNAMIC-LIGHTING-0.1.1-WINDOWS-USER-REPORT.json).
+Two-player visibility, dropped items/offhand/tier edge cases, movement cleanup,
+dimensions, disable/uninstall cleanup, save/restart/crash recovery, independent
+restore and macOS gameplay remain **NOT RUN in the recorded evidence**.
 
 ## Confirmed 0.1.0 failure on the user's Windows server
 
@@ -103,11 +124,13 @@ The bundle includes its complete preferred source, AGPL license/notices,
 README and `SHA256SUMS.txt`. See the
 [machine-readable CI receipt](SERVER-DYNAMIC-LIGHTING-0.1.1-CI.json).
 
-Real 0.1.1 light placement, visibility to two players, movement cleanup,
-dimensions, world/inventory persistence and restart/crash recovery remain
-**NOT RUN** until the corrected package is physically retested. Existing macOS
-native testing limitations remain. Source-level correction of one confirmed
-failure does not establish that every subsequent lighting step works.
+The user now reports that basic real 0.1.1 server lighting works. Visibility
+to two players, movement cleanup, dimensions, world/inventory persistence and
+restart/crash recovery remain **NOT RUN in the recorded evidence**. Existing
+macOS native testing limitations remain. The successful basic retest does not
+accept every supported item, cleanup path or recovery scenario. The candidate's
+bundled guide reflects the pre-retest evidence at build time; this report and
+the separate user report record the later physical observation.
 
 Use the [beginner upgrade instructions](SERVER-DYNAMIC-LIGHTING.md). Test with
 client-only Dynamic Lights and Photon/fullbright OFF outdoors at night, so another

@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "reported_date": "2026-11-17",
+  "date_timezone": "Asia/Singapore",
+  "evidence_type": "user-reported physical test",
+  "verbatim_report": "it now works",
+  "version": "0.1.1",
+  "platform_context": "Windows native Herps 26.3 server",
+  "overall_status": "PARTIAL PASS",
+  "confirmed_scope": {
+    "basic_server_lighting": "PASS (user-reported)",
+    "installed_filename": "Herps-Server-Dynamic-Lighting-0.1.1.zip",
+    "earlier_no_visible_lighting_symptom": "reported resolved"
+  },
+  "supplied_candidate": {
+    "source_commit": "eaa948738d3c54499acc58c92c152236502c54c8",
+    "run_id": 44011990720,
+    "artifact_id": 14297431150,
+    "expected_pack_sha256": "b162ce565eddfd497bd5858dff8267a741b61dede739733351f555f24fae4844",
+    "installed_hash_returned_by_user": false
+  },
+  "not_individually_confirmed": [
+    "exact torch/hand/slot and other held items",
+    "Photon/fullbright and client Dynamic Lights settings",
+    "world position, ordinary-air condition and time of day",
+    "second-player visibility",
+    "dropped-item lighting and each light tier",
+    "movement and source-removal cleanup",
+    "dimension transitions, death, teleport and reconnect",
+    "disable/uninstall cleanup and unloaded-chunk behavior",
+    "world/inventory persistence after save and restart",
+    "crash recovery and independent backup restore",
+    "many players/items and long-session performance",
+    "macOS hosting and gameplay"
+  ],
+  "codex_independently_observed_gameplay": false,
+  "full_optifine_implemented": false,
+  "full_native_acceptance": false,
+  "public_release_authorized": false
+}

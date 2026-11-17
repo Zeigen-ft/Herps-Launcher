@@ -63,8 +63,11 @@ migration does not change visibility, create a release or create a tag.
 
 An optional [Herps 26.3 server dynamic-lighting test pack](docs/SERVER-DYNAMIC-LIGHTING.md)
 has a local Windows installer with a verified-backup guard. It is experimental,
-starts disabled and requires a disposable test world. Multiplayer gameplay is
-**NOT RUN**; it does not implement full OptiFine.
+starts disabled and requires a disposable test world. The user reports
+**basic Windows server lighting works in 0.1.1**; see the
+[physical retest scope](docs/SERVER-DYNAMIC-LIGHTING-0.1.1-VERIFICATION.md).
+Two-player visibility, cleanup/restart and macOS acceptance remain open.
+It does not implement full OptiFine.
 
 ## Supported testing scope
 
