@@ -1,103 +1,82 @@
-# Quick start — install and play
+# Quick start
 
-**Herps Launcher 0.1.0 is a prerelease candidate.** Read
-[INSTALLATION.md](INSTALLATION.md) for the complete guide, requirements, backups,
-security prompts and troubleshooting. Minecraft resources are not bundled.
+Herps Launcher manages profiles and starts the native Herspers Minecraft client.
+Packages are prerelease candidates. Minecraft resources are not included.
 
-## 1. Download your package
+## 1. Download
 
-Open [Herps-Launcher Releases](https://github.com/Zeigen-ft/Herps-Launcher/releases).
-If no prerelease is published, use the successful destination CI download links
-in [the migration report](docs/migration/README.md). Private-repository downloads
-require access; ask the owner if you cannot see them.
+Choose your platform from the [verified packages](release/0.1.0/README.md):
+**Windows x64**, **Mac Intel**, or **Mac Apple Silicon**.
+For the current development branch, use the
+[verified Windows candidate](docs/DISTANT-TERRAIN-EDGE-WINDOWS-CANDIDATE.md).
 
-| Your computer | Release file |
-| --- | --- |
-| Windows 11, Intel/AMD x64 | `Herps-Launcher-0.1.0-Windows-x64-Setup.exe` |
-| Mac with Intel processor | `Herps-Launcher-0.1.0-macOS-Intel.dmg` |
-| Mac with Apple chip / ARM64 | `Herps-Launcher-0.1.0-macOS-Apple-Silicon.dmg` |
-
-Mac: **Apple menu → About This Mac** identifies the processor. Windows:
-**Settings → System → About → System type** should say x64-based processor.
-Do not use these Windows files as a native Windows-on-ARM package.
-
-Download `SHA256SUMS.txt` too. Verify the file before opening it:
-
-```powershell
-# Windows PowerShell, in the download folder:
-Get-FileHash -Algorithm SHA256 -LiteralPath '.\Herps-Launcher-0.1.0-Windows-x64-Setup.exe'
-```
-
-```bash
-# Mac Terminal; substitute your actual DMG path:
-shasum -a 256 "$HOME/Downloads/Herps-Launcher-0.1.0-macOS-Apple-Silicon.dmg"
-```
-
-Compare all 64 hexadecimal digits with the same filename in `SHA256SUMS.txt`.
-Stop if they differ. A CI download is an outer ZIP: extract it before hashing
-its installer/DMG. [Full checksum instructions](INSTALLATION.md#verify-downloads).
+Download the matching checksum file. Compare your installer/ZIP/DMG's SHA-256
+using [these instructions](INSTALLATION.md#verify-downloads).
+For Actions downloads, extract the outer artifact ZIP first.
 
 ## 2. Install
 
-- **Windows:** close existing game/launcher/server processes, back up existing
-  data, then run the installer. Choose a short folder you own and open **Herps
-  Launcher** from Start. The optional portable ZIP must be fully extracted;
-  run `Herps Launcher\Herps Launcher.exe`, keeping its supporting folders.
-- **Mac:** open the verified DMG and copy **both** `Herps Launcher.app` and
-  `Herspers Minecraft.app` into Applications. Eject the DMG, then open Herps Launcher.
+- **Windows:** run the Setup installer, or fully extract the portable ZIP.
+  Keep all files together; open `Herps Launcher.exe`.
+- **Mac:** open the DMG and copy **both** `Herps Launcher.app` and
+  `Herspers Minecraft.app` into Applications. Eject the DMG and open Herps Launcher.
 
-Windows is unsigned; Mac apps are ad hoc signed and not notarized. Review only
-per-app security prompts for the verified download. Do not disable antivirus or
-Gatekeeper. [Security prompts and installation](INSTALLATION.md#install-the-launcher).
-**Physical Mac installation/gameplay remains NOT RUN.** Native CI is separate.
+Back up existing worlds before replacing an installation. Close its game,
+launcher and any server using those binaries. Review verified-app security
+prompts; do not disable antivirus or Gatekeeper.
 
-## 3. Prepare your own Minecraft resources
+## 3. Prepare Minecraft resources — first time only
 
-1. Install a full **JDK 25** for your CPU; a JRE alone is insufficient.
-2. Use the official Minecraft launcher to install and start your legally owned
-   **Minecraft Java Edition 26.3** once. Get that exact version's official server
-   JAR from Minecraft's official version information. Keep the JAR unextracted.
-3. In Herps Launcher → Settings, find the displayed game folder:
-   - Windows: open that folder and double-click **Setup.cmd**.
-   - Mac: run in Terminal:
+1. Install a full **JDK 25** matching your CPU.
+2. Install your legally owned **Minecraft Java Edition 26.3** through the official
+   Minecraft launcher and start that version once.
+3. Obtain its matching **official 26.3 server JAR**. Keep it unextracted.
+4. Run the bundled preparation tool:
+   - **Windows:** open the bundled `game\Herspers-Minecraft` folder and double-click `Setup.cmd`.
+   - **Mac:** open Terminal and run:
 
      ```bash
      "/Applications/Herspers Minecraft.app/Contents/Resources/prepare.command"
      ```
 
-4. Select the matching server JAR when asked. Wait for **Resources are ready**.
-   Stop on errors; do not substitute a modpack or another version's JAR.
-5. Open Settings → **Validate installation**. Use **Find installation…** if needed.
+5. Select the original server JAR when prompted. Wait for **Resources are ready**.
+   If setup reports an error, fix that error before continuing.
 
-[Detailed resource/JDK instructions](INSTALLATION.md#prepare-legitimate-minecraft-resources).
-JDK 25 is for preparation; it does not enable Java mods. No Rust/Cargo is needed.
+The server JAR is a preparation input; you do not need to host a server.
+[JDK and preparation details](INSTALLATION.md#prepare-legitimate-minecraft-resources).
 
-## 4. Play in a new profile
+## 4. Play through Herps Launcher
 
-On Home choose **+ New profile**, name it `first_play`, then select it and click
-**PLAY →**. Create a small new world, save/quit normally and wait for the exit
-status before closing the launcher. Keep valuable existing worlds backed up.
+1. In **Settings**, select the bundled game folder/app and click **Validate installation**.
+   After an update, check that the selected installation points to the new build.
+2. On **Home**, choose **+ New profile** and name it `first_play`.
+3. Select the profile and click **PLAY**.
+4. Create a test world. Use **Save & Quit**, then reopen it to check your setup.
 
-For optional chainmail crafting, make a **different fresh disposable profile
-before creating a world**. Follow [the Chainmail steps](INSTALLATION.md#test-chainmail-plate-and-boots).
-The package starts OFF and must be enabled on Mods. Keep it enabled once saves exist.
+To join a server, use the launcher's **Multiplayer** page with the intended profile.
 
-For the optional native survival remake, use the separate
-[Stage 3 installation and Survival checklist](docs/targeted-porting/NATIVE_SURVIVAL_STAGE_3.md).
-It requires a matching Windows internal candidate and all three stages in a
-**new disposable profile before world creation**. The user reports the required
-Stage 3 Windows checklist PASS; optional and Mac cases remain open. Existing
-release installers do not include it.
+## Run Herspers Minecraft directly — Windows
 
-For the separate optional [Plant Fiber Bandage trial](docs/targeted-porting/NATIVE_SURVIVAL_STAGE_4.md),
-use its matching Windows candidate and a fresh profile with Flint Starter.
-It starts OFF, uses ordinary Regeneration, and has no physical gameplay pass yet.
+Use the bundled `game\Herspers-Minecraft` folder or a verified standalone package.
 
-## If something goes wrong
+1. Fully extract the game folder. Keep `bin`, `preparation` and the starter files together.
+2. Complete the JDK/resource preparation above using `Setup.cmd`.
+3. Open `Play.cmd` or `Herspers-Minecraft.exe`.
+4. Create a test world, save and quit normally, then reopen.
 
-Use Home → **Open launcher and game logs**. Read
-[troubleshooting](INSTALLATION.md#troubleshooting) before deleting or changing
-anything. Earlier logo stalls and initially empty crafting output remain
-unresolved; later success did not prove a fix. Mac gameplay and unreported
-edge cases remain NOT RUN. Full RLCraft/FunCraft and original Forge/Fabric JAR
-execution are unsupported. [Backups and updates](INSTALLATION.md#back-up-worlds).
+**For launcher-managed profiles, use Herps Launcher → PLAY instead.** Direct
+`Play.cmd` uses the standalone data workflow.
+
+## Mods, backups and problems
+
+- Install only supported native content. Follow the package's profile requirements;
+  keep required mods enabled once a world uses them.
+- [Chainmail setup](INSTALLATION.md#test-chainmail-plate-and-boots) ·
+  [Backups and restore](INSTALLATION.md#back-up-worlds)
+- Open **Home → Open launcher and game logs** for failures. Redact personal paths,
+  credentials and private server addresses before sharing.
+- [Troubleshooting](INSTALLATION.md#troubleshooting) · [Complete guide](INSTALLATION.md)
+
+No Rust/Cargo is needed for normal play. Original Forge/Fabric JAR execution and
+full RLCraft/FunCraft compatibility are unsupported. Physical Mac gameplay remains
+NOT RUN; earlier startup stalls and empty crafting output have unresolved causes.

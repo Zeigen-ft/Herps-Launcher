@@ -1,141 +1,84 @@
-# Herspers Minecraft Launcher
+# Herps Launcher
 
-**Herps Launcher 0.1.0 — prerelease candidate**
+A desktop launcher for the native Rust **Herspers Minecraft** client, with
+profiles, saves and supported native content. Targets **Minecraft Java Edition
+26.3 resources**. Current packages are **prerelease candidates**.
 
-The official launcher home is **[Zeigen-ft/Herps-Launcher](https://github.com/Zeigen-ft/Herps-Launcher)**.
-This unofficial desktop launcher manages the native Rust Minecraft client,
-profiles, saves, supported native content and passive Java-mod inspection.
-The game integration currently targets **Minecraft Java Edition 26.3 resources**.
-It is not the official Minecraft launcher or a universal Forge/Fabric launcher.
+[Downloads](release/0.1.0/README.md) · [Quick start](QUICK_START.md) ·
+[Complete installation guide](INSTALLATION.md) · [Support matrix](docs/HERPS-SUPPORT.md)
 
-**Start here:** [Quick start](QUICK_START.md) · [Complete installation guide](INSTALLATION.md)
+## Run Herps Launcher
 
-**Current work:** RLCraft-style development is [paused at four implemented stages](docs/targeted-porting/NATIVE_SURVIVAL_STATUS.md).
-[Better Leaves 9.6 for Herps](docs/BETTER-LEAVES.md) is a separate optional
-Minecraft 26.3 resource pack using the existing launcher and in-game pack menu.
-Windows/Linux native data/model checks passed; [verified download and installation](docs/BETTER-LEAVES.md).
-Visual acceptance and FPS remain NOT RUN.
+1. **Download** the verified Windows x64, Mac Intel or Mac Apple Silicon package.
+   Check its SHA-256. This branch's latest Windows build is
+   [here](docs/DISTANT-TERRAIN-EDGE-WINDOWS-CANDIDATE.md).
+2. **Install.** Windows: run Setup or extract the entire portable ZIP. Mac: copy
+   **both apps** from the DMG to Applications.
+3. **Get the requirements.** Install **JDK 25**, install/start your owned
+   **Minecraft Java 26.3** once in the official launcher, and obtain the matching
+   official server JAR.
+4. **Prepare resources.** Run the bundled `Setup.cmd` on Windows or
+   `prepare.command` on Mac. Select the unextracted server JAR and wait for
+   **Resources are ready**. [Exact paths](QUICK_START.md#3-prepare-minecraft-resources--first-time-only).
+5. **Validate.** Open Herps Launcher → **Settings**, select the bundled game and
+   choose **Validate installation**. Check this selection after updating.
+6. **Play.** Home → **+ New profile** → select profile → **PLAY**.
+   Start with a test world, then save and quit normally.
 
-[Photon 3.1.2-M1 fullbright](docs/PHOTON.md) adds optional recognition of the
-user's original PrecisionZero resource ZIP using native lighting. The pack
-itself is not redistributed. [Candidate and evidence](docs/PHOTON-VERIFICATION.md);
-Windows resource failures are recorded in the [recovery verification](docs/WINDOWS-RESOURCE-RECOVERY.md).
-Physical retesting and macOS acceptance remain open.
+## Run Herspers Minecraft directly — Windows
 
-[Downloads and release notes](https://github.com/Zeigen-ft/Herps-Launcher/releases) ·
-[CI builds](https://github.com/Zeigen-ft/Herps-Launcher/actions/workflows/herps-launcher.yml) ·
-[Prepared release notes](RELEASE_NOTES.md) · [Known limits](docs/HERPS-SUPPORT.md)
+1. Open the bundled `game\Herspers-Minecraft` folder or a verified standalone package.
+2. Keep the entire folder together and finish resource setup using `Setup.cmd`.
+3. Open **`Play.cmd`** or **`Herspers-Minecraft.exe`**.
+4. Create a test world, save and quit, then reopen.
 
-Until the owner publishes a prerelease, use the exact successful destination CI
-artifacts recorded in [migration/release preparation](docs/migration/README.md).
-The repository is currently private: downloads require repository access. This
-migration does not change visibility, create a release or create a tag.
+Use **Herps Launcher → PLAY** for launcher-managed profiles.
+[Step-by-step guide](QUICK_START.md#run-herspers-minecraft-directly--windows).
 
-## What is included
+## Profiles, mods and multiplayer
 
-- Seven pages: Home, Mods, Java Mods, Modpacks, Shaders, Multiplayer and Settings.
-- Separate named profiles, existing-save preservation, game discovery and logs.
-- Native `.hmod` content management and guarded, trusted `.hnmod` development tools.
-- **Chainmail Plate and Boots 0.1.0**, optional and disabled by default; installation
-  is restricted to an explicitly confirmed fresh disposable profile.
-- **[Flint Survival Starter — native remake stage 1](docs/targeted-porting/NATIVE_SURVIVAL_STAGE_1.md)**
-  on the development branch: four native items and five starter recipes, OFF by
-  default with fresh-profile guards. The user reports the basic Windows Survival
-  checklist PASS; [scope and remaining tests](docs/targeted-porting/FLINT_WINDOWS_PHYSICAL_EVIDENCE.json)
-  are recorded separately from CI. Broader native acceptance remains open.
-- The inspected FunCraft hotfix's bounded manual world-backup utility.
-- **[Flint Gathering — native remake stage 2](docs/targeted-porting/NATIVE_SURVIVAL_STAGE_2.md)**:
-  a separate opt-in add-on for stone knapping and knife-cut grass fiber using
-  unchanged starter items. The user reports **ALL GOOD** overall;
-  [individual-case scope and remaining acceptance](docs/targeted-porting/GATHERING_WINDOWS_USER_REPORT.json)
-  are recorded separately from CI. macOS gameplay remains NOT RUN.
-- A standalone, passive local RLCraft 2.9.3 archive inspector.
-- **[Woodcutting Progression — native remake stage 3](docs/targeted-porting/NATIVE_SURVIVAL_STAGE_3.md)**:
-  an optional main-hand axe/hatchet requirement for Survival logs. It starts OFF
-  in a fresh disposable profile. The user reports all required Windows checklist
-  tests PASS; [report and scope](docs/targeted-porting/WOODCUTTING_WINDOWS_USER_REPORT.json).
-  Optional edge cases and every Stage 3 Mac case remain open.
-- [Stage 4: Plant Fiber Bandage](docs/targeted-porting/NATIVE_SURVIVAL_STAGE_4.md)
-  adds one optional recipe and a native Regeneration consumable using the existing
-  API. It starts OFF and requires Flint Starter in a fresh disposable profile.
-  [Verification](docs/targeted-porting/NATIVE_SURVIVAL_STAGE_4_VERIFICATION.md)
-  keeps Stage 4 physical gameplay open; Stage 3's user report does not accept Stage 4.
+- **Profiles:** create/select them on Home. Keep existing worlds backed up.
+- **Native mods:** use Mods and follow each package's profile requirements.
+  [Chainmail Plate and Boots](INSTALLATION.md#test-chainmail-plate-and-boots)
+  starts disabled and requires an explicitly selected fresh disposable profile.
+- **Servers:** use Multiplayer to connect. [Private Windows hosting](docs/INSTALL-WINDOWS.md#5-play-with-a-friend-using-tailscale).
+- **Backups:** [create and restore backups safely](INSTALLATION.md#back-up-worlds).
+- **Errors:** Home → **Open launcher and game logs**;
+  [troubleshooting](INSTALLATION.md#troubleshooting).
 
-An optional [Herps 26.3 server dynamic-lighting test pack](docs/SERVER-DYNAMIC-LIGHTING.md)
-has a local Windows installer with a verified-backup guard. It is experimental,
-starts disabled and requires a disposable test world. The user reports
-**basic Windows server lighting works in 0.1.1**; see the
-[physical retest scope](docs/SERVER-DYNAMIC-LIGHTING-0.1.1-VERIFICATION.md).
-Two-player visibility, cleanup/restart and macOS acceptance remain open.
-It does not implement full OptiFine.
+## Optional development features
 
-On `feature/herps-distant-terrain`, the optional **Explored Terrain LOD** mode
-caches only terrain received by the native client. It starts **Off**, uses a
-separate per-world/dimension rendering cache and adds radius/memory/disk/worker
-limits. See the [renderer and storage design](docs/DISTANT-TERRAIN-ARCHITECTURE.md)
-and [manual checklist and limitations](docs/DISTANT-TERRAIN-MANUAL.md).
-Windows users can follow the [download and quick start](docs/DISTANT-TERRAIN-WINDOWS-QUICKSTART.md)
-for the independently audited [internal candidate](docs/DISTANT-TERRAIN-EDGE-WINDOWS-CANDIDATE.md).
-Native graphics/gameplay acceptance is **NOT RUN**; this adds no server LOD
-streaming or Java Distant Horizons execution.
+- [Native survival stages 1–4](docs/targeted-porting/NATIVE_SURVIVAL_STATUS.md): development paused.
+- [Better Leaves](docs/BETTER-LEAVES.md) · [Photon native lighting](docs/PHOTON.md)
+- [Server dynamic lighting](docs/SERVER-DYNAMIC-LIGHTING.md): user reports basic
+  Windows lighting works in 0.1.1; broader acceptance remains open.
+- [Experimental explored-terrain LOD](docs/DISTANT-TERRAIN-EDGE-FIX.md): Off by default;
+  corrected-candidate physical retesting remains NOT RUN.
 
-## Supported testing scope
+## Known limits
 
-| Target | Current evidence | Remaining acceptance |
-| --- | --- | --- |
-| Windows x64 | Stage 4 development CI: 485 source tests passed, 15 skips; 98/98 delivered cases. Earlier user reports cover Chainmail and the required Stage 3 checklist on their respective candidates | **Stage 4 physical gameplay NOT RUN**; optional cases and physical installation/preservation/failure acceptance remain open |
-| macOS Intel | Earlier destination DMG/architecture/helper checks: 426 source tests passed, 3 skips; 68/68 delivered cases. No Stage 4 build | **All physical gameplay NOT RUN** |
-| macOS Apple Silicon | Earlier destination DMG/architecture/helper checks: 426 source tests passed, 3 skips; 68/68 delivered cases. No Stage 4 build | **All physical gameplay NOT RUN** |
+- Minecraft resources are **not bundled**. Obtain them legitimately.
+- JDK 25 is needed for preparation; Rust/Cargo is not needed for normal play.
+- Original Forge/Fabric JAR execution, Java bridges, Java Mods Build/Test and
+  whole-Modpack Play are unsupported. Full RLCraft/FunCraft compatibility is unsupported.
+- Windows packages are unsigned; Mac packages are ad hoc signed and not notarized
+  unless a package-specific receipt states otherwise. **All physical Mac gameplay
+  remains NOT RUN.** CI does not establish gameplay acceptance.
+- Earlier loading-logo stalls and initially empty crafting output have unresolved
+  causes. [Physical evidence](docs/targeted-porting/RLCRAFT_CHAINMAIL_VERIFICATION.md).
+- User reports cover specific earlier Windows Chainmail/Survival candidates;
+  Stage 4 and unreported edge cases remain open. See each feature's evidence.
 
-Destination run [42144749724](https://github.com/Zeigen-ft/Herps-Launcher/actions/runs/42144749724)
-passed all three targets and release-file assembly. Download the
-[separate verified packages, guides and checksums](release/0.1.0/README.md);
-read the [final migration report](docs/migration/RELEASE_PREPARATION_REPORT.md).
-The older Windows report belongs to source run
-[42118750443](https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/42118750443).
-Source run [42129264888](https://github.com/Zeigen-ft/Herspers-Minecraft/actions/runs/42129264888)
-passed all three platforms and 68/68 frozen cases per platform. These results do
-not physically accept rebuilt packages or certify every GPU/OS version.
+## Development and licenses
 
-**Earlier loading-logo stalls and initially empty recipe output remain unresolved.**
-Later successful launches/crafting did not establish their causes or fixes.
-See [the physical evidence](docs/targeted-porting/RLCRAFT_CHAINMAIL_VERIFICATION.md).
+[Developer setup](docs/HERPS-LAUNCHER.md) · [Source lock](upstream.lock.json) ·
+[Migration and verification](docs/migration/README.md) · [Release notes](RELEASE_NOTES.md)
 
-## Important limitations
+The original histories from `Zeigen-ft/Herspers-Minecraft` and this repository
+are retained. Launcher code and new packaging/docs use [GPLv3](LICENSE).
+Horizon and dependency notices remain under [licenses](licenses);
+the initial destination MIT notice is preserved separately. Legacy Bedrock
+terms are separate; no Bedrock binaries are included in the launcher packages.
 
-**Full RLCraft and FunCraft compatibility is not supported. Original Forge/Fabric
-JAR execution, Java bridges and whole-Modpack Play are not supported.** Java Mods
-Build/Test stays disabled. Static analysis or data carry-over is not gameplay proof.
-Chainmail is one independently authored native replacement; the FunCraft backup
-is another small utility, not execution of either original pack.
-
-Windows packages are unsigned. Mac packages use development/ad hoc signing and
-are not notarized unless a package-specific verified receipt explicitly says
-otherwise. Obtain Minecraft resources legitimately; game assets, original
-modpack binaries, accounts and credentials are not included. Rust/Cargo is not
-needed for normal installed use; JDK 25 is needed for resource preparation.
-
-## Development and provenance
-
-The full verified tree and history were imported from
-`Zeigen-ft/Herspers-Minecraft`, `feature/herps-java-compatibility`, commit
-`962a1ada14ec553c540347c539c2b9c112c0270d`. Both repositories' original histories
-are retained. See [migration provenance](docs/migration/README.md),
-[developer setup](docs/HERPS-LAUNCHER.md) and [the source lock](upstream.lock.json).
-Legacy game-only/Bedrock tools remain for history and regression coverage; they
-are not part of this launcher's release downloads. Heavy native builds run from
-PR validation or explicit workflow dispatch; historical pipelines remain available
-manually without automatically building unrelated products in this repository.
-
-## Licenses and attribution
-
-Launcher code and the new packaging/docs use **[GPLv3](LICENSE)**. The initial
-empty destination repository's MIT notice is preserved separately in
-[licenses/Herps-Launcher-initial-MIT.txt](licenses/Herps-Launcher-initial-MIT.txt);
-it does not relicense imported GPL code. Horizon keeps its MIT license and
-notices under [licenses](licenses). Chainmail recipe attribution, Qt/PySide and
-other dependency notices are retained. Legacy Cinnabar/Bedrock terms remain
-separate; no Bedrock binaries are in this release set.
-
-This project is unofficial and is not endorsed by Mojang, Microsoft, Horizon's
-maintainers or third-party mod authors.
+Unofficial project; not endorsed by Mojang, Microsoft, Horizon's maintainers
+or third-party mod authors.
