@@ -8,7 +8,7 @@ profiles, saves, supported native content and passive Java-mod inspection.
 The game integration currently targets **Minecraft Java Edition 26.3 resources**.
 It is not the official Minecraft launcher or a universal Forge/Fabric launcher.
 
-**Start here:** [Quick start](QUICK_START.md) · [Complete installation guide](INSTALLATION.md)
+**Start here:** [Windows streamlined install](WINDOWS_INSTALL.md) · [Quick start](QUICK_START.md) · [Complete installation guide](INSTALLATION.md)
 
 [Downloads and release notes](https://github.com/Zeigen-ft/Herps-Launcher/releases) ·
 [CI builds](https://github.com/Zeigen-ft/Herps-Launcher/actions/workflows/herps-launcher.yml) ·
