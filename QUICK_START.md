@@ -82,6 +82,11 @@ For optional chainmail crafting, make a **different fresh disposable profile
 before creating a world**. Follow [the Chainmail steps](INSTALLATION.md#test-chainmail-plate-and-boots).
 The package starts OFF and must be enabled on Mods. Keep it enabled once saves exist.
 
+
+## Windows setup and three-player troubleshooting
+
+Before preparing Java Edition 26.3 resources or hosting multiplayer, follow the [Windows setup and multiplayer recovery checklist](docs/WINDOWS-SETUP-MULTIPLAYER-RECOVERY.md). It covers full JDK 25 verification, one-CMD-command-at-a-time setup, official version-manifest SHA-1 mismatch recovery, resource validation, backups, and a controlled three-player/vehicle-lag test. The user-reported successful friend connection does not establish a permanent fix or three-player performance acceptance.
+
 ## If something goes wrong
 
 Use Home → **Open launcher and game logs**. Read
