@@ -13,7 +13,8 @@ class FlintSourceGuardTests(unittest.TestCase):
     def setUp(self):
         temporary = tempfile.TemporaryDirectory(prefix="owned-flint-source-")
         self.addCleanup(temporary.cleanup)
-        self.root = Path(temporary.name)
+        # macOS exposes its temporary directory through /var, a system symlink.
+        self.root = Path(temporary.name).resolve()
         self.source = self.root / "source"; self.source.mkdir()
         (self.source / "owned.rs").write_text("// owned fixture; never compiled\n")
         patches = self.root / "patches"; patches.mkdir()
