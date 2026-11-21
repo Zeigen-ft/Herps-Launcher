@@ -80,3 +80,10 @@ Use the bundled `game\Herspers-Minecraft` folder or a verified standalone packag
 No Rust/Cargo is needed for normal play. Original Forge/Fabric JAR execution and
 full RLCraft/FunCraft compatibility are unsupported. Physical Mac gameplay remains
 NOT RUN; earlier startup stalls and empty crafting output have unresolved causes.
+
+## Join a private game with your own name
+
+1. Connect to the host's Tailscale network. Open **Herps Launcher → Multiplayer**.
+2. Under **In-Game Player Name**, enter a name such as `CJ_Corto` and click **Save player name**. Each player needs a different name. Keep yours to keep using the same offline inventory.
+3. Enter the host's address and click **JOIN**. You can also use **Home → PLAY → Multiplayer** after saving your name. A signed-in account uses its account identity.
+4. If disconnected, read the message before returning to the server list. Rejoin the same address with the same name. See [Multiplayer troubleshooting](INSTALLATION.md#private-multiplayer-troubleshooting).
