@@ -1,0 +1,40 @@
+--- a/crates/horizon-client-render/src/hud.rs
++++ b/crates/horizon-client-render/src/hud.rs
+@@ -2033,15 +2033,11 @@
+             *previous = state;
+         }
+     }
+-    /// Stage the batch's atlas patches, vertices and uniform: before the
+-    /// frame's first pass, so the copies share one command buffer.
+-    pub fn prepare(
+-        &mut self,
+-        device: &wgpu::Device,
++    pub(crate) fn stage_patches(
++        &self,
+         uploads: &mut crate::gfx::upload::Uploads,
+         encoder: &mut wgpu::CommandEncoder,
+         batch: &HudBatch,
+-        size: [u32; 2],
+     ) {
+         if let Some(texture) = &self.atlas_texture {
+             for p in &batch.patches {
+@@ -2063,6 +2059,19 @@
+                 );
+             }
+         }
++    }
++
++    /// Stage the batch's atlas patches, vertices and uniform: before the
++    /// frame's first pass, so the copies share one command buffer.
++    pub fn prepare(
++        &mut self,
++        device: &wgpu::Device,
++        uploads: &mut crate::gfx::upload::Uploads,
++        encoder: &mut wgpu::CommandEncoder,
++        batch: &HudBatch,
++        size: [u32; 2],
++    ) {
++        self.stage_patches(uploads, encoder, batch);
+         if batch.vertices.is_empty() || size.contains(&0) {
+             return;
+         }

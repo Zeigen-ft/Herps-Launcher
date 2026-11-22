@@ -40,7 +40,7 @@
     {
       "path": "crates/horizon-client/src/game.rs",
       "before_sha256": "de63b396454bbd394d4f3ca72fe0a54b83e3c0171cab6aca73b94bcd9c0de1bf",
-      "after_sha256": "2ff9a72507d8cb38e92c7b9f1f2b47b7786f326fad5ee510b83f64d03c0ebc34",
+      "after_sha256": "826c51031c6a8b9c1c412aef727c20e8265b1cead87f21a6743ea144f6adcbd9",
       "patch": "engine/crates-horizon-client-src-game.rs.patch"
     },
     {
@@ -88,7 +88,7 @@
     {
       "path": "crates/horizon-client-render/src/gfx.rs",
       "before_sha256": "6a2d38794c062121bd81a71231ac9388741396e0ecb4f5fadcff2696c0dad33a",
-      "after_sha256": "f3ea4ee9222c56121cee179f1b66eccea063473300d07e9733726e11efa4e7f1",
+      "after_sha256": "509d91a07412c6fd357d1950206de4af68bf78e8f92825cd2d6a9573eb9e6fe0",
       "patch": "engine/crates-horizon-client-render-src-gfx.rs.patch"
     },
     {
@@ -258,6 +258,30 @@
       "before_sha256": "8fcacf37dabf32e84f19ef6ce7e0c67f564b948327f4ffcf0e7805e09f97ad20",
       "patch": "engine/crates-horizon-client-src-game-remote_chunks.rs.patch",
       "after_sha256": "1cd439f3c723d1b24904b5a6e2e47602e0d82241aad480462573343183558a2f"
+    },
+    {
+      "path": "crates/horizon-client-render/src/gfx/upload_budget.rs",
+      "before_sha256": "c87786f121a31458aa4252939b413ed29f2cf1867b58c2cb7b11597fa952f06c",
+      "after_sha256": "702dc932563df79b794556a6e353ee01e4360eb8fb44c6768494ee1e042c04be",
+      "patch": "engine/crates-horizon-client-render-src-gfx-upload_budget.rs.patch"
+    },
+    {
+      "path": "crates/horizon-client-render/src/gfx/world_post.rs",
+      "before_sha256": "34e6e488bacb60c5b131da9171afcf3efd977e3bc32ceb7d9f4e871c213aa23e",
+      "after_sha256": "e43b63c248a5d2fbf9e71c50efdc4e03ec758ec5d957305de51a6b0753b583f2",
+      "patch": "engine/crates-horizon-client-render-src-gfx-world_post.rs.patch"
+    },
+    {
+      "path": "crates/horizon-client-render/src/gfx/present_recovery.rs",
+      "before_sha256": null,
+      "after_sha256": "090c86ed53beb0eb9faba47a26aba2a8c2c60b18d1666a5d6c6605c45023f29f",
+      "patch": "engine/crates-horizon-client-render-src-gfx-present_recovery.rs.patch"
+    },
+    {
+      "path": "crates/horizon-client-render/src/hud.rs",
+      "before_sha256": "a59c99eb9e199495fa55e49d41a3bd3899d5b9ef0e34ba23f94ac53c3d4f581d",
+      "after_sha256": "7c90394d3bca5382dbcf97dddb828b17974de3147aba8e9c76451debe7287a8c",
+      "patch": "engine/crates-horizon-client-render-src-hud.rs.patch"
     }
   ]
 }

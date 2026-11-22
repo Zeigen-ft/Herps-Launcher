@@ -439,8 +439,14 @@ class Window(QMainWindow):
         self.button(box, "Validate installation", self.validate_installation)
         self.button(box, "Open game data and saves", lambda: self.open_path(self.launcher.game))
         self.button(box, "Open mod folder", lambda: self.open_path(self.launcher.game / "horizon-mods"))
-        self.button(box, "Restore original graphics settings", self.restore_settings)
-        self.button(box, "Switch / update game installation…", self.browse_installation)
+        graphics_row = QHBoxLayout()
+        self.button(graphics_row, "Stable FPS · 60 FPS / 8 chunks", self.stable_fps)
+        self.button(graphics_row, "Restore original graphics settings", self.restore_settings)
+        box.addLayout(graphics_row)
+        if getattr(sys, "frozen", False) and platform.system() == "Windows":
+            self.button(box, "Use game bundled with this launcher", self.use_bundled_game)
+        else:
+            self.button(box, "Switch / update game installation…", self.browse_installation)
         self.button(box, "Roll back to previous installation", self.rollback_installation)
         self.details = QLabel()
         self.details.setWordWrap(True)
@@ -451,13 +457,29 @@ class Window(QMainWindow):
         self.require_idle()
         path = QFileDialog.getExistingDirectory(self, "Select Herspers Minecraft folder or .app", options=QFileDialog.Option.DontUseNativeDialog)
         if path:
-            from .core import Installation
-            installation = Installation.inspect(Path(path))
-            self.launcher.config["previous_installation"] = self.launcher.config["installation"]
-            self.launcher.config["installation"] = str(installation.root)
+            self.select_installation(Path(path))
+
+    def select_installation(self, path):
+        from .core import Installation
+        installation = Installation.inspect(path)
+        current = self.launcher.config["installation"]
+        if not current or Path(current) != installation.root:
+            self.launcher.config.update(previous_installation=current, installation=str(installation.root))
             self.launcher.save()
-            self.installation_path.setText(str(installation.root))
-            self.refresh()
+        self.installation_path.setText(str(installation.root))
+        self.refresh()
+        metadata = installation.metadata.get("engine_source") or {}
+        self.details.setText(f"Selected {installation.root}\nEngine patches {metadata.get('patches_sha256', 'unavailable')}")
+
+    def use_bundled_game(self):
+        self.require_idle()
+        self.select_installation(Path(sys.executable).parent / "game/Herspers-Minecraft")
+
+    def stable_fps(self):
+        self.require_idle()
+        self.launcher.apply_stable_fps()
+        self.refresh()
+        self.statusBar().showMessage(f"60 FPS target and 8-chunk render distance saved for {self.launcher.config['profile']}.")
 
     def save_settings(self):
         self.require_idle()

@@ -518,6 +518,13 @@ class Launcher:
         self.release()
         return code
 
+    def apply_stable_fps(self):
+        self.acquire()
+        try:
+            update_pairs(self.game / "options.txt", {"maxFps": "60", "renderDistance": "8"})
+        finally:
+            self.release()
+
     def save_graphics(self, width, height, distance, backend):
         if not 640 <= width <= 7680 or not 480 <= height <= 4320 or not 2 <= distance <= 128:
             raise ValueError("Resolution or render distance is out of range")

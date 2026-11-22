@@ -57,6 +57,36 @@ class DesktopTests(unittest.TestCase):
             QTest.mouseClick(buttons["JOIN →"], Qt.MouseButton.LeftButton)
             play.assert_called_once_with(server="100.80.1.1:25565", name="CJ_Corto")
 
+    def test_stable_fps_changes_only_selected_profile_and_keeps_backup(self):
+        old = self.launcher.game
+        self.launcher.add_profile("travel")
+        self.launcher.game.mkdir(parents=True)
+        options = self.launcher.game / "options.txt"
+        options.write_text("maxFps:120\nrenderDistance:12\nlang:fr_fr\n")
+        self.window.navigate(6)
+        button = next(b for b in self.window.pages.currentWidget().findChildren(QPushButton)
+                      if b.text().startswith("Stable FPS"))
+        QTest.mouseClick(button, Qt.MouseButton.LeftButton)
+        QTest.mouseClick(button, Qt.MouseButton.LeftButton)
+        self.assertEqual(options.read_text(), "lang:fr_fr\nmaxFps:60\nrenderDistance:8\n")
+        self.assertEqual(options.with_suffix(".txt.herps-backup").read_text(), "maxFps:120\nrenderDistance:12\nlang:fr_fr\n")
+        self.assertFalse((old / "options.txt").exists())
+
+    def test_bundled_game_can_replace_old_download_selection_and_roll_back(self):
+        from types import SimpleNamespace
+        previous = str(self.launcher.support / "Downloads" / "OldGame")
+        self.launcher.config["installation"] = previous
+        bundle = self.launcher.support / "Programs" / "game" / "Herspers-Minecraft"
+        def inspect_game(path):
+            return SimpleNamespace(root=path, metadata={})
+        with patch("herps_launcher.app.sys.executable", str(bundle.parents[1] / "Herps Launcher.exe")), \
+             patch("herps_launcher.core.Installation.inspect", side_effect=inspect_game):
+            self.window.use_bundled_game()
+            self.window.use_bundled_game()
+            self.assertEqual(Launcher(self.launcher.support).config["installation"], str(bundle))
+            self.window.rollback_installation()
+            self.assertEqual(self.launcher.config["installation"], previous)
+
     def test_all_seven_sidebar_buttons_navigate_actual_pages(self):
         self.assertEqual([button.text() for button in self.window.nav],
                          ["Home", "Mods", "Java Mods", "Modpacks", "Shaders", "Multiplayer", "Settings"])

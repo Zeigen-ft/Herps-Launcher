@@ -1,0 +1,81 @@
+--- a/crates/horizon-client-render/src/gfx/upload_budget.rs
++++ b/crates/horizon-client-render/src/gfx/upload_budget.rs
+@@ -5,7 +5,7 @@
+ pub struct UploadBudget {
+     count_limit: usize,
+     byte_limit: u64,
+-    time_limit: Option<Duration>,
++    time_limit: Duration,
+     count: usize,
+     bytes: u64,
+ }
+@@ -16,7 +16,7 @@
+         let mut budget = Self::new(count_limit, byte_limit, mobile);
+         if mobile {
+             budget.time_limit =
+-                Some((wait / 4).clamp(Duration::from_millis(2), Duration::from_millis(8)));
++                (wait / 4).clamp(Duration::from_millis(2), Duration::from_millis(8));
+         }
+         budget
+     }
+@@ -28,7 +28,7 @@
+                 (bytes, true) => bytes.min(8 << 20),
+                 (bytes, false) => bytes,
+             },
+-            time_limit: mobile.then_some(Duration::from_millis(2)),
++            time_limit: Duration::from_millis(2),
+             count: 0,
+             bytes: 0,
+         }
+@@ -37,7 +37,7 @@
+         self.count == 0
+             || ((self.count_limit == 0 || self.count < self.count_limit)
+                 && (self.byte_limit == 0 || self.bytes.saturating_add(bytes) <= self.byte_limit)
+-                && self.time_limit.is_none_or(|limit| elapsed < limit))
++                && elapsed < self.time_limit)
+     }
+     pub fn record(&mut self, bytes: u64) {
+         self.count += 1;
+@@ -72,15 +72,38 @@
+         assert!(!budget.allows(32, Duration::from_millis(8)));
+     }
+     #[test]
+-    fn user_limits_remain_stricter_and_desktop_unlimited_is_unchanged() {
++    fn user_limits_can_stop_uploads_before_the_deadline() {
+         let mut count = UploadBudget::new(1, 0, true);
+         count.record(8);
+         assert!(!count.allows(8, Duration::ZERO));
+         let mut bytes = UploadBudget::new(0, 64, true);
+         bytes.record(32);
+         assert!(!bytes.allows(33, Duration::ZERO));
+-        let mut desktop = UploadBudget::new(0, 0, false);
+-        desktop.record(1 << 30);
+-        assert!(desktop.allows(1 << 30, Duration::from_secs(30)));
++    }
++
++    #[test]
++    fn desktop_yields_on_small_bursts_with_auto_or_manual_limits() {
++        for (count, bytes) in [(0, 0), (4, 2048)] {
++            let mut remaining = 8;
++            for expected in [6, 4, 2, 0] {
++                let mut budget =
++                    UploadBudget::with_wait(count, bytes, false, Duration::from_millis(32));
++                let mut elapsed = Duration::ZERO;
++                while remaining > 0 && budget.allows(128, elapsed) {
++                    budget.record(128);
++                    elapsed += Duration::from_millis(1);
++                    remaining -= 1;
++                }
++                assert_eq!(remaining, expected);
++            }
++        }
++    }
++
++    #[test]
++    fn oversized_desktop_section_still_makes_progress() {
++        let mut budget = UploadBudget::new(0, 1024, false);
++        assert!(budget.allows(8192, Duration::from_millis(3)));
++        budget.record(8192);
++        assert!(!budget.allows(1, Duration::ZERO));
+     }
+ }

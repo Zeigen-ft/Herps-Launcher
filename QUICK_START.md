@@ -25,6 +25,13 @@ Back up existing worlds before replacing an installation. Close its game,
 launcher and any server using those binaries. Review verified-app security
 prompts; do not disable antivirus or Gatekeeper.
 
+### Updating a Windows client for smoother terrain and display recovery
+
+1. Download **Herps-Client-Update-Windows-x64** from the candidate's Actions run. Extract the ZIP and compare the setup file's SHA-256 with its accompanying checksum.
+2. Close the game and launcher. If this PC also hosts a server using the same installation, type `stop` in its console and wait for it to finish saving. Run Setup over the existing install.
+3. Open **Herps Launcher** from Start. Choose **Settings → Use game bundled with this launcher** to select the updated client, then select your usual profile. **Stable FPS · 60 FPS / 8 chunks** is optional.
+4. Join your usual server. If the picture stops updating while gameplay continues, press **Ctrl + Shift + F8** once with the game window focused. This refreshes the Windows display in place. If menus or textures still look wrong, keep a screenshot and the client log from that session.
+
 ## 3. Prepare Minecraft resources — first time only
 
 1. Install a full **JDK 25** matching your CPU.

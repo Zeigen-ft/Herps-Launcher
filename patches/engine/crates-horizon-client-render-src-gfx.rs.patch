@@ -17,7 +17,15 @@
      /// `CameraRenderState.hudFov`: the hand's own field of view
      /// (`GameRenderer.render3dHud`).
      pub hand_fov_degrees: f32,
-@@ -735,6 +738,8 @@
+@@ -720,6 +723,7 @@
+     /// first gets the swapchain a fresh configuration; later ones reattach
+     /// the window, as a lost surface does.
+     acquire_validation_failures: u32,
++    present_timeouts: present_recovery::TimeoutStreak,
+     pub drawn_sections: usize,
+     /// Last frame's section draws (face ranges and translucent sections),
+     /// and the draw calls the backend issued for them.
+@@ -735,6 +739,8 @@
      pub gamma: f32,
      /// Optional full-light lightmap (Horizon Extras).
      pub fullbright: bool,
@@ -26,7 +34,15 @@
      /// The Improved transparency option (`GameRenderer.useImprovedTransparency`).
      pub improved_transparency: bool,
      /// Its passes and targets, made when first drawn with.
-@@ -3195,6 +3200,7 @@
+@@ -3184,6 +3190,7 @@
+             info,
+             suspended: !drawable_size(size.width, size.height, max_side),
+             acquire_validation_failures: 0,
++            present_timeouts: Default::default(),
+             drawn_sections: 0,
+             section_draws: 0,
+             section_draw_calls: 0,
+@@ -3195,6 +3202,7 @@
              improved_transparency: false,
              oit: None,
              fullbright: false,
@@ -34,7 +50,38 @@
              animated_textures: true,
              present_modes,
          })
-@@ -4318,41 +4324,15 @@
+@@ -3431,6 +3439,30 @@
+         }
+         self.depth = Self::depth(&self.device, &self.config);
+     }
++    /// Reconfigure only the presentation surface and transient frame buffers.
++    /// The active world, network session, terrain meshes and resource packs stay live.
++    pub fn refresh_window_output(&mut self) {
++        let size = self.window.inner_size();
++        if self.surface.is_none()
++            || self.window.is_minimized() == Some(true)
++            || !drawable_size(
++                size.width,
++                size.height,
++                self.device.limits().max_texture_dimension_2d,
++            )
++        {
++            return;
++        }
++        self.world_post.invalidate_output();
++        self.resize(size.width, size.height);
++        self.window.request_redraw();
++        log::info!(
++            "Horizon: refreshed window output at {} x {}",
++            size.width,
++            size.height
++        );
++    }
++
+     /// Whether sections are drawn as one index list per frame (`flat`).
+     pub fn flat_draws(&self) -> bool {
+         self.flat_on
+@@ -4318,41 +4350,15 @@
          flicker: f32,
          boss_darken: f32,
      ) {
@@ -85,3 +132,40 @@
          // The lightmap changes with the time of day, flicker and effects,
          // not every frame: upload only what differs from the texture.
          if pixels == self.lightmap_pixels && self.lightmap_uploaded {
+@@ -4385,6 +4391,14 @@
+     }
+     pub fn render(&mut self, frame: &Frame) -> Result<bool> {
+         let rendered = self.draw_frame(frame);
++        // Glyph and sprite producers hand off updates only once. A window that
++        // missed presentation must still commit these before dropping the HUD batch.
++        if matches!(&rendered, Ok(false)) && !frame.hud.patches.is_empty() {
++            let mut encoder = self.device.create_command_encoder(&Default::default());
++            self.hud.stage_patches(&mut self.uploads, &mut encoder, frame.hud);
++            self.uploads.finish(&encoder);
++            self.queue.submit([encoder.finish()]);
++        }
+         // A frame that was not drawn still submits the section copies.
+         if let Some(copies) = self.take_section_copies() {
+             self.queue.submit([copies]);
+@@ -4409,13 +4423,20 @@
+         let acquire = Instant::now();
+         let acquired = self.surface.as_ref().map(|s| s.get_current_texture());
+         self.last_wait = acquire.elapsed();
++        if !matches!(&acquired, Some(wgpu::CurrentSurfaceTexture::Timeout)) {
++            self.present_timeouts = Default::default();
++        }
+         let (surface_frame, reconfigure) = match acquired {
+             None => (None, false),
+             Some(wgpu::CurrentSurfaceTexture::Success(f)) => (Some(f), false),
+             Some(wgpu::CurrentSurfaceTexture::Suboptimal(f)) => (Some(f), true),
+-            Some(wgpu::CurrentSurfaceTexture::Timeout | wgpu::CurrentSurfaceTexture::Occluded) => {
++            Some(wgpu::CurrentSurfaceTexture::Timeout) => {
++                if cfg!(windows) && self.present_timeouts.timeout(std::time::Instant::now()) {
++                    self.refresh_window_output();
++                }
+                 return Ok(false);
+             }
++            Some(wgpu::CurrentSurfaceTexture::Occluded) => return Ok(false),
+             Some(wgpu::CurrentSurfaceTexture::Outdated) => {
+                 if let Some(surface) = &self.surface {
+                     Self::configure(

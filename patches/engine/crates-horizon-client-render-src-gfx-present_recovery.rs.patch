@@ -1,0 +1,40 @@
+--- /dev/null
++++ b/crates/horizon-client-render/src/gfx/present_recovery.rs
+@@ -0,0 +1,37 @@
++use std::time::{Duration, Instant};
++
++#[derive(Default)]
++pub(super) struct TimeoutStreak {
++    first_timeout: Option<Instant>,
++    refreshed: bool,
++}
++
++impl TimeoutStreak {
++    /// Refresh once per uninterrupted sequence of window acquisition timeouts.
++    pub(super) fn timeout(&mut self, now: Instant) -> bool {
++        let first = *self.first_timeout.get_or_insert(now);
++        if !self.refreshed && now.duration_since(first) >= Duration::from_secs(2) {
++            self.refreshed = true;
++            return true;
++        }
++        false
++    }
++}
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++
++    #[test]
++    fn sustained_timeouts_refresh_once_then_rearm_on_a_new_streak() {
++        let start = Instant::now();
++        let mut streak = TimeoutStreak::default();
++        assert!(!streak.timeout(start));
++        assert!(!streak.timeout(start + Duration::from_millis(1999)));
++        assert!(streak.timeout(start + Duration::from_secs(2)));
++        assert!(!streak.timeout(start + Duration::from_secs(20)));
++        streak = TimeoutStreak::default();
++        assert!(!streak.timeout(start + Duration::from_secs(21)));
++        assert!(streak.timeout(start + Duration::from_secs(23)));
++    }
++}

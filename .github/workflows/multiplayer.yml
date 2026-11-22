@@ -42,6 +42,10 @@ jobs:
           $sourceDir = python tools/prepare_upstream.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           Set-Location $sourceDir
+          cargo test --locked -p horizon-client-render --lib gfx::upload_budget::tests
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo test --locked -p horizon-client-render --lib gfx::present_recovery::tests
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           cargo test --locked -p horizon-protocol --lib chunk::tests
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           cargo test --locked -p horizon-client --lib net::tests

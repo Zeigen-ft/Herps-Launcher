@@ -226,6 +226,23 @@ jobs:
             dist/herps/photon-lightmap.json
             dist/herps/game-icon.json
           if-no-files-found: error
+      - name: Record Windows update installer checksum
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $setup = Get-Item dist/herps/*-Setup.exe
+          $digest = (Get-FileHash -Algorithm SHA256 $setup.FullName).Hash.ToLowerInvariant()
+          "$digest  $($setup.Name)" | Set-Content -Encoding ascii "$($setup.FullName).sha256"
+          Write-Output "Windows update SHA-256 $digest"
+      - name: Upload Windows setup for in-place client updates
+        if: runner.os == 'Windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: Herps-Client-Update-Windows-x64
+          path: |
+            dist/herps/*-Setup.exe
+            dist/herps/*-Setup.exe.sha256
+          if-no-files-found: error
       - name: Upload native chainmail content and validation
         uses: actions/upload-artifact@v4
         with:

@@ -1,0 +1,14 @@
+--- a/crates/horizon-client-render/src/gfx/world_post.rs
++++ b/crates/horizon-client-render/src/gfx/world_post.rs
+@@ -75,6 +75,11 @@
+ }
+ 
+ impl Post {
++    pub(super) fn invalidate_output(&mut self) {
++        self.target = None;
++        self.taa_previous = None;
++    }
++
+     pub fn new(device: &wgpu::Device, format: wgpu::TextureFormat) -> Self {
+         let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
+             label: Some("Horizon post"),
