@@ -88,7 +88,7 @@
     {
       "path": "crates/horizon-client-render/src/gfx.rs",
       "before_sha256": "6a2d38794c062121bd81a71231ac9388741396e0ecb4f5fadcff2696c0dad33a",
-      "after_sha256": "509d91a07412c6fd357d1950206de4af68bf78e8f92825cd2d6a9573eb9e6fe0",
+      "after_sha256": "d41894aff68f59812c14bcb93af3c1540494252bdf37843bcaa028968273dc79",
       "patch": "engine/crates-horizon-client-render-src-gfx.rs.patch"
     },
     {

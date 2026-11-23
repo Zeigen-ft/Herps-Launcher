@@ -8,7 +8,15 @@
  pub mod lightning;
  mod lod;
  mod native_material;
-@@ -396,6 +397,8 @@
+@@ -303,6 +304,7 @@
+ /// exploring fits in a few.
+ const SECTION_UPLOAD_CHUNK: u64 = 4 << 20;
+ pub mod upload_budget;
++mod present_recovery;
+ /// Section copies are submitted early past this many staged bytes, which
+ /// bounds the staging memory frames that are not drawn can hold.
+ const SECTION_COPY_LIMIT: u64 = 64 << 20;
+@@ -396,6 +398,8 @@
      pub stars: Option<(Mat4, f32)>,
      /// First-person hand and held item, drawn after clearing depth.
      pub hand: &'a [Vertex],
@@ -17,7 +25,7 @@
      /// `CameraRenderState.hudFov`: the hand's own field of view
      /// (`GameRenderer.render3dHud`).
      pub hand_fov_degrees: f32,
-@@ -720,6 +723,7 @@
+@@ -720,6 +724,7 @@
      /// first gets the swapchain a fresh configuration; later ones reattach
      /// the window, as a lost surface does.
      acquire_validation_failures: u32,
@@ -25,7 +33,7 @@
      pub drawn_sections: usize,
      /// Last frame's section draws (face ranges and translucent sections),
      /// and the draw calls the backend issued for them.
-@@ -735,6 +739,8 @@
+@@ -735,6 +740,8 @@
      pub gamma: f32,
      /// Optional full-light lightmap (Horizon Extras).
      pub fullbright: bool,
@@ -34,7 +42,7 @@
      /// The Improved transparency option (`GameRenderer.useImprovedTransparency`).
      pub improved_transparency: bool,
      /// Its passes and targets, made when first drawn with.
-@@ -3184,6 +3190,7 @@
+@@ -3184,6 +3191,7 @@
              info,
              suspended: !drawable_size(size.width, size.height, max_side),
              acquire_validation_failures: 0,
@@ -42,7 +50,7 @@
              drawn_sections: 0,
              section_draws: 0,
              section_draw_calls: 0,
-@@ -3195,6 +3202,7 @@
+@@ -3195,6 +3203,7 @@
              improved_transparency: false,
              oit: None,
              fullbright: false,
@@ -50,7 +58,7 @@
              animated_textures: true,
              present_modes,
          })
-@@ -3431,6 +3439,30 @@
+@@ -3431,6 +3440,30 @@
          }
          self.depth = Self::depth(&self.device, &self.config);
      }
@@ -81,7 +89,7 @@
      /// Whether sections are drawn as one index list per frame (`flat`).
      pub fn flat_draws(&self) -> bool {
          self.flat_on
-@@ -4318,41 +4350,15 @@
+@@ -4318,41 +4351,15 @@
          flicker: f32,
          boss_darken: f32,
      ) {
@@ -132,7 +140,7 @@
          // The lightmap changes with the time of day, flicker and effects,
          // not every frame: upload only what differs from the texture.
          if pixels == self.lightmap_pixels && self.lightmap_uploaded {
-@@ -4385,6 +4391,14 @@
+@@ -4385,6 +4392,14 @@
      }
      pub fn render(&mut self, frame: &Frame) -> Result<bool> {
          let rendered = self.draw_frame(frame);
@@ -147,7 +155,7 @@
          // A frame that was not drawn still submits the section copies.
          if let Some(copies) = self.take_section_copies() {
              self.queue.submit([copies]);
-@@ -4409,13 +4423,20 @@
+@@ -4409,13 +4424,20 @@
          let acquire = Instant::now();
          let acquired = self.surface.as_ref().map(|s| s.get_current_texture());
          self.last_wait = acquire.elapsed();
