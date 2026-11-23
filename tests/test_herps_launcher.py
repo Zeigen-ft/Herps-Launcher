@@ -55,7 +55,65 @@ class LauncherTests(unittest.TestCase):
         for invalid in ("", "ab", "a" * 17, "CJ Corto", "éCJ", " CJ_Corto", "CJ_Corto\n"):
             with self.subTest(invalid=invalid), self.assertRaises(ValueError):
                 reopened.save_player_name(invalid)
-        self.assertEqual(Launcher(self.launcher.support).config["player_name"], "CJ_Corto")
+        self.assertEqual(Launcher(self.launcher.support).private_identity().selected, "CJ_Corto")
+
+    def test_upgrade_recovers_exact_profile_name_without_changing_world_owner_or_server(self):
+        game = self.launcher.game
+        game.mkdir(parents=True)
+        owner = game / "horizon-player.txt"
+        owner.write_bytes(b"name:Player00420\r\n")
+        player_data = self.launcher.support / "servers/tailscale/world/playerdata/fixture.dat"
+        player_data.parent.mkdir(parents=True)
+        player_data.write_bytes(b"existing inventory")
+        self.assertEqual(self.launcher.private_identity().for_launch(), "Player00420")
+        self.launcher.config["player_name"] = "player00420"
+        self.launcher.save()
+        updated = Launcher(self.launcher.support)
+        self.assertEqual(updated.private_identity().choices, ("Player00420", "player00420"))
+        with self.assertRaisesRegex(ValueError, "more than one"):
+            updated.private_identity().for_launch()
+        updated.save_player_name("Player00420")
+        updated.add_profile("other")
+        self.assertEqual(updated.private_identity().choices, ())
+        updated.save_player_name("Other_123")
+        updated.config["profile"] = "default"
+        updated.save()
+        self.assertEqual(Launcher(updated.support).private_identity().for_launch(), "Player00420")
+        self.assertEqual(owner.read_bytes(), b"name:Player00420\r\n")
+        self.assertEqual(player_data.read_bytes(), b"existing inventory")
+
+    def test_legacy_launcher_name_remains_available_to_preexisting_profiles_only(self):
+        self.launcher.add_profile("existing")
+        self.launcher.config["player_name"] = "Legacy_Name"
+        self.launcher.save()
+        updated = Launcher(self.launcher.support)
+        self.assertEqual(updated.private_identity().for_launch(), "Legacy_Name")
+        updated.add_profile("fresh")
+        self.assertEqual(Launcher(updated.support).private_identity().choices, ())
+
+    def test_direct_and_menu_join_pass_the_same_recovered_character_to_the_child(self):
+        installation = self.fixture_install()
+        self.launcher.game.mkdir(parents=True, exist_ok=True)
+        owner = self.launcher.game / "horizon-player.txt"
+        owner.write_bytes(b"name:Player00123\r\n")
+        with patch.object(self.launcher, "installation", return_value=installation), \
+             patch("herps_launcher.core.tailscale", return_value={"connected": True}), \
+             patch("herps_launcher.core.subprocess.run") as prepare, \
+             patch("herps_launcher.core.subprocess.Popen") as start:
+            prepare.return_value.returncode = 0
+            prepare.return_value.stdout = prepare.return_value.stderr = b""
+            start.return_value.pid = 123
+            start.return_value.poll.return_value = start.return_value.returncode = 0
+            for server, clean in [("", False), ("100.80.1.1:25565", False), ("", True)]:
+                self.launcher.launch(server=server, clean=clean)
+                args, options = start.call_args
+                self.assertEqual(options["env"]["HERPS_PRIVATE_PLAYER_NAME"], "Player00123")
+                if server:
+                    self.assertEqual(args[0][-2:], ["--name", "Player00123"])
+                else:
+                    self.assertNotIn("--name", args[0])
+                self.launcher.poll()
+        self.assertEqual(owner.read_bytes(), b"name:Player00123\r\n")
 
     @unittest.skipIf(os.name == "nt", "Owned POSIX child fixture")
     def test_home_child_gets_menu_name_without_changing_world_owner(self):

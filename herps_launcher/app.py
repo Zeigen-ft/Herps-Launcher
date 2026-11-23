@@ -143,6 +143,8 @@ class Window(QMainWindow):
             self.java_mods.refresh_profile()
         if hasattr(self, "modpacks") and self.pages.currentWidget() is self.modpacks:
             self.modpacks.refresh_profile()
+        if index == 5:
+            self.refresh_player_name()
 
     def busy(self):
         return self.worker is not None or self.launcher.child is not None
@@ -204,6 +206,7 @@ class Window(QMainWindow):
             raise ValueError("Profile changes are locked while the game or a build is running")
         self.launcher.config["profile"] = value
         self.launcher.save()
+        self.refresh_player_name()
         self.refresh()
 
     def new_profile(self):
@@ -215,6 +218,18 @@ class Window(QMainWindow):
             self.profile.setCurrentText(name)
 
     def play_game(self, clean=False, server="", name=""):
+        self.require_idle()
+        if not server:
+            identity = self.launcher.private_identity()
+            if identity.choices and not identity.selected:
+                choice, accepted = QInputDialog.getItem(
+                    self, "Choose your multiplayer character",
+                    "Which exact name did you use on your private server? This choice is saved for this profile.",
+                    ["", *identity.choices], 0, True)
+                if not accepted:
+                    return
+                self.launcher.save_player_name(choice)
+                self.refresh_player_name()
         self.start_work(lambda progress: self.launcher.launch(server, name, clean))
         self.statusBar().showMessage("Checking resources and starting the game…")
 
@@ -342,13 +357,16 @@ class Window(QMainWindow):
         form = QFormLayout()
         self.address = QLineEdit()
         self.address.setPlaceholderText("100.80.12.34:25565")
-        self.player_name = QLineEdit()
-        self.player_name.setText(self.launcher.config.get("player_name", ""))
+        self.player_name = QComboBox()
+        self.player_name.setEditable(True)
+        self.player_name.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
+        self.player_name.setCompleter(None)
+        self.player_name.lineEdit().setPlaceholderText("Choose or enter your previous in-game name")
         form.addRow("Host address", self.address)
         form.addRow("In-Game Player Name", self.player_name)
         box.addLayout(form)
         self.button(box, "Save player name", self.save_player_name)
-        note = QLabel("Use the same name each time. Private offline servers use it to find your inventory and progress.")
+        note = QLabel("Use the exact name from your previous server session, including capitals. It selects your inventory and progress for this profile.")
         note.setWordWrap(True)
         box.addWidget(note)
         self.server_list = QListWidget()
@@ -387,14 +405,31 @@ class Window(QMainWindow):
             self.launcher.save()
             self.refresh()
 
+    def refresh_player_name(self):
+        identity = self.launcher.private_identity()
+        self.player_name.clear()
+        self.player_name.addItems(identity.choices)
+        self.player_name.setCurrentIndex(self.player_name.findText(identity.selected) if identity.selected else -1)
+
     def save_player_name(self):
-        self.launcher.save_player_name(self.player_name.text())
-        self.statusBar().showMessage("Player name saved for the next private game.")
+        self.require_idle()
+        name = self.launcher.validate_player_name(self.player_name.currentText())
+        identity = self.launcher.private_identity()
+        if identity.choices and name != identity.selected and (identity.selected or name not in identity.choices):
+            answer = QMessageBox.question(self, "Change multiplayer character?",
+                f"Use {name} for this profile? A different name opens a different inventory on your private server.",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No)
+            if answer != QMessageBox.StandardButton.Yes:
+                return False
+        self.launcher.save_player_name(name)
+        self.refresh_player_name()
+        self.statusBar().showMessage("Multiplayer name saved for this profile.")
+        return True
 
     def join(self):
         address = server_address(self.address.text())
-        self.save_player_name()
-        self.play_game(server=address, name=self.player_name.text())
+        if self.save_player_name():
+            self.play_game(server=address, name=self.player_name.currentText())
 
     def host(self):
         self.require_idle()

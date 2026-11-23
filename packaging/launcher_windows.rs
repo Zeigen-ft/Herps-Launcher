@@ -14,6 +14,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 mod private_server;
 
 const VERSION: &str = "0.2.3";
+const PRIVATE_NAME_FILE: &str = "herps-multiplayer-name.txt";
 const HELP: &str = "Herspers Minecraft for Windows\n\
 Usage: Herspers-Minecraft.exe [-- <game arguments>]\n\
        Herspers-Minecraft.exe --setup [server.jar] [minecraft-folder]\n\
@@ -119,6 +120,33 @@ fn usage(message: impl Into<String>) -> Failure {
 fn validate_player_name(name: &str) -> Result<()> {
     if !(3..=16).contains(&name.len()) || !name.bytes().all(|c| c.is_ascii_alphanumeric() || c == b'_') {
         return Err(usage("Use a player name of 3-16 letters, numbers or underscores. Each friend needs a different name."));
+    }
+    Ok(())
+}
+
+fn read_profile_name(path: &Path) -> Result<Option<String>> {
+    let text = match fs::read_to_string(path) {
+        Ok(text) => text,
+        Err(e) if matches!(e.kind(), io::ErrorKind::NotFound | io::ErrorKind::InvalidData) => return Ok(None),
+        Err(e) => return Err(e.into()),
+    };
+    Ok(text.lines().find_map(|line| line.strip_prefix("name:"))
+        .filter(|name| validate_player_name(name).is_ok()).map(str::to_owned))
+}
+
+fn remember_private_name(game: &Path, name: &str) -> Result<()> {
+    validate_player_name(name)?;
+    let path = game.join(PRIVATE_NAME_FILE);
+    if read_profile_name(&path)?.as_deref() == Some(name) { return Ok(()); }
+    fs::create_dir_all(game)?;
+    let stamp = SystemTime::now().duration_since(UNIX_EPOCH).map_err(|e| Failure::new(e.to_string()))?.as_nanos();
+    let temp = game.join(format!(".private-name-{}-{stamp}.tmp", process::id()));
+    let mut file = File::options().write(true).create_new(true).open(&temp)?;
+    let result = writeln!(file, "name:{name}").and_then(|_| file.sync_all());
+    drop(file);
+    if let Err(error) = result.and_then(|_| fs::rename(&temp, &path)) {
+        let _ = fs::remove_file(temp);
+        return Err(error.into());
     }
     Ok(())
 }
@@ -297,7 +325,19 @@ fn play(bundle: &Path, support: &Path, arguments: &[OsString]) -> Result<i32> {
     let log = support.join("logs/launcher.log");
     let output = File::create(&log)?;
     println!("Starting Herspers Minecraft. Startup log: {}", log.display());
-    let status = Command::new(helper(bundle, "horizon-client.exe")?)
+    let mut command = Command::new(helper(bundle, "horizon-client.exe")?);
+    let explicit = arguments.windows(2).find(|pair| pair[0] == "--name").map(|pair| &pair[1]);
+    if let Some(name) = explicit {
+        command.env("HERPS_PRIVATE_PLAYER_NAME", name);
+    } else if !arguments.iter().any(|arg| arg == "--game-dir") {
+        if let Some(name) = read_profile_name(&game.join(PRIVATE_NAME_FILE))? {
+            command.env("HERPS_PRIVATE_PLAYER_NAME", &name);
+            if arguments.iter().any(|arg| arg == "--server" || arg == "--quickPlayMultiplayer") {
+                command.arg("--name").arg(name);
+            }
+        }
+    }
+    let status = command
         .arg("--resources").arg(support.join("resources/26.3"))
         .arg("--game-dir").arg(&game)
         .args(arguments).current_dir(&game)
@@ -381,7 +421,25 @@ fn join_private(bundle: &Path, support: &Path, address: Option<String>, name: Op
     private_server::tailscale_ipv4().map_err(Failure::new)?;
     let name = match name {
         Some(value) => value,
-        None => prompt_line("Your player name (3-16 letters, numbers or underscores): ")?,
+        None => {
+            let game = support.join("game");
+            let stored = read_profile_name(&game.join(PRIVATE_NAME_FILE))?;
+            let previous = match stored {
+                Some(name) => Some(name),
+                None => read_profile_name(&game.join("horizon-player.txt"))?,
+            };
+            let name = if let Some(previous) = previous {
+                print!("Press Enter to join as {previous}, or type your exact previous server name: ");
+                io::stdout().flush()?;
+                let mut line = String::new();
+                if io::stdin().read_line(&mut line)? == 0 { return Err(usage("No response was entered.")); }
+                if line.trim().is_empty() { previous } else { line.trim().to_owned() }
+            } else {
+                prompt_line("Your exact previous server name (3-16 letters, numbers or underscores): ")?
+            };
+            remember_private_name(&game, &name)?;
+            name
+        }
     };
     validate_player_name(&name)?;
     let arguments = vec!["--server".into(), format!("{ip}:{port}").into(), "--name".into(), name.into()];
@@ -517,6 +575,23 @@ mod tests {
             assert_eq!(parse_args(vec!["--join-tailscale".into(), address.into()]).unwrap_err().code, 2);
         }
         for name in ["", "aa", "a name", "player;command", "a_name_more_than_16"] { assert!(validate_player_name(name).is_err()); }
+    }
+
+    #[test]
+    fn remembered_multiplayer_character_preserves_the_generated_name_and_exact_case() {
+        let scratch = Scratch::new();
+        let game = scratch.0.join("game");
+        fs::create_dir(&game).unwrap();
+        fs::write(game.join("horizon-player.txt"), b"name:Player00042\r\n").unwrap();
+        let saved = game.join(PRIVATE_NAME_FILE);
+        assert_eq!(read_profile_name(&saved).unwrap(), None);
+        for name in ["Player00042", "player00042"] {
+            remember_private_name(&game, name).unwrap();
+            assert_eq!(read_profile_name(&saved).unwrap().as_deref(), Some(name));
+        }
+        assert!(remember_private_name(&game, "bad name").is_err());
+        assert_eq!(read_profile_name(&saved).unwrap().as_deref(), Some("player00042"));
+        assert_eq!(fs::read(game.join("horizon-player.txt")).unwrap(), b"name:Player00042\r\n");
     }
 
     #[test]

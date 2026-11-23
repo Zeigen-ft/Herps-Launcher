@@ -23,6 +23,29 @@ REVISION = "7301f6fdd7f470b11317276e7a11b4dc615c137a"
 GAME = "26.3"
 RUST = "1.95.0"
 ID = re.compile(r"[a-z0-9_]{1,64}\Z")
+PLAYER_NAME = re.compile(r"[A-Za-z0-9_]{3,16}")
+MULTIPLAYER_NAME_FILE = "herps-multiplayer-name.txt"
+
+
+def read_profile_name(path: Path) -> str:
+    """Read Horizon's first name: line without generating or editing an identity."""
+    try:
+        with path.open(encoding="utf-8") as stream:
+            name = next((line[5:].rstrip("\r\n") for line in stream if line.startswith("name:")), "")
+    except (FileNotFoundError, UnicodeDecodeError):
+        return ""
+    return name if PLAYER_NAME.fullmatch(name) else ""
+
+
+@dataclass(frozen=True)
+class PrivateIdentity:
+    selected: str
+    choices: tuple[str, ...]
+
+    def for_launch(self) -> str:
+        if self.choices and not self.selected:
+            raise ValueError("This profile has more than one previous multiplayer name. Choose yours in Multiplayer and save it.")
+        return self.selected
 
 
 def digest(path: Path) -> str:
@@ -257,6 +280,10 @@ class Launcher:
         self.config = read_json(self.config_file) if self.config_file.exists() else {
             "installation": "", "profile": "default", "profiles": ["default"], "servers": [], "close_on_play": False,
         }
+        # A pre-hotfix name applied to all then-existing profiles. Keep it as a
+        # migration candidate for those profiles only, even after adding a new one.
+        if self.config.get("player_name") and "legacy_name_profiles" not in self.config:
+            self.config["legacy_name_profiles"] = list(self.config["profiles"])
         self.child = None
         self.log_stream = None
         self.session = None
@@ -429,13 +456,23 @@ class Launcher:
 
     @staticmethod
     def validate_player_name(name):
-        if not isinstance(name, str) or not re.fullmatch(r"[A-Za-z0-9_]{3,16}", name):
+        if not isinstance(name, str) or not PLAYER_NAME.fullmatch(name):
             raise ValueError("In-Game Player Name must be 3–16 ASCII letters, digits or underscores")
         return name
 
+    def private_identity(self):
+        selected = read_profile_name(self.game / MULTIPLAYER_NAME_FILE)
+        generated = read_profile_name(self.game / "horizon-player.txt")
+        legacy = self.config.get("player_name") if self.config["profile"] in self.config.get("legacy_name_profiles", ()) else None
+        names = (selected, generated, legacy, os.environ.get("HORIZON_PLAYER_NAME"))
+        choices = tuple(dict.fromkeys(n for n in names if isinstance(n, str) and PLAYER_NAME.fullmatch(n)))
+        if not selected and len(choices) == 1:
+            selected = choices[0]
+        return PrivateIdentity(selected, choices)
+
     def save_player_name(self, name):
-        self.config["player_name"] = self.validate_player_name(name)
-        self.save()
+        name = self.validate_player_name(name)
+        atomic(self.game / MULTIPLAYER_NAME_FILE, f"name:{name}\n".encode("ascii"))
 
     def command(self, server="", name="", clean=False):
         from .modpacks.chainmail import protect_launch
@@ -453,7 +490,7 @@ class Launcher:
         args = [str(executable), "--resources", str(self.support / "resources" / GAME), "--game-dir", str(self.game), "--home", str(self.support)]
         if server:
             args += ["--server", server_address(server)]
-            args += ["--name", self.validate_player_name(name or self.config.get("player_name", ""))]
+            args += ["--name", self.validate_player_name(name or self.private_identity().for_launch())]
         return args
 
     def launch(self, server="", name="", clean=False):
@@ -472,12 +509,13 @@ class Launcher:
                 raise ValueError("Game resource validation failed. Use the installation's Setup.cmd / prepare.command with JDK 25 and your own matching game files. See resources-check.log")
             if server and not tailscale()["connected"]:
                 raise ValueError("Connect Tailscale before joining a private server")
-            args = self.command(server, name, clean)
+            saved_name = (name if server else "") or self.private_identity().for_launch()
+            args = self.command(server, saved_name, clean)
             env = os.environ.copy()
             # A menu join uses the saved name; the integrated world's owner keeps its own identity.
             env.pop("HERPS_PRIVATE_PLAYER_NAME", None)
-            saved_name = self.config.get("player_name", "")
-            if not server and saved_name:
+            # Keep later menu rejoins on the same identity as a direct JOIN.
+            if saved_name:
                 env["HERPS_PRIVATE_PLAYER_NAME"] = self.validate_player_name(saved_name)
             env.update(HORIZON_HOME=str(self.support), HORIZON_LAUNCHER_NO_SELF_UPDATE="1")
             # The game's persisted shader choice must win over developer overrides.

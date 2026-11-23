@@ -49,13 +49,46 @@ class DesktopTests(unittest.TestCase):
         page = self.window.pages.currentWidget()
         self.assertIn("In-Game Player Name", [label.text() for label in page.findChildren(QLabel)])
         buttons = {button.text(): button for button in page.findChildren(QPushButton)}
-        self.window.player_name.setText("CJ_Corto")
+        self.window.player_name.setEditText("CJ_Corto")
         QTest.mouseClick(buttons["Save player name"], Qt.MouseButton.LeftButton)
-        self.assertEqual(Launcher(self.launcher.support).config["player_name"], "CJ_Corto")
+        self.assertEqual(Launcher(self.launcher.support).private_identity().selected, "CJ_Corto")
         self.window.address.setText("100.80.1.1:25565")
         with patch.object(self.window, "play_game") as play:
             QTest.mouseClick(buttons["JOIN →"], Qt.MouseButton.LeftButton)
             play.assert_called_once_with(server="100.80.1.1:25565", name="CJ_Corto")
+
+    def test_switching_profiles_refreshes_names_and_cancelled_change_does_not_join(self):
+        from PySide6.QtWidgets import QMessageBox
+        self.launcher.game.mkdir(parents=True)
+        (self.launcher.game / "horizon-player.txt").write_text("name:Original_01\n")
+        self.launcher.add_profile("other")
+        self.launcher.save_player_name("Other_02")
+        self.window.profile.addItem("other")
+        self.window.profile.setCurrentText("other")
+        self.assertEqual(self.window.player_name.currentText(), "Other_02")
+        self.window.profile.setCurrentText("default")
+        self.assertEqual(self.window.player_name.currentText(), "Original_01")
+        self.window.player_name.setEditText("Original_02")
+        self.window.address.setText("100.80.1.1:25565")
+        with patch.object(QMessageBox, "question", return_value=QMessageBox.StandardButton.No), \
+             patch.object(self.window, "play_game") as play:
+            self.window.join()
+            play.assert_not_called()
+        self.assertEqual(self.launcher.private_identity().selected, "Original_01")
+
+    def test_menu_launch_resolves_conflicting_names_only_after_a_choice(self):
+        self.launcher.config.update(player_name="OldShared", legacy_name_profiles=["default"])
+        self.launcher.game.mkdir(parents=True)
+        (self.launcher.game / "horizon-player.txt").write_text("name:OldProfile\n")
+        self.window.navigate(5)
+        self.assertEqual(self.window.player_name.currentText(), "")
+        with patch("herps_launcher.app.QInputDialog.getItem", side_effect=[("", False), ("OldProfile", True)]), \
+             patch.object(self.window, "start_work") as launch:
+            self.window.play_game()
+            launch.assert_not_called()
+            self.window.play_game()
+            launch.assert_called_once()
+        self.assertEqual(Launcher(self.launcher.support).private_identity().selected, "OldProfile")
 
     def test_stable_fps_changes_only_selected_profile_and_keeps_backup(self):
         old = self.launcher.game

@@ -91,6 +91,6 @@ NOT RUN; earlier startup stalls and empty crafting output have unresolved causes
 ## Join a private game with your own name
 
 1. Connect to the host's Tailscale network. Open **Herps Launcher → Multiplayer**.
-2. Under **In-Game Player Name**, enter a name such as `CJ_Corto` and click **Save player name**. Each player needs a different name. Keep yours to keep using the same offline inventory.
+2. Under **In-Game Player Name**, choose or enter the exact name you previously used on this server, including capitals and leading zeroes. Click **Save player name**. The choice belongs to the profile selected on Home. If two previous names appear, your old server join message shows which one to choose.
 3. Enter the host's address and click **JOIN**. You can also use **Home → PLAY → Multiplayer** after saving your name. A signed-in account uses its account identity.
 4. If disconnected, read the message before returning to the server list. Rejoin the same address with the same name. See [Multiplayer troubleshooting](INSTALLATION.md#private-multiplayer-troubleshooting).
