@@ -6,6 +6,10 @@ on:
         description: Completed Windows build run to export as a direct EXE
         type: string
         required: false
+      quick_build:
+        description: Use lower compiler optimization for an earlier test build
+        type: boolean
+        default: false
 permissions:
   contents: read
 jobs:
@@ -15,6 +19,7 @@ jobs:
     timeout-minutes: 90
     env:
       CARGO_BUILD_JOBS: '3'
+      CARGO_PROFILE_FAST_OPT_LEVEL: ${{ inputs.quick_build && '1' || '3' }}
       PYTHONUTF8: '1'
       QT_QPA_PLATFORM: offscreen
     steps:
