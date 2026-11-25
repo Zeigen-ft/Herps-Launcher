@@ -73,7 +73,7 @@ jobs:
     timeout-minutes: 10
     permissions:
       actions: read
-      contents: read
+      contents: write
     steps:
       - name: Download the completed installer build
         uses: actions/download-artifact@v4
@@ -88,9 +88,21 @@ jobs:
           setup=installer/Herps-Felled-26.3-Windows-x64-Setup.exe
           test "$(head -c 2 "$setup")" = MZ
           sha256sum "$setup"
-      - name: Upload the installer as a direct EXE download
-        uses: actions/upload-artifact@v7
+      - name: Check out the existing download branch
+        uses: actions/checkout@v4
         with:
-          path: installer/Herps-Felled-26.3-Windows-x64-Setup.exe
-          archive: false
-          if-no-files-found: error
+          ref: codex/herps-felled-26.3-download
+          path: publish
+      - name: Publish the verified installer file
+        shell: bash
+        run: |
+          set -euo pipefail
+          name=Herps-Felled-26.3-Windows-x64-Setup.exe
+          printf '%s  %s\n' f17e14bbd254ff805839b31c4ca67ac3669245acfcb8bcf82524731c16776042 "installer/$name" | sha256sum -c -
+          cp "installer/$name" "publish/$name"
+          git -C publish config user.name 'github-actions[bot]'
+          git -C publish config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git -C publish add -- "$name"
+          git -C publish commit -m 'Provide the verified Herps Felled Windows installer'
+          git -C publish push origin HEAD:refs/heads/codex/herps-felled-26.3-download
+          git -C publish rev-parse HEAD
