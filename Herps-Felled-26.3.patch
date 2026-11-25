@@ -1,0 +1,1349 @@
+diff --git a/docs/FELLED.md b/docs/FELLED.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..e070af1d56fc3e4e93d092fd48ed689b10a1ea3a
+--- /dev/null
++++ b/docs/FELLED.md
+@@ -0,0 +1,64 @@
++# Felled-style tree felling for Herps 26.3
++
++This is native engine source for Herps Launcher and Minecraft Java 26.3. It uses
++the pinned Horizon commit 7301f6fdd7f470b11317276e7a11b4dc615c137a. Raiiiden's
++Felled 0.1.5 is the behavioral reference. This implementation uses Herps' own
++block models, audio and particles.
++
++## Build and enable
++
++Apply the source patch to Herps Launcher at
++b292a48c279c2b718a5395fe5558f2ff83dcea30, then use its normal native build.
++
++- On Windows, run `pwsh -File scripts/build_windows.ps1`
++- On Apple Silicon, run `bash scripts/build_macos.sh arm64`
++- On an Intel Mac, run `bash scripts/build_macos.sh x86_64`
++
++The commit is unchanged in the upstream lock. GitHub now serves its archive
++under a `starling-` root after the upstream repository rename. The refreshed
++archive was compared against all 4,159 blobs and modes in the pinned Git tree.
++If your checkout cached the previous archive, move its generated
++`.cache/upstream` folder aside before preparing again.
++
++Both features start disabled. Use a disposable profile and an empty file for
++each feature you want to enable.
++
++| Mode | File and location |
++| --- | --- |
++| Client visuals | `felled-client.enabled` beside the profile's `options.txt` |
++| Single-player server | `felled-server.enabled` in the same profile folder |
++| Dedicated server | `felled-server.enabled` in the server working directory, beside `server.properties` |
++
++Reconnect to reload the client flag. Restart the server to reload the server flag.
++Remove the flag files to disable the features. Dedicated installations use the
++rebuilt Herps engine for `--dedicated`. A server flag affects future cuts. Logs
++already moved by the server are saved as normal blocks.
++
++## What happens in game
++
++Chop a qualifying tree's base with an axe. Sneak to chop normally. The scanner
++needs a rooted trunk and a natural-looking crown with non-persistent leaves.
++A 2×2 trunk waits until half the base has been cut. Branches and nearby leaves
++are bounded by scan limits.
++
++With the server flag enabled, a permitted base break can move the remaining tree
++to a clear, grounded landing. Horizontal log axes follow the fall direction.
++Foliage that would land inside terrain is shed. If every landing is blocked,
++the base break proceeds normally. Landed logs can be walked on and
++harvested with the usual server rules. A Herps client with visuals enabled
++animates the server-directed fall and plays local impact effects. Other clients
++on that server see the final blocks through vanilla block updates.
++
++With only the client flag, the window plays a temporary local effect after the
++server confirms your own base break. Standing blocks are hidden briefly in that
++window's mesh. The server still controls collision, block state and drops.
++
++## Parity limits
++
++The server commits the landed blocks during the cut, and Herps clients animate
++that move. Felled's Jolt rigid bodies, crushing damage, mid-fall collision and
++riding, trunk snapping, buoyancy, fire, attachments, and its configuration are
++outside this implementation. The natural-tree check uses block states as a
++heuristic, so some player builds can resemble trees.
++
++Original behavior reference [Felled by Raiiiden](https://www.curseforge.com/minecraft/mc-mods/felled).
+diff --git a/patches/engine/crates-horizon-client-render-src-streaming.rs.patch b/patches/engine/crates-horizon-client-render-src-streaming.rs.patch
+new file mode 100644
+index 0000000000000000000000000000000000000000..e0af5a277d049f62250b9590b15f10fcb4fa0c3a
+--- /dev/null
++++ b/patches/engine/crates-horizon-client-render-src-streaming.rs.patch
+@@ -0,0 +1,28 @@
++--- a/crates/horizon-client-render/src/streaming.rs
+++++ b/crates/horizon-client-render/src/streaming.rs
++@@ -1548,9 +1548,24 @@
++         let room = (self.threads.len() * 32).saturating_sub(self.meshing.len());
++         nearest_first(&mut candidates, room);
++         for (_, x, z, sections) in candidates {
++-            let Some(region) = Self::region(world, x, z) else {
+++            let Some(mut region) = Self::region(world, x, z) else {
++                 continue;
++             };
+++            if !world.preview_hidden.is_empty() {
+++                for (dz, row) in region.iter_mut().enumerate() {
+++                    for (dx, column) in row.iter_mut().enumerate() {
+++                        let key = (x + dx as i32 - 1, z + dz as i32 - 1);
+++                        if let (Some(cells), Some(chunk)) = (world.preview_hidden.get(&key), column)
+++                        {
+++                            for (&[bx, by, bz], &state) in cells {
+++                                if chunk.get(bx & 15, by, bz & 15) == state.0 {
+++                                    Arc::make_mut(chunk).set(bx & 15, by, bz & 15, world.air.0);
+++                                }
+++                            }
+++                        }
+++                    }
+++                }
+++            }
++             world.dirty_sections.take_column(x, z);
++             for sy in sections.iter().map(|sy| sy as i32) {
++                 let first = self.meshed.insert((x, z));
+diff --git a/patches/engine/crates-horizon-client-render-src-world.rs.patch b/patches/engine/crates-horizon-client-render-src-world.rs.patch
+new file mode 100644
+index 0000000000000000000000000000000000000000..fbc93b132f1898d5446caef0ef9a2cab50a1c2c6
+--- /dev/null
++++ b/patches/engine/crates-horizon-client-render-src-world.rs.patch
+@@ -0,0 +1,62 @@
++--- a/crates/horizon-client-render/src/world.rs
+++++ b/crates/horizon-client-render/src/world.rs
++@@ -63,6 +63,8 @@
++     pub air: BlockStateId,
++     /// Sections whose geometry changed and need remeshing.
++     pub dirty_sections: DirtySections,
+++    /// Render-only omissions made to snapshots by the chunk mesh scheduler.
+++    pub(crate) preview_hidden: FxHashMap<(i32, i32), FxHashMap<[i32; 3], BlockStateId>>,
++     /// Chunks whose light must be recomputed.
++     pub dirty_light: crate::fast_hash::FxHashSet<(i32, i32)>,
++     /// Edits on lit chunks (position, old state, new state), relit
++@@ -185,6 +187,7 @@
++             air,
++             fast_lava: false,
++             dirty_sections: Default::default(),
+++            preview_hidden: Default::default(),
++             dirty_light: Default::default(),
++             light_edits: Vec::new(),
++             loaded_entities: Vec::new(),
++@@ -275,6 +278,42 @@
++     pub fn top_y(&self) -> i32 {
++         self.layout().max_y()
++     }
+++    pub fn preview_hides(&self, [x, y, z]: [i32; 3]) -> bool {
+++        self.preview_hidden
+++            .get(&(x >> 4, z >> 4))
+++            .and_then(|cells| cells.get(&[x, y, z]))
+++            .is_some_and(|&state| self.block(x, y, z) == state)
+++    }
+++
+++    pub fn hide_preview_blocks(&mut self, blocks: &[([i32; 3], BlockStateId)], hidden: bool) {
+++        let layout = self.layout();
+++        for &(p @ [x, y, z], state) in blocks {
+++            let column = (x >> 4, z >> 4);
+++            if hidden {
+++                self.preview_hidden
+++                    .entry(column)
+++                    .or_default()
+++                    .insert(p, state);
+++            } else if let Some(cells) = self.preview_hidden.get_mut(&column) {
+++                cells.remove(&p);
+++                if cells.is_empty() {
+++                    self.preview_hidden.remove(&column);
+++                }
+++            }
+++            // Match the mesher's one-cell culling and AO neighbourhood.
+++            for bx in [(x - 1) >> 4, (x + 1) >> 4] {
+++                for bz in [(z - 1) >> 4, (z + 1) >> 4] {
+++                    for sy in [y - 1, y, y + 1]
+++                        .into_iter()
+++                        .filter_map(|y| layout.section_index(y))
+++                    {
+++                        self.dirty_sections.insert((bx, sy as i32, bz));
+++                    }
+++                }
+++            }
+++        }
+++    }
+++
++     /// Resident storage write; marks the touched sections (and neighbours on
++     /// section borders) for remeshing and the surrounding chunks for relighting.
++     /// Neighbour updates, drops and block entities belong to the gameplay layer.
+diff --git a/patches/engine/crates-horizon-client-src-game-felled.rs.patch b/patches/engine/crates-horizon-client-src-game-felled.rs.patch
+new file mode 100644
+index 0000000000000000000000000000000000000000..90c5810be33eabc59b4c590c1b24315f44327a6a
+--- /dev/null
++++ b/patches/engine/crates-horizon-client-src-game-felled.rs.patch
+@@ -0,0 +1,806 @@
++--- /dev/null
+++++ b/crates/horizon-client/src/game/felled.rs
++@@ -0,0 +1,803 @@
+++//! Cosmetic tree felling for the window's connected client.
+++use std::collections::{HashMap, HashSet, VecDeque};
+++use std::time::{Duration, Instant};
+++
+++use glam::{DQuat, DVec3, Vec3};
+++use horizon_client::mesher::Vertex;
+++use horizon_core::{geometry::Direction, position::BlockPos};
+++use horizon_world::registry::BlockStateId;
+++
+++use super::{Game, lan::LanHost};
+++use winit::keyboard::KeyCode;
+++
+++type Pos = [i32; 3];
+++const NEIGHBORS: [Pos; 6] = [
+++    [1, 0, 0],
+++    [-1, 0, 0],
+++    [0, 1, 0],
+++    [0, -1, 0],
+++    [0, 0, 1],
+++    [0, 0, -1],
+++];
+++const MAX_LOGS: usize = 128;
+++const MAX_LEAVES: usize = 384;
+++const MAX_TREES: usize = 4;
+++const MAX_PENDING: usize = 8;
+++const CHANNEL: &str = "herps_felled:fall_v1";
+++const CAPABILITY: &str = "herps_felled:capability_v1";
+++const STEP: f64 = 1.0 / 120.0;
+++
+++#[derive(Default)]
+++pub(super) struct FelledClient {
+++    pub(super) enabled: bool,
+++    pending: HashMap<Pos, Candidate>,
+++    queried_server: bool,
+++    server_felling: bool,
+++    trees: Vec<Tree>,
+++}
+++
+++struct Candidate {
+++    seq: i32,
+++    pivot: Pos,
+++    blocks: Vec<(Pos, BlockStateId)>,
+++    logs: usize,
+++    origin: DVec3,
+++    axis: DVec3,
+++    expires: Instant,
+++}
+++
+++struct Tree {
+++    tree: Candidate,
+++    born: Instant,
+++    updated: Instant,
+++    angle: f64,
+++    speed: f64,
+++    rest: Option<Instant>,
+++    impacted: bool,
+++    landing: Option<(Vec<(Pos, BlockStateId)>, i32)>,
+++}
+++
+++#[derive(serde::Serialize, serde::Deserialize)]
+++struct FallPacket {
+++    pivot: Pos,
+++    dir: [i32; 2],
+++    lift: i32,
+++    logs: usize,
+++    blocks: Vec<(Pos, u32, Option<u32>)>,
+++}
+++
+++pub(super) struct ServerFall {
+++    dimension: String,
+++    pivot: Pos,
+++    bytes: Vec<u8>,
+++}
+++
+++pub(super) struct PlannedFall {
+++    packet: FallPacket,
+++    sources: Vec<(Pos, BlockStateId)>,
+++    targets: Vec<(Pos, BlockStateId)>,
+++    bytes: Vec<u8>,
+++}
+++
+++fn offset([x, y, z]: Pos, [dx, dy, dz]: Pos) -> Pos {
+++    [x + dx, y + dy, z + dz]
+++}
+++
+++fn point([x, y, z]: Pos) -> DVec3 {
+++    DVec3::new(f64::from(x), f64::from(y), f64::from(z))
+++}
+++
+++// Rotate cell coordinates exactly by 90° about the centre of the cut log.
+++fn landed(pivot: Pos, [dx, dz]: [i32; 2], lift: i32, p: Pos) -> Pos {
+++    let [x, y, z] = std::array::from_fn(|i| p[i] - pivot[i]);
+++    let along = x * dx + z * dz;
+++    offset(
+++        pivot,
+++        [
+++            x - dx * along + dx * y,
+++            lift - along,
+++            z - dz * along + dz * y,
+++        ],
+++    )
+++}
+++
+++fn pos_id([x, y, z]: Pos) -> BlockPos {
+++    BlockPos::new(x, y, z)
+++}
+++
+++fn scan<T: Copy>(
+++    base: Pos,
+++    stems: &[Pos],
+++    mut log: impl FnMut(Pos) -> Option<T>,
+++    mut leaf: impl FnMut(Pos) -> Option<T>,
+++) -> Option<(Vec<(Pos, T)>, usize)> {
+++    // Include touching boughs, but cap both the scan extent and the mesh size.
+++    let in_bounds = |p: Pos| {
+++        p[1] > base[1]
+++            && p[1] - base[1] <= 32
+++            && (p[0] - base[0]).abs() <= 8
+++            && (p[2] - base[2]).abs() <= 8
+++    };
+++    let mut logs = Vec::new();
+++    let mut leaf_queue = VecDeque::new();
+++    let mut visited = HashSet::new();
+++    let mut queue: VecDeque<_> = stems.iter().copied().collect();
+++    while let Some(p) = queue.pop_front() {
+++        if !in_bounds(p) || !visited.insert(p) {
+++            continue;
+++        }
+++        let Some(state) = log(p) else { continue };
+++        logs.push((p, state));
+++        if logs.len() > MAX_LOGS {
+++            return None;
+++        }
+++        for step in NEIGHBORS {
+++            queue.push_back(offset(p, step));
+++            leaf_queue.push_back((offset(p, step), 1));
+++            if step[1] == 0 {
+++                queue.push_back(offset(p, offset(step, [0, 1, 0])));
+++                queue.push_back(offset(p, offset(step, [0, -1, 0])));
+++            }
+++        }
+++    }
+++    let log_count = logs.len();
+++    if log_count < 2 {
+++        return None;
+++    }
+++    visited.clear();
+++    visited.extend(logs.iter().map(|(pos, _)| *pos));
+++    while let Some((p, distance)) = leaf_queue.pop_front() {
+++        if !in_bounds(p) || !visited.insert(p) {
+++            continue;
+++        }
+++        let Some(state) = leaf(p) else { continue };
+++        if logs.len() == log_count + MAX_LEAVES {
+++            return None;
+++        }
+++        logs.push((p, state));
+++        if distance < 5 {
+++            leaf_queue.extend(NEIGHBORS.map(|step| (offset(p, step), distance + 1)));
+++        }
+++    }
+++    (logs.len() >= log_count + 3).then_some((logs, log_count))
+++}
+++
+++impl Game<'_> {
+++    pub(super) fn reset_felled_client(&mut self) {
+++        self.felled_client = FelledClient {
+++            enabled: self.options.execution_role.is_client()
+++                && Self::options_path()
+++                    .with_file_name("felled-client.enabled")
+++                    .is_file(),
+++            ..Default::default()
+++        };
+++    }
+++
+++    fn felled_candidate(&self, pos: Pos, state: BlockStateId, seq: i32) -> Option<Candidate> {
+++        let player = self.player.as_ref()?;
+++        if self.keys.contains(&KeyCode::ShiftLeft)
+++            || !self.held().is_some_and(|s| s.item.ends_with("_axe"))
+++        {
+++            return None;
+++        }
+++        let at = |[x, y, z]: Pos| self.world.block(x, y, z);
+++        let facts = self.res.facts();
+++        let base_name = &*facts.get(state).name;
+++        if !self.world.loaded(pos[0], pos[2])
+++            || !self.block_in_tag("minecraft:logs", base_name)
+++            || !self.block_in_tag(
+++                "minecraft:dirt",
+++                &facts.get(at(offset(pos, [0, -1, 0]))).name,
+++            )
+++        {
+++            return None;
+++        }
+++        let log = |p| {
+++            let s = at(p);
+++            (&*facts.get(s).name == base_name).then_some(s)
+++        };
+++        let mut roots = vec![offset(pos, [0, 1, 0])];
+++        for dx in [-1, 0] {
+++            for dz in [-1, 0] {
+++                let square = [
+++                    [dx, 0, dz],
+++                    [dx + 1, 0, dz],
+++                    [dx, 0, dz + 1],
+++                    [dx + 1, 0, dz + 1],
+++                ];
+++                let bases = square.map(|p| offset(pos, p));
+++                let stems = bases.map(|p| offset(p, [0, 1, 0]));
+++                if stems.into_iter().all(|p| log(p).is_some()) {
+++                    if bases.into_iter().filter(|&p| log(p).is_some()).count() > 2 {
+++                        return None;
+++                    }
+++                    roots = stems.to_vec();
+++                }
+++            }
+++        }
+++        let leaf = |p| {
+++            let s = at(p);
+++            (self.block_in_tag("minecraft:leaves", &facts.get(s).name)
+++                && self.pack.assets.registry.state(s).is_some_and(|info| {
+++                    info.properties
+++                        .get("persistent")
+++                        .is_some_and(|v| v == "false")
+++                }))
+++            .then_some(s)
+++        };
+++        let (blocks, logs) = scan(pos, &roots, log, leaf)?;
+++        // A nearby supported trunk must stay standing, even if its crown touches.
+++        if blocks[..logs].iter().any(|(p, _)| {
+++            !roots.contains(p) && p[1] == pos[1] + 1 && !facts.is_air(at(offset(*p, [0, -1, 0])))
+++        }) {
+++            return None;
+++        }
+++
+++        let origin = roots.iter().map(|&p| point(p)).sum::<DVec3>() / roots.len() as f64
+++            + DVec3::new(0.5, 0.0, 0.5);
+++        let away = DVec3::new(
+++            origin.x - player.position.x,
+++            0.0,
+++            origin.z - player.position.z,
+++        );
+++        let dir = away.try_normalize().unwrap_or(DVec3::X);
+++        Some(Candidate {
+++            seq,
+++            pivot: pos,
+++            blocks,
+++            logs,
+++            origin,
+++            axis: DVec3::Y.cross(dir),
+++            expires: Instant::now() + Duration::from_secs(5),
+++        })
+++    }
+++
+++    pub(super) fn felled_predict(&mut self, pos: Pos, state: BlockStateId, seq: i32) {
+++        if !self.felled_client.enabled || self.felled_client.server_felling {
+++            return;
+++        }
+++        self.felled_client.pending.remove(&pos);
+++        let now = Instant::now();
+++        self.felled_client.pending.retain(|_, p| p.expires > now);
+++        if self.felled_client.pending.len() < MAX_PENDING
+++            && let Some(candidate) = self.felled_candidate(pos, state, seq)
+++        {
+++            self.felled_client.pending.insert(pos, candidate);
+++        }
+++    }
+++
+++    pub(super) fn felled_confirm(&mut self, pos: Pos, sequence: i32, state: BlockStateId) {
+++        let Some(candidate) = self.felled_client.pending.get(&pos) else {
+++            return;
+++        };
+++        if candidate.seq > sequence {
+++            return;
+++        }
+++        let Some(candidate) = self.felled_client.pending.remove(&pos) else {
+++            return;
+++        };
+++        let now = Instant::now();
+++        if now >= candidate.expires
+++            || !self.res.facts().is_air(state)
+++            || self.felled_client.trees.len() >= MAX_TREES
+++            || candidate
+++                .blocks
+++                .iter()
+++                .any(|(p, _)| self.world.preview_hides(*p))
+++        {
+++            return;
+++        }
+++        self.world.hide_preview_blocks(&candidate.blocks, true);
+++        self.felled_client.trees.push(Tree {
+++            tree: candidate,
+++            born: now,
+++            updated: now,
+++            angle: 0.0,
+++            speed: 0.35,
+++            rest: None,
+++            impacted: false,
+++            landing: None,
+++        });
+++    }
+++
+++    pub(super) fn felled_plan_server(
+++        &self,
+++        pivot: Pos,
+++        state: BlockStateId,
+++    ) -> Option<PlannedFall> {
+++        if (self.serving.is_none() && self.options.dedicated.is_none())
+++            || !self.felled_server_enabled
+++            || self.felled_outbox.len() >= MAX_PENDING
+++            || !self.may_build()
+++        {
+++            return None;
+++        }
+++        let tree = self.felled_candidate(pivot, state, 0)?;
+++        let source: HashMap<_, _> = tree.blocks.iter().copied().collect();
+++        let facts = self.res.facts();
+++        let at = |[x, y, z]: Pos| self.world.block(x, y, z);
+++        let can_move = |p: Pos| {
+++            self.world.loaded(p[0], p[2])
+++                && self.world.layout().section_index(p[1]).is_some()
+++                && self
+++                    .border
+++                    .contains(f64::from(p[0]) + 0.5, f64::from(p[2]) + 0.5)
+++                && !self.felled_spawn_guard.is_some_and(|(spawn, radius)| {
+++                    spawn[0].abs_diff(p[0]).max(spawn[2].abs_diff(p[2])) <= radius
+++                })
+++        };
+++        let away = tree.axis.cross(DVec3::Y);
+++        let mut dirs = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+++        dirs.sort_by(|a, b| {
+++            let projection = |[x, z]: [i32; 2]| f64::from(x) * away.x + f64::from(z) * away.z;
+++            projection(*b).total_cmp(&projection(*a))
+++        });
+++        for dir @ [dx, dz] in dirs {
+++            'lift: for lift in [0, -1, 1, -2, 2] {
+++                let mut blocks = Vec::with_capacity(source.len());
+++                let mut targets = Vec::with_capacity(source.len());
+++                let mut grounded = false;
+++                for (i, &(p, original)) in tree.blocks.iter().enumerate() {
+++                    let target = landed(pivot, dir, lift, p);
+++                    if !can_move(p)
+++                        || self.world.block_entities.get(&(p[0], p[1], p[2])).is_some()
+++                        || self.pack.assets.registry.state(original).is_some_and(|s| {
+++                            s.properties.get("waterlogged").is_some_and(|v| v == "true")
+++                        })
+++                    {
+++                        return None;
+++                    }
+++                    let clear = can_move(target)
+++                        && (facts.is_air(at(target))
+++                            || source.contains_key(&target)
+++                            || target == pivot);
+++                    if !clear {
+++                        if i < tree.logs {
+++                            continue 'lift;
+++                        }
+++                        // Foliage on the ground-facing side is shed. Never
+++                        // replace the terrain it would have landed in.
+++                        blocks.push((p, original.0, None));
+++                        continue;
+++                    }
+++                    let below = offset(target, [0, -1, 0]);
+++                    grounded |= i < tree.logs
+++                        && !source.contains_key(&below)
+++                        && below != pivot
+++                        && facts.get(at(below)).full_collision;
+++                    let axis = self
+++                        .pack
+++                        .assets
+++                        .registry
+++                        .state(original)
+++                        .and_then(|s| s.properties.get("axis"))
+++                        .map(String::as_str);
+++                    let rotated_axis = match (dx, dz, axis) {
+++                        (0, _, Some("y")) => Some("z"),
+++                        (_, 0, Some("y")) => Some("x"),
+++                        (0, _, Some("z")) | (_, 0, Some("x")) => Some("y"),
+++                        _ => None,
+++                    };
+++                    let rotated = rotated_axis
+++                        .and_then(|a| self.with_props(original, &[("axis", a)]))
+++                        .unwrap_or(original);
+++                    blocks.push((p, original.0, Some(rotated.0)));
+++                    targets.push((target, rotated));
+++                }
+++                let origin = point(pivot) + DVec3::splat(0.5);
+++                let axis = DVec3::Y.cross(DVec3::new(f64::from(dx), 0.0, f64::from(dz)));
+++                let path_clear = grounded
+++                    && (1..16).all(|step| {
+++                        let angle = f64::from(step) * std::f64::consts::FRAC_PI_2 / 16.0;
+++                        let rotation = DQuat::from_axis_angle(axis, angle);
+++                        tree.blocks[..tree.logs].iter().all(|&(p, _)| {
+++                            let moved = origin
+++                                + rotation * (point(p) + DVec3::splat(0.5) - origin)
+++                                + DVec3::Y * f64::from(lift) * angle.sin();
+++                            let pos = moved.floor().as_ivec3().to_array();
+++                            can_move(pos)
+++                                && (source.contains_key(&pos)
+++                                    || pos == pivot
+++                                    || !facts.get(at(pos)).full_collision)
+++                        })
+++                    });
+++                if path_clear {
+++                    let packet = FallPacket {
+++                        pivot,
+++                        dir,
+++                        lift,
+++                        logs: tree.logs,
+++                        blocks,
+++                    };
+++                    let mut bytes = serde_json::to_vec(&packet).ok()?;
+++                    if bytes.len() > 30_000 {
+++                        // The native packet is optional. Vanilla clients still get block updates.
+++                        bytes.clear();
+++                    }
+++                    return Some(PlannedFall {
+++                        packet,
+++                        sources: tree.blocks,
+++                        targets,
+++                        bytes,
+++                    });
+++                }
+++            }
+++        }
+++        None
+++    }
+++
+++    pub(super) fn felled_apply_server(&mut self, fall: PlannedFall) {
+++        use horizon_world::level::{LevelAccess, flags};
+++        for &(pos, state) in &fall.sources {
+++            let mut canceled = false;
+++            self.native_destroy_block(pos, state, &mut canceled);
+++            if canceled {
+++                return;
+++            }
+++        }
+++        let [dx, dz] = fall.packet.dir;
+++        let movement = match (dx, dz) {
+++            (1, 0) => Direction::East,
+++            (-1, 0) => Direction::West,
+++            (0, 1) => Direction::South,
+++            _ => Direction::North,
+++        };
+++        let from: Vec<_> = fall.sources.iter().map(|&(p, _)| pos_id(p)).collect();
+++        let to: Vec<_> = fall.targets.iter().map(|&(p, _)| pos_id(p)).collect();
+++        let allowed = self.with_level(|_, level, _| {
+++            level.allow_piston_move(pos_id(fall.packet.pivot), movement, &from, &to)
+++                && fall
+++                    .targets
+++                    .iter()
+++                    .all(|&(p, s)| level.is_unobstructed(pos_id(p), s))
+++        });
+++        if !allowed {
+++            return;
+++        }
+++        let air = self.world.air;
+++        // Stage the permutation as a single server action, before the next save
+++        // or block broadcast. Preflight exact source states and loaded columns.
+++        let state_at = |[x, y, z]: Pos| self.world.block(x, y, z);
+++        let sources: HashSet<_> = fall.sources.iter().map(|(p, _)| *p).collect();
+++        if fall.sources.iter().any(|&(p, s)| state_at(p) != s)
+++            || fall.targets.iter().any(|&(p, _)| {
+++                !self.world.loaded(p[0], p[2])
+++                    || !(self.res.facts().is_air(state_at(p)) || sources.contains(&p))
+++            })
+++        {
+++            return;
+++        }
+++        let changes: HashMap<_, _> = fall
+++            .sources
+++            .iter()
+++            .map(|&(p, _)| (p, air))
+++            .chain(fall.targets.iter().copied())
+++            .collect();
+++        let mut changed: Vec<_> = changes
+++            .into_iter()
+++            .filter_map(|(p, s)| (state_at(p) != s).then(|| (p, state_at(p), s)))
+++            .collect();
+++        changed.sort_unstable_by_key(|&(p, _, _)| p);
+++        let flags =
+++            flags::UPDATE_CLIENTS | flags::UPDATE_KNOWN_SHAPE | flags::UPDATE_MOVE_BY_PISTON;
+++        self.with_level(|b, level, ticks| {
+++            for &(pos, _, state) in &changed {
+++                b.set_block(level, ticks, pos_id(pos), state, flags);
+++            }
+++        });
+++        // Run normal neighbour and shape processing after every final state
+++        // is present so leaves do not see a half-moved trunk.
+++        self.with_level(|b, level, ticks| {
+++            for &(p, previous, _) in &changed {
+++                let here = pos_id(p);
+++                let state = level.block_state(here);
+++                b.update_neighbors_at(level, ticks, here, b.block(previous));
+++                for direction in Direction::ALL {
+++                    let neighbor = pos_id(offset(p, direction.normal()));
+++                    let old = level.block_state(neighbor);
+++                    let next = b.update_shape(
+++                        level,
+++                        ticks,
+++                        old,
+++                        neighbor,
+++                        direction.opposite(),
+++                        here,
+++                        state,
+++                    );
+++                    if next != old {
+++                        b.set_block(level, ticks, neighbor, next, flags::UPDATE_CLIENTS);
+++                    }
+++                }
+++            }
+++        });
+++        if !fall.bytes.is_empty() {
+++            self.felled_outbox.push(ServerFall {
+++                dimension: self.level.dimension.clone(),
+++                pivot: fall.packet.pivot,
+++                bytes: fall.bytes,
+++            });
+++        }
+++    }
+++
+++    pub(super) fn felled_flush(&mut self, host: &LanHost) {
+++        for fall in std::mem::take(&mut self.felled_outbox) {
+++            let centre = point(fall.pivot);
+++            for g in host.hub.guests.iter().filter(|g| {
+++                g.placed
+++                    && g.brand == "horizon"
+++                    && g.dimension == fall.dimension
+++                    && DVec3::from_array(g.position).distance_squared(centre) <= 80.0 * 80.0
+++            }) {
+++                let _ = self.native_net_send_to_player(g.uuid, CHANNEL, &fall.bytes);
+++            }
+++        }
+++    }
+++
+++    pub(super) fn felled_query_server(&mut self) {
+++        if self.felled_client.enabled
+++            && !self.felled_client.queried_server
+++            && self.remote.as_ref().is_some_and(|r| r.mod_net)
+++            && self.native_net_send_to_server(CAPABILITY, &[]).is_ok()
+++        {
+++            self.felled_client.queried_server = true;
+++        }
+++    }
+++
+++    pub(super) fn felled_query_received(&mut self, player: u128, channel: &str, data: &[u8]) {
+++        if self.felled_server_enabled && channel == CAPABILITY && data.is_empty() {
+++            let _ = self.native_net_send_to_player(player, CAPABILITY, &[]);
+++        }
+++    }
+++
+++    pub(super) fn felled_packet(&mut self, channel: &str, bytes: &[u8]) {
+++        if !self.felled_client.enabled || self.remote.is_none() {
+++            return;
+++        }
+++        if channel == CAPABILITY && bytes.is_empty() {
+++            self.felled_client.server_felling = true;
+++            self.felled_client.pending.clear();
+++            return;
+++        }
+++        if channel != CHANNEL || bytes.len() > 30_000 {
+++            return;
+++        }
+++        let Ok(packet) = serde_json::from_slice::<FallPacket>(bytes) else {
+++            return;
+++        };
+++        let [dx, dz] = packet.dir;
+++        let pivot = packet.pivot;
+++        if !matches!(packet.dir, [1, 0] | [-1, 0] | [0, 1] | [0, -1])
+++            || !(-2..=2).contains(&packet.lift)
+++            || !pivot
+++                .iter()
+++                .all(|&n| (-30_000_000..=30_000_000).contains(&n))
+++            || !self.world.loaded(pivot[0], pivot[2])
+++            || !(2..=MAX_LOGS).contains(&packet.logs)
+++            || packet.blocks.len() < packet.logs
+++            || packet.blocks.len() > packet.logs + MAX_LEAVES
+++        {
+++            return;
+++        }
+++        let mut sources = Vec::with_capacity(packet.blocks.len());
+++        let mut targets = Vec::with_capacity(packet.blocks.len());
+++        let mut seen = HashSet::new();
+++        let registry = &self.pack.assets.registry;
+++        for (index, (p, old, new)) in packet.blocks.into_iter().enumerate() {
+++            if p.iter().zip(pivot).any(|(&a, b)| a.abs_diff(b) > 32) || !seen.insert(p) {
+++                return;
+++            }
+++            let src = BlockStateId(old);
+++            if registry.state(src).is_none() || self.res.facts().is_air(src) || p[1] <= pivot[1] {
+++                return;
+++            }
+++            sources.push((p, src));
+++            if let Some(dst) = new.map(BlockStateId) {
+++                let target = landed(pivot, packet.dir, packet.lift, p);
+++                if registry.state(dst).is_none() || self.res.facts().is_air(dst) {
+++                    return;
+++                }
+++                targets.push((target, dst));
+++            } else if index < packet.logs {
+++                return;
+++            }
+++        }
+++        self.felled_client.server_felling = true;
+++        self.felled_client.pending.clear();
+++        self.felled_client.trees.retain(|tree| {
+++            if tree.landing.is_none() && tree.tree.pivot == pivot {
+++                self.world.hide_preview_blocks(&tree.tree.blocks, false);
+++                false
+++            } else {
+++                true
+++            }
+++        });
+++        if self.felled_client.trees.len() >= MAX_TREES
+++            || targets.iter().any(|(p, _)| self.world.preview_hides(*p))
+++        {
+++            return;
+++        }
+++        self.world.hide_preview_blocks(&targets, true);
+++        let now = Instant::now();
+++        self.felled_client.trees.push(Tree {
+++            tree: Candidate {
+++                seq: 0,
+++                pivot,
+++                logs: packet.logs,
+++                blocks: sources,
+++                expires: now,
+++                origin: point(pivot) + DVec3::splat(0.5),
+++                axis: DVec3::Y.cross(DVec3::new(f64::from(dx), 0.0, f64::from(dz))),
+++            },
+++            born: now,
+++            updated: now,
+++            angle: 0.0,
+++            speed: 0.35,
+++            rest: None,
+++            impacted: false,
+++            landing: Some((targets, packet.lift)),
+++        });
+++    }
+++
+++    pub(super) fn felled_geometry(&mut self, camera: DVec3, out: &mut Vec<Vertex>) {
+++        if self.felled_client.trees.is_empty() {
+++            return;
+++        }
+++        let now = Instant::now();
+++        let mut impact = None;
+++        let (world, facts) = (&self.world, self.res.facts());
+++        for tree in &mut self.felled_client.trees {
+++            if tree.rest.is_some() {
+++                continue;
+++            }
+++            let elapsed = (now - tree.updated).as_secs_f64().min(0.05);
+++            tree.updated = now;
+++            let steps = (elapsed / STEP).ceil().max(1.0) as u32;
+++            let dt = elapsed / f64::from(steps);
+++            for _ in 0..steps {
+++                tree.speed += (0.65 + 2.25 * tree.angle.sin()) * dt;
+++                let tilt = (tree.angle + tree.speed * dt).clamp(0.0, std::f64::consts::FRAC_PI_2);
+++                let rotation = DQuat::from_axis_angle(tree.tree.axis, tilt);
+++                let hit = (tree.landing.is_none() && tilt > 0.12 && tilt > tree.angle)
+++                    .then(|| {
+++                        // Sweep the lower corners of the logs; foliage never stops the trunk.
+++                        tree.tree.blocks[..tree.tree.logs]
+++                            .iter()
+++                            .find_map(|&(p, s)| {
+++                                [0.06, 0.94].into_iter().find_map(|x| {
+++                                    [0.06, 0.94].into_iter().find_map(|z| {
+++                                        let corner =
+++                                            point(p) + DVec3::new(x, 0.08, z) - tree.tree.origin;
+++                                        let moved = tree.tree.origin + rotation * corner;
+++                                        let cell = moved.floor().as_ivec3().to_array();
+++                                        let [x, y, z] = cell;
+++                                        (world.loaded(x, z)
+++                                            && !world.preview_hides(cell)
+++                                            && facts.get(world.block(x, y, z)).full_collision)
+++                                            .then_some((cell, s))
+++                                    })
+++                                })
+++                            })
+++                    })
+++                    .flatten();
+++                if hit.is_some() || tilt == std::f64::consts::FRAC_PI_2 {
+++                    if !tree.impacted {
+++                        tree.impacted = true;
+++                        impact = hit.or_else(|| {
+++                            let (p, s) = tree.tree.blocks[tree.tree.logs - 1];
+++                            let lift = tree
+++                                .landing
+++                                .as_ref()
+++                                .map_or(0.0, |(_, lift)| f64::from(*lift));
+++                            let p = tree.tree.origin
+++                                + rotation * (point(p) - tree.tree.origin)
+++                                + DVec3::Y * lift;
+++                            Some((p.floor().as_ivec3().to_array(), s))
+++                        });
+++                    }
+++                    if hit.is_some() && tree.speed > 0.70 {
+++                        tree.speed *= -0.21;
+++                    } else {
+++                        if hit.is_none() {
+++                            tree.angle = tilt;
+++                        }
+++                        tree.rest = Some(now);
+++                        break;
+++                    }
+++                } else {
+++                    tree.angle = tilt;
+++                }
+++            }
+++        }
+++        let mut trees = std::mem::take(&mut self.felled_client.trees);
+++        trees.retain(|tree| {
+++            let [x, _, z] = tree.tree.origin.floor().as_ivec3().to_array();
+++            if now - tree.born > Duration::from_secs(4)
+++                || tree.rest.is_some_and(|t| {
+++                    now - t > Duration::from_millis(if tree.landing.is_some() { 45 } else { 900 })
+++                })
+++                || !self.world.loaded(x, z)
+++            {
+++                let hidden = tree
+++                    .landing
+++                    .as_ref()
+++                    .map_or(&tree.tree.blocks, |(cells, _)| cells);
+++                self.world.hide_preview_blocks(hidden, false);
+++                return false;
+++            }
+++            true
+++        });
+++        if let Some((pos, state)) = impact {
+++            let sound = self.res.facts().get(state).sounds.break_sound.clone();
+++            self.audio.play(
+++                &sound,
+++                Some((point(pos) + DVec3::splat(0.5)).to_array()),
+++                0.95,
+++                0.64,
+++            );
+++            self.destroy_particles(pos, state);
+++        }
+++        for tree in &trees {
+++            let origin = tree.tree.origin;
+++            if camera.distance_squared(origin) > 80.0 * 80.0 {
+++                continue;
+++            }
+++            let rotation = DQuat::from_axis_angle(tree.tree.axis, tree.angle);
+++            for &([x, y, z], state) in &tree.tree.blocks {
+++                let p = [x, y, z];
+++                let start = out.len();
+++                let local = point(p) - origin;
+++                let lift = tree
+++                    .landing
+++                    .as_ref()
+++                    .map_or(0.0, |(_, lift)| f64::from(*lift));
+++                let moved = origin + rotation * local + DVec3::Y * lift * tree.angle.sin() - camera;
+++                self.moving_block_vertices(state, BlockPos::new(x, y, z), moved, out);
+++                let moving_rotation = rotation.as_quat();
+++                for vertex in &mut out[start..] {
+++                    vertex.pos = (moved.as_vec3()
+++                        + moving_rotation * (Vec3::from_array(vertex.pos) - moved.as_vec3()))
+++                    .to_array();
+++                    let [nx, ny, nz, _] = vertex.normal;
+++                    let n = moving_rotation * Vec3::new(nx.into(), ny.into(), nz.into());
+++                    for (dst, value) in vertex.normal[..3].iter_mut().zip(n.to_array()) {
+++                        *dst = value.round().clamp(-127.0, 127.0) as i8;
+++                    }
+++                }
+++            }
+++        }
+++        self.felled_client.trees = trees;
+++    }
+++}
+++
+++#[cfg(test)]
+++mod tests {
+++    use super::*;
+++
+++    #[test]
+++    fn landing_matches_rendered_rotation_in_each_direction() {
+++        let pivot = [-39, 83, 27];
+++        let p = [-41, 97, 32];
+++        for dir @ [dx, dz] in [[1, 0], [-1, 0], [0, 1], [0, -1]] {
+++            let axis = DVec3::Y.cross(DVec3::new(f64::from(dx), 0.0, f64::from(dz)));
+++            let rotation = DQuat::from_axis_angle(axis, std::f64::consts::FRAC_PI_2);
+++            let corner = point(pivot) + rotation * (point(p) - point(pivot)) + DVec3::Y;
+++            assert_eq!(
+++                corner.round().as_ivec3().to_array(),
+++                landed(pivot, dir, 1, p)
+++            );
+++        }
+++    }
+++
+++    #[test]
+++    fn requires_a_crown_and_ignores_the_cut_base() {
+++        let base = [0, 0, 0];
+++        let stem = [[0, 1, 0]];
+++        let log = |p: Pos| (p[0] == 0 && p[2] == 0 && p[1] <= 3).then_some(1);
+++        assert!(scan(base, &stem, log, |_| None).is_none());
+++        let leaf = |p: Pos| (p[1] == 3 && p[0].abs() + p[2].abs() <= 1).then_some(2);
+++        let (blocks, logs) = scan(base, &stem, log, leaf).unwrap();
+++        assert_eq!(logs, 3);
+++        assert_eq!(blocks.len(), 7);
+++        assert!(blocks.iter().all(|(p, _)| *p != base));
+++    }
+++}
+diff --git a/patches/engine/crates-horizon-client-src-game-lan_actions.rs.patch b/patches/engine/crates-horizon-client-src-game-lan_actions.rs.patch
+new file mode 100644
+index 0000000000000000000000000000000000000000..02d53f28e8b54bb27937e33b7b08458bb83a3acb
+--- /dev/null
++++ b/patches/engine/crates-horizon-client-src-game-lan_actions.rs.patch
+@@ -0,0 +1,45 @@
++--- a/crates/horizon-client/src/game/lan_actions.rs
+++++ b/crates/horizon-client/src/game/lan_actions.rs
++@@ -275,0 +276,10 @@
+++        let guard = if self.felled_server_enabled {
+++            host.hub
+++                .guests
+++                .iter()
+++                .position(|g| g.conn == conn)
+++                .and_then(|gi| self.spawn_protection_area(host, gi))
+++        } else {
+++            None
+++        };
+++        let previous = std::mem::replace(&mut self.felled_spawn_guard, guard);
++@@ -276,0 +287 @@
+++        self.felled_spawn_guard = previous;
++@@ -1260,0 +1272,7 @@
+++        self.spawn_protection_area(host, gi)
+++            .is_some_and(|(spawn, radius)| {
+++                pos[0].abs_diff(spawn[0]).max(pos[2].abs_diff(spawn[2])) <= radius
+++            })
+++    }
+++
+++    fn spawn_protection_area(&self, host: &LanHost, gi: usize) -> Option<([i32; 3], u32)> {
++@@ -1263,12 +1281,9 @@
++-        if self.options.dedicated.is_none() || radius <= 0 || g.dimension != "minecraft:overworld" {
++-            return false;
++-        }
++-        let Some(spawn) = self.level.world_spawn else {
++-            return false;
++-        };
++-        if host.hub.ops.is_empty() || host.hub.ops.contains_key(&g.uuid) {
++-            return false;
++-        }
++-        let dx = pos[0].abs_diff(spawn[0]);
++-        let dz = pos[2].abs_diff(spawn[2]);
++-        dx.max(dz) <= radius as u32
+++        if self.options.dedicated.is_none()
+++            || radius <= 0
+++            || g.dimension != "minecraft:overworld"
+++            || host.hub.ops.is_empty()
+++            || host.hub.ops.contains_key(&g.uuid)
+++        {
+++            return None;
+++        }
+++        Some((self.level.world_spawn?, radius as u32))
+diff --git a/patches/engine/crates-horizon-client-src-game-native_net.rs.patch b/patches/engine/crates-horizon-client-src-game-native_net.rs.patch
+new file mode 100644
+index 0000000000000000000000000000000000000000..7666928d3370506dc8377684d903075527cbdc8b
+--- /dev/null
++++ b/patches/engine/crates-horizon-client-src-game-native_net.rs.patch
+@@ -0,0 +1,12 @@
++--- a/crates/horizon-client/src/game/native_net.rs
+++++ b/crates/horizon-client/src/game/native_net.rs
++@@ -67,0 +68 @@
+++            self.felled_query_received(player, &m.channel, &m.data);
++@@ -73,0 +75 @@
+++        self.felled_flush(host);
++@@ -101 +103,4 @@
++-            Ok(m) => self.native_net_from_server(&m.channel, &m.data),
+++            Ok(m) => {
+++                self.felled_packet(&m.channel, &m.data);
+++                self.native_net_from_server(&m.channel, &m.data);
+++            }
+diff --git a/patches/engine/crates-horizon-client-src-game-remote.rs.patch b/patches/engine/crates-horizon-client-src-game-remote.rs.patch
+new file mode 100644
+index 0000000000000000000000000000000000000000..31534d43362115c0fec9dd61e07a0fae0a36e086
+--- /dev/null
++++ b/patches/engine/crates-horizon-client-src-game-remote.rs.patch
+@@ -0,0 +1,42 @@
++--- a/crates/horizon-client/src/game/remote.rs
+++++ b/crates/horizon-client/src/game/remote.rs
++@@ -721,6 +721,7 @@
++         streaming.radius = self.settings.render_distance;
++         self.streaming = streaming;
++         self.world = World::new(self.res.facts().air, 0);
+++        self.reset_felled_client();
++         self.save = Arc::new(SaveDir::new(
++             std::env::temp_dir().join("horizon-remote-unused"),
++             horizon_client::save::LevelShape::OVERWORLD,
++@@ -959,6 +960,7 @@
++         self.streaming = Streaming::new(Arc::new(NoTerrain), self.pack.context.clone(), 1);
++         self.streaming.paused = true;
++         self.world = World::new(self.res.facts().air, 0);
+++        self.reset_felled_client();
++         self.player = None;
++         self.potions = Default::default();
++         // The vehicle went with the level: an id kept here would seat the
++@@ -1827,6 +1829,7 @@
++             let count = old.len();
++             horizon_client::chunk::free_columns(old, count);
++             self.world = World::new(self.res.facts().air, spawn.seed);
+++            self.reset_felled_client();
++             self.world.shape = shape;
++             self.world.game_time = time;
++             self.world.day_time = day;
++@@ -2109,6 +2112,7 @@
++             if self.world.block(pos[0], pos[1], pos[2]).0 as i32 != state {
++                 self.set_block(pos, state);
++             }
+++            self.felled_confirm(pos, sequence, BlockStateId(state.max(0) as u32));
++         }
++     }
++     fn set_block(&mut self, pos: [i32; 3], state: i32) {
++@@ -6415,6 +6419,7 @@
++     }
++     /// MultiPlayerGameMode.destroyBlock: the predicted break.
++     fn predict_break(&mut self, pos: [i32; 3], state: BlockStateId, sequence: i32) {
+++        self.felled_predict(pos, state, sequence);
++         self.pad_rumble(horizon_client::gamepad::Rumble::BlockBroken);
++         self.tutorial_destroy(state, 1.0);
++         // BlockStatePredictionHandler.retainKnownServerState.
+diff --git a/patches/engine/crates-horizon-client-src-game.rs.patch b/patches/engine/crates-horizon-client-src-game.rs.patch
+index 593142f4ba6a68e4e1ab0544cc9abaf9176831d9..3b30789986b97984f78dd77ceebbe5c046f959b0 100644
+--- a/patches/engine/crates-horizon-client-src-game.rs.patch
++++ b/patches/engine/crates-horizon-client-src-game.rs.patch
+@@ -1,6 +1,14 @@
+ --- a/crates/horizon-client/src/game.rs
+ +++ b/crates/horizon-client/src/game.rs
+-@@ -1713,6 +1713,8 @@
++@@ -109,6 +109,7 @@
++ mod extras;
++ mod falling_damage;
++ mod fangs;
+++mod felled;
++ mod fireworks;
++ mod fishing;
++ mod fov;
++@@ -1713,6 +1714,8 @@
+      clouds: Arc<(u32, u32, Vec<bool>)>,
+      /// misc/forcefield.png: (width, height, RGBA) for the world border wall.
+      forcefield: Arc<(u32, u32, Vec<u8>)>,
+@@ -9,7 +17,7 @@
+  }
+  impl PackResources {
+      /// Everything a pack overlay at `root` provides, over `assets` and `render`
+-@@ -1773,6 +1775,7 @@
++@@ -1773,6 +1776,7 @@
+              names: Arc::new(Names::load(root)),
+              clouds: Arc::new(load_clouds(root)),
+              forcefield: Arc::new(load_forcefield(root)),
+@@ -17,7 +25,44 @@
+          }
+      }
+  }
+-@@ -12397,8 +12400,12 @@
++@@ -2232,6 +2236,10 @@
++     falling: Vec<FallingBlock>,
++     /// Blocks the server shows for a moment (`ClientboundAddTransientBlockPacket`).
++     transient_blocks: transient_blocks::TransientBlocks,
+++    felled_client: felled::FelledClient,
+++    felled_server_enabled: bool,
+++    felled_outbox: Vec<felled::ServerFall>,
+++    felled_spawn_guard: Option<([i32; 3], u32)>,
++     paintings: Vec<horizon_client::entities::Painting>,
++     painting_variants: paintings::PaintingVariants,
++     item_frames: Vec<horizon_client::entities::ItemFrame>,
++@@ -5045,6 +5053,7 @@
++         if canceled {
++             return Ok(());
++         }
+++        let felled = self.felled_plan_server(pos, state);
++         self.pad_rumble(horizon_client::gamepad::Rumble::BlockBroken);
++         let broken = state;
++         let facts = self.res.facts().get(state).clone();
++@@ -5195,6 +5204,9 @@
++             });
++         }
++         self.pending.clear(pos);
+++        if removed && let Some(fall) = felled {
+++            self.felled_apply_server(fall);
+++        }
++         self.process_level_events()?;
++         Ok(())
++     }
++@@ -9950,6 +9962,7 @@
++         self.moving_piston_geometry(camera, alpha, &mut out);
++         // LevelRenderer.submitTransientBlocks.
++         self.transient_block_geometry(camera, &mut out);
+++        self.felled_geometry(camera, &mut out);
++         self.mark_entity(out.len(), "minecraft:tnt");
++         self.tnt_geometry(camera, alpha, &mut out);
++         self.mark_entity(out.len(), "minecraft:painting");
++@@ -12397,8 +12410,12 @@
+      }
+      /// FirstPersonHandsAndItemsRenderer: the right arm or the held items of
+      /// both hands in view space, converted to camera-relative world space.
+@@ -31,7 +76,7 @@
+          // GameRenderer.renderItemInHand: F1 hides the hand with the HUD.
+          if self.spectator()
+              || self.ui.hide_gui
+-@@ -12410,7 +12417,7 @@
++@@ -12410,7 +12427,7 @@
+                  .is_none_or(|p| p.health.dead_or_dying())
+              || self.screen == Screen::Dead
+          {
+@@ -40,7 +85,7 @@
+          }
+          let a = alpha as f32;
+          // FirstPersonHandsAndItemsRenderer: the swing goes to the hand that
+-@@ -12481,6 +12488,13 @@
++@@ -12481,6 +12498,13 @@
+                          self.first_person_arm(arm, to_world * pose, packed, &mut out);
+                      }
+                  }
+@@ -54,7 +99,7 @@
+                  match hold {
+                      MapHold::TwoHanded => self.two_handed_map_geometry(
+                          to_world,
+-@@ -12496,6 +12510,9 @@
++@@ -12496,6 +12520,9 @@
+                          packed,
+                          &mut out,
+                      ),
+@@ -64,7 +109,7 @@
+                  }
+                  continue;
+              }
+-@@ -12597,12 +12614,22 @@
++@@ -12597,12 +12624,22 @@
+                  eye[1].floor() as i32,
+                  eye[2].floor() as i32,
+              );
+@@ -87,7 +132,7 @@
+          }
+          // The hand has its own submit storage, which never uses improved
+          // transparency (`LevelRenderer` alone calls `setUseImprovedTransparency`):
+-@@ -12610,7 +12637,7 @@
++@@ -12610,7 +12647,7 @@
+          for vertex in &mut out {
+              vertex.layer &= !horizon_client::gfx::OIT_ENTITY;
+          }
+@@ -96,7 +141,7 @@
+      }
+      /// The renderer for the window, with the current block sprites, GUI
+      /// atlas and world border texture.
+-@@ -14051,8 +14078,8 @@
++@@ -14051,8 +14088,8 @@
+          } else {
+              (Vec::new(), None)
+          };
+@@ -107,7 +152,7 @@
+          } else {
+              self.hand_geometry(camera_alpha)
+          };
+-@@ -14182,6 +14209,7 @@
++@@ -14182,6 +14219,7 @@
+              },
+              stars: stars.filter(|_| self.settings.horizon.sky || title),
+              hand: &hand,
+@@ -115,7 +160,28 @@
+              hand_fov_degrees: self.hud_fov_degrees(camera_alpha as f32, camera.to_array()),
+              screen: &screen,
+              pack: pack_inputs,
+-@@ -18061,6 +18089,7 @@
++@@ -14715,6 +14753,7 @@
++         if let Err(e) = self.poll_remote() {
++             log::warn!("Horizon: {e}");
++         }
+++        self.felled_query_server();
++         self.prepare_lod();
++         if self.lod.is_some() {
++             for &((x, _, z), _, _) in &self.world.light_edits {
++@@ -16885,6 +16924,12 @@
++             level_events: Vec::new(),
++             falling: Vec::new(),
++             transient_blocks: Default::default(),
+++            felled_client: Default::default(),
+++            felled_server_enabled: Self::options_path()
+++                .with_file_name("felled-server.enabled")
+++                .is_file(),
+++            felled_outbox: Vec::new(),
+++            felled_spawn_guard: None,
++             paintings: Vec::new(),
++             painting_variants: prepared.painting_variants,
++             item_frames: Vec::new(),
++@@ -18061,6 +18106,7 @@
+          previous,
+          api,
+      ))?;
+@@ -123,7 +189,7 @@
+      renderer.hud.sprite_animations = atlas
+          .sprite_animations
+          .iter()
+-@@ -18193,6 +18222,7 @@
++@@ -18193,6 +18239,7 @@
+          celestial: &[],
+          stars: None,
+          hand: &[],
+diff --git a/patches/upstream.json b/patches/upstream.json
+index 558c8729417162a2b91f15138064db2bc28bf7c3..81e5f5845dc7774c8689506274712db745348654 100644
+--- a/patches/upstream.json
++++ b/patches/upstream.json
+@@ -40,7 +40,7 @@
+     {
+       "path": "crates/horizon-client/src/game.rs",
+       "before_sha256": "de63b396454bbd394d4f3ca72fe0a54b83e3c0171cab6aca73b94bcd9c0de1bf",
+-      "after_sha256": "9d63b877ee732d75a22e317b516aa69f4869e0f28585254ecb44269b4b9eb17e",
++      "after_sha256": "2417874574b24291355099bb21e29b9abb3780c45473fc25d1c853f6f208bdf5",
+       "patch": "engine/crates-horizon-client-src-game.rs.patch"
+     },
+     {
+@@ -120,6 +120,42 @@
+       "before_sha256": "0fcca49d533dcc39777140f52aeaeb373543b6c5cdb55b5c9aeb82591a8537a2",
+       "after_sha256": "18c0b8f8cca9cff45280ed9460bb4831d07caf026c737323e159760db9364926",
+       "patch": "engine/crates-horizon-shaders-src-translate-mod.rs.patch"
++    },
++    {
++      "path": "crates/horizon-client/src/game/lan_actions.rs",
++      "before_sha256": "94991c75d38cb37eaffcdaa4678e3af96a556df40a3efcb4553597fc162cb4a5",
++      "after_sha256": "a25fb862ab5d580cd6c0f437af6a234a30794543cc92a09356fd2a55987e753b",
++      "patch": "engine/crates-horizon-client-src-game-lan_actions.rs.patch"
++    },
++    {
++      "path": "crates/horizon-client/src/game/native_net.rs",
++      "before_sha256": "7b8625a19c8398f3fbd65295e1f4752b2425c84d19d0cf6163628d769589edf8",
++      "after_sha256": "eb3c976bea1f24d225c1fe6f262181ca5e4797eb6649e21e14717142ff6cc695",
++      "patch": "engine/crates-horizon-client-src-game-native_net.rs.patch"
++    },
++    {
++      "path": "crates/horizon-client/src/game/remote.rs",
++      "before_sha256": "f21bf9b2160bb8f0537ae910b1d21924a508e80d22254e29a1b4bde7559628de",
++      "after_sha256": "4c5730c0164df0d9f28a950b2f63bc2f0e2df83696f360885d87c17295250ed0",
++      "patch": "engine/crates-horizon-client-src-game-remote.rs.patch"
++    },
++    {
++      "path": "crates/horizon-client-render/src/streaming.rs",
++      "before_sha256": "80a739a8215f442b288e6a532baa9e0cc512f113b01d7742a4a136550e6b588d",
++      "after_sha256": "a6f9509ab467ad3524e741ea3fb8a7c36333c822263c8251814bc9c953ff1b89",
++      "patch": "engine/crates-horizon-client-render-src-streaming.rs.patch"
++    },
++    {
++      "path": "crates/horizon-client-render/src/world.rs",
++      "before_sha256": "30cc1a5a2dad776b909c8a53c8e2ecfa3ec3bc352de36f2e68e1cf11bbdc7ebe",
++      "after_sha256": "de2c96cbffd331ddc11195badbffd4051d8d6d6a5c83d5a2213fa819a57d17fe",
++      "patch": "engine/crates-horizon-client-render-src-world.rs.patch"
++    },
++    {
++      "path": "crates/horizon-client/src/game/felled.rs",
++      "before_sha256": null,
++      "after_sha256": "479c0b5109b847a7bf742e933f26b71da47a921730bf04ec120302cd2e8ec892",
++      "patch": "engine/crates-horizon-client-src-game-felled.rs.patch"
+     }
+   ]
+ }
+diff --git a/upstream.lock.json b/upstream.lock.json
+index 36c75523050318e4f0a7eb325aa4443d4b77736e..1b0c7bf5ebebc8c32b8817fc03fdd3281dffe89c 100644
+--- a/upstream.lock.json
++++ b/upstream.lock.json
+@@ -2,8 +2,8 @@
+   "repository": "https://github.com/Vasysik/horizon-android",
+   "commit": "7301f6fdd7f470b11317276e7a11b4dc615c137a",
+   "archive_url": "https://codeload.github.com/Vasysik/horizon-android/tar.gz/7301f6fdd7f470b11317276e7a11b4dc615c137a",
+-  "archive_sha256": "9280910d4feb890e8e2b48ebe1d309fec12f222281072b63fb578f34d7840f61",
+-  "archive_root": "horizon-android-7301f6fdd7f470b11317276e7a11b4dc615c137a",
++  "archive_sha256": "6c5d6f0b26f13aa157bebc950be4c37ccb9799f3df5e42ed149e6a75da8ca8da",
++  "archive_root": "starling-7301f6fdd7f470b11317276e7a11b4dc615c137a",
+   "rust_toolchain": "1.95.0",
+   "horizon_version": "0.7.6",
+   "minecraft_edition": "Java",
