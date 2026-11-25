@@ -1,0 +1,45 @@
+--- a/crates/horizon-client/src/game/lan_actions.rs
++++ b/crates/horizon-client/src/game/lan_actions.rs
+@@ -275,0 +276,10 @@
++        let guard = if self.felled_server_enabled {
++            host.hub
++                .guests
++                .iter()
++                .position(|g| g.conn == conn)
++                .and_then(|gi| self.spawn_protection_area(host, gi))
++        } else {
++            None
++        };
++        let previous = std::mem::replace(&mut self.felled_spawn_guard, guard);
+@@ -276,0 +287 @@
++        self.felled_spawn_guard = previous;
+@@ -1260,0 +1272,7 @@
++        self.spawn_protection_area(host, gi)
++            .is_some_and(|(spawn, radius)| {
++                pos[0].abs_diff(spawn[0]).max(pos[2].abs_diff(spawn[2])) <= radius
++            })
++    }
++
++    fn spawn_protection_area(&self, host: &LanHost, gi: usize) -> Option<([i32; 3], u32)> {
+@@ -1263,12 +1281,9 @@
+-        if self.options.dedicated.is_none() || radius <= 0 || g.dimension != "minecraft:overworld" {
+-            return false;
+-        }
+-        let Some(spawn) = self.level.world_spawn else {
+-            return false;
+-        };
+-        if host.hub.ops.is_empty() || host.hub.ops.contains_key(&g.uuid) {
+-            return false;
+-        }
+-        let dx = pos[0].abs_diff(spawn[0]);
+-        let dz = pos[2].abs_diff(spawn[2]);
+-        dx.max(dz) <= radius as u32
++        if self.options.dedicated.is_none()
++            || radius <= 0
++            || g.dimension != "minecraft:overworld"
++            || host.hub.ops.is_empty()
++            || host.hub.ops.contains_key(&g.uuid)
++        {
++            return None;
++        }
++        Some((self.level.world_spawn?, radius as u32))

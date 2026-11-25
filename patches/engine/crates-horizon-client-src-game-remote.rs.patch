@@ -1,0 +1,42 @@
+--- a/crates/horizon-client/src/game/remote.rs
++++ b/crates/horizon-client/src/game/remote.rs
+@@ -721,6 +721,7 @@
+         streaming.radius = self.settings.render_distance;
+         self.streaming = streaming;
+         self.world = World::new(self.res.facts().air, 0);
++        self.reset_felled_client();
+         self.save = Arc::new(SaveDir::new(
+             std::env::temp_dir().join("horizon-remote-unused"),
+             horizon_client::save::LevelShape::OVERWORLD,
+@@ -959,6 +960,7 @@
+         self.streaming = Streaming::new(Arc::new(NoTerrain), self.pack.context.clone(), 1);
+         self.streaming.paused = true;
+         self.world = World::new(self.res.facts().air, 0);
++        self.reset_felled_client();
+         self.player = None;
+         self.potions = Default::default();
+         // The vehicle went with the level: an id kept here would seat the
+@@ -1827,6 +1829,7 @@
+             let count = old.len();
+             horizon_client::chunk::free_columns(old, count);
+             self.world = World::new(self.res.facts().air, spawn.seed);
++            self.reset_felled_client();
+             self.world.shape = shape;
+             self.world.game_time = time;
+             self.world.day_time = day;
+@@ -2109,6 +2112,7 @@
+             if self.world.block(pos[0], pos[1], pos[2]).0 as i32 != state {
+                 self.set_block(pos, state);
+             }
++            self.felled_confirm(pos, sequence, BlockStateId(state.max(0) as u32));
+         }
+     }
+     fn set_block(&mut self, pos: [i32; 3], state: i32) {
+@@ -6415,6 +6419,7 @@
+     }
+     /// MultiPlayerGameMode.destroyBlock: the predicted break.
+     fn predict_break(&mut self, pos: [i32; 3], state: BlockStateId, sequence: i32) {
++        self.felled_predict(pos, state, sequence);
+         self.pad_rumble(horizon_client::gamepad::Rumble::BlockBroken);
+         self.tutorial_destroy(state, 1.0);
+         // BlockStatePredictionHandler.retainKnownServerState.

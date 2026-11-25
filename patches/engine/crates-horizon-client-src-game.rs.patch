@@ -1,6 +1,14 @@
 --- a/crates/horizon-client/src/game.rs
 +++ b/crates/horizon-client/src/game.rs
-@@ -1713,6 +1713,8 @@
+@@ -109,6 +109,7 @@
+ mod extras;
+ mod falling_damage;
+ mod fangs;
++mod felled;
+ mod fireworks;
+ mod fishing;
+ mod fov;
+@@ -1713,6 +1714,8 @@
      clouds: Arc<(u32, u32, Vec<bool>)>,
      /// misc/forcefield.png: (width, height, RGBA) for the world border wall.
      forcefield: Arc<(u32, u32, Vec<u8>)>,
@@ -9,7 +17,7 @@
  }
  impl PackResources {
      /// Everything a pack overlay at `root` provides, over `assets` and `render`
-@@ -1773,6 +1775,7 @@
+@@ -1773,6 +1776,7 @@
              names: Arc::new(Names::load(root)),
              clouds: Arc::new(load_clouds(root)),
              forcefield: Arc::new(load_forcefield(root)),
@@ -17,7 +25,44 @@
          }
      }
  }
-@@ -12397,8 +12400,12 @@
+@@ -2232,6 +2236,10 @@
+     falling: Vec<FallingBlock>,
+     /// Blocks the server shows for a moment (`ClientboundAddTransientBlockPacket`).
+     transient_blocks: transient_blocks::TransientBlocks,
++    felled_client: felled::FelledClient,
++    felled_server_enabled: bool,
++    felled_outbox: Vec<felled::ServerFall>,
++    felled_spawn_guard: Option<([i32; 3], u32)>,
+     paintings: Vec<horizon_client::entities::Painting>,
+     painting_variants: paintings::PaintingVariants,
+     item_frames: Vec<horizon_client::entities::ItemFrame>,
+@@ -5045,6 +5053,7 @@
+         if canceled {
+             return Ok(());
+         }
++        let felled = self.felled_plan_server(pos, state);
+         self.pad_rumble(horizon_client::gamepad::Rumble::BlockBroken);
+         let broken = state;
+         let facts = self.res.facts().get(state).clone();
+@@ -5195,6 +5204,9 @@
+             });
+         }
+         self.pending.clear(pos);
++        if removed && let Some(fall) = felled {
++            self.felled_apply_server(fall);
++        }
+         self.process_level_events()?;
+         Ok(())
+     }
+@@ -9950,6 +9962,7 @@
+         self.moving_piston_geometry(camera, alpha, &mut out);
+         // LevelRenderer.submitTransientBlocks.
+         self.transient_block_geometry(camera, &mut out);
++        self.felled_geometry(camera, &mut out);
+         self.mark_entity(out.len(), "minecraft:tnt");
+         self.tnt_geometry(camera, alpha, &mut out);
+         self.mark_entity(out.len(), "minecraft:painting");
+@@ -12397,8 +12410,12 @@
      }
      /// FirstPersonHandsAndItemsRenderer: the right arm or the held items of
      /// both hands in view space, converted to camera-relative world space.
@@ -31,7 +76,7 @@
          // GameRenderer.renderItemInHand: F1 hides the hand with the HUD.
          if self.spectator()
              || self.ui.hide_gui
-@@ -12410,7 +12417,7 @@
+@@ -12410,7 +12427,7 @@
                  .is_none_or(|p| p.health.dead_or_dying())
              || self.screen == Screen::Dead
          {
@@ -40,7 +85,7 @@
          }
          let a = alpha as f32;
          // FirstPersonHandsAndItemsRenderer: the swing goes to the hand that
-@@ -12481,6 +12488,13 @@
+@@ -12481,6 +12498,13 @@
                          self.first_person_arm(arm, to_world * pose, packed, &mut out);
                      }
                  }
@@ -54,7 +99,7 @@
                  match hold {
                      MapHold::TwoHanded => self.two_handed_map_geometry(
                          to_world,
-@@ -12496,6 +12510,9 @@
+@@ -12496,6 +12520,9 @@
                          packed,
                          &mut out,
                      ),
@@ -64,7 +109,7 @@
                  }
                  continue;
              }
-@@ -12597,12 +12614,22 @@
+@@ -12597,12 +12624,22 @@
                  eye[1].floor() as i32,
                  eye[2].floor() as i32,
              );
@@ -87,7 +132,7 @@
          }
          // The hand has its own submit storage, which never uses improved
          // transparency (`LevelRenderer` alone calls `setUseImprovedTransparency`):
-@@ -12610,7 +12637,7 @@
+@@ -12610,7 +12647,7 @@
          for vertex in &mut out {
              vertex.layer &= !horizon_client::gfx::OIT_ENTITY;
          }
@@ -96,7 +141,7 @@
      }
      /// The renderer for the window, with the current block sprites, GUI
      /// atlas and world border texture.
-@@ -14051,8 +14078,8 @@
+@@ -14051,8 +14088,8 @@
          } else {
              (Vec::new(), None)
          };
@@ -107,7 +152,7 @@
          } else {
              self.hand_geometry(camera_alpha)
          };
-@@ -14182,6 +14209,7 @@
+@@ -14182,6 +14219,7 @@
              },
              stars: stars.filter(|_| self.settings.horizon.sky || title),
              hand: &hand,
@@ -115,7 +160,28 @@
              hand_fov_degrees: self.hud_fov_degrees(camera_alpha as f32, camera.to_array()),
              screen: &screen,
              pack: pack_inputs,
-@@ -18061,6 +18089,7 @@
+@@ -14715,6 +14753,7 @@
+         if let Err(e) = self.poll_remote() {
+             log::warn!("Horizon: {e}");
+         }
++        self.felled_query_server();
+         self.prepare_lod();
+         if self.lod.is_some() {
+             for &((x, _, z), _, _) in &self.world.light_edits {
+@@ -16885,6 +16924,12 @@
+             level_events: Vec::new(),
+             falling: Vec::new(),
+             transient_blocks: Default::default(),
++            felled_client: Default::default(),
++            felled_server_enabled: Self::options_path()
++                .with_file_name("felled-server.enabled")
++                .is_file(),
++            felled_outbox: Vec::new(),
++            felled_spawn_guard: None,
+             paintings: Vec::new(),
+             painting_variants: prepared.painting_variants,
+             item_frames: Vec::new(),
+@@ -18061,6 +18106,7 @@
          previous,
          api,
      ))?;
@@ -123,7 +189,7 @@
      renderer.hud.sprite_animations = atlas
          .sprite_animations
          .iter()
-@@ -18193,6 +18222,7 @@
+@@ -18193,6 +18239,7 @@
          celestial: &[],
          stars: None,
          hand: &[],

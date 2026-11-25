@@ -1,0 +1,12 @@
+--- a/crates/horizon-client/src/game/native_net.rs
++++ b/crates/horizon-client/src/game/native_net.rs
+@@ -67,0 +68 @@
++            self.felled_query_received(player, &m.channel, &m.data);
+@@ -73,0 +75 @@
++        self.felled_flush(host);
+@@ -101 +103,4 @@
+-            Ok(m) => self.native_net_from_server(&m.channel, &m.data),
++            Ok(m) => {
++                self.felled_packet(&m.channel, &m.data);
++                self.native_net_from_server(&m.channel, &m.data);
++            }

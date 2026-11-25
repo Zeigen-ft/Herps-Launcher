@@ -1,0 +1,28 @@
+--- a/crates/horizon-client-render/src/streaming.rs
++++ b/crates/horizon-client-render/src/streaming.rs
+@@ -1548,9 +1548,24 @@
+         let room = (self.threads.len() * 32).saturating_sub(self.meshing.len());
+         nearest_first(&mut candidates, room);
+         for (_, x, z, sections) in candidates {
+-            let Some(region) = Self::region(world, x, z) else {
++            let Some(mut region) = Self::region(world, x, z) else {
+                 continue;
+             };
++            if !world.preview_hidden.is_empty() {
++                for (dz, row) in region.iter_mut().enumerate() {
++                    for (dx, column) in row.iter_mut().enumerate() {
++                        let key = (x + dx as i32 - 1, z + dz as i32 - 1);
++                        if let (Some(cells), Some(chunk)) = (world.preview_hidden.get(&key), column)
++                        {
++                            for (&[bx, by, bz], &state) in cells {
++                                if chunk.get(bx & 15, by, bz & 15) == state.0 {
++                                    Arc::make_mut(chunk).set(bx & 15, by, bz & 15, world.air.0);
++                                }
++                            }
++                        }
++                    }
++                }
++            }
+             world.dirty_sections.take_column(x, z);
+             for sy in sections.iter().map(|sy| sy as i32) {
+                 let first = self.meshed.insert((x, z));

@@ -1,0 +1,806 @@
+--- /dev/null
++++ b/crates/horizon-client/src/game/felled.rs
+@@ -0,0 +1,803 @@
++//! Cosmetic tree felling for the window's connected client.
++use std::collections::{HashMap, HashSet, VecDeque};
++use std::time::{Duration, Instant};
++
++use glam::{DQuat, DVec3, Vec3};
++use horizon_client::mesher::Vertex;
++use horizon_core::{geometry::Direction, position::BlockPos};
++use horizon_world::registry::BlockStateId;
++
++use super::{Game, lan::LanHost};
++use winit::keyboard::KeyCode;
++
++type Pos = [i32; 3];
++const NEIGHBORS: [Pos; 6] = [
++    [1, 0, 0],
++    [-1, 0, 0],
++    [0, 1, 0],
++    [0, -1, 0],
++    [0, 0, 1],
++    [0, 0, -1],
++];
++const MAX_LOGS: usize = 128;
++const MAX_LEAVES: usize = 384;
++const MAX_TREES: usize = 4;
++const MAX_PENDING: usize = 8;
++const CHANNEL: &str = "herps_felled:fall_v1";
++const CAPABILITY: &str = "herps_felled:capability_v1";
++const STEP: f64 = 1.0 / 120.0;
++
++#[derive(Default)]
++pub(super) struct FelledClient {
++    pub(super) enabled: bool,
++    pending: HashMap<Pos, Candidate>,
++    queried_server: bool,
++    server_felling: bool,
++    trees: Vec<Tree>,
++}
++
++struct Candidate {
++    seq: i32,
++    pivot: Pos,
++    blocks: Vec<(Pos, BlockStateId)>,
++    logs: usize,
++    origin: DVec3,
++    axis: DVec3,
++    expires: Instant,
++}
++
++struct Tree {
++    tree: Candidate,
++    born: Instant,
++    updated: Instant,
++    angle: f64,
++    speed: f64,
++    rest: Option<Instant>,
++    impacted: bool,
++    landing: Option<(Vec<(Pos, BlockStateId)>, i32)>,
++}
++
++#[derive(serde::Serialize, serde::Deserialize)]
++struct FallPacket {
++    pivot: Pos,
++    dir: [i32; 2],
++    lift: i32,
++    logs: usize,
++    blocks: Vec<(Pos, u32, Option<u32>)>,
++}
++
++pub(super) struct ServerFall {
++    dimension: String,
++    pivot: Pos,
++    bytes: Vec<u8>,
++}
++
++pub(super) struct PlannedFall {
++    packet: FallPacket,
++    sources: Vec<(Pos, BlockStateId)>,
++    targets: Vec<(Pos, BlockStateId)>,
++    bytes: Vec<u8>,
++}
++
++fn offset([x, y, z]: Pos, [dx, dy, dz]: Pos) -> Pos {
++    [x + dx, y + dy, z + dz]
++}
++
++fn point([x, y, z]: Pos) -> DVec3 {
++    DVec3::new(f64::from(x), f64::from(y), f64::from(z))
++}
++
++// Rotate cell coordinates exactly by 90° about the centre of the cut log.
++fn landed(pivot: Pos, [dx, dz]: [i32; 2], lift: i32, p: Pos) -> Pos {
++    let [x, y, z] = std::array::from_fn(|i| p[i] - pivot[i]);
++    let along = x * dx + z * dz;
++    offset(
++        pivot,
++        [
++            x - dx * along + dx * y,
++            lift - along,
++            z - dz * along + dz * y,
++        ],
++    )
++}
++
++fn pos_id([x, y, z]: Pos) -> BlockPos {
++    BlockPos::new(x, y, z)
++}
++
++fn scan<T: Copy>(
++    base: Pos,
++    stems: &[Pos],
++    mut log: impl FnMut(Pos) -> Option<T>,
++    mut leaf: impl FnMut(Pos) -> Option<T>,
++) -> Option<(Vec<(Pos, T)>, usize)> {
++    // Include touching boughs, but cap both the scan extent and the mesh size.
++    let in_bounds = |p: Pos| {
++        p[1] > base[1]
++            && p[1] - base[1] <= 32
++            && (p[0] - base[0]).abs() <= 8
++            && (p[2] - base[2]).abs() <= 8
++    };
++    let mut logs = Vec::new();
++    let mut leaf_queue = VecDeque::new();
++    let mut visited = HashSet::new();
++    let mut queue: VecDeque<_> = stems.iter().copied().collect();
++    while let Some(p) = queue.pop_front() {
++        if !in_bounds(p) || !visited.insert(p) {
++            continue;
++        }
++        let Some(state) = log(p) else { continue };
++        logs.push((p, state));
++        if logs.len() > MAX_LOGS {
++            return None;
++        }
++        for step in NEIGHBORS {
++            queue.push_back(offset(p, step));
++            leaf_queue.push_back((offset(p, step), 1));
++            if step[1] == 0 {
++                queue.push_back(offset(p, offset(step, [0, 1, 0])));
++                queue.push_back(offset(p, offset(step, [0, -1, 0])));
++            }
++        }
++    }
++    let log_count = logs.len();
++    if log_count < 2 {
++        return None;
++    }
++    visited.clear();
++    visited.extend(logs.iter().map(|(pos, _)| *pos));
++    while let Some((p, distance)) = leaf_queue.pop_front() {
++        if !in_bounds(p) || !visited.insert(p) {
++            continue;
++        }
++        let Some(state) = leaf(p) else { continue };
++        if logs.len() == log_count + MAX_LEAVES {
++            return None;
++        }
++        logs.push((p, state));
++        if distance < 5 {
++            leaf_queue.extend(NEIGHBORS.map(|step| (offset(p, step), distance + 1)));
++        }
++    }
++    (logs.len() >= log_count + 3).then_some((logs, log_count))
++}
++
++impl Game<'_> {
++    pub(super) fn reset_felled_client(&mut self) {
++        self.felled_client = FelledClient {
++            enabled: self.options.execution_role.is_client()
++                && Self::options_path()
++                    .with_file_name("felled-client.enabled")
++                    .is_file(),
++            ..Default::default()
++        };
++    }
++
++    fn felled_candidate(&self, pos: Pos, state: BlockStateId, seq: i32) -> Option<Candidate> {
++        let player = self.player.as_ref()?;
++        if self.keys.contains(&KeyCode::ShiftLeft)
++            || !self.held().is_some_and(|s| s.item.ends_with("_axe"))
++        {
++            return None;
++        }
++        let at = |[x, y, z]: Pos| self.world.block(x, y, z);
++        let facts = self.res.facts();
++        let base_name = &*facts.get(state).name;
++        if !self.world.loaded(pos[0], pos[2])
++            || !self.block_in_tag("minecraft:logs", base_name)
++            || !self.block_in_tag(
++                "minecraft:dirt",
++                &facts.get(at(offset(pos, [0, -1, 0]))).name,
++            )
++        {
++            return None;
++        }
++        let log = |p| {
++            let s = at(p);
++            (&*facts.get(s).name == base_name).then_some(s)
++        };
++        let mut roots = vec![offset(pos, [0, 1, 0])];
++        for dx in [-1, 0] {
++            for dz in [-1, 0] {
++                let square = [
++                    [dx, 0, dz],
++                    [dx + 1, 0, dz],
++                    [dx, 0, dz + 1],
++                    [dx + 1, 0, dz + 1],
++                ];
++                let bases = square.map(|p| offset(pos, p));
++                let stems = bases.map(|p| offset(p, [0, 1, 0]));
++                if stems.into_iter().all(|p| log(p).is_some()) {
++                    if bases.into_iter().filter(|&p| log(p).is_some()).count() > 2 {
++                        return None;
++                    }
++                    roots = stems.to_vec();
++                }
++            }
++        }
++        let leaf = |p| {
++            let s = at(p);
++            (self.block_in_tag("minecraft:leaves", &facts.get(s).name)
++                && self.pack.assets.registry.state(s).is_some_and(|info| {
++                    info.properties
++                        .get("persistent")
++                        .is_some_and(|v| v == "false")
++                }))
++            .then_some(s)
++        };
++        let (blocks, logs) = scan(pos, &roots, log, leaf)?;
++        // A nearby supported trunk must stay standing, even if its crown touches.
++        if blocks[..logs].iter().any(|(p, _)| {
++            !roots.contains(p) && p[1] == pos[1] + 1 && !facts.is_air(at(offset(*p, [0, -1, 0])))
++        }) {
++            return None;
++        }
++
++        let origin = roots.iter().map(|&p| point(p)).sum::<DVec3>() / roots.len() as f64
++            + DVec3::new(0.5, 0.0, 0.5);
++        let away = DVec3::new(
++            origin.x - player.position.x,
++            0.0,
++            origin.z - player.position.z,
++        );
++        let dir = away.try_normalize().unwrap_or(DVec3::X);
++        Some(Candidate {
++            seq,
++            pivot: pos,
++            blocks,
++            logs,
++            origin,
++            axis: DVec3::Y.cross(dir),
++            expires: Instant::now() + Duration::from_secs(5),
++        })
++    }
++
++    pub(super) fn felled_predict(&mut self, pos: Pos, state: BlockStateId, seq: i32) {
++        if !self.felled_client.enabled || self.felled_client.server_felling {
++            return;
++        }
++        self.felled_client.pending.remove(&pos);
++        let now = Instant::now();
++        self.felled_client.pending.retain(|_, p| p.expires > now);
++        if self.felled_client.pending.len() < MAX_PENDING
++            && let Some(candidate) = self.felled_candidate(pos, state, seq)
++        {
++            self.felled_client.pending.insert(pos, candidate);
++        }
++    }
++
++    pub(super) fn felled_confirm(&mut self, pos: Pos, sequence: i32, state: BlockStateId) {
++        let Some(candidate) = self.felled_client.pending.get(&pos) else {
++            return;
++        };
++        if candidate.seq > sequence {
++            return;
++        }
++        let Some(candidate) = self.felled_client.pending.remove(&pos) else {
++            return;
++        };
++        let now = Instant::now();
++        if now >= candidate.expires
++            || !self.res.facts().is_air(state)
++            || self.felled_client.trees.len() >= MAX_TREES
++            || candidate
++                .blocks
++                .iter()
++                .any(|(p, _)| self.world.preview_hides(*p))
++        {
++            return;
++        }
++        self.world.hide_preview_blocks(&candidate.blocks, true);
++        self.felled_client.trees.push(Tree {
++            tree: candidate,
++            born: now,
++            updated: now,
++            angle: 0.0,
++            speed: 0.35,
++            rest: None,
++            impacted: false,
++            landing: None,
++        });
++    }
++
++    pub(super) fn felled_plan_server(
++        &self,
++        pivot: Pos,
++        state: BlockStateId,
++    ) -> Option<PlannedFall> {
++        if (self.serving.is_none() && self.options.dedicated.is_none())
++            || !self.felled_server_enabled
++            || self.felled_outbox.len() >= MAX_PENDING
++            || !self.may_build()
++        {
++            return None;
++        }
++        let tree = self.felled_candidate(pivot, state, 0)?;
++        let source: HashMap<_, _> = tree.blocks.iter().copied().collect();
++        let facts = self.res.facts();
++        let at = |[x, y, z]: Pos| self.world.block(x, y, z);
++        let can_move = |p: Pos| {
++            self.world.loaded(p[0], p[2])
++                && self.world.layout().section_index(p[1]).is_some()
++                && self
++                    .border
++                    .contains(f64::from(p[0]) + 0.5, f64::from(p[2]) + 0.5)
++                && !self.felled_spawn_guard.is_some_and(|(spawn, radius)| {
++                    spawn[0].abs_diff(p[0]).max(spawn[2].abs_diff(p[2])) <= radius
++                })
++        };
++        let away = tree.axis.cross(DVec3::Y);
++        let mut dirs = [[1, 0], [-1, 0], [0, 1], [0, -1]];
++        dirs.sort_by(|a, b| {
++            let projection = |[x, z]: [i32; 2]| f64::from(x) * away.x + f64::from(z) * away.z;
++            projection(*b).total_cmp(&projection(*a))
++        });
++        for dir @ [dx, dz] in dirs {
++            'lift: for lift in [0, -1, 1, -2, 2] {
++                let mut blocks = Vec::with_capacity(source.len());
++                let mut targets = Vec::with_capacity(source.len());
++                let mut grounded = false;
++                for (i, &(p, original)) in tree.blocks.iter().enumerate() {
++                    let target = landed(pivot, dir, lift, p);
++                    if !can_move(p)
++                        || self.world.block_entities.get(&(p[0], p[1], p[2])).is_some()
++                        || self.pack.assets.registry.state(original).is_some_and(|s| {
++                            s.properties.get("waterlogged").is_some_and(|v| v == "true")
++                        })
++                    {
++                        return None;
++                    }
++                    let clear = can_move(target)
++                        && (facts.is_air(at(target))
++                            || source.contains_key(&target)
++                            || target == pivot);
++                    if !clear {
++                        if i < tree.logs {
++                            continue 'lift;
++                        }
++                        // Foliage on the ground-facing side is shed. Never
++                        // replace the terrain it would have landed in.
++                        blocks.push((p, original.0, None));
++                        continue;
++                    }
++                    let below = offset(target, [0, -1, 0]);
++                    grounded |= i < tree.logs
++                        && !source.contains_key(&below)
++                        && below != pivot
++                        && facts.get(at(below)).full_collision;
++                    let axis = self
++                        .pack
++                        .assets
++                        .registry
++                        .state(original)
++                        .and_then(|s| s.properties.get("axis"))
++                        .map(String::as_str);
++                    let rotated_axis = match (dx, dz, axis) {
++                        (0, _, Some("y")) => Some("z"),
++                        (_, 0, Some("y")) => Some("x"),
++                        (0, _, Some("z")) | (_, 0, Some("x")) => Some("y"),
++                        _ => None,
++                    };
++                    let rotated = rotated_axis
++                        .and_then(|a| self.with_props(original, &[("axis", a)]))
++                        .unwrap_or(original);
++                    blocks.push((p, original.0, Some(rotated.0)));
++                    targets.push((target, rotated));
++                }
++                let origin = point(pivot) + DVec3::splat(0.5);
++                let axis = DVec3::Y.cross(DVec3::new(f64::from(dx), 0.0, f64::from(dz)));
++                let path_clear = grounded
++                    && (1..16).all(|step| {
++                        let angle = f64::from(step) * std::f64::consts::FRAC_PI_2 / 16.0;
++                        let rotation = DQuat::from_axis_angle(axis, angle);
++                        tree.blocks[..tree.logs].iter().all(|&(p, _)| {
++                            let moved = origin
++                                + rotation * (point(p) + DVec3::splat(0.5) - origin)
++                                + DVec3::Y * f64::from(lift) * angle.sin();
++                            let pos = moved.floor().as_ivec3().to_array();
++                            can_move(pos)
++                                && (source.contains_key(&pos)
++                                    || pos == pivot
++                                    || !facts.get(at(pos)).full_collision)
++                        })
++                    });
++                if path_clear {
++                    let packet = FallPacket {
++                        pivot,
++                        dir,
++                        lift,
++                        logs: tree.logs,
++                        blocks,
++                    };
++                    let mut bytes = serde_json::to_vec(&packet).ok()?;
++                    if bytes.len() > 30_000 {
++                        // The native packet is optional. Vanilla clients still get block updates.
++                        bytes.clear();
++                    }
++                    return Some(PlannedFall {
++                        packet,
++                        sources: tree.blocks,
++                        targets,
++                        bytes,
++                    });
++                }
++            }
++        }
++        None
++    }
++
++    pub(super) fn felled_apply_server(&mut self, fall: PlannedFall) {
++        use horizon_world::level::{LevelAccess, flags};
++        for &(pos, state) in &fall.sources {
++            let mut canceled = false;
++            self.native_destroy_block(pos, state, &mut canceled);
++            if canceled {
++                return;
++            }
++        }
++        let [dx, dz] = fall.packet.dir;
++        let movement = match (dx, dz) {
++            (1, 0) => Direction::East,
++            (-1, 0) => Direction::West,
++            (0, 1) => Direction::South,
++            _ => Direction::North,
++        };
++        let from: Vec<_> = fall.sources.iter().map(|&(p, _)| pos_id(p)).collect();
++        let to: Vec<_> = fall.targets.iter().map(|&(p, _)| pos_id(p)).collect();
++        let allowed = self.with_level(|_, level, _| {
++            level.allow_piston_move(pos_id(fall.packet.pivot), movement, &from, &to)
++                && fall
++                    .targets
++                    .iter()
++                    .all(|&(p, s)| level.is_unobstructed(pos_id(p), s))
++        });
++        if !allowed {
++            return;
++        }
++        let air = self.world.air;
++        // Stage the permutation as a single server action, before the next save
++        // or block broadcast. Preflight exact source states and loaded columns.
++        let state_at = |[x, y, z]: Pos| self.world.block(x, y, z);
++        let sources: HashSet<_> = fall.sources.iter().map(|(p, _)| *p).collect();
++        if fall.sources.iter().any(|&(p, s)| state_at(p) != s)
++            || fall.targets.iter().any(|&(p, _)| {
++                !self.world.loaded(p[0], p[2])
++                    || !(self.res.facts().is_air(state_at(p)) || sources.contains(&p))
++            })
++        {
++            return;
++        }
++        let changes: HashMap<_, _> = fall
++            .sources
++            .iter()
++            .map(|&(p, _)| (p, air))
++            .chain(fall.targets.iter().copied())
++            .collect();
++        let mut changed: Vec<_> = changes
++            .into_iter()
++            .filter_map(|(p, s)| (state_at(p) != s).then(|| (p, state_at(p), s)))
++            .collect();
++        changed.sort_unstable_by_key(|&(p, _, _)| p);
++        let flags =
++            flags::UPDATE_CLIENTS | flags::UPDATE_KNOWN_SHAPE | flags::UPDATE_MOVE_BY_PISTON;
++        self.with_level(|b, level, ticks| {
++            for &(pos, _, state) in &changed {
++                b.set_block(level, ticks, pos_id(pos), state, flags);
++            }
++        });
++        // Run normal neighbour and shape processing after every final state
++        // is present so leaves do not see a half-moved trunk.
++        self.with_level(|b, level, ticks| {
++            for &(p, previous, _) in &changed {
++                let here = pos_id(p);
++                let state = level.block_state(here);
++                b.update_neighbors_at(level, ticks, here, b.block(previous));
++                for direction in Direction::ALL {
++                    let neighbor = pos_id(offset(p, direction.normal()));
++                    let old = level.block_state(neighbor);
++                    let next = b.update_shape(
++                        level,
++                        ticks,
++                        old,
++                        neighbor,
++                        direction.opposite(),
++                        here,
++                        state,
++                    );
++                    if next != old {
++                        b.set_block(level, ticks, neighbor, next, flags::UPDATE_CLIENTS);
++                    }
++                }
++            }
++        });
++        if !fall.bytes.is_empty() {
++            self.felled_outbox.push(ServerFall {
++                dimension: self.level.dimension.clone(),
++                pivot: fall.packet.pivot,
++                bytes: fall.bytes,
++            });
++        }
++    }
++
++    pub(super) fn felled_flush(&mut self, host: &LanHost) {
++        for fall in std::mem::take(&mut self.felled_outbox) {
++            let centre = point(fall.pivot);
++            for g in host.hub.guests.iter().filter(|g| {
++                g.placed
++                    && g.brand == "horizon"
++                    && g.dimension == fall.dimension
++                    && DVec3::from_array(g.position).distance_squared(centre) <= 80.0 * 80.0
++            }) {
++                let _ = self.native_net_send_to_player(g.uuid, CHANNEL, &fall.bytes);
++            }
++        }
++    }
++
++    pub(super) fn felled_query_server(&mut self) {
++        if self.felled_client.enabled
++            && !self.felled_client.queried_server
++            && self.remote.as_ref().is_some_and(|r| r.mod_net)
++            && self.native_net_send_to_server(CAPABILITY, &[]).is_ok()
++        {
++            self.felled_client.queried_server = true;
++        }
++    }
++
++    pub(super) fn felled_query_received(&mut self, player: u128, channel: &str, data: &[u8]) {
++        if self.felled_server_enabled && channel == CAPABILITY && data.is_empty() {
++            let _ = self.native_net_send_to_player(player, CAPABILITY, &[]);
++        }
++    }
++
++    pub(super) fn felled_packet(&mut self, channel: &str, bytes: &[u8]) {
++        if !self.felled_client.enabled || self.remote.is_none() {
++            return;
++        }
++        if channel == CAPABILITY && bytes.is_empty() {
++            self.felled_client.server_felling = true;
++            self.felled_client.pending.clear();
++            return;
++        }
++        if channel != CHANNEL || bytes.len() > 30_000 {
++            return;
++        }
++        let Ok(packet) = serde_json::from_slice::<FallPacket>(bytes) else {
++            return;
++        };
++        let [dx, dz] = packet.dir;
++        let pivot = packet.pivot;
++        if !matches!(packet.dir, [1, 0] | [-1, 0] | [0, 1] | [0, -1])
++            || !(-2..=2).contains(&packet.lift)
++            || !pivot
++                .iter()
++                .all(|&n| (-30_000_000..=30_000_000).contains(&n))
++            || !self.world.loaded(pivot[0], pivot[2])
++            || !(2..=MAX_LOGS).contains(&packet.logs)
++            || packet.blocks.len() < packet.logs
++            || packet.blocks.len() > packet.logs + MAX_LEAVES
++        {
++            return;
++        }
++        let mut sources = Vec::with_capacity(packet.blocks.len());
++        let mut targets = Vec::with_capacity(packet.blocks.len());
++        let mut seen = HashSet::new();
++        let registry = &self.pack.assets.registry;
++        for (index, (p, old, new)) in packet.blocks.into_iter().enumerate() {
++            if p.iter().zip(pivot).any(|(&a, b)| a.abs_diff(b) > 32) || !seen.insert(p) {
++                return;
++            }
++            let src = BlockStateId(old);
++            if registry.state(src).is_none() || self.res.facts().is_air(src) || p[1] <= pivot[1] {
++                return;
++            }
++            sources.push((p, src));
++            if let Some(dst) = new.map(BlockStateId) {
++                let target = landed(pivot, packet.dir, packet.lift, p);
++                if registry.state(dst).is_none() || self.res.facts().is_air(dst) {
++                    return;
++                }
++                targets.push((target, dst));
++            } else if index < packet.logs {
++                return;
++            }
++        }
++        self.felled_client.server_felling = true;
++        self.felled_client.pending.clear();
++        self.felled_client.trees.retain(|tree| {
++            if tree.landing.is_none() && tree.tree.pivot == pivot {
++                self.world.hide_preview_blocks(&tree.tree.blocks, false);
++                false
++            } else {
++                true
++            }
++        });
++        if self.felled_client.trees.len() >= MAX_TREES
++            || targets.iter().any(|(p, _)| self.world.preview_hides(*p))
++        {
++            return;
++        }
++        self.world.hide_preview_blocks(&targets, true);
++        let now = Instant::now();
++        self.felled_client.trees.push(Tree {
++            tree: Candidate {
++                seq: 0,
++                pivot,
++                logs: packet.logs,
++                blocks: sources,
++                expires: now,
++                origin: point(pivot) + DVec3::splat(0.5),
++                axis: DVec3::Y.cross(DVec3::new(f64::from(dx), 0.0, f64::from(dz))),
++            },
++            born: now,
++            updated: now,
++            angle: 0.0,
++            speed: 0.35,
++            rest: None,
++            impacted: false,
++            landing: Some((targets, packet.lift)),
++        });
++    }
++
++    pub(super) fn felled_geometry(&mut self, camera: DVec3, out: &mut Vec<Vertex>) {
++        if self.felled_client.trees.is_empty() {
++            return;
++        }
++        let now = Instant::now();
++        let mut impact = None;
++        let (world, facts) = (&self.world, self.res.facts());
++        for tree in &mut self.felled_client.trees {
++            if tree.rest.is_some() {
++                continue;
++            }
++            let elapsed = (now - tree.updated).as_secs_f64().min(0.05);
++            tree.updated = now;
++            let steps = (elapsed / STEP).ceil().max(1.0) as u32;
++            let dt = elapsed / f64::from(steps);
++            for _ in 0..steps {
++                tree.speed += (0.65 + 2.25 * tree.angle.sin()) * dt;
++                let tilt = (tree.angle + tree.speed * dt).clamp(0.0, std::f64::consts::FRAC_PI_2);
++                let rotation = DQuat::from_axis_angle(tree.tree.axis, tilt);
++                let hit = (tree.landing.is_none() && tilt > 0.12 && tilt > tree.angle)
++                    .then(|| {
++                        // Sweep the lower corners of the logs; foliage never stops the trunk.
++                        tree.tree.blocks[..tree.tree.logs]
++                            .iter()
++                            .find_map(|&(p, s)| {
++                                [0.06, 0.94].into_iter().find_map(|x| {
++                                    [0.06, 0.94].into_iter().find_map(|z| {
++                                        let corner =
++                                            point(p) + DVec3::new(x, 0.08, z) - tree.tree.origin;
++                                        let moved = tree.tree.origin + rotation * corner;
++                                        let cell = moved.floor().as_ivec3().to_array();
++                                        let [x, y, z] = cell;
++                                        (world.loaded(x, z)
++                                            && !world.preview_hides(cell)
++                                            && facts.get(world.block(x, y, z)).full_collision)
++                                            .then_some((cell, s))
++                                    })
++                                })
++                            })
++                    })
++                    .flatten();
++                if hit.is_some() || tilt == std::f64::consts::FRAC_PI_2 {
++                    if !tree.impacted {
++                        tree.impacted = true;
++                        impact = hit.or_else(|| {
++                            let (p, s) = tree.tree.blocks[tree.tree.logs - 1];
++                            let lift = tree
++                                .landing
++                                .as_ref()
++                                .map_or(0.0, |(_, lift)| f64::from(*lift));
++                            let p = tree.tree.origin
++                                + rotation * (point(p) - tree.tree.origin)
++                                + DVec3::Y * lift;
++                            Some((p.floor().as_ivec3().to_array(), s))
++                        });
++                    }
++                    if hit.is_some() && tree.speed > 0.70 {
++                        tree.speed *= -0.21;
++                    } else {
++                        if hit.is_none() {
++                            tree.angle = tilt;
++                        }
++                        tree.rest = Some(now);
++                        break;
++                    }
++                } else {
++                    tree.angle = tilt;
++                }
++            }
++        }
++        let mut trees = std::mem::take(&mut self.felled_client.trees);
++        trees.retain(|tree| {
++            let [x, _, z] = tree.tree.origin.floor().as_ivec3().to_array();
++            if now - tree.born > Duration::from_secs(4)
++                || tree.rest.is_some_and(|t| {
++                    now - t > Duration::from_millis(if tree.landing.is_some() { 45 } else { 900 })
++                })
++                || !self.world.loaded(x, z)
++            {
++                let hidden = tree
++                    .landing
++                    .as_ref()
++                    .map_or(&tree.tree.blocks, |(cells, _)| cells);
++                self.world.hide_preview_blocks(hidden, false);
++                return false;
++            }
++            true
++        });
++        if let Some((pos, state)) = impact {
++            let sound = self.res.facts().get(state).sounds.break_sound.clone();
++            self.audio.play(
++                &sound,
++                Some((point(pos) + DVec3::splat(0.5)).to_array()),
++                0.95,
++                0.64,
++            );
++            self.destroy_particles(pos, state);
++        }
++        for tree in &trees {
++            let origin = tree.tree.origin;
++            if camera.distance_squared(origin) > 80.0 * 80.0 {
++                continue;
++            }
++            let rotation = DQuat::from_axis_angle(tree.tree.axis, tree.angle);
++            for &([x, y, z], state) in &tree.tree.blocks {
++                let p = [x, y, z];
++                let start = out.len();
++                let local = point(p) - origin;
++                let lift = tree
++                    .landing
++                    .as_ref()
++                    .map_or(0.0, |(_, lift)| f64::from(*lift));
++                let moved = origin + rotation * local + DVec3::Y * lift * tree.angle.sin() - camera;
++                self.moving_block_vertices(state, BlockPos::new(x, y, z), moved, out);
++                let moving_rotation = rotation.as_quat();
++                for vertex in &mut out[start..] {
++                    vertex.pos = (moved.as_vec3()
++                        + moving_rotation * (Vec3::from_array(vertex.pos) - moved.as_vec3()))
++                    .to_array();
++                    let [nx, ny, nz, _] = vertex.normal;
++                    let n = moving_rotation * Vec3::new(nx.into(), ny.into(), nz.into());
++                    for (dst, value) in vertex.normal[..3].iter_mut().zip(n.to_array()) {
++                        *dst = value.round().clamp(-127.0, 127.0) as i8;
++                    }
++                }
++            }
++        }
++        self.felled_client.trees = trees;
++    }
++}
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++
++    #[test]
++    fn landing_matches_rendered_rotation_in_each_direction() {
++        let pivot = [-39, 83, 27];
++        let p = [-41, 97, 32];
++        for dir @ [dx, dz] in [[1, 0], [-1, 0], [0, 1], [0, -1]] {
++            let axis = DVec3::Y.cross(DVec3::new(f64::from(dx), 0.0, f64::from(dz)));
++            let rotation = DQuat::from_axis_angle(axis, std::f64::consts::FRAC_PI_2);
++            let corner = point(pivot) + rotation * (point(p) - point(pivot)) + DVec3::Y;
++            assert_eq!(
++                corner.round().as_ivec3().to_array(),
++                landed(pivot, dir, 1, p)
++            );
++        }
++    }
++
++    #[test]
++    fn requires_a_crown_and_ignores_the_cut_base() {
++        let base = [0, 0, 0];
++        let stem = [[0, 1, 0]];
++        let log = |p: Pos| (p[0] == 0 && p[2] == 0 && p[1] <= 3).then_some(1);
++        assert!(scan(base, &stem, log, |_| None).is_none());
++        let leaf = |p: Pos| (p[1] == 3 && p[0].abs() + p[2].abs() <= 1).then_some(2);
++        let (blocks, logs) = scan(base, &stem, log, leaf).unwrap();
++        assert_eq!(logs, 3);
++        assert_eq!(blocks.len(), 7);
++        assert!(blocks.iter().all(|(p, _)| *p != base));
++    }
++}
