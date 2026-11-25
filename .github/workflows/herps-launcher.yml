@@ -1,10 +1,16 @@
 name: Build Herps Felled Windows installer
 on:
   workflow_dispatch:
+    inputs:
+      source_run:
+        description: Completed Windows build run to export as a direct EXE
+        type: string
+        required: false
 permissions:
   contents: read
 jobs:
   windows:
+    if: ${{ inputs.source_run == '' }}
     runs-on: windows-latest
     timeout-minutes: 90
     env:
@@ -54,4 +60,32 @@ jobs:
         with:
           name: Herps-Felled-Windows-x64-Setup
           path: dist/herps/Herps-Felled-26.3-Windows-x64-Setup.exe
+          if-no-files-found: error
+
+  download-file:
+    if: ${{ inputs.source_run != '' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      actions: read
+      contents: read
+    steps:
+      - name: Download the completed installer build
+        uses: actions/download-artifact@v4
+        with:
+          name: Herps-Felled-Windows-x64-Setup
+          path: installer
+          run-id: ${{ inputs.source_run }}
+          github-token: ${{ github.token }}
+      - name: Verify the installer file
+        run: |
+          set -eu
+          setup=installer/Herps-Felled-26.3-Windows-x64-Setup.exe
+          test "$(head -c 2 "$setup")" = MZ
+          sha256sum "$setup"
+      - name: Upload the installer as a direct EXE download
+        uses: actions/upload-artifact@v7
+        with:
+          path: installer/Herps-Felled-26.3-Windows-x64-Setup.exe
+          archive: false
           if-no-files-found: error
