@@ -56,6 +56,16 @@ With only the client flag, the window plays a temporary local effect after the
 server confirms your own base break. Standing blocks are hidden briefly in that
 window's mesh. The server still controls collision, block state and drops.
 
+## Windows display recovery
+
+The updated client budgets terrain uploads across frames and preserves HUD
+texture updates when a frame is skipped. It also attempts to refresh the
+Windows display after sustained presentation timeouts. If the picture stays
+stuck after the game responds again, focus the game window and press
+Ctrl+Shift+F8 to refresh the display without leaving the session.
+
+The Herps patches for these changes come from eefbd42 and b976af7.
+
 ## Parity limits
 
 The server commits the landed blocks during the cut, and Herps clients animate

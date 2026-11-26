@@ -1,0 +1,47 @@
+--- a/crates/horizon-client-render/src/gfx/upload_budget.rs
++++ b/crates/horizon-client-render/src/gfx/upload_budget.rs
+@@ -8 +8 @@
+-    time_limit: Option<Duration>,
++    time_limit: Duration,
+@@ -19 +19 @@
+-                Some((wait / 4).clamp(Duration::from_millis(2), Duration::from_millis(8)));
++                (wait / 4).clamp(Duration::from_millis(2), Duration::from_millis(8));
+@@ -31 +31 @@
+-            time_limit: mobile.then_some(Duration::from_millis(2)),
++            time_limit: Duration::from_millis(2),
+@@ -40 +40 @@
+-                && self.time_limit.is_none_or(|limit| elapsed < limit))
++                && elapsed < self.time_limit)
+@@ -75 +75 @@
+-    fn user_limits_remain_stricter_and_desktop_unlimited_is_unchanged() {
++    fn user_limits_can_stop_uploads_before_the_deadline() {
+@@ -82,3 +82,26 @@
+-        let mut desktop = UploadBudget::new(0, 0, false);
+-        desktop.record(1 << 30);
+-        assert!(desktop.allows(1 << 30, Duration::from_secs(30)));
++    }
++
++    #[test]
++    fn desktop_yields_on_small_bursts_with_auto_or_manual_limits() {
++        for (count, bytes) in [(0, 0), (4, 2048)] {
++            let mut remaining = 8;
++            for expected in [6, 4, 2, 0] {
++                let mut budget =
++                    UploadBudget::with_wait(count, bytes, false, Duration::from_millis(32));
++                let mut elapsed = Duration::ZERO;
++                while remaining > 0 && budget.allows(128, elapsed) {
++                    budget.record(128);
++                    elapsed += Duration::from_millis(1);
++                    remaining -= 1;
++                }
++                assert_eq!(remaining, expected);
++            }
++        }
++    }
++
++    #[test]
++    fn oversized_desktop_section_still_makes_progress() {
++        let mut budget = UploadBudget::new(0, 1024, false);
++        assert!(budget.allows(8192, Duration::from_millis(3)));
++        budget.record(8192);
++        assert!(!budget.allows(1, Duration::ZERO));

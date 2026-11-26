@@ -44,11 +44,11 @@ jobs:
           $limits = python tools/windows_installer.py $shortPayload | ConvertFrom-Json
           $spec = Join-Path $env:RUNNER_TEMP 'herps-felled.iss'
           $source = Get-Content -Raw packaging/herps-windows.iss
-          $source = $source.Replace('AppId=io.herspers.herps-launcher', 'AppId=io.herspers.herps-felled').Replace('AppName=Herps Launcher', 'AppName=Herps Felled').Replace('Programs\Herps Launcher', 'Programs\Herps Felled').Replace('DefaultGroupName=Herps Launcher', 'DefaultGroupName=Herps Felled').Replace('Herps-Launcher-0.1.0-Windows-x64-Setup', 'Herps-Felled-26.3-Fix1-Windows-x64-Setup')
+          $source = $source.Replace('AppId=io.herspers.herps-launcher', 'AppId=io.herspers.herps-felled').Replace('AppName=Herps Launcher', 'AppName=Herps Felled').Replace('Programs\Herps Launcher', 'Programs\Herps Felled').Replace('DefaultGroupName=Herps Launcher', 'DefaultGroupName=Herps Felled').Replace('Herps-Launcher-0.1.0-Windows-x64-Setup', 'Herps-Felled-26.3-Fix2-Windows-x64-Setup')
           Set-Content -LiteralPath $spec -Value $source -Encoding utf8BOM
           $compiler = 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe'
           & $compiler "/DMaxPayloadFileChars=$($limits.file_chars)" "/DMaxPayloadDirChars=$($limits.directory_chars)" "/DPayload=$shortPayload" "/DOutput=$((Resolve-Path dist/herps).Path)" $spec
-          $setup = 'dist/herps/Herps-Felled-26.3-Fix1-Windows-x64-Setup.exe'
+          $setup = 'dist/herps/Herps-Felled-26.3-Fix2-Windows-x64-Setup.exe'
           $hash = (Get-FileHash $setup -Algorithm SHA256).Hash.ToLowerInvariant()
           Set-Content -LiteralPath "$setup.sha256" -Value $hash -Encoding ascii
           Write-Output $hash
@@ -57,8 +57,8 @@ jobs:
         with:
           name: Herps-Felled-Windows-x64-Setup
           path: |
-            dist/herps/Herps-Felled-26.3-Fix1-Windows-x64-Setup.exe
-            dist/herps/Herps-Felled-26.3-Fix1-Windows-x64-Setup.exe.sha256
+            dist/herps/Herps-Felled-26.3-Fix2-Windows-x64-Setup.exe
+            dist/herps/Herps-Felled-26.3-Fix2-Windows-x64-Setup.exe.sha256
           if-no-files-found: error
 
   download-file:
@@ -77,7 +77,7 @@ jobs:
       - name: Verify the installer file
         run: |
           set -eu
-          setup=installer/Herps-Felled-26.3-Fix1-Windows-x64-Setup.exe
+          setup=installer/Herps-Felled-26.3-Fix2-Windows-x64-Setup.exe
           test "$(head -c 2 "$setup")" = MZ
           sha256sum "$setup"
       - name: Check out the existing download branch
@@ -89,7 +89,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          name=Herps-Felled-26.3-Fix1-Windows-x64-Setup.exe
+          name=Herps-Felled-26.3-Fix2-Windows-x64-Setup.exe
           expected=$(tr -d '\r\n' < "installer/$name.sha256")
           [[ "$expected" =~ ^[0-9a-f]{64}$ ]]
           printf '%s  %s\n' "$expected" "installer/$name" | sha256sum -c -
