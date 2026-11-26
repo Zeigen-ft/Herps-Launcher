@@ -454,8 +454,8 @@ class Window(QMainWindow):
         actions = [("Browse…", self.browse_installation)]
         if bundled and bundled.is_dir():
             actions.insert(0, ("Use bundled game", lambda: self.select_installation(bundled)))
-        actions.extend((("Validate installation", self.validate_installation),
-                        ("Roll back installation", self.rollback_installation)))
+        actions.extend((("Validate game", self.validate_installation),
+                        ("Roll back", self.rollback_installation)))
         for index, (label, action) in enumerate(actions):
             self.button(select, label, action, index // 2, index % 2)
         installation.addRow(select)
@@ -492,7 +492,7 @@ class Window(QMainWindow):
         graphics.addRow(restore)
 
         files = QHBoxLayout()
-        self.button(files, "Open game data and saves", lambda: self.open_path(self.launcher.game))
+        self.button(files, "Open game data", lambda: self.open_path(self.launcher.game))
         self.button(files, "Open mod folder", lambda: self.open_path(self.launcher.game / "horizon-mods"))
         files.addStretch()
 
