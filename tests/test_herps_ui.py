@@ -74,7 +74,11 @@ class DesktopTests(unittest.TestCase):
         for field in (self.window.installation_path, self.window.source, self.window.width,
                       self.window.height, self.window.distance, self.window.backend):
             self.assertGreaterEqual(field.height(), 36)
-        self.assertEqual(scroll.horizontalScrollBar().maximum(), 0)
+        content = scroll.widget()
+        self.assertLessEqual(content.width(), scroll.viewport().width(),
+                             f"Settings content minimum {content.minimumSizeHint().toTuple()}, "
+                             f"viewport {scroll.viewport().size().toTuple()}, "
+                             f"window {self.window.size().toTuple()}")
         save = settings.findChild(QPushButton, "saveSettings")
         self.assertTrue(save.isVisible())
         self.assertTrue(settings.rect().contains(save.mapTo(settings, save.rect().bottomRight())))

@@ -10,7 +10,7 @@ import sys
 
 from PySide6.QtCore import Qt, QThread, QTimer, Signal, QUrl, QLockFile
 from PySide6.QtGui import QDesktopServices, QFont
-from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QFileDialog, QFormLayout, QFrame,
+from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QFileDialog, QFormLayout, QFrame, QGridLayout,
     QHBoxLayout, QInputDialog, QLabel, QLineEdit, QListWidget, QMainWindow, QMessageBox,
     QPushButton, QScrollArea, QSizePolicy, QSpinBox, QStackedWidget, QTextEdit, QVBoxLayout, QWidget)
 
@@ -132,10 +132,10 @@ class Window(QMainWindow):
         self.pages.addWidget(page)
         return box
 
-    def button(self, layout, label, function):
+    def button(self, layout, label, function, *position):
         button = QPushButton(label)
         button.clicked.connect(lambda: self.guard(function))
-        layout.addWidget(button)
+        layout.addWidget(button, *position)
         return button
 
     def guard(self, function):
@@ -447,14 +447,16 @@ class Window(QMainWindow):
         installation.addRow("Game installation", self.installation_path)
         installation.addRow("Prepared native source", self.source)
 
-        select = QHBoxLayout()
+        select = QGridLayout()
+        select.setColumnStretch(2, 1)
         bundled = bundled_installation()
+        actions = [("Browse…", self.browse_installation)]
         if bundled and bundled.is_dir():
-            self.button(select, "Use bundled game", lambda: self.select_installation(bundled))
-        self.button(select, "Browse…", self.browse_installation)
-        self.button(select, "Validate installation", self.validate_installation)
-        self.button(select, "Roll back installation", self.rollback_installation)
-        select.addStretch()
+            actions.insert(0, ("Use bundled game", lambda: self.select_installation(bundled)))
+        actions.extend((("Validate installation", self.validate_installation),
+                        ("Roll back installation", self.rollback_installation)))
+        for index, (label, action) in enumerate(actions):
+            self.button(select, label, action, index // 2, index % 2)
         installation.addRow(select)
 
         self.details = QLabel()
