@@ -248,6 +248,15 @@ def server_address(value: str) -> str:
     return f"{host}:{int(port)}"
 
 
+def bundled_installation() -> Path | None:
+    if not getattr(sys, "frozen", False):
+        return None
+    executable = Path(sys.executable)
+    if platform.system() == "Darwin":
+        return executable.parents[3] / "Herspers Minecraft.app"
+    return executable.parent / "game/Herspers-Minecraft"
+
+
 class Launcher:
     def __init__(self, support: Path | None = None):
         self.support = support if support is not None else support_dir()
@@ -265,10 +274,9 @@ class Launcher:
         self.lock_fd = None
         if not self.config["installation"]:
             candidates = [Path("/Applications/Herspers Minecraft.app")]
-            if getattr(sys, "frozen", False):
-                candidates += [Path(sys.executable).parent / "game/Herspers-Minecraft"]
-                if platform.system() == "Darwin":
-                    candidates += [Path(sys.executable).parents[3] / "Herspers Minecraft.app"]
+            bundled = bundled_installation()
+            if bundled is not None:
+                candidates.append(bundled)
             for candidate in candidates:
                 if candidate.exists():
                     try:

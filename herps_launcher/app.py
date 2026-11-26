@@ -10,11 +10,11 @@ import sys
 
 from PySide6.QtCore import Qt, QThread, QTimer, Signal, QUrl, QLockFile
 from PySide6.QtGui import QDesktopServices, QFont
-from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QFileDialog, QFormLayout,
+from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QFileDialog, QFormLayout, QFrame,
     QHBoxLayout, QInputDialog, QLabel, QLineEdit, QListWidget, QMainWindow, QMessageBox,
-    QPushButton, QSpinBox, QStackedWidget, QTextEdit, QVBoxLayout, QWidget)
+    QPushButton, QScrollArea, QSizePolicy, QSpinBox, QStackedWidget, QTextEdit, QVBoxLayout, QWidget)
 
-from .core import Launcher, GAME, REVISION, build_native, pairs, read_json, tailscale, server_address
+from .core import Launcher, GAME, REVISION, build_native, bundled_installation, pairs, read_json, tailscale, server_address
 from .javamods.page import JavaModsPage
 from .modpacks.page import ModpacksPage
 from . import __version__
@@ -25,14 +25,22 @@ QMainWindow { background: #10151d; }
 QLabel#brand { color: #a4f0b3; font-size: 23px; font-weight: 800; padding: 18px 4px; }
 QLabel#heading { font-size: 30px; font-weight: 700; padding-bottom: 12px; }
 QLabel#muted { color: #9eafc1; }
+QLabel[settingsSection="true"] { font-size: 17px; font-weight: 700; }
 QLabel#hero { background: #1c302d; border: 1px solid #325b49; border-radius: 16px; padding: 28px; font-size: 23px; }
 QPushButton { background: #23303e; border: 1px solid #354658; border-radius: 8px; padding: 11px 16px; text-align: left; }
 QPushButton:hover { background: #304656; border-color: #7cbe99; }
 QPushButton:disabled { color: #7b8895; background: #202731; }
 QPushButton#play { background: #91edab; color: #10271b; font-size: 24px; font-weight: 800; padding: 22px; }
+QPushButton#saveSettings { background: #91edab; color: #10271b; font-weight: 700; }
+QPushButton#saveSettings:hover { background: #b0f5c4; }
 QPushButton#nav { border: none; background: transparent; padding: 14px; }
 QPushButton#nav:checked { background: #263b35; color: #a4f0b3; }
 QLineEdit, QComboBox, QSpinBox, QListWidget, QTextEdit { background: #19222e; border: 1px solid #344252; border-radius: 7px; padding: 9px; selection-background-color: #31574a; }
+QScrollArea#settingsScroll QLineEdit:focus, QScrollArea#settingsScroll QComboBox:focus, QScrollArea#settingsScroll QSpinBox:focus { border-color: #7cbe99; }
+QScrollArea#settingsScroll QScrollBar:vertical { background: #18202a; width: 10px; border-radius: 5px; }
+QScrollArea#settingsScroll QScrollBar::handle:vertical { background: #546778; min-height: 24px; border-radius: 5px; }
+QScrollArea#settingsScroll QScrollBar::add-line:vertical, QScrollArea#settingsScroll QScrollBar::sub-line:vertical { height: 0; }
+QScrollArea#settingsScroll QScrollBar::add-page:vertical, QScrollArea#settingsScroll QScrollBar::sub-page:vertical { background: transparent; }
 QListWidget::item { padding: 12px; border-bottom: 1px solid #293544; }
 QListWidget::item:selected { background: #2a4b3d; }
 QCheckBox { padding: 8px; }
@@ -107,7 +115,8 @@ class Window(QMainWindow):
         self.timer.timeout.connect(self.tick)
         self.timer.start(800)
         self.refresh()
-        self.statusBar().showMessage("Select your Herspers Java installation in Settings to get started.")
+        if not self.launcher.config["installation"]:
+            self.statusBar().showMessage("Select your Herspers Java installation in Settings to get started.")
 
     def page(self, title, description):
         page = QWidget()
@@ -407,49 +416,114 @@ class Window(QMainWindow):
             subprocess.Popen(["/usr/bin/open", "-a", "Terminal", str(script)])
 
     def settings_page(self):
-        box = self.page("Settings", "Keep your game installation and data separate. Default profile reuses existing Herspers saves; new profiles start with their own game folders.")
-        form = QFormLayout()
+        box = self.page("Settings", "Game files and saves are stored separately. Graphics settings apply to the current profile.")
+        scroll = QScrollArea()
+        scroll.setObjectName("settingsScroll")
+        scroll.setFrameShape(QFrame.Shape.NoFrame)
+        scroll.setWidgetResizable(True)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        content = QWidget()
+        sections = QVBoxLayout(content)
+        sections.setContentsMargins(0, 0, 12, 0)
+        sections.setSpacing(20)
+        scroll.setWidget(content)
+        box.addWidget(scroll, 1)
+
         self.installation_path = QLineEdit(self.launcher.config["installation"])
         self.source = QLineEdit(self.launcher.config.get("native_source", ""))
         self.width, self.height, self.distance = QSpinBox(), QSpinBox(), QSpinBox()
         self.width.setRange(640, 7680)
         self.height.setRange(480, 4320)
         self.distance.setRange(2, 128)
+        self.distance.setSuffix(" chunks")
         self.backend = QComboBox()
         self.backend.addItems(["auto"] if platform.system() == "Darwin" else ["auto", "vulkan", "dx12", "opengl"])
-        form.addRow("Herspers folder / .app", self.installation_path)
-        form.addRow("Prepared native source", self.source)
-        form.addRow("Window width", self.width)
-        form.addRow("Window height", self.height)
-        form.addRow("Render distance", self.distance)
-        form.addRow("Renderer (Mac auto = Metal)", self.backend)
-        box.addLayout(form)
-        row = QHBoxLayout()
-        self.button(row, "Find installation…", self.browse_installation)
-        self.button(row, "Save settings", self.save_settings)
-        box.addLayout(row)
-        self.button(box, "Validate installation", self.validate_installation)
-        self.button(box, "Open game data and saves", lambda: self.open_path(self.launcher.game))
-        self.button(box, "Open mod folder", lambda: self.open_path(self.launcher.game / "horizon-mods"))
-        self.button(box, "Restore original graphics settings", self.restore_settings)
-        self.button(box, "Switch / update game installation…", self.browse_installation)
-        self.button(box, "Roll back to previous installation", self.rollback_installation)
+        for field in (self.installation_path, self.source, self.width, self.height, self.distance, self.backend):
+            field.setMinimumHeight(36)
+
+        installation = QFormLayout()
+        installation.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
+        installation.setVerticalSpacing(8)
+        installation.addRow("Game installation", self.installation_path)
+        installation.addRow("Prepared native source", self.source)
+
+        select = QHBoxLayout()
+        bundled = bundled_installation()
+        if bundled and bundled.is_dir():
+            self.button(select, "Use bundled game", lambda: self.select_installation(bundled))
+        self.button(select, "Browse…", self.browse_installation)
+        self.button(select, "Validate installation", self.validate_installation)
+        self.button(select, "Roll back installation", self.rollback_installation)
+        select.addStretch()
+        installation.addRow(select)
+
         self.details = QLabel()
+        self.details.setObjectName("muted")
         self.details.setWordWrap(True)
-        box.addWidget(self.details)
-        box.addStretch()
+        self.details.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
+        self.details.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        self.details.hide()
+        installation.addRow(self.details)
+
+        graphics = QFormLayout()
+        graphics.setVerticalSpacing(8)
+        self.distance.setMaximumWidth(152)
+        self.backend.setMaximumWidth(152)
+        window_size = QHBoxLayout()
+        for name, field in (("Width", self.width), ("Height", self.height)):
+            label = QLabel(name)
+            label.setBuddy(field)
+            field.setSuffix(" px")
+            window_size.addWidget(label)
+            window_size.addWidget(field)
+        window_size.addStretch()
+        graphics.addRow("Window size", window_size)
+        graphics.addRow("Render distance", self.distance)
+        graphics.addRow("Renderer", self.backend)
+        if platform.system() == "Darwin":
+            self.backend.setToolTip("Auto uses Metal on macOS")
+        restore = QHBoxLayout()
+        self.button(restore, "Restore original graphics settings", self.restore_settings)
+        restore.addStretch()
+        graphics.addRow(restore)
+
+        files = QHBoxLayout()
+        self.button(files, "Open game data and saves", lambda: self.open_path(self.launcher.game))
+        self.button(files, "Open mod folder", lambda: self.open_path(self.launcher.game / "horizon-mods"))
+        files.addStretch()
+
+        for title, fields in (("Installation", installation), ("Graphics", graphics), ("Game files", files)):
+            section = QVBoxLayout()
+            section.setSpacing(8)
+            heading = QLabel(title)
+            heading.setProperty("settingsSection", True)
+            section.addWidget(heading)
+            section.addLayout(fields)
+            sections.addLayout(section)
+        sections.addStretch()
+
+        footer = QHBoxLayout()
+        footer.addStretch()
+        self.button(footer, "Save settings", self.save_settings).setObjectName("saveSettings")
+        box.addLayout(footer)
 
     def browse_installation(self):
         self.require_idle()
         path = QFileDialog.getExistingDirectory(self, "Select Herspers Minecraft folder or .app", options=QFileDialog.Option.DontUseNativeDialog)
         if path:
-            from .core import Installation
-            installation = Installation.inspect(Path(path))
-            self.launcher.config["previous_installation"] = self.launcher.config["installation"]
-            self.launcher.config["installation"] = str(installation.root)
+            self.select_installation(Path(path))
+
+    def select_installation(self, path):
+        self.require_idle()
+        from .core import Installation
+        installation = Installation.inspect(path)
+        current = self.launcher.config["installation"]
+        if Path(current) != installation.root:
+            self.launcher.config.update(previous_installation=current, installation=str(installation.root))
             self.launcher.save()
-            self.installation_path.setText(str(installation.root))
-            self.refresh()
+        self.installation_path.setText(str(installation.root))
+        self.details.setText(f"Selected {installation.root}")
+        self.details.show()
 
     def save_settings(self):
         self.require_idle()
@@ -458,7 +532,9 @@ class Window(QMainWindow):
         self.launcher.config.update(installation=str(installation.root), native_source=self.source.text())
         self.launcher.save_graphics(self.width.value(), self.height.value(), self.distance.value(), self.backend.currentText())
         self.launcher.save()
+        self.details.hide()
         self.refresh()
+        self.statusBar().showMessage("Settings saved.", 4000)
 
     def rollback_installation(self):
         self.require_idle()
@@ -470,12 +546,14 @@ class Window(QMainWindow):
         self.launcher.config["previous_installation"], self.launcher.config["installation"] = self.launcher.config["installation"], previous
         self.launcher.save()
         self.installation_path.setText(previous)
-        self.refresh()
+        self.details.setText(f"Selected {previous}")
+        self.details.show()
 
     def validate_installation(self):
         self.require_idle()
         installation = self.launcher.installation()
         self.details.setText(f"Validated Java {GAME} · product {installation.metadata['product_version']} · {installation.metadata['architecture']}\nSource {REVISION}\n{installation.root}")
+        self.details.show()
 
     def restore_settings(self):
         self.require_idle()

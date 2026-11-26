@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 import tempfile
 import time
+from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
@@ -10,7 +11,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 try:
     from PySide6.QtCore import Qt
     from PySide6.QtTest import QTest
-    from PySide6.QtWidgets import QApplication
+    from PySide6.QtWidgets import QApplication, QPushButton, QScrollArea
     from herps_launcher.app import Window, STYLE
 except ImportError:
     QApplication = None
@@ -63,6 +64,44 @@ class DesktopTests(unittest.TestCase):
         self.assertNotEqual(self.launcher.game, original)
         self.assertEqual(Launcher(self.launcher.support).config["profile"], "creative")
         self.assertIn("creative", self.window.summary.text())
+
+    def test_settings_fields_keep_their_height_in_a_short_window(self):
+        self.window.resize(900, 640)
+        self.window.nav[-1].click()
+        self.app.processEvents()
+        settings = self.window.pages.currentWidget()
+        scroll = settings.findChild(QScrollArea)
+        for field in (self.window.installation_path, self.window.source, self.window.width,
+                      self.window.height, self.window.distance, self.window.backend):
+            self.assertGreaterEqual(field.height(), 36)
+        self.assertEqual(scroll.horizontalScrollBar().maximum(), 0)
+        save = settings.findChild(QPushButton, "saveSettings")
+        self.assertTrue(save.isVisible())
+        self.assertTrue(settings.rect().contains(save.mapTo(settings, save.rect().bottomRight())))
+
+    def test_settings_selecting_bundled_game_preserves_profile_and_rollback(self):
+        bundled = self.launcher.support / "game/Herspers-Minecraft"
+        bundled.mkdir(parents=True)
+        previous = self.launcher.support / "previous"
+        self.launcher.config["installation"] = str(previous)
+        profile_data = self.launcher.game
+        with patch("herps_launcher.app.bundled_installation", return_value=bundled):
+            window = Window(self.launcher)
+        try:
+            window.nav[-1].click()
+            buttons = {button.text(): button for button in window.pages.currentWidget().findChildren(QPushButton)}
+            with patch("herps_launcher.core.Installation.inspect", return_value=SimpleNamespace(root=bundled)) as inspect:
+                buttons["Use bundled game"].click()
+                buttons["Use bundled game"].click()
+                inspect.assert_called_with(bundled)
+            saved = Launcher(self.launcher.support)
+            self.assertEqual(saved.config["installation"], str(bundled))
+            self.assertEqual(saved.config["previous_installation"], str(previous))
+            self.assertEqual(saved.game, profile_data)
+            self.assertEqual(window.installation_path.text(), str(bundled))
+        finally:
+            window.close()
+            window.deleteLater()
 
     def test_tailscale_result_is_visible_on_home_and_multiplayer(self):
         self.window.tail_result({"connected": True, "message": "Running", "ips": ["100.80.12.34"]})
