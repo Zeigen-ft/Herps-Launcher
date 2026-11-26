@@ -443,6 +443,7 @@ class Window(QMainWindow):
 
         installation = QFormLayout()
         installation.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
+        installation.setRowWrapPolicy(QFormLayout.RowWrapPolicy.WrapLongRows)
         installation.setVerticalSpacing(8)
         installation.addRow("Game installation", self.installation_path)
         installation.addRow("Prepared native source", self.source)
@@ -468,6 +469,7 @@ class Window(QMainWindow):
         installation.addRow(self.details)
 
         graphics = QFormLayout()
+        graphics.setRowWrapPolicy(QFormLayout.RowWrapPolicy.WrapLongRows)
         graphics.setVerticalSpacing(8)
         self.distance.setMaximumWidth(152)
         self.backend.setMaximumWidth(152)

@@ -75,8 +75,10 @@ class DesktopTests(unittest.TestCase):
                       self.window.height, self.window.distance, self.window.backend):
             self.assertGreaterEqual(field.height(), 36)
         content = scroll.widget()
+        layout = content.layout()
+        section_sizes = [layout.itemAt(i).minimumSize().toTuple() for i in range(layout.count())]
         self.assertLessEqual(content.width(), scroll.viewport().width(),
-                             f"Settings content minimum {content.minimumSizeHint().toTuple()}, "
+                             f"Settings section minimum sizes {section_sizes}, "
                              f"viewport {scroll.viewport().size().toTuple()}, "
                              f"window {self.window.size().toTuple()}")
         save = settings.findChild(QPushButton, "saveSettings")
