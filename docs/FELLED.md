@@ -43,7 +43,10 @@ are bounded by scan limits.
 
 With the server flag enabled, a permitted base break can move the remaining tree
 to a clear, grounded landing. Horizontal log axes follow the fall direction.
-Foliage that would land inside terrain is shed. If every landing is blocked,
+Grass, ferns and flowers can give way under a falling tree.
+The server tries other landings if terrain, an entity or a protection hook blocks
+the preferred one. Foliage that would land inside solid terrain is shed.
+If every landing is blocked,
 the base break proceeds normally. Landed logs can be walked on and
 harvested with the usual server rules. A Herps client with visuals enabled
 animates the server-directed fall and plays local impact effects. Other clients

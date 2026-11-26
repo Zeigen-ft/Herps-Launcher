@@ -40,7 +40,7 @@
          if canceled {
              return Ok(());
          }
-+        let felled = self.felled_plan_server(pos, state);
++        let felled = self.felled_capture_server(pos, state);
          self.pad_rumble(horizon_client::gamepad::Rumble::BlockBroken);
          let broken = state;
          let facts = self.res.facts().get(state).clone();

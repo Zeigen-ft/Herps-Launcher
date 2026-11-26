@@ -40,7 +40,7 @@
     {
       "path": "crates/horizon-client/src/game.rs",
       "before_sha256": "de63b396454bbd394d4f3ca72fe0a54b83e3c0171cab6aca73b94bcd9c0de1bf",
-      "after_sha256": "2417874574b24291355099bb21e29b9abb3780c45473fc25d1c853f6f208bdf5",
+      "after_sha256": "90b341a8af3b354741ac39e4940cf286eeb3c93b6ae684e6c4267caeda05f8e1",
       "patch": "engine/crates-horizon-client-src-game.rs.patch"
     },
     {
@@ -154,7 +154,7 @@
     {
       "path": "crates/horizon-client/src/game/felled.rs",
       "before_sha256": null,
-      "after_sha256": "479c0b5109b847a7bf742e933f26b71da47a921730bf04ec120302cd2e8ec892",
+      "after_sha256": "c937ae315065cdb93b0640d63b5c60cfb2f585a1b46d009aac9fae7426a3e40a",
       "patch": "engine/crates-horizon-client-src-game-felled.rs.patch"
     }
   ]

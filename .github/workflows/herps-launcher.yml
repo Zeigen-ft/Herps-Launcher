@@ -1,25 +1,14 @@
 name: Build Herps Felled Windows installer
 on:
   workflow_dispatch:
-    inputs:
-      source_run:
-        description: Completed Windows build run to export as a direct EXE
-        type: string
-        required: false
-      quick_build:
-        description: Use lower compiler optimization for an earlier test build
-        type: boolean
-        default: false
 permissions:
   contents: read
 jobs:
   windows:
-    if: ${{ inputs.source_run == '' }}
     runs-on: windows-latest
     timeout-minutes: 90
     env:
       CARGO_BUILD_JOBS: '3'
-      CARGO_PROFILE_FAST_OPT_LEVEL: ${{ inputs.quick_build && '1' || '3' }}
       PYTHONUTF8: '1'
       QT_QPA_PLATFORM: offscreen
     steps:
@@ -55,20 +44,25 @@ jobs:
           $limits = python tools/windows_installer.py $shortPayload | ConvertFrom-Json
           $spec = Join-Path $env:RUNNER_TEMP 'herps-felled.iss'
           $source = Get-Content -Raw packaging/herps-windows.iss
-          $source = $source.Replace('AppId=io.herspers.herps-launcher', 'AppId=io.herspers.herps-felled').Replace('AppName=Herps Launcher', 'AppName=Herps Felled').Replace('Programs\Herps Launcher', 'Programs\Herps Felled').Replace('DefaultGroupName=Herps Launcher', 'DefaultGroupName=Herps Felled').Replace('Herps-Launcher-0.1.0-Windows-x64-Setup', 'Herps-Felled-26.3-Windows-x64-Setup')
+          $source = $source.Replace('AppId=io.herspers.herps-launcher', 'AppId=io.herspers.herps-felled').Replace('AppName=Herps Launcher', 'AppName=Herps Felled').Replace('Programs\Herps Launcher', 'Programs\Herps Felled').Replace('DefaultGroupName=Herps Launcher', 'DefaultGroupName=Herps Felled').Replace('Herps-Launcher-0.1.0-Windows-x64-Setup', 'Herps-Felled-26.3-Fix1-Windows-x64-Setup')
           Set-Content -LiteralPath $spec -Value $source -Encoding utf8BOM
           $compiler = 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe'
           & $compiler "/DMaxPayloadFileChars=$($limits.file_chars)" "/DMaxPayloadDirChars=$($limits.directory_chars)" "/DPayload=$shortPayload" "/DOutput=$((Resolve-Path dist/herps).Path)" $spec
-          Get-FileHash dist/herps/Herps-Felled-26.3-Windows-x64-Setup.exe -Algorithm SHA256
+          $setup = 'dist/herps/Herps-Felled-26.3-Fix1-Windows-x64-Setup.exe'
+          $hash = (Get-FileHash $setup -Algorithm SHA256).Hash.ToLowerInvariant()
+          Set-Content -LiteralPath "$setup.sha256" -Value $hash -Encoding ascii
+          Write-Output $hash
       - name: Upload the Windows installer
         uses: actions/upload-artifact@v4
         with:
           name: Herps-Felled-Windows-x64-Setup
-          path: dist/herps/Herps-Felled-26.3-Windows-x64-Setup.exe
+          path: |
+            dist/herps/Herps-Felled-26.3-Fix1-Windows-x64-Setup.exe
+            dist/herps/Herps-Felled-26.3-Fix1-Windows-x64-Setup.exe.sha256
           if-no-files-found: error
 
   download-file:
-    if: ${{ inputs.source_run != '' }}
+    needs: windows
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -80,12 +74,10 @@ jobs:
         with:
           name: Herps-Felled-Windows-x64-Setup
           path: installer
-          run-id: ${{ inputs.source_run }}
-          github-token: ${{ github.token }}
       - name: Verify the installer file
         run: |
           set -eu
-          setup=installer/Herps-Felled-26.3-Windows-x64-Setup.exe
+          setup=installer/Herps-Felled-26.3-Fix1-Windows-x64-Setup.exe
           test "$(head -c 2 "$setup")" = MZ
           sha256sum "$setup"
       - name: Check out the existing download branch
@@ -97,8 +89,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          name=Herps-Felled-26.3-Windows-x64-Setup.exe
-          printf '%s  %s\n' f17e14bbd254ff805839b31c4ca67ac3669245acfcb8bcf82524731c16776042 "installer/$name" | sha256sum -c -
+          name=Herps-Felled-26.3-Fix1-Windows-x64-Setup.exe
+          expected=$(tr -d '\r\n' < "installer/$name.sha256")
+          [[ "$expected" =~ ^[0-9a-f]{64}$ ]]
+          printf '%s  %s\n' "$expected" "installer/$name" | sha256sum -c -
           cp "installer/$name" "publish/$name"
           git -C publish config user.name 'github-actions[bot]'
           git -C publish config user.email '41898282+github-actions[bot]@users.noreply.github.com'
